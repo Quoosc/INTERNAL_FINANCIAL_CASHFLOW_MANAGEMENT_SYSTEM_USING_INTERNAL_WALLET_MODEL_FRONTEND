@@ -1,0 +1,52 @@
+@startuml UC-ACC-01: Manage Disbursement (Flow 1)
+
+actor "Accountant" as Acc
+participant "Frontend" as FE
+participant "RequestController" as API
+participant "RequestService" as Svc
+database "projects" as PDB
+database "wallets" as WDB
+database "transactions" as TxDB
+
+Acc -> FE: Chọn "Giải ngân"
+FE -> API: GET /api/v1/requests?status=PENDING_ACCOUNTANT
+API --> FE: Danh sách YC chờ giải ngân
+
+Acc -> FE: Chọn YC → Kiểm tra chứng từ
+
+alt Giải ngân
+    Acc -> FE: Nhấn "Giải ngân"
+    FE --> Acc: Yêu cầu nhập PIN
+    Acc -> FE: Nhập PIN
+    FE -> API: POST /api/v1/requests/{id}/payout {pin}
+    API -> Svc: payout(requestId, pin, Acc)
+    Svc -> Svc: verifyPin(Acc, pin)
+    Svc -> PDB: project = findForUpdate(projectId)
+    Svc -> Svc: check project.availableBudget >= amount
+
+    alt NS dự án không đủ
+        Svc --> API: throw InsufficientProjectBudget
+        API --> FE: 400 NS DA không đủ
+        FE --> Acc: NS dự án không đủ
+    else Đủ
+        Svc -> PDB: project.deductBudget(amount)
+        Svc -> WDB: empWallet.credit(amount)
+        Svc -> TxDB: createTx(REQUEST_PAYMENT, COMPLETED)
+        Svc -> Svc: request.status = PAID
+        Svc -> Svc: notifyEmployee(PAID)
+        Svc --> API: Request(PAID)
+        API --> FE: 200
+        FE --> Acc: Giải ngân thành công
+    end
+else Từ chối
+    Acc -> FE: Nhấn "Từ chối" + nhập lý do
+    FE -> API: POST /api/v1/requests/{id}/reject {reason}
+    API -> Svc: reject(requestId, reason)
+    Svc -> Svc: request.status = REJECTED
+    Svc -> Svc: notifyEmployee(REJECTED)
+    Svc --> API: Request(REJECTED)
+    API --> FE: 200
+    FE --> Acc: Đã từ chối
+end
+
+@enduml

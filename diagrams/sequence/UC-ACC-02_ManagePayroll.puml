@@ -1,0 +1,49 @@
+@startuml UC-ACC-02: Manage Payroll
+
+actor "Accountant" as Acc
+participant "Frontend" as FE
+participant "PayrollController" as API
+participant "PayrollService" as Svc
+database "system_fund" as FundDB
+database "wallets" as WDB
+database "payroll_periods / payslips" as PRDB
+
+Acc -> FE: Chọn "Quản lý lương" → "Tạo kỳ mới"
+FE -> API: POST /api/v1/payroll {month, year}
+API -> Svc: createPeriod(month, year)
+Svc -> PRDB: save(PayrollPeriod, DRAFT)
+Svc --> FE: PayrollPeriod(DRAFT)
+
+Acc -> FE: Upload file Excel
+FE -> API: POST /api/v1/payroll/{id}/upload (FormData)
+API -> Svc: importExcel(periodId, file)
+Svc -> Svc: Parse Excel → tạo Payslip cho từng NV
+Svc -> Svc: Validate (NV tồn tại, amount hợp lệ)
+Svc --> FE: PayrollPeriod + list Payslip
+
+Acc -> FE: Preview → Nhấn "Chốt & Chi lương"
+FE -> API: POST /api/v1/payroll/{id}/execute
+API -> Svc: executeBatchPayroll(periodId)
+Svc -> FundDB: check totalBalance >= totalPayroll
+
+alt Quỹ không đủ
+    Svc --> API: throw InsufficientFund
+    API --> FE: 400
+    FE --> Acc: Quỹ hệ thống không đủ
+else Đủ
+    loop Mỗi Payslip
+        Svc -> Svc: tính netSalary = gross - deduction - advanceDeduct
+        Svc -> WDB: wallet.credit(netSalary)
+        note over Svc: Auto-Netting:\nnếu debtBalance > 0 thì trừ nợ
+        Svc -> WDB: wallet.reduceDebt(advanceDeduct)
+        Svc -> FundDB: fund.totalBalance -= netSalary
+        Svc -> Svc: createTx(PAYSLIP_PAYMENT)
+    end
+    Svc -> PRDB: period.status = COMPLETED
+    Svc -> Svc: notifyAllEmployees("Lương về")
+    Svc --> API: PayrollPeriod(COMPLETED)
+    API --> FE: 200
+    FE --> Acc: Chi lương thành công
+end
+
+@enduml

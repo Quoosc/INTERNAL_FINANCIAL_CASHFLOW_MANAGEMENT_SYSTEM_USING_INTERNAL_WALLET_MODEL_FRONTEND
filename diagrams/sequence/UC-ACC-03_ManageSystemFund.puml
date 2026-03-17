@@ -1,0 +1,27 @@
+@startuml UC-ACC-03: Manage System Fund
+
+actor "Accountant" as Acc
+participant "Frontend" as FE
+participant "SystemFundController" as API
+participant "SystemFundService" as Svc
+database "system_fund" as DB
+
+Acc -> FE: Chọn "Quỹ hệ thống"
+FE -> API: GET /api/v1/system-fund
+API -> Svc: getSystemFund()
+Svc -> DB: findFirst()
+DB --> Svc: SystemFund(totalBalance, bankName, bankAccount)
+Svc --> API: SystemFund
+API --> FE: 200 SystemFund
+FE --> Acc: Hiển thị số dư Quỹ
+
+Acc -> FE: Nhấn "Nạp vốn" → Nhập số tiền
+FE -> API: POST /api/v1/system-fund/topup {amount}
+API -> Svc: topUp(amount)
+Svc -> DB: fund.totalBalance += amount
+Svc -> Svc: auditEvent(SYSTEM_FUND_ADJUSTED)
+Svc --> API: SystemFund
+API --> FE: 200
+FE --> Acc: Nạp vốn thành công
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml UC-ACC-04: Approve Withdrawal
+
+actor "Accountant" as Acc
+participant "Frontend" as FE
+participant "WalletController" as API
+participant "WalletService" as Svc
+database "wallets" as WDB
+database "transactions" as TxDB
+database "system_fund" as FundDB
+
+Acc -> FE: Chọn "Duyệt rút tiền"
+FE -> API: GET /api/v1/wallet/pending-withdrawals
+API --> FE: DS Transaction(WITHDRAW, PENDING)
+
+Acc -> FE: Chọn lệnh rút → Xem chi tiết
+
+alt Duyệt
+    Acc -> FE: Nhấn "Duyệt"
+    FE -> API: POST /api/v1/wallet/withdrawals/{txId}/approve
+    API -> Svc: approveWithdrawal(txId)
+    Svc -> WDB: wallet = findByIdForUpdate()
+    Svc -> WDB: wallet.pendingBalance -= amount
+    Svc -> WDB: wallet.balance -= amount
+    Svc -> FundDB: fund.totalBalance -= amount
+    Svc -> TxDB: transaction.status = COMPLETED
+    Svc -> Svc: notifyEmployee("Rút tiền thành công")
+    Svc --> API: Transaction(COMPLETED)
+    API --> FE: 200
+    FE --> Acc: Đã duyệt
+else Từ chối
+    Acc -> FE: Nhấn "Từ chối"
+    FE -> API: POST /api/v1/wallet/withdrawals/{txId}/reject
+    API -> Svc: rejectWithdrawal(txId)
+    Svc -> WDB: wallet.pendingBalance -= amount
+    Svc -> TxDB: transaction.status = FAILED
+    Svc -> Svc: notifyEmployee("Rút tiền bị từ chối")
+    Svc --> API: Transaction(FAILED)
+    API --> FE: 200
+    FE --> Acc: Đã từ chối
+end
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml UC-ADM-04: Manage Roles & Permissions
+
+actor "Admin" as Adm
+participant "Frontend" as FE
+participant "RoleController" as API
+participant "RoleService" as Svc
+database "roles / role_permissions" as DB
+
+Adm -> FE: Chọn "Quản lý vai trò"
+FE -> API: GET /api/v1/roles
+API --> FE: List<Role>
+
+== Tạo Role mới ==
+
+Adm -> FE: Nhập: tên, mô tả, chọn permissions
+FE -> API: POST /api/v1/roles {name, description, permissions[]}
+API -> Svc: createRole(dto)
+Svc -> DB: check existsByName
+
+alt Tên trùng
+    Svc --> API: throw RoleNameExists
+    API --> FE: 400
+else OK
+    Svc -> DB: save(Role + permissions)
+    Svc -> Svc: auditEvent(PERMISSION_GRANTED)
+    Svc --> API: Role
+    API --> FE: 201
+    FE --> Adm: Tạo Role thành công
+end
+
+== Cập nhật Permissions ==
+
+Adm -> FE: Chọn Role → Thêm/Gỡ permission
+FE -> API: PUT /api/v1/roles/{id} {name, permissions[]}
+API -> Svc: updateRole(roleId, dto)
+Svc -> DB: update(Role, permissions)
+Svc -> Svc: auditEvent(PERMISSION_GRANTED / PERMISSION_REVOKED)
+Svc --> API: Role
+API --> FE: 200
+FE --> Adm: Cập nhật Role thành công
+
+@enduml

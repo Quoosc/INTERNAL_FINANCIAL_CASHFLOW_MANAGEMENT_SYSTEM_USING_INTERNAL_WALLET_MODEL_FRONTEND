@@ -1,0 +1,50 @@
+@startuml UC-ADM-03: Approve/Reject Quota Top-up (Flow 3)
+
+actor "Admin" as Adm
+participant "Frontend" as FE
+participant "RequestController" as API
+participant "RequestService" as Svc
+database "system_fund" as FundDB
+database "departments" as DeptDB
+database "transactions" as TxDB
+
+Adm -> FE: Xem DS YC QUOTA_TOPUP chờ duyệt
+FE -> API: GET /api/v1/requests?type=QUOTA_TOPUP&status=PENDING_APPROVAL
+API --> FE: Danh sách YC
+
+Adm -> FE: Chọn YC → Xem chi tiết
+
+alt Duyệt
+    Adm -> FE: Nhấn "Duyệt"
+    FE -> API: POST /api/v1/requests/{id}/approve
+    API -> Svc: approveQuotaTopup(requestId, Adm)
+    Svc -> FundDB: fund = getSystemFund()
+    Svc -> Svc: check fund.totalBalance >= amount
+
+    alt Quỹ hệ thống không đủ
+        Svc --> API: throw InsufficientFund
+        API --> FE: 400
+        FE --> Adm: Quỹ không đủ
+    else Đủ
+        Svc -> FundDB: fund.totalBalance -= amount
+        Svc -> DeptDB: dept.receiveQuota(amount)
+        Svc -> TxDB: createTx(DEPT_QUOTA_ALLOCATION)
+        Svc -> Svc: request.status = PAID
+        Svc -> Svc: auditEvent(QUOTA_TOPUP)
+        Svc -> Svc: notifyManager(approved)
+        Svc --> API: Request(PAID)
+        API --> FE: 200
+        FE --> Adm: Đã duyệt & cấp vốn tự động
+    end
+else Từ chối
+    Adm -> FE: Nhấn "Từ chối" + nhập lý do
+    FE -> API: POST /api/v1/requests/{id}/reject {reason}
+    API -> Svc: reject(requestId, reason)
+    Svc -> Svc: request.status = REJECTED
+    Svc -> Svc: notifyManager(rejected)
+    Svc --> API: Request(REJECTED)
+    API --> FE: 200
+    FE --> Adm: Đã từ chối
+end
+
+@enduml

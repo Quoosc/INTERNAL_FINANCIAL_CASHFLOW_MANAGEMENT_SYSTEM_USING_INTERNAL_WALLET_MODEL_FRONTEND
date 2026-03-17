@@ -1,0 +1,50 @@
+@startuml UC-ADM-06: View Audit Logs
+
+actor "Admin" as Adm
+participant "Frontend" as FE
+participant "AuditController" as API
+participant "AuditService" as Svc
+database "audit_logs" as DB
+
+Adm -> FE: Chọn "Audit Log"
+FE -> API: GET /api/v1/audit/logs?page=0&size=20
+API -> Svc: getAllLogs(pageable)
+Svc -> DB: findAll(pageable, sort=createdAt DESC)
+DB --> Svc: Page<AuditLog>
+Svc --> API: Page<AuditLogResponse>
+API --> FE: 200 Page<AuditLogResponse>
+FE --> Adm: Hiển thị DS audit log
+
+opt Lọc theo Action
+    FE -> API: GET /api/v1/audit/logs/action/{action}
+    API -> Svc: getLogsByAction(action, pageable)
+    Svc -> DB: findByAction(action, pageable)
+    DB --> Svc: Page<AuditLog>
+    Svc --> FE: Page<AuditLogResponse>
+end
+
+opt Lọc theo Entity
+    FE -> API: GET /api/v1/audit/logs/entity?name=users
+    API -> Svc: getLogsByEntity(name, pageable)
+    Svc -> DB: findByEntityName(name, pageable)
+    DB --> Svc: Page<AuditLog>
+    Svc --> FE: Page<AuditLogResponse>
+end
+
+opt Lọc theo Time Range
+    FE -> API: GET /api/v1/audit/logs/range?from=...&to=...
+    API -> Svc: getLogsByTimeRange(from, to, pageable)
+    Svc -> DB: findByTimeRange(from, to, pageable)
+    DB --> Svc: Page<AuditLog>
+    Svc --> FE: Page<AuditLogResponse>
+end
+
+opt Xem lịch sử 1 entity
+    FE -> API: GET /api/v1/audit/logs/entity/{name}/{id}
+    API -> Svc: getEntityHistory(name, id)
+    Svc -> DB: findByEntityNameAndId(name, id)
+    DB --> Svc: List<AuditLog>
+    Svc --> FE: List<AuditLogResponse>
+end
+
+@enduml

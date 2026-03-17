@@ -1,0 +1,63 @@
+@startuml UC-ADM-01: Manage Users
+
+actor "Admin" as Adm
+participant "Frontend" as FE
+participant "UserController" as API
+participant "UserService" as Svc
+database "users / user_profiles" as DB
+database "wallets" as WDB
+participant "EmailRedisProducer" as Mail
+
+Adm -> FE: Chọn "Quản lý nhân sự"
+FE -> API: GET /api/v1/users
+API --> FE: Page<User>
+
+== Onboard (Tạo tài khoản mới) ==
+
+Adm -> FE: Nhấn "Thêm nhân viên"
+Adm -> FE: Nhập: email, họ tên, PB, chức vụ, role
+FE -> API: POST /api/v1/users (CreateUserDTO)
+API -> Svc: createUser(dto)
+Svc -> DB: check existsByEmail
+
+alt Email trùng
+    Svc --> API: throw EmailExists
+    API --> FE: 400
+    FE --> Adm: Email đã tồn tại
+else OK
+    Svc -> Svc: generateRandomPassword()
+    Svc -> DB: save(User, isFirstLogin=true)
+    Svc -> DB: save(UserProfile)
+    Svc -> WDB: save(Wallet, balance=0)
+    Svc -> Mail: sendEmail(email, password)
+    Svc -> Svc: auditEvent(USER_CREATED)
+    Svc --> API: User
+    API --> FE: 201 User
+    FE --> Adm: Tạo thành công
+end
+
+== Khóa / Mở khóa ==
+
+Adm -> FE: Nhấn "Khóa" trên user
+FE -> API: PATCH /api/v1/users/{id}/lock
+API -> Svc: toggleLock(userId)
+Svc -> DB: user.status = LOCKED / ACTIVE
+Svc -> Svc: auditEvent(USER_LOCKED / USER_UNLOCKED)
+Svc --> API: User
+API --> FE: 200
+
+== Reset Mật khẩu ==
+
+opt Reset MK
+    Adm -> FE: Nhấn "Reset MK"
+    FE -> API: POST /api/v1/users/{id}/reset-password
+    API -> Svc: resetPassword(userId)
+    Svc -> Svc: generateRandomPassword()
+    Svc -> DB: user.password = BCrypt(newPassword)
+    Svc -> DB: user.isFirstLogin = true
+    Svc -> Mail: sendEmail(email, newPassword)
+    Svc -> Svc: auditEvent(PASSWORD_RESET)
+    Svc --> FE: 200
+end
+
+@enduml

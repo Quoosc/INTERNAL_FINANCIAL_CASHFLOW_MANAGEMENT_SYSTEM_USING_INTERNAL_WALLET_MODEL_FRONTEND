@@ -1,0 +1,50 @@
+@startuml UC-ADM-02: Manage Departments
+
+actor "Admin" as Adm
+participant "Frontend" as FE
+participant "DepartmentController" as API
+participant "DepartmentService" as Svc
+database "departments" as DB
+database "system_fund" as FundDB
+
+Adm -> FE: Chọn "Quản lý phòng ban"
+FE -> API: GET /api/v1/departments
+API --> FE: List<Department>
+
+== Tạo phòng ban ==
+
+Adm -> FE: Nhập: tên, mã, gán Manager
+FE -> API: POST /api/v1/departments {name, code, managerId}
+API -> Svc: createDepartment(dto)
+Svc -> DB: check existsByCode
+
+alt Mã trùng
+    Svc --> API: throw CodeExists
+    API --> FE: 400
+else OK
+    Svc -> DB: save(Department)
+    Svc -> Svc: auditEvent(DEPARTMENT_CREATED)
+    Svc --> API: Department
+    API --> FE: 201
+end
+
+== Cấp vốn trực tiếp ==
+
+Adm -> FE: Chọn PB → "Cấp vốn" → Nhập số tiền
+FE -> API: POST /api/v1/departments/{id}/topup {amount}
+API -> Svc: allocateBudget(deptId, amount)
+Svc -> FundDB: check fund.totalBalance >= amount
+
+alt Quỹ không đủ
+    Svc --> API: throw InsufficientFund
+    API --> FE: 400
+else Đủ
+    Svc -> FundDB: fund.totalBalance -= amount
+    Svc -> DB: dept.receiveQuota(amount)
+    Svc -> Svc: auditEvent(QUOTA_TOPUP)
+    Svc --> API: Department
+    API --> FE: 200
+    FE --> Adm: Cấp vốn thành công
+end
+
+@enduml

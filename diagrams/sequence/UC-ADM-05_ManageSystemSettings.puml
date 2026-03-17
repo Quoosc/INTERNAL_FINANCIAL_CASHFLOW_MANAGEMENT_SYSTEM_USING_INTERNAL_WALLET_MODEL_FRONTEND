@@ -1,0 +1,28 @@
+@startuml UC-ADM-05: Manage System Settings
+
+actor "Admin" as Adm
+participant "Frontend" as FE
+participant "SystemConfigController" as API
+participant "SystemConfigService" as Svc
+database "system_configs" as DB
+
+Adm -> FE: Chọn "Cấu hình hệ thống"
+FE -> API: GET /api/v1/system-config
+API -> Svc: getAllConfigs()
+Svc -> DB: findAll()
+DB --> Svc: List<SystemConfig>
+Svc --> API: List<SystemConfig>
+API --> FE: 200
+FE --> Adm: Hiển thị DS config\n(key, value, description)
+
+Adm -> FE: Chọn config → Sửa value → Nhấn "Lưu"
+FE -> API: PUT /api/v1/system-config/{key} {value}
+API -> Svc: updateConfig(key, value)
+Svc -> DB: config.setValue(value)
+Svc -> DB: save(config)
+Svc -> Svc: auditEvent(CONFIG_UPDATED)
+Svc --> API: SystemConfig
+API --> FE: 200
+FE --> Adm: Cập nhật thành công
+
+@enduml

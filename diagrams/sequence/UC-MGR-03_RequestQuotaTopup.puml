@@ -1,0 +1,20 @@
+@startuml UC-MGR-03: Request Quota Top-up (Flow 3)
+
+actor "Manager" as Mgr
+participant "Frontend" as FE
+participant "RequestController" as API
+participant "RequestService" as Svc
+database "requests" as DB
+
+Mgr -> FE: Nhấn "Xin cấp vốn phòng ban"
+Mgr -> FE: Nhập số tiền + lý do
+FE -> API: POST /api/v1/requests\n{type: QUOTA_TOPUP, amount, description}
+API -> Svc: createRequest(dto, currentUser)
+Svc -> Svc: generateRequestCode()
+Svc -> DB: save(Request, type=QUOTA_TOPUP,\nPENDING_APPROVAL, project=null)
+Svc -> Svc: notifyAdmin()
+Svc --> API: Request
+API --> FE: 201
+FE --> Mgr: Tạo YC cấp vốn PB thành công,\nchờ Admin duyệt
+
+@enduml

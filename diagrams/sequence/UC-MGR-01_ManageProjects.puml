@@ -1,0 +1,48 @@
+@startuml UC-MGR-01: Manage Projects
+
+actor "Manager" as Mgr
+participant "Frontend" as FE
+participant "ProjectController" as API
+participant "ProjectService" as Svc
+database "projects / project_members" as DB
+
+== Tạo Dự án ==
+
+Mgr -> FE: Nhấn "Tạo dự án", nhập tên, mô tả
+FE -> API: POST /api/v1/projects {name, description}
+API -> Svc: createProject(dto, currentManager)
+Svc -> Svc: generateProjectCode(PRJ-{DEPT}-{YEAR})
+Svc -> DB: save(Project, dept=manager.dept, status=PLANNING)
+Svc --> API: Project
+API --> FE: 201 Project
+FE --> Mgr: Tạo DA thành công
+
+== Chỉ định Team Leader ==
+
+Mgr -> FE: Chọn DA → "Chỉ định TL"
+Mgr -> FE: Chọn NV trong phòng ban
+FE -> API: POST /api/v1/projects/{id}/assign-leader {userId}
+API -> Svc: assignLeader(projectId, userId)
+Svc -> DB: save(ProjectMember, role=LEADER)
+Svc --> API: success
+API --> FE: 200
+
+== Cập nhật thông tin ==
+
+Mgr -> FE: Sửa tên, mô tả
+FE -> API: PUT /api/v1/projects/{id} (UpdateProjectDTO)
+API -> Svc: updateProject(projectId, dto)
+Svc -> DB: save(updatedProject)
+Svc --> FE: 200
+
+== Đổi trạng thái ==
+
+opt Pause / Close
+    Mgr -> FE: Nhấn "Tạm dừng" hoặc "Đóng DA"
+    FE -> API: PATCH /api/v1/projects/{id}/status {status: PAUSED/CLOSED}
+    API -> Svc: updateProjectStatus(projectId, status)
+    Svc -> DB: project.status = PAUSED / CLOSED
+    Svc --> FE: 200
+end
+
+@enduml

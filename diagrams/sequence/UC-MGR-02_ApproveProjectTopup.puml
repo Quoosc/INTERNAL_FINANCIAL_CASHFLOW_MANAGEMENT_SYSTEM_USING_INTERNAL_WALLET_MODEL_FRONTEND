@@ -1,0 +1,49 @@
+@startuml UC-MGR-02: Approve/Reject Project Top-up (Flow 2)
+
+actor "Manager" as Mgr
+participant "Frontend" as FE
+participant "RequestController" as API
+participant "RequestService" as Svc
+database "departments" as DeptDB
+database "projects" as ProjDB
+database "transactions" as TxDB
+
+Mgr -> FE: Xem DS YC PROJECT_TOPUP chờ duyệt
+FE -> API: GET /api/v1/requests?type=PROJECT_TOPUP&status=PENDING_APPROVAL
+API --> FE: Danh sách YC
+
+Mgr -> FE: Chọn YC → Xem chi tiết
+
+alt Duyệt
+    Mgr -> FE: Nhấn "Duyệt"
+    FE -> API: POST /api/v1/requests/{id}/approve
+    API -> Svc: approveProjectTopup(requestId, Mgr)
+    Svc -> DeptDB: dept = findByIdForUpdate(deptId)
+    Svc -> Svc: check dept.totalAvailableBalance >= amount
+
+    alt NS phòng ban không đủ
+        Svc --> API: throw InsufficientDeptBudget
+        API --> FE: 400
+        FE --> Mgr: NS phòng ban không đủ
+    else Đủ
+        Svc -> DeptDB: dept.allocateToProject(amount)
+        Svc -> ProjDB: project.addBudget(amount)
+        Svc -> TxDB: createTx(PROJECT_QUOTA_ALLOCATION)
+        Svc -> Svc: request.status = PAID
+        Svc -> Svc: notifyTeamLeader(approved)
+        Svc --> API: Request(PAID)
+        API --> FE: 200
+        FE --> Mgr: Đã duyệt & cấp vốn tự động
+    end
+else Từ chối
+    Mgr -> FE: Nhấn "Từ chối" + nhập lý do
+    FE -> API: POST /api/v1/requests/{id}/reject {reason}
+    API -> Svc: reject(requestId, reason)
+    Svc -> Svc: request.status = REJECTED
+    Svc -> Svc: notifyTeamLeader(rejected)
+    Svc --> API: Request(REJECTED)
+    API --> FE: 200
+    FE --> Mgr: Đã từ chối
+end
+
+@enduml

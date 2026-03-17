@@ -1,0 +1,20 @@
+@startuml UC-MGR-04: View Department Dashboard
+
+actor "Manager" as Mgr
+participant "Frontend" as FE
+participant "DepartmentController" as API
+participant "DepartmentService" as Svc
+database "departments / projects / requests" as DB
+
+Mgr -> FE: Chọn "Dashboard phòng ban"
+FE -> API: GET /api/v1/departments/me/dashboard
+API -> Svc: getDeptDashboard(currentManager)
+Svc -> DB: findDeptById(manager.departmentId)
+Svc -> DB: findProjectsByDeptId(deptId)
+Svc -> DB: findRequestsByDeptId(deptId)
+DB --> Svc: Department + projects + requests
+Svc --> API: DashboardDTO
+API --> FE: 200 DashboardDTO
+FE --> Mgr: Hiển thị:\ntotalProjectQuota, totalAvailableBalance,\nDS DA, DS YC phòng ban
+
+@enduml

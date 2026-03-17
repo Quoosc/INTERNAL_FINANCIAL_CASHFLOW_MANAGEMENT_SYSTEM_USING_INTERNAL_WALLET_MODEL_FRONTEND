@@ -1,0 +1,78 @@
+@startuml UC-CM-01: Quy trinh Dang nhap
+
+title UC-CM-01: Quy trình Đăng nhập
+
+|Nguoi dung|
+start
+:Truy cập trang Đăng nhập;
+:Nhập Email và Password;
+:Nhấn nút "Đăng nhập";
+
+|He thong|
+:Kiểm tra định dạng dữ liệu;
+note right
+  Email hợp lệ,
+  Password không rỗng
+end note
+
+if (Dữ liệu hợp lệ?) then (Không)
+  |Nguoi dung|
+  :Hiển thị lỗi nhập liệu\n(VD: Email không hợp lệ);
+  stop
+else (Có)
+endif
+
+|Co so du lieu|
+:Kiểm tra Email trong DB;
+
+if (Email tồn tại?) then (Không)
+  |He thong|
+  :Hiển thị thông báo\n"Email or password is incorrect";
+  |Nguoi dung|
+  stop
+else (Có)
+endif
+
+|Co so du lieu|
+:Kiểm tra trạng thái tài khoản;
+
+if (Tài khoản bị khóa?) then (Có)
+  |He thong|
+  :Hiển thị thông báo\n"Account is locked";
+  |Nguoi dung|
+  stop
+else (Không)
+endif
+
+|He thong|
+:Xác thực mật khẩu (BCrypt);
+
+if (Mật khẩu đúng?) then (Không)
+  :Hiển thị thông báo\n"Email or password is incorrect";
+  |Nguoi dung|
+  stop
+else (Có)
+endif
+
+|He thong|
+:Revoke ALL refresh tokens cũ\n(Token Rotation);
+:Tạo Access Token (JWT);
+:Tạo Refresh Token (JWT);
+
+|Co so du lieu|
+:Lưu Refresh Token vào DB;
+
+|He thong|
+:Ghi nhận đăng nhập thành công\n(Audit Log);
+
+if (isFirstLogin?) then (Có)
+  |Nguoi dung|
+  :Chuyển hướng đến\ntrang Đổi mật khẩu lần đầu;
+  stop
+else (Không)
+  |Nguoi dung|
+  :Chuyển hướng đến\nDashboard theo Role;
+  stop
+endif
+
+@enduml

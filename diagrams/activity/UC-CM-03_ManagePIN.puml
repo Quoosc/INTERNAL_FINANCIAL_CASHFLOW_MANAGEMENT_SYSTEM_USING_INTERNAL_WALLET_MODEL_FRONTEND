@@ -1,0 +1,71 @@
+@startuml UC-CM-03: Quan ly PIN Giao dich
+
+title UC-CM-03: Quản lý PIN Giao dịch
+
+|Nguoi dung|
+start
+:Chọn "Cài đặt PIN" trong phần Bảo mật;
+:Nhập mật khẩu hiện tại;
+
+|He thong|
+:Xác thực mật khẩu hiện tại;
+
+if (Mật khẩu đúng?) then (Sai)
+  |Nguoi dung|
+  :Thông báo "Sai mật khẩu";
+  stop
+else (Đúng)
+endif
+
+|He thong|
+if (Đã có PIN?) then (Chưa)
+  |Nguoi dung|
+  :Nhập PIN mới 5 số & Xác nhận;
+else (Rồi)
+  |Nguoi dung|
+  :Nhập PIN cũ;
+
+  |He thong|
+  if (PIN cũ đúng?) then (Sai)
+    :retryCount++;
+
+    |Co so du lieu|
+    :Đọc PIN_MAX_RETRY từ system_configs;
+
+    |He thong|
+    if (retryCount >= PIN_MAX_RETRY?) then (Có)
+      :Khóa PIN trong PIN_LOCK_MINUTES phút;
+
+      |Co so du lieu|
+      :Cập nhật lockedUntil vào DB;
+
+      |He thong|
+      :Ghi Audit Log PIN_LOCKED;
+      |Nguoi dung|
+      :Thông báo "PIN bị khóa";
+      stop
+    else (Chưa)
+      |Nguoi dung|
+      :Cho nhập lại PIN cũ;
+      stop
+    endif
+  else (Đúng)
+    |Nguoi dung|
+    :Nhập PIN mới 5 số & Xác nhận;
+  endif
+endif
+
+|He thong|
+:Mã hóa PIN mới (BCrypt);
+
+|Co so du lieu|
+:Lưu PIN mã hóa vào\nuser_security_settings;
+
+|He thong|
+:Ghi Audit Log PIN_RESET;
+:Thông báo thành công;
+
+|Nguoi dung|
+stop
+
+@enduml

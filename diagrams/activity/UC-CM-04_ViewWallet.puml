@@ -1,0 +1,39 @@
+@startuml UC-CM-04: Xem Vi & Lich su GD
+
+title UC-CM-04: Xem Ví & Lịch sử Giao dịch
+
+|Nguoi dung|
+start
+:Chọn "Ví của tôi" trên menu;
+
+|He thong|
+:GET /api/v1/wallet/me;
+
+|Co so du lieu|
+:Truy vấn Wallet theo userId;
+:Trả về balance, pendingBalance, debtBalance;
+
+|He thong|
+:Tính availableBalance =\nbalance - pendingBalance;
+:Hiển thị Dashboard Ví;
+
+|Nguoi dung|
+:Xem thông tin: Số dư, Tiền treo,\nDư nợ tạm ứng, Khả dụng;
+
+:Chọn "Lịch sử giao dịch";
+
+|He thong|
+:GET /api/v1/wallet/transactions\n?type=&from=&to=&page=0&size=20;
+
+|Co so du lieu|
+:Truy vấn transactions theo walletId\n(phân trang, filter);
+:Trả về Page<Transaction>;
+
+|He thong|
+:Hiển thị danh sách GD\n(DEPOSIT, WITHDRAW,\nREQUEST_PAYMENT, PAYSLIP_PAYMENT);
+
+|Nguoi dung|
+:Xem danh sách giao dịch;
+stop
+
+@enduml

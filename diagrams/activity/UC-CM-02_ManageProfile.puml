@@ -1,0 +1,48 @@
+@startuml UC-CM-02: Quan ly Ho so
+
+title UC-CM-02: Quản lý Hồ sơ cá nhân
+
+|Nguoi dung|
+start
+:Chọn "Hồ sơ cá nhân" trên menu;
+
+|He thong|
+:GET /api/v1/users/me/profile;
+
+|Co so du lieu|
+:Truy vấn UserProfile theo userId;
+:Trả về UserProfile;
+
+|He thong|
+:Hiển thị thông tin: Tên, SĐT,\nĐịa chỉ, Ảnh, TT Ngân hàng;
+
+|Nguoi dung|
+:Chỉnh sửa thông tin;
+:Nhấn "Lưu";
+
+|He thong|
+:Validate dữ liệu;
+
+if (Dữ liệu hợp lệ?) then (Không)
+  |Nguoi dung|
+  :Hiển thị lỗi validation;
+  stop
+else (Có)
+endif
+
+|He thong|
+if (Có thay đổi TT ngân hàng?) then (Có)
+  :Ghi Audit Log\nBANK_INFO_UPDATED;
+else (Không)
+endif
+
+|Co so du lieu|
+:Lưu UserProfile vào DB;
+
+|He thong|
+:Thông báo cập nhật thành công;
+
+|Nguoi dung|
+stop
+
+@enduml

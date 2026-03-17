@@ -1,0 +1,42 @@
+@startuml UC-CM-08: Xem Thong bao
+
+title UC-CM-08: Xem Thông báo
+
+|Nguoi dung|
+start
+:Nhấn icon chuông trên header;
+
+|He thong|
+:GET /api/v1/notifications?page=0&size=20;
+
+|Co so du lieu|
+:Truy vấn notifications theo userId\n(sắp xếp createdAt DESC);
+:Trả về Page<Notification>;
+
+|He thong|
+:Hiển thị DS thông báo;
+
+|Nguoi dung|
+if (Nhấn vào 1 thông báo?) then (Có)
+  |He thong|
+  :PATCH /api/v1/notifications/{id}/read;
+
+  |Co so du lieu|
+  :notification.isRead = true;
+
+  |He thong|
+  :Hiển thị chi tiết thông báo;
+  |Nguoi dung|
+  stop
+else (Đọc tất cả)
+  |He thong|
+  :PATCH /api/v1/notifications/read-all;
+
+  |Co so du lieu|
+  :UPDATE SET isRead = true\nWHERE userId = ?;
+
+  |Nguoi dung|
+  stop
+endif
+
+@enduml

@@ -1,0 +1,40 @@
+@startuml UC-CM-07: Xem Phieu luong
+
+title UC-CM-07: Xem Phiếu lương
+
+|Nguoi dung|
+start
+:Chọn "Phiếu lương" trên menu;
+
+|He thong|
+:GET /api/v1/payroll/my-payslips;
+
+|Co so du lieu|
+:Truy vấn Payslip theo userId;
+:Trả về List<Payslip>;
+
+|He thong|
+:Hiển thị DS kỳ lương\n(tháng/năm, trạng thái);
+
+|Nguoi dung|
+:Chọn kỳ lương → Xem chi tiết;
+
+|He thong|
+:Hiển thị chi tiết:\nLương cơ bản, Thưởng, Khấu trừ,\nTrừ nợ tạm ứng, Thực lĩnh;
+
+|Nguoi dung|
+if (Muốn tải PDF?) then (Có)
+  :Nhấn "Tải PDF";
+
+  |He thong|
+  :GET /api/v1/payroll/payslips/{id}/pdf;
+  :Render PDF phiếu lương;
+
+  |Nguoi dung|
+  :Download file PDF;
+  stop
+else (Không)
+  stop
+endif
+
+@enduml

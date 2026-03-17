@@ -1,0 +1,52 @@
+@startuml UC-CM-05: Nap tien
+
+title UC-CM-05: Nạp tiền vào Ví
+
+|Nguoi dung|
+start
+:Nhấn "Nạp tiền";
+:Nhập số tiền;
+:Nhập mã PIN;
+
+|He thong|
+:Xác thực PIN;
+
+if (PIN đúng?) then (Sai)
+  |Nguoi dung|
+  :Thông báo "Sai PIN";
+  stop
+else (Đúng)
+endif
+
+|Co so du lieu|
+:Tạo Transaction\n(DEPOSIT, status=PENDING);
+
+|He thong|
+:Gọi Payment Gateway\n→ Sinh mã QR thanh toán;
+
+|Nguoi dung|
+:Hiển thị QR code;
+:Quét QR thanh toán\nqua app Ngân hàng;
+
+|He thong|
+:Nhận Webhook IPN từ Gateway;
+
+if (Thanh toán thành công?) then (Có)
+  |Co so du lieu|
+  :wallet.credit(amount)\n→ Cộng số dư;
+  :transaction.status = COMPLETED;
+
+  |He thong|
+  :Gửi thông báo biến động số dư;
+  |Nguoi dung|
+  :Nhận thông báo\n"Nạp tiền thành công";
+  stop
+else (Không)
+  |Co so du lieu|
+  :transaction.status = FAILED;
+  |Nguoi dung|
+  :Nạp tiền thất bại;
+  stop
+endif
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml UC-CM-06: Rut tien
+
+title UC-CM-06: Rút tiền về Ngân hàng
+
+|Nguoi dung|
+start
+:Nhấn "Rút tiền";
+:Nhập số tiền + TK ngân hàng nhận;
+:Nhập mã PIN;
+
+|He thong|
+:Xác thực PIN;
+
+if (PIN đúng?) then (Sai)
+  |Nguoi dung|
+  :Thông báo "Sai PIN";
+  stop
+else (Đúng)
+endif
+
+|Co so du lieu|
+:Đọc Wallet (Pessimistic Lock);
+
+|He thong|
+:Kiểm tra số dư khả dụng\n(balance - pendingBalance);
+
+if (Đủ số dư?) then (Không)
+  |Nguoi dung|
+  :Thông báo "Số dư không đủ";
+  stop
+else (Có)
+endif
+
+|Co so du lieu|
+:Đọc WITHDRAW_AUTO_APPROVE_LIMIT\ntừ system_configs;
+
+|He thong|
+if (amount <= Hạn mức?) then (Có — Auto Payout)
+  |Co so du lieu|
+  :wallet.debit(amount);
+  :Tạo Transaction\n(WITHDRAW, COMPLETED);
+
+  |He thong|
+  :Thông báo "Rút tiền thành công";
+  |Nguoi dung|
+  stop
+else (Không — Queue Approval)
+  |Co so du lieu|
+  :wallet.pendingBalance += amount;
+  :Tạo Transaction\n(WITHDRAW, PENDING);
+
+  |He thong|
+  :Gửi thông báo cho Accountant;
+  |Nguoi dung|
+  :Thông báo "Chờ Accountant duyệt";
+  stop
+endif
+
+@enduml

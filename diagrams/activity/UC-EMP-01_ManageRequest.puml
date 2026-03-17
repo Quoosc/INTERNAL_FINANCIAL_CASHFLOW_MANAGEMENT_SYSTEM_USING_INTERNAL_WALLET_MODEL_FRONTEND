@@ -1,0 +1,62 @@
+@startuml UC-EMP-01: Quan ly Yeu cau Chi tieu
+
+title UC-EMP-01: Quản lý Yêu cầu Chi tiêu (Flow 1)
+
+|Employee|
+start
+:Nhấn "Tạo yêu cầu mới";
+:Chọn loại: ADVANCE / EXPENSE / REIMBURSE;
+:Chọn Dự án đang Active;
+:Chọn Phase → Expense Category;
+:Nhập số tiền + Mô tả;
+
+if (Loại = EXPENSE hoặc REIMBURSE?) then (Có)
+  :Upload chứng từ bắt buộc;
+else (Không)
+endif
+
+|He thong|
+:POST /api/v1/requests (CreateRequestDTO);
+
+|Co so du lieu|
+:Đọc Phase + PhaseCategoryBudget;
+
+|He thong|
+:Kiểm tra ngân sách\nPhase/Category khả dụng;
+
+if (Ngân sách đủ?) then (Không)
+  |Employee|
+  :Thông báo "NS Phase/Category không đủ";
+  stop
+else (Có)
+endif
+
+|He thong|
+:Sinh requestCode tự động;
+
+|Co so du lieu|
+:Lưu Request\n(status = PENDING_APPROVAL);
+:Lưu RequestAttachment (nếu có);
+
+|He thong|
+:Gửi thông báo cho Team Leader;
+
+|Employee|
+:Tạo yêu cầu thành công\n→ Theo dõi trạng thái;
+
+== Hủy yêu cầu ==
+
+if (Muốn hủy & status = PENDING_APPROVAL?) then (Có)
+  :Nhấn "Hủy";
+
+  |Co so du lieu|
+  :request.status = CANCELLED;
+
+  |Employee|
+  :YC đã bị hủy;
+  stop
+else (Không)
+  stop
+endif
+
+@enduml

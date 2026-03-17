@@ -1,0 +1,34 @@
+@startuml UC-EMP-02: Xem Du an dang tham gia
+
+title UC-EMP-02: Xem Dự án đang tham gia
+
+|Employee|
+start
+:Chọn "Dự án" trên menu;
+
+|He thong|
+:GET /api/v1/projects?status=ACTIVE&member=me;
+
+|Co so du lieu|
+:Truy vấn projects theo\nProjectMember(userId) + status=ACTIVE;
+:Trả về List<Project>;
+
+|He thong|
+:Hiển thị DS dự án\n(tên, mã DA, Phase, NS khả dụng);
+
+|Employee|
+:Chọn 1 DA → Xem chi tiết;
+
+|He thong|
+:GET /api/v1/projects/{id};
+
+|Co so du lieu|
+:Truy vấn Project + phases + members;
+
+|He thong|
+:Hiển thị chi tiết:\nPhase, Thành viên, Category budget;
+
+|Employee|
+stop
+
+@enduml

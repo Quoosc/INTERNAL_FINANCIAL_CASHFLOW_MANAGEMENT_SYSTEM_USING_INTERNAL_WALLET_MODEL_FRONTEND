@@ -1,0 +1,51 @@
+@startuml UC-TL-01: Duyet Chi tieu ca nhan (Flow 1)
+
+title UC-TL-01: Duyệt Chi tiêu cá nhân (Flow 1 — Ủy quyền Tuyệt đối)
+
+|Team Leader|
+start
+:Xem DS yêu cầu PENDING_APPROVAL\ntrong DA mình là LEADER;
+
+|He thong|
+:GET /api/v1/requests\n?status=PENDING_APPROVAL&projectRole=LEADER;
+
+|Co so du lieu|
+:Truy vấn requests theo DA + status;
+:Trả về danh sách YC;
+
+|He thong|
+:Hiển thị DS yêu cầu chờ duyệt;
+
+|Team Leader|
+:Chọn YC → Xem chi tiết + chứng từ;
+
+if (Quyết định?) then (Duyệt)
+  :Nhấn "Duyệt";
+
+  |Co so du lieu|
+  :request.status = PENDING_ACCOUNTANT;
+  :Lưu RequestHistory(TL, APPROVE);
+
+  |He thong|
+  :Thông báo Accountant;
+  :Thông báo Employee: "Đã duyệt";
+
+  |Team Leader|
+  stop
+else (Từ chối)
+  :Nhấn "Từ chối";
+  :Nhập lý do từ chối (bắt buộc);
+
+  |Co so du lieu|
+  :request.status = REJECTED;
+  :request.rejectReason = lý do;
+  :Lưu RequestHistory(TL, REJECT);
+
+  |He thong|
+  :Thông báo Employee: "Bị từ chối";
+
+  |Team Leader|
+  stop
+endif
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml UC-TL-03: Quan ly Phase & Ngan sach
+
+title UC-TL-03: Quản lý Phase & Ngân sách DA
+
+|Team Leader|
+start
+:Chọn DA → "Quản lý Phase";
+
+|He thong|
+:GET /api/v1/projects/{id};
+
+|Co so du lieu|
+:Truy vấn Project + phases;
+
+|He thong|
+:Hiển thị DS Phase\n(ACTIVE / CLOSED);
+
+|Team Leader|
+if (Thao tác?) then (Tạo Phase)
+  :Nhập tên + budget cho Phase mới;
+
+  |He thong|
+  if (project.availableBudget >= budget?) then (Không đủ)
+    |Team Leader|
+    :Thông báo "NS DA không đủ";
+    stop
+  else (Đủ)
+  endif
+
+  :Sinh phaseCode tự động;
+
+  |Co so du lieu|
+  :Lưu ProjectPhase (status=ACTIVE);
+
+  |Team Leader|
+  stop
+
+else (Gán Category)
+  :Chọn Phase → Gán ExpenseCategory;
+  :Đặt budget cho Category;
+
+  |Co so du lieu|
+  :Lưu PhaseCategoryBudget;
+
+  |Team Leader|
+  stop
+
+else (Đóng Phase)
+  :Nhấn "Đóng Phase";
+
+  |Co so du lieu|
+  :phase.status = CLOSED;
+
+  |Team Leader|
+  stop
+endif
+
+@enduml

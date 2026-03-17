@@ -1,0 +1,34 @@
+@startuml UC-TL-02: Xin cap von Du an (Flow 2)
+
+title UC-TL-02: Xin cấp vốn Dự án (Flow 2)
+
+|Team Leader|
+start
+:Nhấn "Xin cấp vốn dự án";
+:Chọn DA cần cấp vốn;
+:Nhập số tiền + lý do;
+
+|He thong|
+:Validate: TL là Leader của DA;
+
+if (Là Leader?) then (Không)
+  |Team Leader|
+  :Thông báo "Không có quyền";
+  stop
+else (Có)
+endif
+
+|He thong|
+:Sinh requestCode tự động;
+
+|Co so du lieu|
+:Lưu Request\n(type=PROJECT_TOPUP,\nstatus=PENDING_APPROVAL);
+
+|He thong|
+:Gửi thông báo cho Manager\n(trưởng phòng của DA);
+
+|Team Leader|
+:Tạo YC thành công,\nchờ Manager duyệt;
+stop
+
+@enduml

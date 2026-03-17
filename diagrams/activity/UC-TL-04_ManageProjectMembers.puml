@@ -1,0 +1,48 @@
+@startuml UC-TL-04: Quan ly Thanh vien DA
+
+title UC-TL-04: Quản lý Thành viên Dự án
+
+|Team Leader|
+start
+:Chọn DA → "Quản lý thành viên";
+
+|He thong|
+:GET /api/v1/projects/{id};
+
+|Co so du lieu|
+:Truy vấn Project + members;
+
+|He thong|
+:Hiển thị DS thành viên\n(User, ProjectRole, position);
+
+|Team Leader|
+if (Thao tác?) then (Thêm)
+  :Tìm NV cùng phòng ban;
+  :Nhấn "Thêm";
+
+  |Co so du lieu|
+  :Lưu ProjectMember(role=MEMBER);
+
+  |Team Leader|
+  :Thêm thành viên thành công;
+  stop
+else (Xóa)
+  :Chọn Member → Nhấn "Xóa";
+
+  |He thong|
+  if (userId = leaderId?) then (Có)
+    |Team Leader|
+    :Thông báo "Không thể xóa Leader";
+    stop
+  else (Không)
+  endif
+
+  |Co so du lieu|
+  :Xóa ProjectMember;
+
+  |Team Leader|
+  :Xóa thành viên thành công;
+  stop
+endif
+
+@enduml

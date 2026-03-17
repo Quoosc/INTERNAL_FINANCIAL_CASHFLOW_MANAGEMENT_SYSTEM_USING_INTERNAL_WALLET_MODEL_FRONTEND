@@ -1,0 +1,70 @@
+@startuml UC-ACC-02: Chi luong Batch
+
+title UC-ACC-02: Chi lương Batch (Auto-Netting)
+
+|Accountant|
+start
+:Chọn "Quản lý lương" → "Tạo kỳ mới";
+:Nhập tháng, năm;
+
+|Co so du lieu|
+:Lưu PayrollPeriod (status=DRAFT);
+
+|Accountant|
+:Upload file Excel bảng lương;
+
+|He thong|
+:Parse Excel → Tạo Payslip từng NV;
+:Validate (NV tồn tại, amount hợp lệ);
+
+if (Dữ liệu hợp lệ?) then (Không)
+  |Accountant|
+  :Hiển thị lỗi validation;
+  stop
+else (Có)
+endif
+
+|Accountant|
+:Preview bảng lương;
+:Nhấn "Chốt & Chi lương";
+
+|Co so du lieu|
+:Đọc SystemFund.totalBalance;
+
+|He thong|
+if (System Fund đủ?) then (Không)
+  |Accountant|
+  :Thông báo "Quỹ không đủ";
+  stop
+else (Có)
+endif
+
+|He thong|
+while (Còn Payslip chưa xử lý?) is (Có)
+  :Tính netSalary = gross - deduction;
+
+  if (NV có debtBalance > 0?) then (Có)
+    :Auto-Netting:\nnetSalary -= advanceDeduct;
+
+    |Co so du lieu|
+    :wallet.reduceDebt(advanceDeduct);
+  else (Không)
+  endif
+
+  |Co so du lieu|
+  :wallet.credit(netSalary);
+  :fund.totalBalance -= netSalary;
+  :Ghi Transaction (PAYSLIP_PAYMENT);
+endwhile (Không)
+
+|Co so du lieu|
+:PayrollPeriod.status = COMPLETED;
+
+|He thong|
+:Thông báo tất cả NV: "Lương về";
+
+|Accountant|
+:Chi lương thành công;
+stop
+
+@enduml

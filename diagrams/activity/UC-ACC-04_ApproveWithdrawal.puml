@@ -1,0 +1,49 @@
+@startuml UC-ACC-04: Duyet Rut tien
+
+title UC-ACC-04: Duyệt Rút tiền
+
+|Accountant|
+start
+:Chọn "Duyệt rút tiền";
+
+|He thong|
+:GET /api/v1/wallet/pending-withdrawals;
+
+|Co so du lieu|
+:Truy vấn Transaction\n(WITHDRAW, PENDING);
+
+|He thong|
+:Hiển thị DS lệnh rút chờ duyệt;
+
+|Accountant|
+:Chọn lệnh rút → Xem chi tiết\n(NV, số tiền, TK NH);
+
+if (Quyết định?) then (Duyệt)
+  :Nhấn "Duyệt";
+
+  |Co so du lieu|
+  :wallet.pendingBalance -= amount;
+  :wallet.balance -= amount;
+  :fund.totalBalance -= amount;
+  :transaction.status = COMPLETED;
+
+  |He thong|
+  :Thông báo Employee\n"Rút tiền thành công";
+
+  |Accountant|
+  stop
+else (Từ chối)
+  :Nhấn "Từ chối";
+
+  |Co so du lieu|
+  :wallet.pendingBalance -= amount;
+  :transaction.status = FAILED;
+
+  |He thong|
+  :Thông báo Employee\n"Rút tiền bị từ chối";
+
+  |Accountant|
+  stop
+endif
+
+@enduml

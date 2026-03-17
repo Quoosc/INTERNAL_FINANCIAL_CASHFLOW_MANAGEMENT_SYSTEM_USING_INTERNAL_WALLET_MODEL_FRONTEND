@@ -1,0 +1,72 @@
+@startuml UC-ACC-01: Giai ngan (Flow 1)
+
+title UC-ACC-01: Giải ngân (Flow 1)
+
+|Accountant|
+start
+:Chọn "Giải ngân";
+
+|He thong|
+:GET /api/v1/requests?status=PENDING_ACCOUNTANT;
+
+|Co so du lieu|
+:Truy vấn requests\nstatus = PENDING_ACCOUNTANT;
+
+|He thong|
+:Hiển thị DS yêu cầu chờ giải ngân;
+
+|Accountant|
+:Chọn YC → Kiểm tra chứng từ;
+
+if (Quyết định?) then (Giải ngân)
+  :Nhấn "Giải ngân";
+  :Nhập PIN Accountant;
+
+  |He thong|
+  :Xác thực PIN;
+
+  if (PIN đúng?) then (Sai)
+    |Accountant|
+    :Thông báo "Sai PIN";
+    stop
+  else (Đúng)
+  endif
+
+  |Co so du lieu|
+  :Đọc Project (Pessimistic Lock);
+
+  |He thong|
+  if (NS dự án đủ?) then (Không)
+    |Accountant|
+    :Thông báo "NS DA không đủ";
+    stop
+  else (Có)
+  endif
+
+  |Co so du lieu|
+  :project.deductBudget(amount)\n→ Trừ Project Fund;
+  :empWallet.credit(amount)\n→ Cộng Ví NV;
+  :Ghi Transaction\n(REQUEST_PAYMENT, COMPLETED);
+  :request.status = PAID;
+
+  |He thong|
+  :Thông báo Employee: "Đã giải ngân";
+
+  |Accountant|
+  stop
+
+else (Từ chối)
+  :Nhấn "Từ chối";
+  :Nhập lý do;
+
+  |Co so du lieu|
+  :request.status = REJECTED;
+
+  |He thong|
+  :Thông báo Employee: "Bị từ chối";
+
+  |Accountant|
+  stop
+endif
+
+@enduml

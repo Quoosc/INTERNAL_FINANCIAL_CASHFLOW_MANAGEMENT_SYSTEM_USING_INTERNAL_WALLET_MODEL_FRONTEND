@@ -1,0 +1,32 @@
+@startuml UC-ACC-03: Quan ly Quy He thong
+
+title UC-ACC-03: Quản lý Quỹ Hệ thống
+
+|Accountant|
+start
+:Chọn "Quỹ hệ thống";
+
+|He thong|
+:GET /api/v1/system-fund;
+
+|Co so du lieu|
+:Truy vấn SystemFund;
+
+|He thong|
+:Hiển thị: Số dư quỹ,\nTK ngân hàng, Tên NH;
+
+|Accountant|
+:Nhấn "Nạp vốn";
+:Nhập số tiền;
+
+|Co so du lieu|
+:fund.totalBalance += amount;
+
+|He thong|
+:Ghi Audit Log\nSYSTEM_FUND_ADJUSTED;
+
+|Accountant|
+:Nạp vốn thành công;
+stop
+
+@enduml

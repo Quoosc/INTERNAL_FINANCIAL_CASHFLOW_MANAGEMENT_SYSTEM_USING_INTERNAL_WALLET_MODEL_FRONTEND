@@ -1,0 +1,30 @@
+@startuml UC-CM-07: View Payslip
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "PayrollController" as API
+participant "PayrollService" as Svc
+database "payroll_periods / payslips" as DB
+
+User -> FE: Chọn "Phiếu lương"
+FE -> API: GET /api/v1/payroll/my-payslips
+API -> Svc: getMyPayslips(currentUser.id)
+Svc -> DB: findPayslipsByUserId(userId)
+DB --> Svc: List<Payslip>
+Svc --> API: List<Payslip>
+API --> FE: 200 List<Payslip>
+FE --> User: Hiển thị DS kỳ lương
+
+User -> FE: Chọn kỳ lương → Xem chi tiết
+FE --> User: baseSalary, bonus, deduction,\nadvanceDeduct, finalNetSalary
+
+opt Tải PDF
+    User -> FE: Nhấn "Tải PDF"
+    FE -> API: GET /api/v1/payroll/payslips/{id}/pdf
+    API -> Svc: generatePayslipPdf(payslipId)
+    Svc --> API: byte[] PDF
+    API --> FE: 200 application/pdf
+    FE --> User: Download file PDF
+end
+
+@enduml

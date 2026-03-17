@@ -1,0 +1,37 @@
+@startuml UC-CM-05: Deposit
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "WalletController" as API
+participant "WalletService" as Svc
+participant "Payment Gateway" as GW
+database "wallets / transactions" as DB
+
+User -> FE: Nhấn "Nạp tiền", nhập số tiền
+FE --> User: Yêu cầu nhập PIN
+User -> FE: Nhập PIN
+FE -> API: POST /api/v1/wallet/deposit {amount, pin}
+API -> Svc: deposit(userId, amount, pin)
+Svc -> Svc: verifyPin(userId, pin)
+
+alt PIN sai
+    Svc --> API: throw PinInvalid
+    API --> FE: 401 "Invalid PIN"
+    FE --> User: Sai PIN
+else PIN đúng
+    Svc -> DB: createTransaction(DEPOSIT, PENDING)
+    Svc -> GW: createPaymentLink(amount, txCode)
+    GW --> Svc: paymentUrl + QR code
+    Svc --> API: {qrCode, paymentUrl, transactionId}
+    API --> FE: 200
+    FE --> User: Hiển thị QR code
+
+    User -> GW: Quét QR thanh toán qua app NH
+    GW -> API: Webhook IPN (txCode, status=SUCCESS)
+    API -> Svc: handleWebhook(txCode, SUCCESS)
+    Svc -> DB: wallet.credit(amount)
+    Svc -> DB: transaction.status = COMPLETED
+    Svc -> Svc: sendNotification(BALANCE_CHANGED)
+end
+
+@enduml

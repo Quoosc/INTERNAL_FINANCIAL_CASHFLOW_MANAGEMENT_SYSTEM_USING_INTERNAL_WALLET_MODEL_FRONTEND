@@ -1,0 +1,41 @@
+@startuml UC-CM-03: Manage Transaction PIN
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "UserController" as API
+participant "UserService" as Svc
+database "user_security_settings" as DB
+database "system_configs" as Cfg
+
+User -> FE: Chọn "Cài đặt PIN"
+FE --> User: Yêu cầu nhập mật khẩu hiện tại
+User -> FE: Nhập mật khẩu
+FE -> API: PUT /api/v1/users/me/pin {currentPassword, newPin}
+API -> Svc: updatePin(currentPassword, newPin)
+Svc -> Svc: verifyPassword(currentPassword)
+
+alt Sai mật khẩu
+    Svc --> API: throw Unauthorized
+    API --> FE: 401
+    FE --> User: Sai mật khẩu
+else Đúng mật khẩu
+    Svc -> Cfg: getConfig(PIN_MAX_RETRY)
+    alt Đã có PIN — cần xác thực PIN cũ
+        Svc -> DB: checkOldPin()
+        alt Sai PIN quá N lần
+            Svc -> DB: lockPin(PIN_LOCK_MINUTES)
+            Svc -> Svc: auditEvent(PIN_LOCKED)
+            Svc --> API: throw PinLocked
+            API --> FE: 423 "PIN locked"
+            FE --> User: PIN bị khóa
+        end
+    end
+    Svc -> Svc: BCrypt.encode(newPin)
+    Svc -> DB: save(encodedPin)
+    Svc -> Svc: auditEvent(PIN_RESET)
+    Svc --> API: success
+    API --> FE: 200
+    FE --> User: Cập nhật PIN thành công
+end
+
+@enduml

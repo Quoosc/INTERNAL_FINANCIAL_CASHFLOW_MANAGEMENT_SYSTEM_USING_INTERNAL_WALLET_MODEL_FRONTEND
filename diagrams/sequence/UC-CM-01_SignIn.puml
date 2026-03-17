@@ -1,0 +1,48 @@
+@startuml UC-CM-01: Sign In
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "AuthController" as AuthCtrl
+participant "AuthService" as AuthSvc
+database "users" as DB
+database "jwt_tokens" as TokenDB
+
+User -> FE: Nhập email + password
+FE -> AuthCtrl: POST /api/v1/auth/login
+AuthCtrl -> AuthSvc: authenticate(email, password)
+AuthSvc -> DB: findByEmail(email)
+
+alt Email không tồn tại
+    DB --> AuthSvc: null
+    AuthSvc --> AuthCtrl: throw BadCredentials
+    AuthCtrl --> FE: 401 "Invalid credentials"
+    FE --> User: Hiển thị lỗi
+else Tài khoản LOCKED
+    DB --> AuthSvc: user (status = LOCKED)
+    AuthSvc --> AuthCtrl: throw AccountLocked
+    AuthCtrl --> FE: 403 "Account is locked"
+    FE --> User: Hiển thị trạng thái khóa
+else Email tồn tại & ACTIVE
+    DB --> AuthSvc: user
+    AuthSvc -> AuthSvc: BCrypt.matches(password, user.password)
+    alt Sai password
+        AuthSvc --> AuthCtrl: throw BadCredentials
+        AuthCtrl --> FE: 401 "Invalid credentials"
+        FE --> User: Hiển thị lỗi
+    else Đúng password
+        AuthSvc -> AuthSvc: revokeAllUserTokens(user)
+        AuthSvc -> AuthSvc: generateAccessToken(user)
+        AuthSvc -> AuthSvc: generateRefreshToken(user)
+        AuthSvc -> TokenDB: save(refreshToken)
+        AuthSvc --> AuthCtrl: AuthenticationResponse
+        AuthCtrl --> FE: 200 (accessToken, refreshToken, user)
+        FE -> FE: setTokens(localStorage) + setTokenCookie
+        alt isFirstLogin = true
+            FE --> User: Redirect → Đổi mật khẩu lần đầu
+        else isFirstLogin = false
+            FE --> User: Redirect → Dashboard theo role
+        end
+    end
+end
+
+@enduml

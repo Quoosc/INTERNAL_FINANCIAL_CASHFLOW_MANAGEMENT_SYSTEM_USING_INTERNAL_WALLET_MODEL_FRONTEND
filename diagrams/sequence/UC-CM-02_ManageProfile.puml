@@ -1,0 +1,32 @@
+@startuml UC-CM-02: Manage Profile
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "UserController" as API
+participant "UserService" as Svc
+database "users / user_profiles" as DB
+
+User -> FE: Chọn "Hồ sơ cá nhân"
+FE -> API: GET /api/v1/users/me/profile
+API -> Svc: getCurrentUserProfile()
+Svc -> DB: findByUserId(currentUser.id)
+DB --> Svc: UserProfile
+Svc --> API: UserProfile
+API --> FE: 200 UserProfile
+FE --> User: Hiển thị thông tin hồ sơ
+
+User -> FE: Chỉnh sửa & nhấn "Lưu"
+FE -> API: PUT /api/v1/users/me/profile (UpdateProfileDTO)
+API -> Svc: updateProfile(dto)
+Svc -> DB: save(updatedProfile)
+
+alt Cập nhật thông tin ngân hàng
+    Svc -> Svc: publishAuditEvent(BANK_INFO_UPDATED)
+end
+
+DB --> Svc: saved
+Svc --> API: UserProfile
+API --> FE: 200 UserProfile
+FE --> User: Thông báo cập nhật thành công
+
+@enduml

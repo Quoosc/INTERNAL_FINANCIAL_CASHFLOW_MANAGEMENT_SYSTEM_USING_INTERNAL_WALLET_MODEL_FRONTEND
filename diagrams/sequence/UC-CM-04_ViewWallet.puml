@@ -1,0 +1,27 @@
+@startuml UC-CM-04: View Wallet & Transaction History
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "WalletController" as API
+participant "WalletService" as Svc
+database "wallets / transactions" as DB
+
+User -> FE: Chọn "Ví của tôi"
+FE -> API: GET /api/v1/wallet/me
+API -> Svc: getMyWallet(currentUser.id)
+Svc -> DB: findByUserId(userId)
+DB --> Svc: Wallet(balance, pendingBalance, debtBalance)
+Svc --> API: Wallet
+API --> FE: 200 Wallet
+FE --> User: Hiển thị Dashboard Ví\n(Số dư, Tiền treo, Dư nợ, Khả dụng)
+
+User -> FE: Chọn "Lịch sử giao dịch"
+FE -> API: GET /api/v1/wallet/transactions?type=&from=&to=&page=0&size=20
+API -> Svc: getTransactions(userId, filters, pageable)
+Svc -> DB: findByWalletId(walletId, filters, pageable)
+DB --> Svc: Page<Transaction>
+Svc --> API: Page<Transaction>
+API --> FE: 200 Page<Transaction>
+FE --> User: Hiển thị danh sách GD\n(DEPOSIT, WITHDRAW, REQUEST_PAYMENT, PAYSLIP_PAYMENT)
+
+@enduml

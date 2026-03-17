@@ -1,0 +1,32 @@
+@startuml UC-CM-08: View Notifications
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "NotificationController" as API
+participant "NotificationService" as Svc
+database "notifications" as DB
+
+User -> FE: Nhấn icon chuông
+FE -> API: GET /api/v1/notifications?page=0&size=20
+API -> Svc: getNotifications(currentUser.id, pageable)
+Svc -> DB: findByUserId(userId, pageable)
+DB --> Svc: Page<Notification>
+Svc --> API: Page<Notification>
+API --> FE: 200 Page<Notification>
+FE --> User: Hiển thị DS thông báo
+
+User -> FE: Nhấn vào 1 thông báo
+FE -> API: PATCH /api/v1/notifications/{id}/read
+API -> Svc: markAsRead(notificationId)
+Svc -> DB: notification.isRead = true
+Svc --> FE: 200
+
+opt Đánh dấu tất cả đã đọc
+    User -> FE: Nhấn "Đọc tất cả"
+    FE -> API: PATCH /api/v1/notifications/read-all
+    API -> Svc: markAllAsRead(userId)
+    Svc -> DB: UPDATE SET isRead = true WHERE userId = ?
+    Svc --> FE: 200
+end
+
+@enduml

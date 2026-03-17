@@ -1,0 +1,48 @@
+@startuml UC-CM-06: Withdraw
+
+actor "Người dùng" as User
+participant "Frontend" as FE
+participant "WalletController" as API
+participant "WalletService" as Svc
+database "system_configs" as Cfg
+database "wallets / transactions" as DB
+
+User -> FE: Nhấn "Rút tiền", nhập số tiền + TK NH
+FE --> User: Yêu cầu PIN
+User -> FE: Nhập PIN
+FE -> API: POST /api/v1/wallet/withdraw {amount, bankAccount, pin}
+API -> Svc: withdraw(userId, amount, bankAccount, pin)
+Svc -> Svc: verifyPin(userId, pin)
+
+alt PIN sai
+    Svc --> API: throw PinInvalid
+    API --> FE: 401
+    FE --> User: Sai PIN
+else PIN đúng
+    Svc -> DB: wallet = findByIdForUpdate(walletId)
+    Svc -> Svc: checkAvailableBalance(amount)
+
+    alt Số dư không đủ
+        Svc --> API: throw InsufficientBalance
+        API --> FE: 400
+        FE --> User: Số dư không đủ
+    else Đủ số dư
+        Svc -> Cfg: getConfig(WITHDRAW_AUTO_APPROVE_LIMIT)
+        alt amount <= limit (Auto Payout)
+            Svc -> DB: wallet.debit(amount)
+            Svc -> DB: createTransaction(WITHDRAW, COMPLETED)
+            Svc --> API: Transaction(COMPLETED)
+            API --> FE: 200
+            FE --> User: Rút tiền thành công
+        else amount > limit (Queue Approval)
+            Svc -> DB: wallet.pendingBalance += amount
+            Svc -> DB: createTransaction(WITHDRAW, PENDING)
+            Svc -> Svc: notifyAccountant()
+            Svc --> API: Transaction(PENDING)
+            API --> FE: 200
+            FE --> User: Chờ Accountant duyệt
+        end
+    end
+end
+
+@enduml

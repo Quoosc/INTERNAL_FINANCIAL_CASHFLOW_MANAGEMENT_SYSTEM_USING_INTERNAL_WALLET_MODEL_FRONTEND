@@ -1,0 +1,46 @@
+@startuml UC-EMP-01: Manage Request
+
+actor "Employee" as Emp
+participant "Frontend" as FE
+participant "RequestController" as API
+participant "RequestService" as Svc
+database "projects / phases" as PDB
+database "requests" as RDB
+
+Emp -> FE: Nhấn "Tạo yêu cầu mới"
+FE -> API: GET /api/v1/projects?status=ACTIVE&member=me
+API --> FE: Danh sách DA Active
+
+Emp -> FE: Chọn loại (ADVANCE/EXPENSE/REIMBURSE)
+Emp -> FE: Chọn DA → Phase → Category
+Emp -> FE: Nhập số tiền, mô tả, upload chứng từ
+
+FE -> API: POST /api/v1/requests (CreateRequestDTO)
+API -> Svc: createRequest(dto, currentUser)
+Svc -> PDB: findPhaseById(phaseId)
+Svc -> Svc: checkPhaseBudget(phase, amount)
+
+alt NS Phase không đủ
+    Svc --> API: throw InsufficientBudget
+    API --> FE: 400
+    FE --> Emp: NS Phase không đủ
+else Đủ
+    Svc -> Svc: generateRequestCode()
+    Svc -> RDB: save(Request, PENDING_APPROVAL)
+    Svc -> Svc: notifyTeamLeader(request)
+    Svc --> API: Request
+    API --> FE: 201 Request
+    FE --> Emp: Tạo thành công
+end
+
+== Hủy yêu cầu ==
+
+opt status = PENDING_APPROVAL
+    Emp -> FE: Nhấn "Hủy"
+    FE -> API: POST /api/v1/requests/{id}/cancel
+    API -> Svc: cancel(requestId, currentUser)
+    Svc -> RDB: request.status = CANCELLED
+    Svc --> FE: 200
+end
+
+@enduml

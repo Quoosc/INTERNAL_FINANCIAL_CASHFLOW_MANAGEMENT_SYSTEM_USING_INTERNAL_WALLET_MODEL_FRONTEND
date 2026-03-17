@@ -1,0 +1,27 @@
+@startuml UC-EMP-02: View Active Projects
+
+actor "Employee" as Emp
+participant "Frontend" as FE
+participant "ProjectController" as API
+participant "ProjectService" as Svc
+database "projects / project_members" as DB
+
+Emp -> FE: Chọn "Dự án"
+FE -> API: GET /api/v1/projects?status=ACTIVE&member=me
+API -> Svc: getActiveProjectsByMember(currentUser.id)
+Svc -> DB: findByMemberIdAndStatus(userId, ACTIVE)
+DB --> Svc: List<Project>
+Svc --> API: List<Project>
+API --> FE: 200 List<Project>
+FE --> Emp: Hiển thị DS dự án\n(tên, mã, Phase, NS khả dụng)
+
+Emp -> FE: Chọn 1 DA → Xem chi tiết
+FE -> API: GET /api/v1/projects/{id}
+API -> Svc: getProjectById(projectId)
+Svc -> DB: findById(projectId)
+DB --> Svc: Project + phases + members
+Svc --> API: Project
+API --> FE: 200 Project
+FE --> Emp: Hiển thị Phase, thành viên, Category budget
+
+@enduml

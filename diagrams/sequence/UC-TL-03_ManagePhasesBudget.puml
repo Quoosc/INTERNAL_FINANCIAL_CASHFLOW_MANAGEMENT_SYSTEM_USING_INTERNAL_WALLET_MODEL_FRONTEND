@@ -1,0 +1,48 @@
+@startuml UC-TL-03: Manage Project Phases & Budget
+
+actor "Team Leader" as TL
+participant "Frontend" as FE
+participant "ProjectController" as API
+participant "ProjectService" as Svc
+database "project_phases / phase_category_budgets" as DB
+
+TL -> FE: Chọn DA → "Quản lý Phase"
+FE -> API: GET /api/v1/projects/{id}
+API --> FE: Project + phases
+
+== Tạo Phase mới ==
+
+TL -> FE: Nhấn "Thêm Phase", nhập tên + budget
+FE -> API: POST /api/v1/projects/{id}/phases {name, budgetLimit}
+API -> Svc: createPhase(projectId, dto)
+Svc -> Svc: check project.availableBudget >= budgetLimit
+
+alt NS DA không đủ
+    Svc --> API: throw InsufficientBudget
+    API --> FE: 400 NS không đủ
+else Đủ
+    Svc -> Svc: generatePhaseCode()
+    Svc -> DB: save(ProjectPhase, status=ACTIVE)
+    Svc --> API: ProjectPhase
+    API --> FE: 201 ProjectPhase
+end
+
+== Gán Category + Budget ==
+
+TL -> FE: Chọn Phase → Gán ExpenseCategory + budget
+FE -> API: POST /api/v1/projects/{id}/phases/{phaseId}/categories\n{categoryId, budget}
+API -> Svc: assignCategory(phaseId, categoryId, budget)
+Svc -> DB: save(PhaseCategoryBudget)
+Svc --> FE: 200
+
+== Đóng Phase ==
+
+opt Đóng Phase
+    TL -> FE: Nhấn "Đóng Phase"
+    FE -> API: PATCH /api/v1/projects/{id}/phases/{phaseId}/status\n{status: CLOSED}
+    API -> Svc: updatePhaseStatus(phaseId, CLOSED)
+    Svc -> DB: phase.status = CLOSED
+    Svc --> FE: 200
+end
+
+@enduml

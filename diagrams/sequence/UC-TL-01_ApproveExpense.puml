@@ -1,0 +1,37 @@
+@startuml UC-TL-01: Approve/Reject Personal Expense (Flow 1)
+
+actor "Team Leader" as TL
+participant "Frontend" as FE
+participant "RequestController" as API
+participant "RequestService" as Svc
+database "requests" as RDB
+
+TL -> FE: Chọn "Danh sách chờ duyệt"
+FE -> API: GET /api/v1/requests?status=PENDING_APPROVAL&projectRole=LEADER
+API --> FE: Danh sách YC PENDING_APPROVAL
+
+TL -> FE: Chọn YC → Xem chi tiết + chứng từ
+
+alt Duyệt
+    TL -> FE: Nhấn "Duyệt"
+    FE -> API: POST /api/v1/requests/{id}/approve
+    API -> Svc: approveByTeamLeader(requestId, TL)
+    Svc -> RDB: request.status = PENDING_ACCOUNTANT
+    Svc -> RDB: saveRequestHistory(TL, APPROVE)
+    Svc -> Svc: notifyAccountant(request)
+    Svc --> API: Request(PENDING_ACCOUNTANT)
+    API --> FE: 200
+    FE --> TL: Đã duyệt → chờ KT giải ngân
+else Từ chối
+    TL -> FE: Nhấn "Từ chối" + nhập lý do
+    FE -> API: POST /api/v1/requests/{id}/reject {reason}
+    API -> Svc: reject(requestId, reason)
+    Svc -> RDB: request.status = REJECTED, rejectReason = reason
+    Svc -> RDB: saveRequestHistory(TL, REJECT)
+    Svc -> Svc: notifyEmployee(request)
+    Svc --> API: Request(REJECTED)
+    API --> FE: 200
+    FE --> TL: Đã từ chối
+end
+
+@enduml

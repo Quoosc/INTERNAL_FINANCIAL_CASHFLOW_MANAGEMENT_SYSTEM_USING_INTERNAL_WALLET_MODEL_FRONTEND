@@ -1,0 +1,39 @@
+@startuml UC-TL-04: Manage Project Members
+
+actor "Team Leader" as TL
+participant "Frontend" as FE
+participant "ProjectController" as API
+participant "ProjectService" as Svc
+database "project_members / users" as DB
+
+TL -> FE: Chọn DA → "Quản lý thành viên"
+FE -> API: GET /api/v1/projects/{id}
+API --> FE: Project + members list
+
+== Thêm Member ==
+
+TL -> FE: Tìm NV cùng phòng ban → Nhấn "Thêm"
+FE -> API: POST /api/v1/projects/{id}/members {userId}
+API -> Svc: addMember(projectId, userId)
+Svc -> DB: save(ProjectMember, role=MEMBER)
+Svc --> API: ProjectMember
+API --> FE: 201
+FE --> TL: Thêm thành viên thành công
+
+== Xóa Member ==
+
+TL -> FE: Chọn Member → Nhấn "Xóa"
+FE -> API: DELETE /api/v1/projects/{id}/members/{userId}
+API -> Svc: removeMember(projectId, userId)
+Svc -> Svc: check userId != leaderId
+
+alt Xóa chính Leader
+    Svc --> API: throw Forbidden
+    API --> FE: 400 Không thể xóa Leader
+else OK
+    Svc -> DB: delete(ProjectMember)
+    Svc --> API: success
+    API --> FE: 200
+end
+
+@enduml

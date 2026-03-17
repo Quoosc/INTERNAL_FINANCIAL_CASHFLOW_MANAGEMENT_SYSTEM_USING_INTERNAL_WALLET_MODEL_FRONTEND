@@ -1,0 +1,28 @@
+@startuml UC-TL-02: Request Project Top-up (Flow 2)
+
+actor "Team Leader" as TL
+participant "Frontend" as FE
+participant "RequestController" as API
+participant "RequestService" as Svc
+database "requests / projects" as DB
+
+TL -> FE: Nhấn "Xin cấp vốn dự án"
+TL -> FE: Chọn DA, nhập số tiền + lý do
+FE -> API: POST /api/v1/requests\n{type: PROJECT_TOPUP, projectId, amount, description}
+API -> Svc: createRequest(dto, currentUser)
+Svc -> Svc: validateProjectLeader(TL, projectId)
+
+alt Không phải Leader của DA
+    Svc --> API: throw Forbidden
+    API --> FE: 403
+    FE --> TL: Không có quyền
+else Là Leader
+    Svc -> Svc: generateRequestCode()
+    Svc -> DB: save(Request, type=PROJECT_TOPUP, PENDING_APPROVAL)
+    Svc -> Svc: notifyManager(project.department.manager)
+    Svc --> API: Request
+    API --> FE: 201
+    FE --> TL: Tạo YC cấp vốn thành công,\nchờ Manager duyệt
+end
+
+@enduml

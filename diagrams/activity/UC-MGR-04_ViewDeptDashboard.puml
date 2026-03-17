@@ -1,0 +1,22 @@
+@startuml UC-MGR-04: Dashboard Phong ban
+
+title UC-MGR-04: Xem Dashboard Phòng ban
+
+|Manager|
+start
+:Chọn "Dashboard phòng ban" trên menu;
+
+|He thong|
+:GET /api/v1/departments/me/dashboard;
+
+|Co so du lieu|
+:Truy vấn Department + Projects + Requests\ntheo departmentId;
+
+|He thong|
+:Hiển thị Dashboard:\n- Tổng NS đã nhận (totalProjectQuota)\n- NS khả dụng (totalAvailableBalance)\n- Số DA đang Active\n- DS Dự án + trạng thái + budget\n- DS YC phòng ban;
+
+|Manager|
+:Xem tổng quan phòng ban;
+stop
+
+@enduml

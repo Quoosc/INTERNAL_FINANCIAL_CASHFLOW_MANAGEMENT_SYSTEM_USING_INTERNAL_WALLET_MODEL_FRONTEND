@@ -1,0 +1,23 @@
+@startuml UC-MGR-03: Xin cap von Phong ban (Flow 3)
+
+title UC-MGR-03: Xin cấp vốn Phòng ban (Flow 3)
+
+|Manager|
+start
+:Nhấn "Xin cấp vốn phòng ban";
+:Nhập số tiền + lý do;
+
+|He thong|
+:Sinh requestCode tự động;
+
+|Co so du lieu|
+:Lưu Request\n(type=QUOTA_TOPUP,\nstatus=PENDING_APPROVAL,\nproject=null);
+
+|He thong|
+:Gửi thông báo cho Admin;
+
+|Manager|
+:Tạo YC thành công,\nchờ Admin duyệt;
+stop
+
+@enduml

@@ -1,0 +1,51 @@
+@startuml UC-MGR-02: Duyet cap von DA (Flow 2)
+
+title UC-MGR-02: Duyệt cấp vốn Dự án (Flow 2)
+
+|Manager|
+start
+:Xem DS YC PROJECT_TOPUP\nstatus = PENDING_APPROVAL;
+
+|He thong|
+:Hiển thị DS yêu cầu cấp vốn;
+
+|Manager|
+:Chọn YC → Xem chi tiết:\nDA, số tiền, lý do, NS PB còn lại;
+
+if (Quyết định?) then (Duyệt)
+  :Nhấn "Duyệt";
+
+  |He thong|
+  if (NS phòng ban đủ?) then (Không)
+    |Manager|
+    :Thông báo "NS PB không đủ";
+    stop
+  else (Có)
+  endif
+
+  |Co so du lieu|
+  :dept.allocateToProject(amount)\n→ Trừ Dept Fund;
+  :project.addBudget(amount)\n→ Cộng Project Fund;
+  :Ghi Transaction\n(PROJECT_QUOTA_ALLOCATION);
+  :request.status = PAID (tự động);
+
+  |He thong|
+  :Thông báo TL: "Đã duyệt";
+
+  |Manager|
+  stop
+else (Từ chối)
+  :Nhấn "Từ chối";
+  :Nhập lý do bắt buộc;
+
+  |Co so du lieu|
+  :request.status = REJECTED;
+
+  |He thong|
+  :Thông báo TL: "Bị từ chối";
+
+  |Manager|
+  stop
+endif
+
+@enduml

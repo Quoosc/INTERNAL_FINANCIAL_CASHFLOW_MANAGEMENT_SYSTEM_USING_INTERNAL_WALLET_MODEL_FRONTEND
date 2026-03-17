@@ -1,0 +1,51 @@
+@startuml UC-MGR-01: Quan ly Du an
+
+title UC-MGR-01: Quản lý Dự án
+
+|Manager|
+start
+
+if (Thao tác?) then (Tạo DA)
+  :Nhập tên, mô tả;
+
+  |He thong|
+  :Sinh projectCode (PRJ-{DEPT}-{YEAR});
+
+  |Co so du lieu|
+  :Lưu Project\n(dept=manager.dept, status=PLANNING);
+
+  |Manager|
+  :Tạo DA thành công;
+
+  :Chọn NV → Chỉ định Team Leader;
+
+  |Co so du lieu|
+  :Lưu ProjectMember(role=LEADER);
+
+  |Manager|
+  stop
+
+else (Cập nhật)
+  :Sửa tên, mô tả;
+
+  |Co so du lieu|
+  :Cập nhật Project;
+
+  |Manager|
+  stop
+
+else (Đổi trạng thái)
+  if (Action?) then (Tạm dừng)
+    |Co so du lieu|
+    :project.status = PAUSED\n→ Chặn tạo Request mới;
+    |Manager|
+    stop
+  else (Đóng DA)
+    |Co so du lieu|
+    :project.status = CLOSED\n→ Thu hồi vốn dư;
+    |Manager|
+    stop
+  endif
+endif
+
+@enduml

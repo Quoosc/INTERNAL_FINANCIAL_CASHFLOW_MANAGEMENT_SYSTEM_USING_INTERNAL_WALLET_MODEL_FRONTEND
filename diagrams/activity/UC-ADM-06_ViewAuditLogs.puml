@@ -1,0 +1,68 @@
+@startuml UC-ADM-06: Xem Audit Logs
+
+title UC-ADM-06: Xem Audit Logs
+
+|Admin|
+start
+:Chọn "Audit Log" trên menu;
+
+|He thong|
+:GET /api/v1/audit/logs?page=0&size=20;
+
+|Co so du lieu|
+:Truy vấn audit_logs\n(sort createdAt DESC, phân trang);
+
+|He thong|
+:Hiển thị DS audit log\n(action, user, entity, timestamp);
+
+|Admin|
+if (Cần filter?) then (Theo Action)
+  :Chọn AuditAction filter;
+
+  |Co so du lieu|
+  :findByAction(action, pageable);
+
+  |He thong|
+  :Cập nhật DS theo filter;
+
+  |Admin|
+  stop
+
+else (Theo Entity)
+  :Chọn entity name filter;
+
+  |Co so du lieu|
+  :findByEntityName(name, pageable);
+
+  |He thong|
+  :Cập nhật DS theo filter;
+
+  |Admin|
+  stop
+
+else (Theo Khoảng thời gian)
+  :Chọn từ ngày → đến ngày;
+
+  |Co so du lieu|
+  :findByTimeRange(from, to, pageable);
+
+  |He thong|
+  :Cập nhật DS theo filter;
+
+  |Admin|
+  stop
+
+else (Xem lịch sử 1 entity)
+  :Chọn entity cụ thể (VD: user #5);
+
+  |Co so du lieu|
+  :findByEntityNameAndId(name, id);
+
+  |He thong|
+  :Hiển thị toàn bộ lịch sử\nthay đổi của entity;
+
+  |Admin|
+  stop
+endif
+
+@enduml

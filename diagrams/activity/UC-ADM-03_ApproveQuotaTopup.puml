@@ -1,0 +1,55 @@
+@startuml UC-ADM-03: Duyet cap von PB (Flow 3)
+
+title UC-ADM-03: Duyệt cấp vốn Phòng ban (Flow 3)
+
+|Admin|
+start
+:Xem DS YC QUOTA_TOPUP\nstatus = PENDING_APPROVAL;
+
+|He thong|
+:Hiển thị DS yêu cầu cấp vốn PB;
+
+|Admin|
+:Chọn YC → Xem chi tiết:\nPB, số tiền, lý do, NS Quỹ còn lại;
+
+if (Quyết định?) then (Duyệt)
+  :Nhấn "Duyệt";
+
+  |Co so du lieu|
+  :Đọc SystemFund.totalBalance;
+
+  |He thong|
+  if (System Fund đủ?) then (Không)
+    |Admin|
+    :Thông báo "Quỹ không đủ";
+    stop
+  else (Có)
+  endif
+
+  |Co so du lieu|
+  :fund.totalBalance -= amount\n→ Trừ System Fund;
+  :dept.receiveQuota(amount)\n→ Cộng Dept Fund;
+  :Ghi Transaction\n(DEPT_QUOTA_ALLOCATION);
+  :request.status = PAID (tự động);
+
+  |He thong|
+  :Ghi Audit Log QUOTA_TOPUP;
+  :Thông báo Manager: "Đã duyệt";
+
+  |Admin|
+  stop
+else (Từ chối)
+  :Nhấn "Từ chối";
+  :Nhập lý do bắt buộc;
+
+  |Co so du lieu|
+  :request.status = REJECTED;
+
+  |He thong|
+  :Thông báo Manager: "Bị từ chối";
+
+  |Admin|
+  stop
+endif
+
+@enduml

@@ -1,0 +1,57 @@
+@startuml UC-ADM-04: Quan ly Vai tro & Phan quyen
+
+title UC-ADM-04: Quản lý Vai trò & Phân quyền (Dynamic RBAC)
+
+|Admin|
+start
+:Chọn "Quản lý vai trò";
+
+|He thong|
+:GET /api/v1/roles;
+
+|Co so du lieu|
+:Truy vấn List<Role> + permissions;
+
+|He thong|
+:Hiển thị DS vai trò\n+ bộ quyền của từng role;
+
+|Admin|
+if (Thao tác?) then (Tạo Role)
+  :Nhập: tên, mô tả;
+  :Chọn permissions từ DS;
+
+  |Co so du lieu|
+  :Kiểm tra existsByName;
+
+  if (Tên trùng?) then (Có)
+    |Admin|
+    :Thông báo "Tên trùng";
+    stop
+  else (Không)
+  endif
+
+  |Co so du lieu|
+  :Lưu Role + permissions;
+
+  |He thong|
+  :Ghi Audit Log\nPERMISSION_GRANTED;
+
+  |Admin|
+  :Tạo Role thành công;
+  stop
+
+else (Sửa Permissions)
+  :Chọn Role → Thêm/Gỡ permission;
+
+  |Co so du lieu|
+  :Cập nhật Role + permissions;
+
+  |He thong|
+  :Ghi Audit Log\nPERMISSION_GRANTED / REVOKED;
+
+  |Admin|
+  :Cập nhật thành công;
+  stop
+endif
+
+@enduml

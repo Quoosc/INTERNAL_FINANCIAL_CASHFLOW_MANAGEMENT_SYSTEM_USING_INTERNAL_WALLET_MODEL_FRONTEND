@@ -1,0 +1,68 @@
+@startuml UC-ADM-02: Quan ly Phong ban
+
+title UC-ADM-02: Quản lý Phòng ban
+
+|Admin|
+start
+:Chọn "Quản lý phòng ban";
+
+|He thong|
+:GET /api/v1/departments;
+
+|Co so du lieu|
+:Truy vấn List<Department>;
+
+|He thong|
+:Hiển thị DS phòng ban;
+
+|Admin|
+if (Thao tác?) then (Tạo PB)
+  :Nhập: tên, mã, gán Manager;
+
+  |Co so du lieu|
+  :Kiểm tra existsByCode;
+
+  if (Mã đã tồn tại?) then (Có)
+    |Admin|
+    :Thông báo "Mã trùng";
+    stop
+  else (Không)
+  endif
+
+  |Co so du lieu|
+  :Lưu Department;
+
+  |He thong|
+  :Ghi Audit Log DEPARTMENT_CREATED;
+
+  |Admin|
+  stop
+
+else (Cấp vốn)
+  :Chọn PB → "Cấp vốn";
+  :Nhập số tiền;
+
+  |Co so du lieu|
+  :Đọc SystemFund.totalBalance;
+
+  |He thong|
+  if (Quỹ đủ?) then (Không)
+    |Admin|
+    :Thông báo "Quỹ không đủ";
+    stop
+  else (Có)
+  endif
+
+  |Co so du lieu|
+  :fund.totalBalance -= amount;
+  :dept.receiveQuota(amount);
+
+  |He thong|
+  :Ghi Audit Log QUOTA_TOPUP;
+
+  |Admin|
+  :Cấp vốn thành công;
+  stop
+endif
+
+@enduml

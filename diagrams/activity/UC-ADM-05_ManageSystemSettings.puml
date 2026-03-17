@@ -1,0 +1,52 @@
+@startuml UC-ADM-05: Cau hinh He thong
+
+title UC-ADM-05: Cấu hình Hệ thống
+
+|Admin|
+start
+:Chọn "Cấu hình hệ thống";
+
+|He thong|
+:GET /api/v1/system-config;
+
+|Co so du lieu|
+:Truy vấn List<SystemConfig>;
+
+|He thong|
+:Hiển thị DS cấu hình\n(configKey, configValue, description);
+
+|Admin|
+:Chọn config cần sửa;
+:Sửa value → Nhấn "Lưu";
+
+|He thong|
+:Validate giá trị mới;
+
+if (Giá trị hợp lệ?) then (Không)
+  |Admin|
+  :Hiển thị lỗi validation;
+  stop
+else (Có)
+endif
+
+|Co so du lieu|
+:config.setValue(value);
+:save(config);
+
+|He thong|
+:Ghi Audit Log CONFIG_UPDATED;
+
+|Admin|
+:Cập nhật thành công;
+
+note right
+  Các config quan trọng:
+  - WITHDRAW_AUTO_APPROVE_LIMIT
+  - PIN_MAX_RETRY
+  - PIN_LOCK_MINUTES
+  - TOKEN_EXPIRY
+end note
+
+stop
+
+@enduml

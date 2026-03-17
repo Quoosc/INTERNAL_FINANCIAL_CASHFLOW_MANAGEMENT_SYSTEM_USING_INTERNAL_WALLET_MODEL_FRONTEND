@@ -1,0 +1,78 @@
+@startuml UC-ADM-01: Quan ly Nhan su
+
+title UC-ADM-01: Quản lý Nhân sự
+
+|Admin|
+start
+:Chọn "Quản lý nhân sự";
+
+|He thong|
+:GET /api/v1/users;
+
+|Co so du lieu|
+:Truy vấn Page<User>;
+
+|He thong|
+:Hiển thị DS nhân viên;
+
+|Admin|
+if (Thao tác?) then (Tạo mới)
+  :Nhập: email, họ tên, PB, chức vụ, role;
+
+  |Co so du lieu|
+  :Kiểm tra existsByEmail;
+
+  if (Email đã tồn tại?) then (Có)
+    |Admin|
+    :Thông báo "Email trùng";
+    stop
+  else (Không)
+  endif
+
+  |He thong|
+  :Sinh mật khẩu ngẫu nhiên;
+
+  |Co so du lieu|
+  :Tạo User (isFirstLogin=true);
+  :Tạo UserProfile;
+  :Tạo Wallet (balance=0);
+
+  |He thong|
+  :Gửi email thông báo TK + MK;
+  :Ghi Audit Log USER_CREATED;
+
+  |Admin|
+  :Tạo thành công;
+  stop
+
+else (Khóa / Mở khóa)
+  :Nhấn "Khóa/Mở";
+
+  |Co so du lieu|
+  :user.status = LOCKED / ACTIVE;
+
+  |He thong|
+  :Ghi Audit Log\nUSER_LOCKED / USER_UNLOCKED;
+
+  |Admin|
+  stop
+
+else (Reset MK)
+  :Nhấn "Reset MK";
+
+  |He thong|
+  :Sinh MK mới ngẫu nhiên;
+
+  |Co so du lieu|
+  :user.password = BCrypt(newPW);
+  :user.isFirstLogin = true;
+
+  |He thong|
+  :Gửi email MK mới;
+  :Ghi Audit Log PASSWORD_RESET;
+
+  |Admin|
+  stop
+endif
+
+@enduml

@@ -60,46 +60,113 @@ sequenceDiagram
     BE-->>FE: Response thành công
 ```
 
-## 3. Luồng tạo yêu cầu (Request Flow)
+## 3. Luồng yêu cầu — Ủy quyền Tuyệt đối (Absolute Delegation)
+
+> **Kiến trúc mới**: 5 vai trò — 3 luồng duyệt — 4 tầng quỹ — KHÔNG leo thang.
+> Mỗi loại yêu cầu có **1 người duyệt duy nhất**, xác định bởi `request.type`.
+
+### 3.1 Cấu trúc 4 tầng quỹ
+
+```
+System Fund (Admin quản lý, Accountant nạp)
+    ↓ Flow 3: Admin duyệt QUOTA_TOPUP
+Department Fund (Manager quản lý)
+    ↓ Flow 2: Manager duyệt PROJECT_TOPUP
+Project Fund (Team Leader quản lý Phase/Category)
+    ↓ Flow 1: TL duyệt → Accountant giải ngân
+Personal Wallet (NV sử dụng)
+```
+
+### 3.2 Flow 1 — Chi tiêu cá nhân (ADVANCE / EXPENSE / REIMBURSE)
 
 ```mermaid
 sequenceDiagram
     participant EMP as Employee
     participant FE as Frontend
     participant BE as Backend
-    participant MGR as Manager
+    participant TL as Team Leader
     participant ACC as Accountant
 
     EMP->>FE: Mở /requests/new
-    FE->>BE: GET /api/v1/projects (load danh sách dự án)
-    FE-->>EMP: Hiển thị form tạo yêu cầu
+    FE->>BE: GET /api/v1/projects (DA Active + member=me)
+    FE-->>EMP: Form tạo YC (chọn DA → Phase → Category)
 
-    EMP->>FE: Chọn loại (ADVANCE), dự án, số tiền → Submit
+    EMP->>FE: Chọn loại, số tiền, chứng từ → Submit
     FE->>BE: POST /api/v1/requests {type, projectId, phaseId, amount}
-    BE->>BE: Validate (phase budget, permission)
-    BE->>BE: Set status = PENDING_MANAGER
+    BE->>BE: Validate (Phase budget, Category budget)
+    BE->>BE: Set status = PENDING_APPROVAL
     BE-->>FE: {requestCode: "REQ-IT-0326-001"}
-    FE-->>EMP: Thông báo "Yêu cầu đã gửi"
 
-    Note over BE: Notification → Manager
+    Note over BE: Notification → Team Leader
 
-    MGR->>FE: Mở /requests (thấy yêu cầu mới)
-    MGR->>FE: Click Duyệt
+    TL->>FE: Mở /requests (YC trong DA mình dẫn)
+    TL->>FE: Xem chi tiết + chứng từ → Duyệt
     FE->>BE: POST /api/v1/requests/{id}/approve
-    BE->>BE: Nếu trong hạn mức → status = APPROVED
-    BE->>BE: Nếu vượt hạn mức → status = PENDING_ADMIN (Leo thang)
+    BE->>BE: status = PENDING_ACCOUNTANT
 
-    Note over BE: Kế toán giải ngân
+    Note over BE: Notification → Accountant
 
-    ACC->>FE: Mở /requests?status=APPROVED
-    ACC->>FE: Click "Chi tiền"
-    FE->>BE: POST /api/v1/requests/{id}/payout
-    BE->>BE: SystemFund.debit(amount)
-    BE->>BE: Wallet.credit(amount) (cộng ví nhân viên)
-    BE->>BE: Tạo Transaction (type=REQUEST_PAYMENT)
-    BE->>BE: Set status = PAID
+    ACC->>FE: Mở /requests?status=PENDING_ACCOUNTANT
+    ACC->>FE: Kiểm tra chứng từ → Nhập PIN → Giải ngân
+    FE->>BE: POST /api/v1/requests/{id}/payout {pin}
+    BE->>BE: project.deductBudget(amount)
+    BE->>BE: wallet.credit(amount) (cộng ví NV)
+    BE->>BE: Transaction(REQUEST_PAYMENT)
+    BE->>BE: status = PAID
     BE-->>FE: Thành công
 ```
+
+### 3.3 Flow 2 — Cấp vốn Dự án (PROJECT_TOPUP)
+
+```mermaid
+sequenceDiagram
+    participant TL as Team Leader
+    participant FE as Frontend
+    participant BE as Backend
+    participant MGR as Manager
+
+    TL->>FE: Nhấn "Xin cấp vốn DA"
+    FE->>BE: POST /api/v1/requests {type: PROJECT_TOPUP, projectId, amount}
+    BE->>BE: status = PENDING_APPROVAL
+    Note over BE: Notification → Manager
+
+    MGR->>FE: Xem YC PROJECT_TOPUP → Duyệt
+    FE->>BE: POST /api/v1/requests/{id}/approve
+    BE->>BE: dept.allocateToProject(amount) — trừ Dept Fund
+    BE->>BE: project.addBudget(amount) — cộng Project Fund
+    BE->>BE: status = PAID (AUTO — không qua Accountant)
+    BE-->>FE: Thành công
+```
+
+### 3.4 Flow 3 — Cấp vốn Phòng ban (QUOTA_TOPUP)
+
+```mermaid
+sequenceDiagram
+    participant MGR as Manager
+    participant FE as Frontend
+    participant BE as Backend
+    participant ADM as Admin
+
+    MGR->>FE: Nhấn "Xin cấp vốn PB"
+    FE->>BE: POST /api/v1/requests {type: QUOTA_TOPUP, amount}
+    BE->>BE: status = PENDING_APPROVAL
+    Note over BE: Notification → Admin
+
+    ADM->>FE: Xem YC QUOTA_TOPUP → Duyệt
+    FE->>BE: POST /api/v1/requests/{id}/approve
+    BE->>BE: fund.totalBalance -= amount — trừ System Fund
+    BE->>BE: dept.receiveQuota(amount) — cộng Dept Fund
+    BE->>BE: status = PAID (AUTO — không qua Accountant)
+    BE-->>FE: Thành công
+```
+
+### 3.5 Bảng tóm tắt 3 Flow
+
+| Flow | Type | Người tạo | Approver | Giải ngân | Dòng tiền |
+|------|------|-----------|----------|-----------|-----------|
+| 1 | ADVANCE/EXPENSE/REIMBURSE | Employee/TL | **Team Leader** | **Accountant (PIN)** | Project → Wallet |
+| 2 | PROJECT_TOPUP | Team Leader | **Manager** | **Auto** | Dept → Project |
+| 3 | QUOTA_TOPUP | Manager | **Admin** | **Auto** | System → Dept |
 
 ## 4. Luồng lương (Payroll Flow)
 

@@ -69,15 +69,20 @@ TypeScript: `ApiResponse<T>` — xem `types/api.ts`
 
 ## 3. Requests (`/api/v1/requests`) 🔮 PLANNED
 
-| Method | Endpoint | Body | Response | Auth | Permission |
-|--------|----------|------|----------|------|------------|
-| GET | `/api/v1/requests` | Query params | `Page<Request>` | ✅ | `REQUEST_VIEW_SELF/DEPT/ALL` |
-| POST | `/api/v1/requests` | `CreateRequestDTO` | `Request` | ✅ | `REQUEST_CREATE` |
-| GET | `/api/v1/requests/{id}` | — | `Request` | ✅ | Varies |
-| POST | `/api/v1/requests/{id}/approve` | `{comment}` | `Request` | ✅ | `REQUEST_APPROVE_TIER1/2` |
-| POST | `/api/v1/requests/{id}/reject` | `{reason}` | `Request` | ✅ | `REQUEST_REJECT` |
-| POST | `/api/v1/requests/{id}/payout` | — | `Request` | ✅ | `REQUEST_PAYOUT` |
-| POST | `/api/v1/requests/{id}/cancel` | — | `Request` | ✅ | Owner only |
+> **Kiến trúc Ủy quyền Tuyệt đối — 3 Flows, KHÔNG leo thang:**
+> - Flow 1 (ADVANCE/EXPENSE/REIMBURSE): Employee → **TL approve** → **Accountant payout (PIN)**
+> - Flow 2 (PROJECT_TOPUP): TL → **Manager approve** → auto PAID
+> - Flow 3 (QUOTA_TOPUP): Manager → **Admin approve** → auto PAID
+
+| Method | Endpoint | Body | Response | Auth | Permission | Ghi chú |
+|--------|----------|------|----------|------|------------|---------|
+| GET | `/api/v1/requests` | Query params | `Page<Request>` | ✅ | `REQUEST_VIEW_SELF/DEPT/ALL` | Filter: type, status |
+| POST | `/api/v1/requests` | `CreateRequestDTO` | `Request` | ✅ | `REQUEST_CREATE` | Status → PENDING_APPROVAL |
+| GET | `/api/v1/requests/{id}` | — | `Request` | ✅ | Varies | |
+| POST | `/api/v1/requests/{id}/approve` | `{comment}` | `Request` | ✅ | `REQUEST_APPROVE_TIER1` (TL/Mgr) / `TIER2` (Admin) | Flow 1→PENDING_ACCOUNTANT, Flow 2&3→PAID (auto) |
+| POST | `/api/v1/requests/{id}/reject` | `{reason}` | `Request` | ✅ | `REQUEST_REJECT` | Status → REJECTED |
+| POST | `/api/v1/requests/{id}/payout` | `{pin}` | `Request` | ✅ | `REQUEST_PAYOUT` | Chỉ Flow 1 — Accountant giải ngân, cần PIN |
+| POST | `/api/v1/requests/{id}/cancel` | — | `Request` | ✅ | Owner only | Chỉ khi PENDING_APPROVAL |
 
 ---
 

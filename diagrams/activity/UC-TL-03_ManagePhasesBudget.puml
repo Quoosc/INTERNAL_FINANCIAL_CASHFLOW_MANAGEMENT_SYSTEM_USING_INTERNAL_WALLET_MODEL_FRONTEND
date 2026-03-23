@@ -1,4 +1,4 @@
-@startuml UC-TL-03: Quan ly Phase & Ngan sach
+@startuml
 
 title UC-TL-03: Quản lý Phase & Ngân sách DA
 
@@ -35,7 +35,7 @@ if (Thao tác?) then (Tạo Phase)
   |Team Leader|
   stop
 
-else (Gán Category)
+elseif (Thao tác = Gán Category?) then (Có)
   :Chọn Phase → Gán ExpenseCategory;
   :Đặt budget cho Category;
 

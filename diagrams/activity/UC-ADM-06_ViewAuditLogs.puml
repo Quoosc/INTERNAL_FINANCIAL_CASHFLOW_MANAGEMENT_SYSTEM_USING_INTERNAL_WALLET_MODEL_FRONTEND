@@ -1,4 +1,4 @@
-@startuml UC-ADM-06: Xem Audit Logs
+@startuml
 
 title UC-ADM-06: Xem Audit Logs
 
@@ -16,7 +16,7 @@ start
 :Hiển thị DS audit log\n(action, user, entity, timestamp);
 
 |Admin|
-if (Cần filter?) then (Theo Action)
+if (Filter = Action?) then (Co)
   :Chọn AuditAction filter;
 
   |Co so du lieu|
@@ -28,41 +28,43 @@ if (Cần filter?) then (Theo Action)
   |Admin|
   stop
 
-else (Theo Entity)
-  :Chọn entity name filter;
+else (Khong)
+  if (Filter = Entity?) then (Co)
+    :Chọn entity name filter;
 
-  |Co so du lieu|
-  :findByEntityName(name, pageable);
+    |Co so du lieu|
+    :findByEntityName(name, pageable);
 
-  |He thong|
-  :Cập nhật DS theo filter;
+    |He thong|
+    :Cập nhật DS theo filter;
 
-  |Admin|
-  stop
+    |Admin|
+    stop
+  else (Khong)
+    if (Filter = TimeRange?) then (Co)
+      :Chọn từ ngày -> đến ngày;
 
-else (Theo Khoảng thời gian)
-  :Chọn từ ngày → đến ngày;
+      |Co so du lieu|
+      :findByTimeRange(from, to, pageable);
 
-  |Co so du lieu|
-  :findByTimeRange(from, to, pageable);
+      |He thong|
+      :Cập nhật DS theo filter;
 
-  |He thong|
-  :Cập nhật DS theo filter;
+      |Admin|
+      stop
+    else (History Entity)
+      :Chọn entity cụ thể (VD: user #5);
 
-  |Admin|
-  stop
+      |Co so du lieu|
+      :findByEntityNameAndId(name, id);
 
-else (Xem lịch sử 1 entity)
-  :Chọn entity cụ thể (VD: user #5);
+      |He thong|
+      :Hiển thị toàn bộ lịch sử\nthay đổi của entity;
 
-  |Co so du lieu|
-  :findByEntityNameAndId(name, id);
-
-  |He thong|
-  :Hiển thị toàn bộ lịch sử\nthay đổi của entity;
-
-  |Admin|
-  stop
+      |Admin|
+      stop
+    endif
+  endif
 endif
 
 @enduml

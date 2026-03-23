@@ -1,11 +1,11 @@
-@startuml UC-MGR-01: Quan ly Du an
+@startuml
 
 title UC-MGR-01: Quản lý Dự án
 
 |Manager|
 start
 
-if (Thao tác?) then (Tạo DA)
+if (Thao tác = Tạo DA?) then (Có)
   :Nhập tên, mô tả;
 
   |He thong|
@@ -25,26 +25,27 @@ if (Thao tác?) then (Tạo DA)
   |Manager|
   stop
 
-else (Cập nhật)
-  :Sửa tên, mô tả;
+else (Khong)
+  if (Thao tác = Cập nhật?) then (Có)
+    :Sửa tên, mô tả;
 
-  |Co so du lieu|
-  :Cập nhật Project;
-
-  |Manager|
-  stop
-
-else (Đổi trạng thái)
-  if (Action?) then (Tạm dừng)
     |Co so du lieu|
-    :project.status = PAUSED\n→ Chặn tạo Request mới;
+    :Cập nhật Project;
+
     |Manager|
     stop
-  else (Đóng DA)
-    |Co so du lieu|
-    :project.status = CLOSED\n→ Thu hồi vốn dư;
-    |Manager|
-    stop
+  else (Đổi trạng thái)
+    if (Action?) then (Tạm dừng)
+      |Co so du lieu|
+      :project.status = PAUSED\n-> Chan tao Request moi;
+      |Manager|
+      stop
+    else (Đóng DA)
+      |Co so du lieu|
+      :project.status = CLOSED\n-> Thu hoi von du;
+      |Manager|
+      stop
+    endif
   endif
 endif
 

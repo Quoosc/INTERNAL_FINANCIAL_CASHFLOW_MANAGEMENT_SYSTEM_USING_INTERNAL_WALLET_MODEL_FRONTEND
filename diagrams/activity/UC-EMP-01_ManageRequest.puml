@@ -1,4 +1,4 @@
-@startuml UC-EMP-01: Quan ly Yeu cau Chi tieu
+@startuml
 
 title UC-EMP-01: Quản lý Yêu cầu Chi tiêu (Flow 1)
 
@@ -42,11 +42,11 @@ endif
 :Gửi thông báo cho Team Leader;
 
 |Employee|
-:Tạo yêu cầu thành công\n→ Theo dõi trạng thái;
+:Tạo yêu cầu thành công\n-> Theo dõi trạng thái;
 
-== Hủy yêu cầu ==
+:Hủy yêu cầu;
 
-if (Muốn hủy & status = PENDING_APPROVAL?) then (Có)
+if (Muốn hủy va status = PENDING_APPROVAL) then (Có)
   :Nhấn "Hủy";
 
   |Co so du lieu|

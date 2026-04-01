@@ -1,8 +1,9 @@
-import { BaseEntity } from "./api";
+// =============================================================
+// User Types - khớp với backend API_Spec.md v2.0
+// Cập nhật: tách thành Response DTOs thay vì map 1:1 entity
+// =============================================================
 
-// =============================================================
-// User Enums - khớp với com.mkwang.backend.modules.user.entity.*
-// =============================================================
+// --- Enums ---
 
 /** khớp với user.entity.UserStatus */
 export enum UserStatus {
@@ -11,7 +12,23 @@ export enum UserStatus {
   PENDING = "PENDING",
 }
 
-/** khớp với user.entity.Permission - Dynamic RBAC */
+/**
+ * Roles mặc định trong hệ thống — 5 roles.
+ * Dùng cho FE logic (menu, routing, permission check).
+ * Backend trả role dưới dạng string trong AuthUser.role
+ */
+export enum RoleName {
+  EMPLOYEE = "EMPLOYEE",
+  TEAM_LEADER = "TEAM_LEADER",
+  MANAGER = "MANAGER",
+  ACCOUNTANT = "ACCOUNTANT",
+  ADMIN = "ADMIN",
+}
+
+/**
+ * Dynamic RBAC Permissions.
+ * Định nghĩa cứng trong source code, Admin gán cho Role qua UI.
+ */
 export enum Permission {
   // --- 1. IAM & Security ---
   USER_PROFILE_VIEW = "USER_PROFILE_VIEW",
@@ -68,54 +85,105 @@ export enum Permission {
   AUDIT_LOG_VIEW = "AUDIT_LOG_VIEW",
 }
 
-// =============================================================
-// User Interfaces - khớp với com.mkwang.backend.modules.user.entity.*
-// =============================================================
+// --- Response DTOs (khớp API Spec) ---
 
-/** khớp với user.entity.Role */
-export interface Role extends BaseEntity {
+/**
+ * GET /users/me/profile — response
+ *
+ * > bankInfo, securitySettings là nested object
+ * > avatar: Signed URL Cloudinary, nullable
+ */
+export interface UserProfileResponse {
   id: number;
-  name: string;
-  description: string | null;
-  permissions: Permission[];
-}
-
-/** khớp với user.entity.UserProfile */
-export interface UserProfile {
-  userId: number;
-  employeeCode: string | null;
-  jobTitle: string | null;
-  phoneNumber: string | null;
-  dateOfBirth: string | null; // ISO date
-  citizenId: string | null;
-  address: string | null;
-  avatarFileId: number | null;
-  bankName: string | null;
-  bankAccountNum: string | null;
-  bankAccountOwner: string | null;
-}
-
-/** khớp với user.entity.UserSecuritySettings */
-export interface UserSecuritySettings {
-  userId: number;
-  hasPinSet: boolean; // FE chỉ cần biết có PIN chưa, không nhận PIN hash
-  retryCount: number;
-  lockedUntil: string | null;
-  isPinLocked: boolean;
-}
-
-/** khớp với user.entity.User */
-export interface User extends BaseEntity {
-  id: number;
-  email: string;
+  employeeCode: string;
   fullName: string;
-  isFirstLogin: boolean;
-  role: Role;
+  email: string;
+  phoneNumber: string | null;
+  dateOfBirth: string | null;     // "YYYY-MM-DD"
+  address: string | null;
   departmentId: number | null;
-  status: UserStatus;
-  profile: UserProfile | null;
-  enabled: boolean;
-  accountNonExpired: boolean;
-  accountNonLocked: boolean;
-  credentialsNonExpired: boolean;
+  departmentName: string | null;
+  jobTitle: string | null;
+  citizenId: string | null;
+  avatar: string | null;         // Signed URL 15 min
+  bankInfo: BankInfo;
+  securitySettings: SecuritySettings;
+}
+
+export interface BankInfo {
+  bankName: string | null;
+  accountNumber: string | null;
+  accountOwner: string | null;
+}
+
+export interface SecuritySettings {
+  hasPIN: boolean;
+  pinLockedUntil: string | null; // ISO datetime, null = not locked
+}
+
+// --- Request DTOs ---
+
+/** PUT /users/me/profile — body */
+export interface UpdateProfileRequest {
+  fullName: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;       // "YYYY-MM-DD"
+  citizenId?: string;
+  address?: string;
+}
+
+/** PUT /users/me/avatar — body (sau khi upload lên Cloudinary) */
+export interface UpdateAvatarRequest {
+  cloudinaryPublicId: string;
+  fileName: string;
+  fileType: string;
+  size: number;
+}
+
+/** PUT /users/me/bank-info — body */
+export interface UpdateBankInfoRequest {
+  bankName: string;
+  accountNumber: string;
+  accountOwner: string;
+}
+
+/** PUT /users/me/password — body (đổi MK khi đã đăng nhập) */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+/** POST /users/me/pin — body (tạo PIN lần đầu) */
+export interface CreatePinRequest {
+  pin: string; // 5 chữ số
+}
+
+/** PUT /users/me/pin — body (đổi PIN) */
+export interface UpdatePinRequest {
+  currentPin: string;
+  newPin: string; // 5 chữ số
+}
+
+/** POST /users/me/pin/verify — body */
+export interface VerifyPinRequest {
+  pin: string;
+}
+
+/** POST /users/me/pin/verify — response */
+export interface VerifyPinResponse {
+  valid: boolean;
+}
+
+/** PUT /users/me/avatar — response */
+export interface UpdateAvatarResponse {
+  avatar: string; // Signed URL
+}
+
+// --- Bank List (static data) ---
+
+/** GET /banks — response item */
+export interface BankOption {
+  value: string;    // "MB Bank" — lưu vào user_profiles.bank_name
+  label: string;    // "MB Bank (Quân đội)" — hiển thị dropdown
 }

@@ -1,86 +1,178 @@
-import { BaseEntity } from "./api";
-
 // =============================================================
-// Request Enums - khớp với com.mkwang.backend.modules.request.entity.*
+// Request Types - khớp với backend API_Spec.md v2.0
+// Kiến trúc: 3 Flows, 5 Roles, NO Escalation
 // =============================================================
 
-/** khớp với request.entity.RequestType */
+// --- Enums ---
+
+/**
+ * khớp với request.entity.RequestType — 5 giá trị
+ *
+ * Flow 1: ADVANCE, EXPENSE, REIMBURSE → Employee → TL approve → Accountant payout
+ * Flow 2: PROJECT_TOPUP → TL → Manager approve → auto PAID
+ * Flow 3: QUOTA_TOPUP → Manager → Admin approve → auto PAID
+ */
 export enum RequestType {
-  ADVANCE = "ADVANCE",             // Tạm ứng (Member xin tiền cất vào ví)
-  EXPENSE = "EXPENSE",             // Thanh toán chi phí (Member xin tiền thanh toán cho NCC)
-  REIMBURSE = "REIMBURSE",         // Hoàn ứng (Member nộp hóa đơn cấn trừ nợ Tạm ứng)
-  PROJECT_TOPUP = "PROJECT_TOPUP", // Xin cấp vốn Dự án (Team Leader → Manager)
-  QUOTA_TOPUP = "QUOTA_TOPUP",     // Xin cấp vốn Phòng ban (Manager → Admin)
+  ADVANCE = "ADVANCE",
+  EXPENSE = "EXPENSE",
+  REIMBURSE = "REIMBURSE",
+  PROJECT_TOPUP = "PROJECT_TOPUP",
+  QUOTA_TOPUP = "QUOTA_TOPUP",
 }
 
 /**
- * khớp với request.entity.RequestStatus
+ * khớp với request.entity.RequestStatus — 6 giá trị
  *
- * NO ESCALATION — mỗi flow chỉ có DUY NHẤT 1 cấp duyệt.
- * PENDING_APPROVAL là status chung — approver xác định bởi request.type.
+ * PENDING_APPROVAL: chờ 1 cấp duyệt duy nhất (TL/Manager/Admin tùy type)
+ * KHÔNG có PENDING_MANAGER / PENDING_ADMIN
  */
 export enum RequestStatus {
-  PENDING_APPROVAL = "PENDING_APPROVAL",       // Chờ 1 cấp duyệt duy nhất (TL/Manager/Admin tùy type)
-  PENDING_ACCOUNTANT = "PENDING_ACCOUNTANT",   // Chỉ Flow 1 — chờ KT kiểm tra chứng từ & giải ngân
-  APPROVED = "APPROVED",                       // Đã duyệt nghiệp vụ (Flow 2&3 auto → PAID)
-  PAID = "PAID",                               // Đã giải ngân / đã cấp vốn xong
-  REJECTED = "REJECTED",                       // Bị từ chối
-  CANCELLED = "CANCELLED",                     // Người tạo tự hủy (chỉ khi PENDING_APPROVAL)
+  PENDING_APPROVAL = "PENDING_APPROVAL",
+  PENDING_ACCOUNTANT = "PENDING_ACCOUNTANT",
+  APPROVED = "APPROVED",
+  PAID = "PAID",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
 }
 
-/** khớp với request.entity.RequestAction — KHÔNG còn ESCALATE */
+/**
+ * khớp với request.entity.RequestAction — 4 giá trị
+ * KHÔNG có ESCALATE
+ */
 export enum RequestAction {
   APPROVE = "APPROVE",
   REJECT = "REJECT",
+  PAYOUT = "PAYOUT",
+  CANCEL = "CANCEL",
 }
 
-/** khớp với request.entity.RequestHistoryStatus */
-export enum RequestHistoryStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-  CANCELED = "CANCELED",
-}
+// --- Common Response DTOs ---
 
-// =============================================================
-// Request Interfaces - khớp với com.mkwang.backend.modules.request.entity.*
-// =============================================================
-
-/** khớp với request.entity.RequestAttachment */
-export interface RequestAttachment {
-  requestId: number;
+/** File attachment trong request response */
+export interface RequestAttachmentResponse {
   fileId: number;
   fileName: string;
-  fileUrl: string;
+  cloudinaryPublicId?: string;
+  url: string;                      // Signed URL Cloudinary (15 min)
+  fileType: string;
+  size: number;
 }
 
-/** khớp với request.entity.RequestHistory */
-export interface RequestHistory extends BaseEntity {
+/** Một dòng trong timeline (lịch sử duyệt) */
+export interface RequestTimelineEntry {
   id: number;
-  requestId: number;
+  action: RequestAction;
+  statusAfterAction: RequestStatus;
   actorId: number;
   actorName: string;
-  action: RequestAction;
-  statusAfterAction: RequestHistoryStatus;
   comment: string | null;
+  createdAt: string;
 }
 
-/** khớp với request.entity.Request */
-export interface Request extends BaseEntity {
+// --- Employee Request DTOs ---
+
+/**
+ * GET /requests — response item (danh sách request của employee)
+ */
+export interface RequestListItem {
   id: number;
   requestCode: string;
-  requesterId: number;
-  requesterName: string;
-  projectId: number;
-  projectName: string;
-  phaseId: number;
-  phaseName: string;
   type: RequestType;
+  status: RequestStatus;
   amount: number;
   approvedAmount: number | null;
-  status: RequestStatus;
-  rejectReason: string | null;
   description: string | null;
-  attachments: RequestAttachment[];
-  histories: RequestHistory[];
+  rejectReason: string | null;
+  projectId: number | null;
+  projectName: string | null;
+  phaseId: number | null;
+  phaseName: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * GET /requests/:id — response (chi tiết request)
+ */
+export interface RequestDetailResponse extends RequestListItem {
+  projectCode: string | null;
+  phaseCode: string | null;
+  requesterId: number;
+  requesterName: string;
+  attachments: RequestAttachmentResponse[];
+  timeline: RequestTimelineEntry[];
+}
+
+/**
+ * GET /requests/summary — response
+ */
+export interface RequestSummaryResponse {
+  totalPendingApproval: number;
+  totalPendingAccountant: number;
+  totalApproved: number;
+  totalRejected: number;
+  totalPaid: number;
+  totalCancelled: number;
+}
+
+// --- Employee Request Body DTOs ---
+
+/**
+ * POST /requests — body
+ *
+ * Flow 1 (ADVANCE/EXPENSE/REIMBURSE): projectId + phaseId + categoryId bắt buộc
+ * Flow 2 (PROJECT_TOPUP): projectId bắt buộc, phaseId/categoryId = null
+ * Flow 3 (QUOTA_TOPUP): projectId/phaseId/categoryId = null
+ */
+export interface CreateRequestBody {
+  type: RequestType;
+  projectId?: number;
+  phaseId?: number;
+  categoryId?: number;
+  amount: number;
+  description: string;
+  attachmentFileIds?: number[];    // file_storages.id
+}
+
+/** PUT /requests/:id — body (chỉ khi PENDING_APPROVAL) */
+export interface UpdateRequestBody {
+  amount?: number;
+  description?: string;
+  attachmentFileIds?: number[];
+}
+
+// --- Employee Request Filter Params ---
+
+/** GET /requests — query params */
+export interface RequestFilterParams {
+  type?: RequestType;
+  status?: RequestStatus;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+// --- WebSocket Payloads ---
+
+/** /user/queue/requests — message payload */
+export interface RequestStatusUpdateMessage {
+  type: "REQUEST_STATUS_CHANGED";
+  data: {
+    id: number;
+    requestCode: string;
+    previousStatus: RequestStatus;
+    newStatus: RequestStatus;
+    approvedAmount: number | null;
+    rejectReason: string | null;
+    actor: {
+      id: number;
+      fullName: string;
+      role: string;
+    };
+    comment: string | null;
+    updatedAt: string;
+  };
+  timestamp: string;
 }

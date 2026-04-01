@@ -6,7 +6,7 @@ export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
-  timestamp: string; // ISO 8601 LocalDateTime from Java
+  timestamp: string; // ISO 8601 LocalDateTime from Java (yyyy-MM-dd'T'HH:mm:ss)
 }
 
 // =============================================================
@@ -16,27 +16,40 @@ export interface ApiResponse<T> {
 export interface BaseEntity {
   createdAt: string;
   updatedAt: string;
-  createdBy: number | null;
-  updatedBy: number | null;
 }
 
 // =============================================================
-// Pagination (chuẩn bị cho Spring Data Page<T>)
+// Pagination - khớp với backend custom pagination format
+// Page index = 1-based (khác Spring Data 0-based)
 // =============================================================
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
+/**
+ * Backend trả pagination theo format tự định nghĩa (KHÔNG dùng Spring Data Page<T>).
+ * Sử dụng 1-indexed page.
+ *
+ * Ví dụ: GET /requests?page=1&limit=20
+ */
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;      // 1-indexed
+  limit: number;
   totalPages: number;
-  size: number;
-  number: number; // current page (0-indexed)
-  first: boolean;
-  last: boolean;
-  empty: boolean;
 }
 
-export interface PageRequest {
-  page?: number;
-  size?: number;
-  sort?: string; // e.g. "createdAt,desc"
+/** Params phân trang gửi lên backend */
+export interface PaginationParams {
+  page?: number;     // 1-indexed, default 1
+  limit?: number;    // default 20
+}
+
+/** Params phân trang + search chung */
+export interface SearchPaginationParams extends PaginationParams {
+  search?: string;
+}
+
+/** Date range filter params */
+export interface DateRangeParams {
+  from?: string;     // YYYY-MM-DD
+  to?: string;       // YYYY-MM-DD
 }

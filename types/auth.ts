@@ -1,49 +1,74 @@
 // =============================================================
 // Auth DTOs - khớp với com.mkwang.backend.modules.auth.dto.*
+// Cập nhật: align 100% với API_Spec.md v2.0
 // =============================================================
 
 // --- Request DTOs ---
 
-/** khớp với auth.dto.request.LoginRequest */
+/** POST /auth/login */
 export interface LoginRequest {
   email: string;
   password: string;
 }
 
-/** khớp với auth.dto.request.RegisterRequest */
-export interface RegisterRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-}
-
-/** khớp với auth.dto.request.RefreshTokenRequest */
+/** POST /auth/refresh-token */
 export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
-/** khớp với auth.dto.request.LogoutRequest */
-export interface LogoutRequest {
-  refreshToken: string;
+/** POST /auth/change-password — đổi MK lần đầu (isFirstLogin = true) */
+export interface FirstLoginChangePasswordRequest {
+  newPassword: string;
+}
+
+/** POST /auth/forgot-password */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/** POST /auth/reset-password — đặt lại MK bằng token từ email */
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 // --- Response DTOs ---
 
-/** khớp với auth.dto.response.UserInfoResponse */
-export interface UserInfoResponse {
+/**
+ * User info trả về trong login response & GET /auth/me.
+ * Khớp với backend AuthenticationResponse.user
+ *
+ * > role: tên role (string) — "EMPLOYEE" | "TEAM_LEADER" | "MANAGER" | "ACCOUNTANT" | "ADMIN"
+ * > departmentId/departmentName: nullable nếu chưa gán phòng ban
+ * > avatar: Signed URL Cloudinary (15 phút), nullable
+ * > isFirstLogin: nếu true → FE redirect đổi MK
+ * > status: ACTIVE | LOCKED | PENDING
+ */
+export interface AuthUser {
   id: number;
+  fullName: string;
   email: string;
-  full_name: string;
   role: string;
-  permissions: string[];
+  departmentId: number | null;
+  departmentName: string | null;
+  avatar: string | null;
+  isFirstLogin: boolean;
+  status: string;
 }
 
-/** khớp với auth.dto.response.AuthenticationResponse */
-export interface AuthenticationResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  user: UserInfoResponse;
+/** POST /auth/login — response */
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
 }
+
+/** POST /auth/refresh-token — response */
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/** GET /auth/me — response (giống AuthUser) */
+export type AuthMeResponse = AuthUser;

@@ -1,11 +1,14 @@
 # API_CONTRACT.md — Đồng bộ API giữa Frontend & Backend
 
-## Base URL
+> **Version:** 2.0 — Aligned với Backend `API_Spec.md` (09/03/2026)
+> **Kiến trúc:** 5 Roles, 3 Flows, 4-tầng Quỹ, NO Escalation
 
-- **Development**: `http://localhost:8080` (proxy qua Next.js rewrites)
-- **Frontend gọi**: `/api/v1/...` (tự proxy sang backend)
+## Base URL & Proxy
 
-## Response Format (chung)
+- **Backend:** `http://localhost:8080/api/v1`
+- **Frontend gọi:** `/api/v1/...` (proxy qua `next.config.ts` rewrites)
+
+## Response Format
 
 ```json
 {
@@ -18,157 +21,242 @@
 
 TypeScript: `ApiResponse<T>` — xem `types/api.ts`
 
----
+## Pagination Format
 
-## 1. Authentication (`/api/v1/auth`) ✅ READY
-
-| Method | Endpoint | Request Body | Response Data | Auth |
-|--------|----------|-------------|---------------|------|
-| POST | `/api/v1/auth/register` | `RegisterRequest` | `AuthenticationResponse` | ❌ |
-| POST | `/api/v1/auth/login` | `LoginRequest` | `AuthenticationResponse` | ❌ |
-| POST | `/api/v1/auth/refresh-token` | `RefreshTokenRequest` | `AuthenticationResponse` | ❌ |
-| POST | `/api/v1/auth/logout` | `LogoutRequest` | `string` | ❌ |
-
-### Request/Response DTOs
-
-```typescript
-// LoginRequest
-{ email: string; password: string }
-
-// RegisterRequest
-{ firstName: string; lastName: string; email: string; password: string }
-
-// AuthenticationResponse
+```json
 {
-  access_token: string;
-  refresh_token: string;
-  token_type: "Bearer";
-  expires_in: number;
-  user: {
-    id: number;
-    email: string;
-    full_name: string;
-    role: string;
-    permissions: string[];
-  }
+  "items": [...],
+  "total": 42,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 3
 }
 ```
 
----
-
-## 2. Wallet (`/api/v1/wallet`) 🔮 PLANNED
-
-| Method | Endpoint | Request Body | Response Data | Auth | Permission |
-|--------|----------|-------------|---------------|------|------------|
-| GET | `/api/v1/wallet/me` | — | `Wallet` | ✅ | `WALLET_VIEW_SELF` |
-| POST | `/api/v1/wallet/deposit` | `{amount, pin}` | `Transaction` | ✅ | `WALLET_DEPOSIT` |
-| POST | `/api/v1/wallet/withdraw` | `{amount, bankAccount, pin}` | `Transaction` | ✅ | `WALLET_WITHDRAW` |
-| GET | `/api/v1/wallet/transactions` | Query params | `Page<Transaction>` | ✅ | `WALLET_TRANSACTION_VIEW` |
+TypeScript: `PaginatedResponse<T>` — page **1-indexed**
 
 ---
 
-## 3. Requests (`/api/v1/requests`) 🔮 PLANNED
+## 1. Authentication (`/auth`) ✅ READY
 
-> **Kiến trúc Ủy quyền Tuyệt đối — 3 Flows, KHÔNG leo thang:**
-> - Flow 1 (ADVANCE/EXPENSE/REIMBURSE): Employee → **TL approve** → **Accountant payout (PIN)**
-> - Flow 2 (PROJECT_TOPUP): TL → **Manager approve** → auto PAID
-> - Flow 3 (QUOTA_TOPUP): Manager → **Admin approve** → auto PAID
-
-| Method | Endpoint | Body | Response | Auth | Permission | Ghi chú |
-|--------|----------|------|----------|------|------------|---------|
-| GET | `/api/v1/requests` | Query params | `Page<Request>` | ✅ | `REQUEST_VIEW_SELF/DEPT/ALL` | Filter: type, status |
-| POST | `/api/v1/requests` | `CreateRequestDTO` | `Request` | ✅ | `REQUEST_CREATE` | Status → PENDING_APPROVAL |
-| GET | `/api/v1/requests/{id}` | — | `Request` | ✅ | Varies | |
-| POST | `/api/v1/requests/{id}/approve` | `{comment}` | `Request` | ✅ | `REQUEST_APPROVE_TIER1` (TL/Mgr) / `TIER2` (Admin) | Flow 1→PENDING_ACCOUNTANT, Flow 2&3→PAID (auto) |
-| POST | `/api/v1/requests/{id}/reject` | `{reason}` | `Request` | ✅ | `REQUEST_REJECT` | Status → REJECTED |
-| POST | `/api/v1/requests/{id}/payout` | `{pin}` | `Request` | ✅ | `REQUEST_PAYOUT` | Chỉ Flow 1 — Accountant giải ngân, cần PIN |
-| POST | `/api/v1/requests/{id}/cancel` | — | `Request` | ✅ | Owner only | Chỉ khi PENDING_APPROVAL |
+| Method | Endpoint | Body | Response | Auth |
+|--------|----------|------|----------|:----:|
+| POST | `/auth/login` | `LoginRequest` | `LoginResponse` | ❌ |
+| POST | `/auth/logout` | — | `{ message }` | ✅ |
+| POST | `/auth/refresh-token` | `RefreshTokenRequest` | `RefreshTokenResponse` | ❌ |
+| POST | `/auth/change-password` | `ChangePasswordRequest` | `{ message }` | ✅ |
+| POST | `/auth/forgot-password` | `ForgotPasswordRequest` | `{ message }` | ❌ |
+| POST | `/auth/reset-password` | `ResetPasswordRequest` | `{ message }` | ❌ |
+| GET | `/auth/me` | — | `AuthUser` | ✅ |
 
 ---
 
-## 4. Projects (`/api/v1/projects`) 🔮 PLANNED
+## 2. User Profile (`/users/me`) 🔮 Sprint 1
 
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/projects` | Query | `Page<Project>` | `PROJECT_VIEW_ACTIVE/ALL` |
-| POST | `/api/v1/projects` | `CreateProjectDTO` | `Project` | `PROJECT_CREATE` |
-| GET | `/api/v1/projects/{id}` | — | `Project` | Varies |
-| PUT | `/api/v1/projects/{id}` | `UpdateProjectDTO` | `Project` | `PROJECT_UPDATE` |
-| POST | `/api/v1/projects/{id}/phases` | `CreatePhaseDTO` | `ProjectPhase` | `PROJECT_PHASE_MANAGE` |
-| POST | `/api/v1/projects/{id}/members` | `{userId}` | `ProjectMember` | `PROJECT_MEMBER_MANAGE` |
-
----
-
-## 5. Payroll (`/api/v1/payroll`) 🔮 PLANNED
-
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/payroll` | Query | `Page<PayrollPeriod>` | `PAYROLL_VIEW_SELF/MANAGE` |
-| POST | `/api/v1/payroll` | `CreatePayrollDTO` | `PayrollPeriod` | `PAYROLL_MANAGE` |
-| POST | `/api/v1/payroll/{id}/upload` | FormData (Excel) | `PayrollPeriod` | `PAYROLL_MANAGE` |
-| POST | `/api/v1/payroll/{id}/execute` | — | `PayrollPeriod` | `PAYROLL_EXECUTE` |
-| GET | `/api/v1/payroll/my-payslips` | — | `Payslip[]` | `PAYROLL_VIEW_SELF` |
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/users/me/profile` | — | `UserProfileResponse` |
+| PUT | `/users/me/profile` | `UpdateProfileRequest` | `UserProfileResponse` |
+| PUT | `/users/me/avatar` | `UpdateAvatarRequest` | `{ avatar }` |
+| PUT | `/users/me/bank-info` | `UpdateBankInfoRequest` | `BankInfo` |
+| PUT | `/users/me/password` | `ChangePasswordRequest` | `{ message }` |
+| POST | `/users/me/pin` | `CreatePinRequest` | `{ message }` |
+| PUT | `/users/me/pin` | `UpdatePinRequest` | `{ message }` |
+| POST | `/users/me/pin/verify` | `VerifyPinRequest` | `{ valid }` |
 
 ---
 
-## 6. Users (`/api/v1/users`) 🔮 PLANNED
+## 3. File Storage (`/files`) ✅ READY
 
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/users` | Query | `Page<User>` | `USER_VIEW_LIST` |
-| POST | `/api/v1/users` | `CreateUserDTO` | `User` | `USER_CREATE` |
-| PUT | `/api/v1/users/{id}` | `UpdateUserDTO` | `User` | `USER_UPDATE` |
-| PATCH | `/api/v1/users/{id}/lock` | — | `User` | `USER_LOCK` |
-| GET | `/api/v1/users/me/profile` | — | `UserProfile` | `USER_PROFILE_VIEW` |
-| PUT | `/api/v1/users/me/profile` | `UpdateProfileDTO` | `UserProfile` | `USER_PROFILE_UPDATE` |
-| PUT | `/api/v1/users/me/pin` | `{oldPin, newPin}` | — | `USER_PIN_UPDATE` |
+| Method | Endpoint | Response |
+|--------|----------|----------|
+| GET | `/files/signature?folder=` | `{ signature, timestamp, cloudName, apiKey, folder, publicId }` |
+| DELETE | `/files/:publicId` | `{ message }` |
 
 ---
 
-## 7. Roles (`/api/v1/roles`) 🔮 PLANNED
+## 4. Common Data
 
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/roles` | — | `Role[]` | `ROLE_MANAGE` |
-| POST | `/api/v1/roles` | `{name, description, permissions}` | `Role` | `ROLE_MANAGE` |
-| PUT | `/api/v1/roles/{id}` | `{name, permissions}` | `Role` | `ROLE_MANAGE` |
-
----
-
-## 8. Departments (`/api/v1/departments`) 🔮 PLANNED
-
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/departments` | — | `Department[]` | `DEPT_MANAGE` |
-| POST | `/api/v1/departments` | `{name, code, managerId}` | `Department` | `DEPT_MANAGE` |
-| POST | `/api/v1/departments/{id}/topup` | `{amount}` | `Department` | `DEPT_BUDGET_ALLOCATE` |
-
----
-
-## 9. System Fund (`/api/v1/system-fund`) 🔮 PLANNED
-
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/system-fund` | — | `SystemFund` | `SYSTEM_FUND_VIEW` |
-| POST | `/api/v1/system-fund/topup` | `{amount}` | `SystemFund` | `SYSTEM_FUND_TOPUP` |
+| Method | Endpoint | Response | Sprint |
+|--------|----------|----------|:------:|
+| GET | `/banks` | `BankOption[]` | 1 |
+| GET | `/wallet` | `WalletResponse` | 3 |
+| GET | `/wallet/transactions` | `PaginatedResponse<TransactionResponse>` | 3 |
+| POST | `/wallet/withdraw` | `WithdrawResponse` | 3 |
+| POST | `/wallet/deposit/generate-qr` | `DepositQRResponse` | 3 |
+| GET | `/projects` | `PaginatedResponse<ProjectListItem>` | 4 |
+| GET | `/projects/:id/phases` | `ProjectPhasesResponse` | 4 |
+| GET | `/payslips` | `PaginatedResponse<PayslipListItem>` | 7 |
+| GET | `/payslips/:id` | `PayslipDetailResponse` | 7 |
+| GET | `/notifications` | `NotificationListResponse` | 8 |
+| PUT | `/notifications/:id/read` | `MarkReadResponse` | 8 |
+| PUT | `/notifications/read-all` | `MarkAllReadResponse` | 8 |
 
 ---
 
-## 10. Notifications (`/api/v1/notifications`) 🔮 PLANNED
+## 5. Employee Requests (`/requests`) 🔮 Sprint 5
 
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/notifications` | Query | `Page<Notification>` | `NOTIFICATION_VIEW` |
-| PATCH | `/api/v1/notifications/{id}/read` | — | — | Owner only |
-| PATCH | `/api/v1/notifications/read-all` | — | — | Owner only |
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/requests` | Query params | `PaginatedResponse<RequestListItem>` |
+| GET | `/requests/summary` | — | `RequestSummaryResponse` |
+| GET | `/requests/:id` | — | `RequestDetailResponse` |
+| POST | `/requests` | `CreateRequestBody` | `RequestDetailResponse` |
+| PUT | `/requests/:id` | `UpdateRequestBody` | `RequestDetailResponse` |
+| DELETE | `/requests/:id` | — | `{ message }` |
 
 ---
 
-## 11. Audit Logs (`/api/v1/audit-logs`) 🔮 PLANNED
+## 6. Team Leader (`/team-leader`) 🔮 Sprint 4-5
 
-| Method | Endpoint | Body | Response | Permission |
-|--------|----------|------|----------|------------|
-| GET | `/api/v1/audit-logs` | Query (action, date) | `Page<AuditLog>` | `AUDIT_LOG_VIEW` |
+### Project Management
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/team-leader/projects` | Query | `PaginatedResponse<TLProjectListItem>` |
+| GET | `/team-leader/projects/:id` | — | `TLProjectDetailResponse` |
+| POST | `/team-leader/projects/:id/phases` | `CreatePhaseBody` | `ProjectPhaseResponse` |
+| PUT | `/team-leader/projects/:id/phases/:phaseId` | `UpdatePhaseBody` | `ProjectPhaseResponse` |
+| POST | `/team-leader/projects/:id/members` | `AddMemberBody` | `ProjectMemberResponse` |
+| PUT | `/team-leader/projects/:id/members/:userId` | `UpdateMemberBody` | `ProjectMemberResponse` |
+| DELETE | `/team-leader/projects/:id/members/:userId` | — | `{ message }` |
+| GET | `/team-leader/projects/:id/available-members` | `?search=` | `AvailableMemberResponse[]` |
+| GET | `/team-leader/projects/:id/categories` | `?phaseId=` | `PhaseCategoriesResponse` |
+| PUT | `/team-leader/projects/:id/categories` | `UpdateCategoryBudgetBody` | `PhaseCategoriesResponse` |
+| GET | `/team-leader/expense-categories` | — | `ExpenseCategoryResponse[]` |
+
+### Approvals (Flow 1)
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/team-leader/approvals` | Query | `PaginatedResponse<TLApprovalListItem>` |
+| GET | `/team-leader/approvals/:id` | — | `RequestDetailResponse` |
+| POST | `/team-leader/approvals/:id/approve` | `TLApproveBody` | `TLApproveResponse` |
+| POST | `/team-leader/approvals/:id/reject` | `TLRejectBody` | `TLRejectResponse` |
+
+### Team Overview
+
+| Method | Endpoint | Response |
+|--------|----------|----------|
+| GET | `/team-leader/team-members` | `PaginatedResponse<TLTeamMemberListItem>` |
+| GET | `/team-leader/team-members/:userId` | `TLTeamMemberDetailResponse` |
+
+---
+
+## 7. Manager (`/manager`) 🔮 Sprint 4-5
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/manager/approvals` | Query | `PaginatedResponse<ManagerApprovalListItem>` |
+| GET | `/manager/approvals/:id` | — | `ManagerApprovalDetailResponse` |
+| POST | `/manager/approvals/:id/approve` | `ManagerApproveBody` | `ManagerApproveResponse` |
+| POST | `/manager/approvals/:id/reject` | `ManagerRejectBody` | `ManagerRejectResponse` |
+| GET | `/manager/projects` | Query | `PaginatedResponse<ManagerProjectListItem>` |
+| GET | `/manager/projects/:id` | — | `ProjectDetailResponse` |
+| POST | `/manager/projects` | `CreateProjectBody` | `ProjectDetailResponse` |
+| PUT | `/manager/projects/:id` | `UpdateProjectBody` | `ProjectDetailResponse` |
+| GET | `/manager/department/members` | Query | `PaginatedResponse<ManagerDeptMemberListItem>` |
+| GET | `/manager/department/members/:id` | — | `ManagerDeptMemberDetailResponse` |
+| GET | `/manager/department/team-leaders` | — | `TeamLeaderOptionResponse[]` |
+
+---
+
+## 8. Accountant (`/accountant`) 🔮 Sprint 6-7
+
+### Disbursements
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/accountant/disbursements` | Query | `PaginatedResponse<DisbursementListItem>` |
+| GET | `/accountant/disbursements/:id` | — | `DisbursementDetailResponse` |
+| POST | `/accountant/disbursements/:id/disburse` | `DisburseBody` | `DisburseResponse` |
+| POST | `/accountant/disbursements/:id/reject` | `DisbursementRejectBody` | `DisbursementRejectResponse` |
+| GET | `/accountant/requests/:requestId` | — | `AccountantRequestDetailResponse` |
+
+### Payroll
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/accountant/payroll` | Query | `PaginatedResponse<PayrollPeriodListItem>` |
+| GET | `/accountant/payroll/:periodId` | — | `PayrollDetailResponse` |
+| POST | `/accountant/payroll` | `CreatePayrollPeriodBody` | `PayrollDetailResponse` |
+| GET | `/accountant/payroll/template` | — | *File download (.xlsx)* |
+| POST | `/accountant/payroll/:periodId/import` | `FormData (file)` | `PayrollImportResponse` |
+| POST | `/accountant/payroll/:periodId/confirm-overwrite` | — | `{ message }` |
+| POST | `/accountant/payroll/:periodId/auto-netting` | — | `AutoNettingResponse` |
+| POST | `/accountant/payroll/:periodId/run` | — | `PayrollRunResponse` |
+| PUT | `/accountant/payroll/:periodId/entries/:payslipId` | `UpdatePayslipEntryBody` | `PayrollEntry` |
+
+### Ledger
+
+| Method | Endpoint | Response |
+|--------|----------|----------|
+| GET | `/accountant/ledger` | `PaginatedResponse<TransactionResponse>` |
+| GET | `/accountant/ledger/summary` | `LedgerSummaryResponse` |
+| GET | `/accountant/ledger/:transactionId` | `TransactionDetailResponse` |
+
+---
+
+## 9. Admin (`/admin`) 🔮 Sprint 2, 6
+
+### Approvals (Flow 3)
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/admin/approvals` | Query | `PaginatedResponse<AdminApprovalListItem>` |
+| GET | `/admin/approvals/:id` | — | `AdminApprovalDetailResponse` |
+| POST | `/admin/approvals/:id/approve` | `AdminApproveBody` | `AdminApproveResponse` |
+| POST | `/admin/approvals/:id/reject` | `AdminRejectBody` | `AdminRejectResponse` |
+
+### User Management
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/admin/users` | Query | `PaginatedResponse<AdminUserListItem>` |
+| GET | `/admin/users/:id` | — | `AdminUserDetailResponse` |
+| POST | `/admin/users` | `CreateUserBody` | `CreateUserResponse` |
+| PUT | `/admin/users/:id` | `UpdateUserBody` | `AdminUserDetailResponse` |
+| POST | `/admin/users/:id/lock` | — | `LockUserResponse` |
+| POST | `/admin/users/:id/unlock` | — | `UnlockUserResponse` |
+| POST | `/admin/users/:id/reset-password` | — | `{ message }` |
+
+### Departments
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/admin/departments` | Query | `PaginatedResponse<DepartmentListItem>` |
+| GET | `/admin/departments/:id` | — | `DepartmentDetailResponse` |
+| POST | `/admin/departments` | `CreateDepartmentBody` | `DepartmentDetailResponse` |
+| PUT | `/admin/departments/:id` | `UpdateDepartmentBody` | `DepartmentDetailResponse` |
+
+### Audit & Settings
+
+| Method | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| GET | `/admin/audit` | Query | `PaginatedResponse<AuditLogResponse>` |
+| GET | `/admin/settings` | — | `SystemSettingsResponse` |
+| PUT | `/admin/settings` | `UpdateSettingsBody` | `SystemSettingsResponse` |
+
+---
+
+## 10. WebSocket Channels 🔮 Sprint 8
+
+| Channel | Payload Type | Trigger |
+|---------|-------------|---------|
+| `/user/queue/wallet` | `WalletUpdateMessage` | Disbursement, Payroll, Withdraw, Deposit |
+| `/user/queue/requests` | `RequestStatusUpdateMessage` | Approve/Reject/Payout |
+| `/user/queue/notifications` | `NotificationMessage` | Any notification created |
+
+---
+
+## 11. Dashboard APIs 🔮 Sprint 9
+
+| Method | Endpoint | Response |
+|--------|----------|----------|
+| GET | `/dashboard/employee` | `EmployeeDashboardResponse` |
+| GET | `/dashboard/manager` | `ManagerDashboardResponse` |
+| GET | `/dashboard/accountant` | `AccountantDashboardResponse` |
+| GET | `/dashboard/admin` | `AdminDashboardResponse` |
 
 ---
 
@@ -177,6 +265,4 @@ TypeScript: `ApiResponse<T>` — xem `types/api.ts`
 | Icon | Nghĩa |
 |------|-------|
 | ✅ READY | Backend Controller đã implement |
-| 🔮 PLANNED | Chỉ có Entity, cần dev thêm Controller |
-| ✅ Auth | Yêu cầu `Authorization: Bearer <token>` |
-| ❌ Auth | Public endpoint |
+| 🔮 Sprint N | Dự kiến implement ở Sprint N |

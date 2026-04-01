@@ -1,5 +1,8 @@
 # FLOW.md — Luồng dữ liệu (Data Flow)
 
+> **Version:** 2.0 — Aligned với Backend `API_Spec.md` v2.0
+> **Kiến trúc:** 5 Roles — 3 Luồng duyệt — 4 Tầng quỹ — KHÔNG leo thang
+
 ## 1. Tổng quan kiến trúc
 
 ```
@@ -17,7 +20,7 @@
 │   http://localhost:8080         │
 ├─────────────────────────────────┤
 │  Controller → Service → Repo   │
-│  → MySQL/PostgreSQL DB          │
+│  → PostgreSQL DB                │
 └─────────────────────────────────┘
 ```
 
@@ -37,47 +40,67 @@ sequenceDiagram
 
     U->>FE: Nhập email + password → Submit
     FE->>BE: POST /api/v1/auth/login {email, password}
-    BE-->>FE: {access_token, refresh_token, user}
+    BE-->>FE: {accessToken, refreshToken, user}
     FE->>FE: Lưu tokens (localStorage + cookie)
     FE->>FE: setUser(user) vào AuthContext
-    FE-->>U: Redirect → /dashboard
+    FE-->>U: Check user.isFirstLogin?
+
+    alt isFirstLogin = true
+        FE-->>U: Redirect → /change-password
+        U->>FE: Nhập mật khẩu mới → Submit
+        FE->>BE: POST /api/v1/auth/change-password {newPassword}
+        FE-->>U: Redirect → /create-pin
+        U->>FE: Nhập PIN 5 số → Submit
+        FE->>BE: POST /api/v1/users/me/pin {pin}
+        FE-->>U: Redirect → /dashboard
+    else isFirstLogin = false
+        FE-->>U: Redirect → /dashboard (theo role)
+    end
 
     Note over FE,BE: Các request tiếp theo
 
     U->>FE: Truy cập /wallet
     FE->>MW: Cookie có access_token → OK
-    FE->>BE: GET /api/v1/wallet/me (Header: Bearer token)
-    BE-->>FE: {balance, pendingBalance, debtBalance}
+    FE->>BE: GET /api/v1/wallet (Header: Bearer token)
+    BE-->>FE: {balance, pendingBalance, debtBalance, version}
     FE-->>U: Hiển thị Wallet Dashboard
 
     Note over FE,BE: Khi token hết hạn (401)
 
     FE->>BE: Bất kỳ API nào → 401 Unauthorized
     FE->>BE: POST /api/v1/auth/refresh-token {refreshToken}
-    BE-->>FE: {new access_token, new refresh_token}
+    BE-->>FE: {accessToken, refreshToken} mới
     FE->>FE: Lưu tokens mới
     FE->>BE: Retry request ban đầu với token mới
     BE-->>FE: Response thành công
 ```
 
-## 3. Luồng yêu cầu — Ủy quyền Tuyệt đối (Absolute Delegation)
-
-> **Kiến trúc mới**: 5 vai trò — 3 luồng duyệt — 4 tầng quỹ — KHÔNG leo thang.
-> Mỗi loại yêu cầu có **1 người duyệt duy nhất**, xác định bởi `request.type`.
-
-### 3.1 Cấu trúc 4 tầng quỹ
+## 3. Hệ thống 5 Vai trò & 4 Tầng quỹ
 
 ```
-System Fund (Admin quản lý, Accountant nạp)
-    ↓ Flow 3: Admin duyệt QUOTA_TOPUP
-Department Fund (Manager quản lý)
-    ↓ Flow 2: Manager duyệt PROJECT_TOPUP
-Project Fund (Team Leader quản lý Phase/Category)
-    ↓ Flow 1: TL duyệt → Accountant giải ngân
-Personal Wallet (NV sử dụng)
+┌──────────────────────────────────────────────────────────┐
+│                    5 VAI TRÒ (ROLES)                     │
+├──────────┬───────────┬─────────┬────────────┬────────────┤
+│ EMPLOYEE │TEAM_LEADER│ MANAGER │ ACCOUNTANT │   ADMIN    │
+│ Tạo YC   │Duyệt Flow1│Duyệt F2│ Giải ngân  │ Duyệt F3  │
+│ chi tiêu │Quản lý DA │Quản lý │ Chi lương  │ Quản trị  │
+│          │Phase/Categ│ PB     │ Sổ cái    │ Hệ thống  │
+└──────────┴───────────┴─────────┴────────────┴────────────┘
+
+┌──────────────────────────────────────────────────────────┐
+│                 4 TẦNG QUỸ (FUND TIERS)                  │
+├──────────────────────────────────────────────────────────┤
+│ Tier 1: System Fund (Admin quản lý, Accountant nạp)     │
+│    ↓ Flow 3: QUOTA_TOPUP (Manager → Admin duyệt)       │
+│ Tier 2: Department Fund (Manager quản lý)               │
+│    ↓ Flow 2: PROJECT_TOPUP (TL → Manager duyệt)        │
+│ Tier 3: Project Fund → Phase → Category Budget          │
+│    ↓ Flow 1: TL duyệt → Accountant giải ngân (PIN)     │
+│ Tier 4: Personal Wallet (Nhân viên sử dụng)            │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Flow 1 — Chi tiêu cá nhân (ADVANCE / EXPENSE / REIMBURSE)
+## 4. Flow 1 — Chi tiêu cá nhân (ADVANCE / EXPENSE / REIMBURSE)
 
 ```mermaid
 sequenceDiagram
@@ -92,31 +115,31 @@ sequenceDiagram
     FE-->>EMP: Form tạo YC (chọn DA → Phase → Category)
 
     EMP->>FE: Chọn loại, số tiền, chứng từ → Submit
-    FE->>BE: POST /api/v1/requests {type, projectId, phaseId, amount}
+    FE->>BE: POST /api/v1/requests {type, projectId, phaseId, categoryId, amount}
     BE->>BE: Validate (Phase budget, Category budget)
     BE->>BE: Set status = PENDING_APPROVAL
     BE-->>FE: {requestCode: "REQ-IT-0326-001"}
 
     Note over BE: Notification → Team Leader
 
-    TL->>FE: Mở /requests (YC trong DA mình dẫn)
+    TL->>FE: Mở /team-leader/approvals
     TL->>FE: Xem chi tiết + chứng từ → Duyệt
-    FE->>BE: POST /api/v1/requests/{id}/approve
+    FE->>BE: POST /api/v1/team-leader/approvals/{id}/approve {approvedAmount}
     BE->>BE: status = PENDING_ACCOUNTANT
 
     Note over BE: Notification → Accountant
 
-    ACC->>FE: Mở /requests?status=PENDING_ACCOUNTANT
+    ACC->>FE: Mở /accountant/disbursements
     ACC->>FE: Kiểm tra chứng từ → Nhập PIN → Giải ngân
-    FE->>BE: POST /api/v1/requests/{id}/payout {pin}
+    FE->>BE: POST /api/v1/accountant/disbursements/{id}/disburse {pin}
     BE->>BE: project.deductBudget(amount)
     BE->>BE: wallet.credit(amount) (cộng ví NV)
     BE->>BE: Transaction(REQUEST_PAYMENT)
     BE->>BE: status = PAID
-    BE-->>FE: Thành công
+    BE-->>FE: {transactionCode: "TXN-8829145A"}
 ```
 
-### 3.3 Flow 2 — Cấp vốn Dự án (PROJECT_TOPUP)
+## 5. Flow 2 — Cấp vốn Dự án (PROJECT_TOPUP)
 
 ```mermaid
 sequenceDiagram
@@ -130,15 +153,15 @@ sequenceDiagram
     BE->>BE: status = PENDING_APPROVAL
     Note over BE: Notification → Manager
 
-    MGR->>FE: Xem YC PROJECT_TOPUP → Duyệt
-    FE->>BE: POST /api/v1/requests/{id}/approve
+    MGR->>FE: Mở /manager/approvals → Xem YC
+    FE->>BE: POST /api/v1/manager/approvals/{id}/approve {approvedAmount}
     BE->>BE: dept.allocateToProject(amount) — trừ Dept Fund
     BE->>BE: project.addBudget(amount) — cộng Project Fund
     BE->>BE: status = PAID (AUTO — không qua Accountant)
     BE-->>FE: Thành công
 ```
 
-### 3.4 Flow 3 — Cấp vốn Phòng ban (QUOTA_TOPUP)
+## 6. Flow 3 — Cấp vốn Phòng ban (QUOTA_TOPUP)
 
 ```mermaid
 sequenceDiagram
@@ -152,23 +175,23 @@ sequenceDiagram
     BE->>BE: status = PENDING_APPROVAL
     Note over BE: Notification → Admin
 
-    ADM->>FE: Xem YC QUOTA_TOPUP → Duyệt
-    FE->>BE: POST /api/v1/requests/{id}/approve
+    ADM->>FE: Mở /admin/approvals → Xem YC
+    FE->>BE: POST /api/v1/admin/approvals/{id}/approve {approvedAmount}
     BE->>BE: fund.totalBalance -= amount — trừ System Fund
     BE->>BE: dept.receiveQuota(amount) — cộng Dept Fund
     BE->>BE: status = PAID (AUTO — không qua Accountant)
     BE-->>FE: Thành công
 ```
 
-### 3.5 Bảng tóm tắt 3 Flow
+## 7. Bảng tóm tắt 3 Flow
 
 | Flow | Type | Người tạo | Approver | Giải ngân | Dòng tiền |
-|------|------|-----------|----------|-----------|-----------|
+|------|------|-----------|----------|-----------|-----------| 
 | 1 | ADVANCE/EXPENSE/REIMBURSE | Employee/TL | **Team Leader** | **Accountant (PIN)** | Project → Wallet |
 | 2 | PROJECT_TOPUP | Team Leader | **Manager** | **Auto** | Dept → Project |
 | 3 | QUOTA_TOPUP | Manager | **Admin** | **Auto** | System → Dept |
 
-## 4. Luồng lương (Payroll Flow)
+## 8. Luồng lương (Payroll Flow)
 
 ```mermaid
 sequenceDiagram
@@ -177,18 +200,22 @@ sequenceDiagram
     participant BE as Backend
     participant EMP as Employee
 
-    ACC->>FE: Mở /payroll → Tạo kỳ lương mới
-    FE->>BE: POST /api/v1/payroll {month, year, name}
+    ACC->>FE: Mở /accountant/payroll → Tạo kỳ lương mới
+    FE->>BE: POST /api/v1/accountant/payroll {month, year, name}
     BE-->>FE: {periodCode: "PR-2026-03"}
 
     ACC->>FE: Import Excel → Upload danh sách lương
-    FE->>BE: POST /api/v1/payroll/{id}/upload (Excel file)
+    FE->>BE: POST /api/v1/accountant/payroll/{id}/import (Excel file)
     BE->>BE: Parse Excel → Tạo Payslip cho từng NV
-    BE->>BE: Auto-netting: tính advanceDeduct từ debtBalance
-    BE-->>FE: {payslips: [...]}
+    BE-->>FE: {entries: [...], errors: [...]}
 
-    ACC->>FE: Xác nhận "Chốt & Chi lương"
-    FE->>BE: POST /api/v1/payroll/{id}/execute
+    ACC->>FE: Nhấn "Tính bù trừ"
+    FE->>BE: POST /api/v1/accountant/payroll/{id}/auto-netting
+    BE->>BE: Tính advanceDeduct từ debtBalance
+    BE-->>FE: {summary: [...]}
+
+    ACC->>FE: Xác nhận "Chạy lương"
+    FE->>BE: POST /api/v1/accountant/payroll/{id}/run
     BE->>BE: forEach payslip:
     BE->>BE:   1. SystemFund.debit(finalNetSalary)
     BE->>BE:   2. Wallet.credit(finalNetSalary)
@@ -196,11 +223,11 @@ sequenceDiagram
     BE->>BE:   4. Tạo Transaction(PAYSLIP_PAYMENT)
     BE-->>FE: Kỳ lương đã chi xong
 
-    EMP->>FE: Mở /payroll → Xem phiếu lương
-    FE->>BE: GET /api/v1/payroll/my-payslips
+    EMP->>FE: Mở /payslips → Xem phiếu lương
+    FE->>BE: GET /api/v1/payslips
 ```
 
-## 5. Server Component vs Client Component
+## 9. Server Component vs Client Component
 
 | Trường hợp | Dùng | Lý do |
 |------------|------|-------|
@@ -210,7 +237,7 @@ sequenceDiagram
 | Dashboard với wallet | **Client** | Cần Context (useWallet, useAuth) |
 | Upload file | **Client** | Cần File API, progress tracking |
 
-## 6. Cách data chảy trong code
+## 10. Cách data chảy trong code
 
 ```
 User clicks button

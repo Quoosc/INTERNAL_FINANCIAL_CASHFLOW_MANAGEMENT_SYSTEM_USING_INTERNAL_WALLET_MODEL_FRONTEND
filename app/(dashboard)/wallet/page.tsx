@@ -45,7 +45,7 @@ export default function WalletPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 border border-blue-500/20 rounded-2xl p-6">
               <p className="text-sm text-gray-400 mb-2">Số dư khả dụng</p>
-              <p className="text-3xl font-bold text-white">{wallet ? formatCurrency(wallet.availableBalance) : "---"}</p>
+              <p className="text-3xl font-bold text-white">{wallet ? formatCurrency(wallet.balance - wallet.pendingBalance) : "---"}</p>
               <p className="text-xs text-gray-500 mt-2">= Tổng số dư − Tiền treo</p>
             </div>
             <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/20 border border-amber-500/20 rounded-2xl p-6">

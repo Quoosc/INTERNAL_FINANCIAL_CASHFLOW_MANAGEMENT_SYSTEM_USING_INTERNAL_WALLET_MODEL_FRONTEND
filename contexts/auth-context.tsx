@@ -1,26 +1,30 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { UserInfoResponse, Permission } from "@/types";
+import { AuthUser, RoleName } from "@/types";
 import { getAccessToken } from "@/lib/api-client";
 import { logout as authLogout } from "@/lib/auth";
 
 // =============================================================
 // Auth Context - Quản lý trạng thái xác thực toàn cục
+// Kiến trúc mới: 5 Roles, role-based access (không permission-level)
 // =============================================================
 
 interface AuthState {
-  user: UserInfoResponse | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
 
 interface AuthContextType extends AuthState {
-  setUser: (user: UserInfoResponse | null) => void;
+  setUser: (user: AuthUser | null) => void;
   logout: () => Promise<void>;
-  hasPermission: (permission: Permission) => boolean;
-  hasAnyPermission: (permissions: Permission[]) => boolean;
-  hasAllPermissions: (permissions: Permission[]) => boolean;
+  /** Kiểm tra user có đúng role cụ thể không */
+  hasRole: (role: RoleName) => boolean;
+  /** Kiểm tra user có bất kỳ role nào trong danh sách không */
+  hasAnyRole: (roles: RoleName[]) => boolean;
+  /** Kiểm tra user có phải first login (cần đổi MK) không */
+  isFirstLogin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedUser = localStorage.getItem("user_info");
         if (storedUser) {
           try {
-            const user: UserInfoResponse = JSON.parse(storedUser);
+            const user: AuthUser = JSON.parse(storedUser);
             setState({ user, isAuthenticated: true, isLoading: false });
             return;
           } catch {
@@ -71,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({ user: null, isAuthenticated: false, isLoading: false });
   }, []);
 
-  const setUser = useCallback((user: UserInfoResponse | null) => {
+  const setUser = useCallback((user: AuthUser | null) => {
     if (user) {
       localStorage.setItem("user_info", JSON.stringify(user));
       setState({ user, isAuthenticated: true, isLoading: false });
@@ -88,29 +92,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/login";
   }, []);
 
-  const hasPermission = useCallback(
-    (permission: Permission): boolean => {
+  const hasRole = useCallback(
+    (role: RoleName): boolean => {
       if (!state.user) return false;
-      return state.user.permissions.includes(permission);
+      return state.user.role === role;
     },
     [state.user]
   );
 
-  const hasAnyPermission = useCallback(
-    (permissions: Permission[]): boolean => {
+  const hasAnyRole = useCallback(
+    (roles: RoleName[]): boolean => {
       if (!state.user) return false;
-      return permissions.some((p) => state.user!.permissions.includes(p));
+      return roles.some((r) => state.user!.role === r);
     },
     [state.user]
   );
 
-  const hasAllPermissions = useCallback(
-    (permissions: Permission[]): boolean => {
-      if (!state.user) return false;
-      return permissions.every((p) => state.user!.permissions.includes(p));
-    },
-    [state.user]
-  );
+  const isFirstLogin = state.user?.isFirstLogin ?? false;
 
   return (
     <AuthContext.Provider
@@ -118,9 +116,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...state,
         setUser,
         logout,
-        hasPermission,
-        hasAnyPermission,
-        hasAllPermissions,
+        hasRole,
+        hasAnyRole,
+        isFirstLogin,
       }}
     >
       {children}
@@ -131,8 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 /**
  * Hook để truy cập auth context
  * @example
- * const { user, hasPermission, logout } = useAuth();
- * if (hasPermission(Permission.WALLET_VIEW_SELF)) { ... }
+ * const { user, hasRole, logout } = useAuth();
+ * if (hasRole(RoleName.ADMIN)) { ... }
+ * if (hasAnyRole([RoleName.ADMIN, RoleName.MANAGER])) { ... }
  */
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);

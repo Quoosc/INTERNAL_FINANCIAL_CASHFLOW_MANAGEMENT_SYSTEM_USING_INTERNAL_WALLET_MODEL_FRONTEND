@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { Permission } from "@/types";
+import { RoleName } from "@/types";
 import { AuthProvider } from "@/contexts/auth-context";
 import { WalletProvider } from "@/contexts/wallet-context";
 
@@ -17,7 +17,7 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
-  permissions?: Permission[]; // items without permissions are visible to all
+  roles?: RoleName[]; // items without roles are visible to all
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -38,7 +38,7 @@ const NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
       </svg>
     ),
-    permissions: [Permission.WALLET_VIEW_SELF],
+    // visible to all authenticated users
   },
   {
     label: "Yêu cầu",
@@ -48,7 +48,7 @@ const NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
-    permissions: [Permission.REQUEST_CREATE, Permission.REQUEST_VIEW_SELF],
+    // visible to all authenticated users
   },
   {
     label: "Dự án",
@@ -58,7 +58,7 @@ const NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
     ),
-    permissions: [Permission.PROJECT_VIEW_ACTIVE, Permission.PROJECT_VIEW_ALL],
+    // visible to all authenticated users
   },
   {
     label: "Bảng lương",
@@ -68,7 +68,7 @@ const NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
       </svg>
     ),
-    permissions: [Permission.PAYROLL_VIEW_SELF, Permission.PAYROLL_MANAGE],
+    // visible to all authenticated users
   },
 ];
 
@@ -81,7 +81,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
       </svg>
     ),
-    permissions: [Permission.USER_VIEW_LIST],
+    roles: [RoleName.ADMIN],
   },
   {
     label: "Vai trò & Quyền",
@@ -91,7 +91,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
-    permissions: [Permission.ROLE_MANAGE],
+    roles: [RoleName.ADMIN],
   },
   {
     label: "Phòng ban",
@@ -101,7 +101,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
       </svg>
     ),
-    permissions: [Permission.DEPT_MANAGE],
+    roles: [RoleName.ADMIN],
   },
   {
     label: "Quỹ hệ thống",
@@ -111,7 +111,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    permissions: [Permission.SYSTEM_FUND_VIEW],
+    roles: [RoleName.ADMIN, RoleName.ACCOUNTANT],
   },
   {
     label: "Cấu hình",
@@ -122,7 +122,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
-    permissions: [Permission.SYSTEM_CONFIG_MANAGE],
+    roles: [RoleName.ADMIN],
   },
   {
     label: "Nhật ký hệ thống",
@@ -132,14 +132,14 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
       </svg>
     ),
-    permissions: [Permission.AUDIT_LOG_VIEW],
+    roles: [RoleName.ADMIN],
   },
 ];
 
 // --- Sidebar Component ---
 function Sidebar() {
   const pathname = usePathname();
-  const { user, hasAnyPermission, logout } = useAuth();
+  const { user, hasAnyRole, logout } = useAuth();
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -147,11 +147,11 @@ function Sidebar() {
   };
 
   const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.permissions || hasAnyPermission(item.permissions)
+    (item) => !item.roles || hasAnyRole(item.roles)
   );
 
   const visibleAdminItems = ADMIN_NAV_ITEMS.filter(
-    (item) => !item.permissions || hasAnyPermission(item.permissions)
+    (item) => !item.roles || hasAnyRole(item.roles)
   );
 
   return (
@@ -236,11 +236,11 @@ function Sidebar() {
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-400 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-semibold text-sm">
-              {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
+              {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{user?.full_name || "User"}</p>
+            <p className="text-sm font-medium text-white truncate">{user?.fullName || "User"}</p>
             <p className="text-xs text-gray-500 truncate">{user?.role || "Employee"}</p>
           </div>
           <button

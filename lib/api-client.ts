@@ -78,13 +78,13 @@ async function refreshAccessToken(): Promise<string | null> {
       return null;
     }
 
-    const json: ApiResponse<{ access_token: string; refresh_token: string }> =
+    const json: ApiResponse<{ accessToken: string; refreshToken: string }> =
       await res.json();
 
     if (json.success && json.data) {
-      setTokens(json.data.access_token, json.data.refresh_token);
-      setTokenCookie(json.data.access_token);
-      return json.data.access_token;
+      setTokens(json.data.accessToken, json.data.refreshToken);
+      setTokenCookie(json.data.accessToken);
+      return json.data.accessToken;
     }
 
     return null;

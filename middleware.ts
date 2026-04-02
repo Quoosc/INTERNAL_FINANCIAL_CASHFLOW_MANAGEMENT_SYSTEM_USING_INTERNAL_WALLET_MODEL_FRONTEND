@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
 // =============================================================
 
 // Routes that DON'T require authentication
-const PUBLIC_ROUTES = ["/login", "/register"];
+const PUBLIC_ROUTES = ["/login", "/register", "/change-password", "/create-pin"];
 
 // Static file patterns to skip
 const STATIC_PATTERNS = [

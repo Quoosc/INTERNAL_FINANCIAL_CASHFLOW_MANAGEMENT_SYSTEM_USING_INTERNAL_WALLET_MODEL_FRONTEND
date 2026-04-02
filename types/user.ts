@@ -26,8 +26,9 @@ export enum RoleName {
 }
 
 /**
- * Dynamic RBAC Permissions.
+ * Dynamic RBAC Permissions — 46 values.
  * Định nghĩa cứng trong source code, Admin gán cho Role qua UI.
+ * Khớp với Database.md Permission Matrix (v2.0 — NO Escalation).
  */
 export enum Permission {
   // --- 1. IAM & Security ---
@@ -56,15 +57,25 @@ export enum Permission {
   PROJECT_MEMBER_MANAGE = "PROJECT_MEMBER_MANAGE",
   PROJECT_STATUS_MANAGE = "PROJECT_STATUS_MANAGE",
   PROJECT_VIEW_ALL = "PROJECT_VIEW_ALL",
+  /** Team Leader: quản lý danh mục chi tiêu trong dự án */
+  PROJECT_CATEGORY_MANAGE = "PROJECT_CATEGORY_MANAGE",
+  /** Team Leader: phân bổ ngân sách Phase/Category */
+  PROJECT_BUDGET_ALLOCATE = "PROJECT_BUDGET_ALLOCATE",
+  /** Manager: chỉ định Team Leader cho dự án */
+  PROJECT_ASSIGN_LEADER = "PROJECT_ASSIGN_LEADER",
 
   // --- 4. Request Flow ---
   REQUEST_CREATE = "REQUEST_CREATE",
   REQUEST_VIEW_SELF = "REQUEST_VIEW_SELF",
   REQUEST_VIEW_DEPT = "REQUEST_VIEW_DEPT",
-  REQUEST_APPROVE_TIER1 = "REQUEST_APPROVE_TIER1",
+  /** Team Leader: duyệt MỌI đơn chi tiêu Member (Flow 1 — không giới hạn số tiền) */
+  REQUEST_APPROVE_TEAM_LEADER = "REQUEST_APPROVE_TEAM_LEADER",
+  /** Manager: duyệt đơn xin cấp vốn dự án (Flow 2 — PROJECT_TOPUP) */
+  REQUEST_APPROVE_PROJECT_TOPUP = "REQUEST_APPROVE_PROJECT_TOPUP",
+  /** Admin: duyệt đơn xin cấp vốn phòng ban (Flow 3 — QUOTA_TOPUP) */
+  REQUEST_APPROVE_DEPT_TOPUP = "REQUEST_APPROVE_DEPT_TOPUP",
   REQUEST_REJECT = "REQUEST_REJECT",
   REQUEST_VIEW_ALL = "REQUEST_VIEW_ALL",
-  REQUEST_APPROVE_TIER2 = "REQUEST_APPROVE_TIER2",
   REQUEST_VIEW_APPROVED = "REQUEST_VIEW_APPROVED",
   REQUEST_PAYOUT = "REQUEST_PAYOUT",
 

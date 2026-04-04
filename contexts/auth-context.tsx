@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import { AuthUser, RoleName } from "@/types";
 import { getAccessToken } from "@/lib/api-client";
 import { logout as authLogout } from "@/lib/auth";
@@ -47,33 +47,24 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-  });
-
-  // Initialize auth state from stored token
-  useEffect(() => {
+  const [state, setState] = useState<AuthState>(() => {
     const token = getAccessToken();
     if (token) {
       const payload = decodeJwtPayload(token);
-      if (payload) {
-        // Extract user info from localStorage (set during login)
+      if (payload && typeof window !== "undefined") {
         const storedUser = localStorage.getItem("user_info");
         if (storedUser) {
           try {
             const user: AuthUser = JSON.parse(storedUser);
-            setState({ user, isAuthenticated: true, isLoading: false });
-            return;
+            return { user, isAuthenticated: true, isLoading: false };
           } catch {
             // Invalid stored data
           }
         }
       }
     }
-    setState({ user: null, isAuthenticated: false, isLoading: false });
-  }, []);
+    return { user: null, isAuthenticated: false, isLoading: false };
+  });
 
   const setUser = useCallback((user: AuthUser | null) => {
     if (user) {

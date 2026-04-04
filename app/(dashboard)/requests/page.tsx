@@ -275,7 +275,7 @@ function parseType(value: string | null): RequestType | undefined {
   return valid.has(value) ? (value as RequestType) : undefined;
 }
 
-function buildInitialState(searchParams: ReadonlyURLSearchParams): {
+function buildInitialState(searchParams: { get: (key: string) => string | null }): {
   filters: RequestFilterParams;
   fromDate: string;
   toDate: string;

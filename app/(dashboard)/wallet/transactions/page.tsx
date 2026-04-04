@@ -317,7 +317,7 @@ function parseTypeValue(typeParam: string | null): TransactionType | undefined {
   return undefined;
 }
 
-function getInitialState(searchParams: ReadonlyURLSearchParams): {
+function getInitialState(searchParams: { get: (key: string) => string | null }): {
   filters: TransactionFiltersState;
   page: number;
 } {

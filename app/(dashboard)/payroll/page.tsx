@@ -117,7 +117,7 @@ function parseStatus(value: string | null): PayslipStatus | undefined {
   return undefined;
 }
 
-function buildInitialState(searchParams: ReadonlyURLSearchParams): {
+function buildInitialState(searchParams: { get: (key: string) => string | null }): {
   filters: PayrollFilters;
   page: number;
 } {

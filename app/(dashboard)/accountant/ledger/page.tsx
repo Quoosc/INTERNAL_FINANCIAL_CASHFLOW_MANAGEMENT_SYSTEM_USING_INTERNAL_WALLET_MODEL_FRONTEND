@@ -374,14 +374,14 @@ export default function AccountantLedgerPage() {
           <p className="text-slate-400 mt-1">Tat ca giao dich he thong theo nguyen tac double-entry immutable.</p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-500/40 bg-slate-500/15 text-slate-300 text-sm font-medium">
-          Immutable - Chi doc
+          Immutable — Chỉ đọc
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SummaryCard label="Tong nap vao" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-300" />
         <SummaryCard label="Tong chi ra" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-300" />
-        <SummaryCard label="So du rong" value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-white" />
+        <SummaryCard label="Số dư ròng" value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-white" />
       </div>
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
@@ -449,7 +449,7 @@ export default function AccountantLedgerPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Khong co giao dich phu hop bo loc.</td>
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Không có giao dịch phù hợp bộ lọc.</td>
                 </tr>
               ) : (
                 items.map((item) => (

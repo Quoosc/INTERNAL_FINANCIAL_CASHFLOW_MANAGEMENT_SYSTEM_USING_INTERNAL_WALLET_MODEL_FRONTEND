@@ -195,7 +195,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
-          Quay lai So cai
+          Quay lại Sổ cái
         </Link>
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-8 text-center text-slate-400">
           Khong tim thay giao dich.
@@ -237,8 +237,8 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           <InfoCard label="So tien" value={formatCurrency(txn.amount)} tone={txn.amount >= 0 ? "text-emerald-300" : "text-rose-300"} />
           <InfoCard label="Vi nhan" value={`${txn.walletOwnerName} (#${txn.walletId})`} />
           <InfoCard label="Mo ta" value={txn.description ?? "-"} />
-          <InfoCard label="So du truoc" value={formatCurrency(balanceBefore)} />
-          <InfoCard label="So du sau" value={formatCurrency(txn.balanceAfter)} />
+          <InfoCard label="Số dư trước" value={formatCurrency(balanceBefore)} />
+          <InfoCard label="Số dư sau" value={formatCurrency(txn.balanceAfter)} />
           <InfoCard label="Gateway" value={txn.gatewayProvider ?? "INTERNAL"} />
         </div>
       </div>
@@ -264,14 +264,14 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
         <h2 className="text-lg font-semibold text-white">Audit & Traceability</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <InfoCard label="Nguoi thuc hien" value={txn.actorName ? `${txn.actorName} (#${txn.actorId ?? "-"})` : "He thong"} />
+          <InfoCard label="Người thực hiện" value={txn.actorName ? `${txn.actorName} (#${txn.actorId ?? "-"})` : "Hệ thống"} />
           <InfoCard label="IP" value={txn.ipAddress ?? "N/A"} mono />
           <InfoCard label="Thoi gian tao" value={formatDateTime(txn.createdAt)} />
           <InfoCard label="Cap nhat" value={formatDateTime(txn.updatedAt)} />
           <InfoCard label="Payment Ref" value={txn.paymentRef ?? "-"} mono />
           <InfoCard
             label="Opposing entry"
-            value={txn.relatedTransactionId ? `#${txn.relatedTransactionId}` : "Khong co"}
+            value={txn.relatedTransactionId ? `#${txn.relatedTransactionId}` : "Không có"}
           />
         </div>
 
@@ -298,7 +298,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
         </svg>
-        Quay lai So cai
+        Quay lại Sổ cái
       </Link>
     </div>
   );

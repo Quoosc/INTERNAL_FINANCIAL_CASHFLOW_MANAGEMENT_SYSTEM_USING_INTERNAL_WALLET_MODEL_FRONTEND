@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import React, { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api-client";
 import {
   AutoNettingResponse,
@@ -50,9 +50,9 @@ function formatDateTime(iso: string): string {
 }
 
 function getStatusLabel(status: PayrollStatus): string {
-  if (status === PayrollStatus.DRAFT) return "Nhap";
-  if (status === PayrollStatus.PROCESSING) return "Dang xu ly";
-  return "Hoan tat";
+  if (status === PayrollStatus.DRAFT) return "Nháp";
+  if (status === PayrollStatus.PROCESSING) return "Đang xử lý";
+  return "Hoàn tất";
 }
 
 function getStatusClass(status: PayrollStatus): string {
@@ -293,7 +293,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           outstandingDebt,
           deductedAmount,
           remainingDebt: Math.max(0, outstandingDebt - deductedAmount),
-          note: deductedAmount > 0 ? "Da bu tru tu ky luong" : "Khong co du no",
+          note: deductedAmount > 0 ? "Đã bù trừ từ kỳ lương" : "Không có dư nợ",
         };
       });
 
@@ -356,9 +356,9 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
-          Quay lai danh sach ky luong
+          Quay lại danh sách kỳ lương
         </Link>
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-8 text-center text-slate-400">Khong tim thay ky luong.</div>
+        <div className="bg-slate-800 border border-white/10 rounded-2xl p-8 text-center text-slate-400">Không tìm thấy kỳ lương.</div>
       </div>
     );
   }
@@ -368,7 +368,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-slate-400">
-        <Link href="/accountant/payroll" className="hover:text-slate-200 transition-colors">Bang luong</Link>
+        <Link href="/accountant/payroll" className="hover:text-slate-200 transition-colors">Bảng lương</Link>
         <span>/</span>
         <span className="text-slate-300 font-mono">{period.periodCode}</span>
       </div>
@@ -378,11 +378,11 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           <div>
             <p className="text-xs text-slate-500 font-mono">{period.periodCode}</p>
             <h1 className="text-2xl font-bold text-white mt-1">{period.name}</h1>
-            <p className="text-sm text-slate-400 mt-1">Thang {period.month}/{period.year}</p>
+            <p className="text-sm text-slate-400 mt-1">Tháng {period.month}/{period.year}</p>
           </div>
           <div className="flex flex-col items-start lg:items-end gap-2">
             <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getStatusClass(period.status)}`}>{getStatusLabel(period.status)}</span>
-            <p className="text-sm text-slate-400">Cap nhat: {formatDateTime(period.updatedAt)}</p>
+            <p className="text-sm text-slate-400">Cập nhật: {formatDateTime(period.updatedAt)}</p>
           </div>
         </div>
       </div>
@@ -412,53 +412,53 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       {activeStep === 1 && (
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Buoc 1: Upload Excel</h2>
-            <a href="/api/v1/accountant/payroll/template" className="inline-flex w-fit items-center gap-2 text-sm text-blue-300 hover:text-blue-200">Tai template Excel</a>
+            <h2 className="text-lg font-semibold text-white">Bước 1: Upload Excel</h2>
+            <a href="/api/v1/accountant/payroll/template" className="inline-flex w-fit items-center gap-2 text-sm text-blue-300 hover:text-blue-200">Tải template Excel</a>
           </div>
 
           <label className="block rounded-2xl border border-dashed border-white/20 bg-slate-900/60 p-6 text-center cursor-pointer hover:border-blue-400/50 transition-colors">
             <input type="file" accept=".xlsx,.xls" className="hidden" onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} />
-            <p className="text-sm text-slate-300">Keo tha hoac bam de chon file Excel (.xlsx, .xls)</p>
-            <p className="text-xs text-slate-500 mt-2">{selectedFile ? `Da chon: ${selectedFile.name}` : "Chua co file nao duoc chon"}</p>
+            <p className="text-sm text-slate-300">Kéo thả hoặc bấm để chọn file Excel (.xlsx, .xls)</p>
+            <p className="text-xs text-slate-500 mt-2">{selectedFile ? `Đã chọn: ${selectedFile.name}` : "Chưa có file nào được chọn"}</p>
           </label>
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => void handleImport()} disabled={!selectedFile || uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Dang tai len..." : "Tai len"}</button>
+            <button type="button" onClick={() => void handleImport()} disabled={!selectedFile || uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Đang tải lên..." : "Tải lên"}</button>
           </div>
 
           {importResult && (
             <div className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-white">Ket qua import</h3>
+              <h3 className="text-sm font-semibold text-white">Kết quả import</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <SummaryStat label="Tong dong" value={String(importResult.totalRows)} />
-                <SummaryStat label="Thanh cong" value={String(importResult.successCount)} tone="text-emerald-300" />
-                <SummaryStat label="Loi" value={String(importResult.errorCount)} tone="text-rose-300" />
-                <SummaryStat label="Tong net" value={formatCurrency(importResult.totalNetPayroll)} />
+                <SummaryStat label="Tổng dòng" value={String(importResult.totalRows)} />
+                <SummaryStat label="Thành công" value={String(importResult.successCount)} tone="text-emerald-300" />
+                <SummaryStat label="Lỗi" value={String(importResult.errorCount)} tone="text-rose-300" />
+                <SummaryStat label="Tổng net" value={formatCurrency(importResult.totalNetPayroll)} />
               </div>
             </div>
           )}
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => setActiveStep(2)} disabled={!hasEntries} className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Tiep theo →</button>
+            <button type="button" onClick={() => setActiveStep(2)} disabled={!hasEntries} className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Tiếp theo →</button>
           </div>
         </div>
       )}
 
       {activeStep === 2 && (
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Buoc 2: Xem & Sua danh sach</h2>
+          <h2 className="text-lg font-semibold text-white">Bước 2: Xem & Sửa danh sách</h2>
 
           <div className="rounded-xl border border-white/10 overflow-x-auto">
             <table className="w-full min-w-[980px]">
               <thead>
                 <tr className="bg-slate-900/70 border-b border-white/10">
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Ma NV</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Ho ten</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Luong gross</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Phu cap</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Khau tru</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Luong net</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Hanh dong</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Mã NV</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Họ tên</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Lương gross</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Phụ cấp</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Khấu trừ</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Lương net</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -475,7 +475,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                       <td className="px-4 py-3 text-right text-sm text-rose-300">{formatCurrency(deductionValue)}</td>
                       <td className="px-4 py-3 text-right text-sm text-emerald-300 font-semibold">{formatCurrency(entry.finalNetSalary)}</td>
                       <td className="px-4 py-3 text-right">
-                        <button type="button" onClick={() => openEdit(entry)} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs">Sua</button>
+                        <button type="button" onClick={() => openEdit(entry)} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs">Sửa</button>
                       </td>
                     </tr>
                   );
@@ -485,38 +485,38 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SummaryStat label="Tong gross" value={formatCurrency(grossTotal)} />
-            <SummaryStat label="Tong net" value={formatCurrency(netTotal)} tone="text-emerald-300" />
+            <SummaryStat label="Tổng gross" value={formatCurrency(grossTotal)} />
+            <SummaryStat label="Tổng net" value={formatCurrency(netTotal)} tone="text-emerald-300" />
           </div>
 
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => setActiveStep(1)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lai</button>
-            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold">Tinh bu tru →</button>
+            <button type="button" onClick={() => setActiveStep(1)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lại</button>
+            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold">Tính bù trừ →</button>
           </div>
         </div>
       )}
 
       {activeStep === 3 && (
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Buoc 3: Auto-netting</h2>
+          <h2 className="text-lg font-semibold text-white">Bước 3: Auto-netting</h2>
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => void handleNetting()} disabled={netting || period.entries.length === 0} className="px-4 py-2.5 rounded-xl bg-amber-500/80 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 text-sm font-semibold">{netting ? "Dang tinh..." : "Tinh bu tru no tam ung"}</button>
+            <button type="button" onClick={() => void handleNetting()} disabled={netting || period.entries.length === 0} className="px-4 py-2.5 rounded-xl bg-amber-500/80 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 text-sm font-semibold">{netting ? "Đang tính..." : "Tính bù trừ nợ tạm ứng"}</button>
           </div>
 
           {!nettingResult ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-10 text-center text-slate-500 text-sm">Chua co du lieu auto-netting. Bam &quot;Tinh bu tru no tam ung&quot; de tiep tuc.</div>
+            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-10 text-center text-slate-500 text-sm">Chưa có dữ liệu auto-netting. Bấm &quot;Tính bù trừ nợ tạm ứng&quot; để tiếp tục.</div>
           ) : (
             <>
               <div className="rounded-xl border border-white/10 overflow-x-auto">
                 <table className="w-full min-w-[920px]">
                   <thead>
                     <tr className="bg-slate-900/70 border-b border-white/10">
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Ma NV</th>
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Ho ten</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Du no</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Khau tru</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Luong thuc linh</th>
+                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Mã NV</th>
+                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Họ tên</th>
+                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Dư nợ</th>
+                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Khấu trừ</th>
+                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Lương thực lĩnh</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -537,43 +537,43 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <SummaryStat label="Tong khau tru tam ung" value={formatCurrency(nettingResult.totalAdvanceDeducted)} tone="text-amber-300" />
-                <SummaryStat label="Tong thuc linh" value={formatCurrency(netTotal)} tone="text-emerald-300" />
+                <SummaryStat label="Tổng khấu trừ tạm ứng" value={formatCurrency(nettingResult.totalAdvanceDeducted)} tone="text-amber-300" />
+                <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-300" />
               </div>
             </>
           )}
 
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => setActiveStep(2)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lai</button>
-            <button type="button" onClick={() => setActiveStep(4)} disabled={!nettingResult && !isCompleted} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Xac nhan & Chay luong →</button>
+            <button type="button" onClick={() => setActiveStep(2)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lại</button>
+            <button type="button" onClick={() => setActiveStep(4)} disabled={!nettingResult && !isCompleted} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Xác nhận & Chạy lương →</button>
           </div>
         </div>
       )}
 
       {activeStep === 4 && (
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Buoc 4: Chay luong</h2>
+          <h2 className="text-lg font-semibold text-white">Bước 4: Chạy lương</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SummaryStat label="So nhan vien" value={`${totalEmployees} nguoi`} />
-            <SummaryStat label="Tong thuc linh" value={formatCurrency(netTotal)} tone="text-emerald-300" />
+            <SummaryStat label="Số nhân viên" value={`${totalEmployees} người`} />
+            <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-300" />
           </div>
 
           {isCompleted ? (
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 space-y-2">
-              <p className="text-emerald-300 font-semibold">✓ Payroll da chay thanh cong</p>
-              <p className="text-sm text-slate-200">Ky {period.periodCode} da chuyen trang thai COMPLETED.</p>
-              <p className="text-sm text-slate-300">{runResult ? `Da tao ${runResult.payslipsGenerated} phieu luong • Tong chi ${formatCurrency(runResult.totalNetPayroll)}` : `Tong chi: ${formatCurrency(period.totalNetPayroll)}`}</p>
+              <p className="text-emerald-300 font-semibold">✓ Payroll đã chạy thành công</p>
+              <p className="text-sm text-slate-200">Ky {period.periodCode} đã chuyển trạng thái COMPLETED.</p>
+              <p className="text-sm text-slate-300">{runResult ? `Đã tạo ${runResult.payslipsGenerated} phiếu lương • Tong chi ${formatCurrency(runResult.totalNetPayroll)}` : `Tổng chi: ${formatCurrency(period.totalNetPayroll)}`}</p>
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-200 text-sm">⚠ Thao tac nay KHONG THE HOAN TAC. He thong se chi luong cho {totalEmployees} nhan vien.</div>
-              <button type="button" onClick={() => setShowRunConfirm(true)} className="px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">Chay luong ngay</button>
+              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-200 text-sm">⚠ Thao tác này KHÔNG THỂ HOÀN TÁC. Hệ thống sẽ chi lương cho {totalEmployees} nhân viên.</div>
+              <button type="button" onClick={() => setShowRunConfirm(true)} className="px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">Chạy lương ngay</button>
             </>
           )}
 
           <div>
-            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lai</button>
+            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lại</button>
           </div>
         </div>
       )}
@@ -584,18 +584,18 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
         <div className="fixed inset-0 z-50">
           <button type="button" className="absolute inset-0 bg-black/70" onClick={closeEdit} aria-label="Dong modal sua entry" />
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Sua dong luong - {editingEntry.employeeCode}</h3>
+            <h3 className="text-xl font-bold text-white">Sửa dòng lương - {editingEntry.employeeCode}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <NumberInput label="Luong co ban" value={baseSalary} onChange={setBaseSalary} />
-              <NumberInput label="Thuong" value={bonus} onChange={setBonus} />
-              <NumberInput label="Phu cap" value={allowance} onChange={setAllowance} />
-              <NumberInput label="Khau tru" value={deduction} onChange={setDeduction} />
-              <NumberInput label="Khau tru tam ung" value={advanceDeduct} onChange={setAdvanceDeduct} />
+              <NumberInput label="Lương cơ bản" value={baseSalary} onChange={setBaseSalary} />
+              <NumberInput label="Thưởng" value={bonus} onChange={setBonus} />
+              <NumberInput label="Phụ cấp" value={allowance} onChange={setAllowance} />
+              <NumberInput label="Khấu trừ" value={deduction} onChange={setDeduction} />
+              <NumberInput label="Khấu trừ tạm ứng" value={advanceDeduct} onChange={setAdvanceDeduct} />
             </div>
             {entryError && <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">{entryError}</div>}
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button type="button" onClick={closeEdit} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">Huy</button>
-              <button type="button" onClick={() => void handleSaveEntry()} disabled={uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Dang luu..." : "Luu"}</button>
+              <button type="button" onClick={closeEdit} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">Hủy</button>
+              <button type="button" onClick={() => void handleSaveEntry()} disabled={uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Đang lưu..." : "Lưu"}</button>
             </div>
           </div>
         </div>
@@ -603,14 +603,14 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
       {showRunConfirm && (
         <div className="fixed inset-0 z-50">
-          <button type="button" className="absolute inset-0 bg-black/70" onClick={() => setShowRunConfirm(false)} aria-label="Dong xac nhan chay luong" />
+          <button type="button" className="absolute inset-0 bg-black/70" onClick={() => setShowRunConfirm(false)} aria-label="Đóng xác nhận chạy lương" />
           <div className="absolute inset-x-0 top-20 mx-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Xac nhan chay luong</h3>
-            <p className="text-sm text-slate-300">He thong se chi luong cho <span className="font-semibold text-white">{totalEmployees} nhan vien</span> voi tong so tien <span className="font-semibold text-emerald-300">{formatCurrency(netTotal)}</span>.</p>
-            <p className="text-sm text-rose-300">Thao tac nay khong the hoan tac.</p>
+            <h3 className="text-xl font-bold text-white">Xác nhận chạy lương</h3>
+            <p className="text-sm text-slate-300">Hệ thống sẽ chi lương cho <span className="font-semibold text-white">{totalEmployees} nhân viên</span> với tổng số tiền <span className="font-semibold text-emerald-300">{formatCurrency(netTotal)}</span>.</p>
+            <p className="text-sm text-rose-300">Thao tác này không thể hoàn tác.</p>
             <div className="flex items-center justify-end gap-3">
-              <button type="button" onClick={() => setShowRunConfirm(false)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">Huy</button>
-              <button type="button" onClick={() => void handleRun()} disabled={running} className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{running ? "Dang chay..." : "Xac nhan chay luong"}</button>
+              <button type="button" onClick={() => setShowRunConfirm(false)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">Hủy</button>
+              <button type="button" onClick={() => void handleRun()} disabled={running} className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{running ? "Đang chạy..." : "Xác nhận chạy lương"}</button>
             </div>
           </div>
         </div>

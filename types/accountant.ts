@@ -4,7 +4,7 @@
 // =============================================================
 
 import type { RequestAttachmentResponse, RequestTimelineEntry, RequestStatus, RequestType } from "./request";
-import type { ApprovalRequester, ApprovalPhase } from "./team-leader";
+import type { ApprovalPhase } from "./team-leader";
 
 // --- Disbursement DTOs ---
 

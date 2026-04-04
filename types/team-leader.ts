@@ -4,7 +4,7 @@
 // =============================================================
 
 import type { RequestAttachmentResponse, RequestStatus, RequestType } from "./request";
-import type { ProjectDetailResponse, ProjectPhaseResponse, ProjectRole } from "./project";
+import type { ProjectDetailResponse } from "./project";
 
 // --- TL Projects ---
 

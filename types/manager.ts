@@ -3,7 +3,7 @@
 // Endpoints prefix: /manager/*
 // =============================================================
 
-import type { RequestAttachmentResponse, RequestTimelineEntry, RequestStatus } from "./request";
+import type { RequestTimelineEntry, RequestStatus } from "./request";
 import type { ApprovalRequester } from "./team-leader";
 
 // --- Manager Approvals (Flow 2 — PROJECT_TOPUP) ---

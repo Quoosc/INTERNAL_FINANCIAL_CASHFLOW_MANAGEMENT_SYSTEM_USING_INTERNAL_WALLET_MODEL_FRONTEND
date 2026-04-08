@@ -119,40 +119,40 @@ financial-wallet-frontend/
 
 ## Quy ước quan trọng
 
-| Concept | Quy tắc |
-|---|---|
-| **Server Component** | Mặc định — không có directive. Dùng cho pages hiển thị dữ liệu (list, detail). |
-| **Client Component** | Thêm `"use client"` dòng đầu. Dùng khi cần hook, form, browser event, context. |
-| **Route Group** | `(auth)` và `(dashboard)` không ảnh hưởng URL — chỉ chia layout và providers. |
-| **Types** | Đặt trong `types/`, luôn import qua `@/types` (barrel). Không import từ file con. |
-| **API calls** | Chỉ dùng `api.get/post/put/patch/delete` từ `@/lib/api-client`. Không dùng raw fetch/axios. |
-| **Role check** | `useAuth().hasRole(RoleName.ADMIN)` hoặc `useAuth().hasAnyRole([RoleName.CFO, RoleName.ADMIN, RoleName.ACCOUNTANT])` |
-| **Styling** | Tailwind CSS v4 only. Không inline `style={{}}` trừ dynamic values. Không Shadcn (chưa cài). |
-| **Icons** | Inline SVG. Nếu cần library: cài `lucide-react`, import riêng lẻ. |
+| Concept              | Quy tắc                                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Server Component** | Mặc định — không có directive. Dùng cho pages hiển thị dữ liệu (list, detail).                                       |
+| **Client Component** | Thêm `"use client"` dòng đầu. Dùng khi cần hook, form, browser event, context.                                       |
+| **Route Group**      | `(auth)` và `(dashboard)` không ảnh hưởng URL — chỉ chia layout và providers.                                        |
+| **Types**            | Đặt trong `types/`, luôn import qua `@/types` (barrel). Không import từ file con.                                    |
+| **API calls**        | Chỉ dùng `api.get/post/put/patch/delete` từ `@/lib/api-client`. Không dùng raw fetch/axios.                          |
+| **Role check**       | `useAuth().hasRole(RoleName.ADMIN)` hoặc `useAuth().hasAnyRole([RoleName.CFO, RoleName.ADMIN, RoleName.ACCOUNTANT])` |
+| **Styling**          | Tailwind CSS v4 only. Không inline `style={{}}` trừ dynamic values. Không Shadcn (chưa cài).                         |
+| **Icons**            | Inline SVG. Nếu cần library: cài `lucide-react`, import riêng lẻ.                                                    |
 
 ---
 
 ## Mapping Backend ↔ Frontend
 
-| Backend Module | Frontend Route | Ghi chú |
-|---|---|---|
-| `auth` | `/login` | `/register` tồn tại nhưng không có endpoint backend |
-| `wallet` | `/wallet/*` | Ví, nạp/rút tiền, lịch sử giao dịch |
-| `request` | `/requests/*` | Tạm ứng, thanh toán, hoàn ứng (3 flows) |
-| `project` | `/projects/*` | Dự án, phase, category budget, thành viên |
-| `accounting` | `/payroll/*`, `/admin/system-fund` | Kỳ lương, phiếu lương, quỹ hệ thống, sổ cái |
-| `user` | `/admin/users` | Quản lý nhân sự |
-| `user.Role` | `/admin/roles` | Vai trò & quyền hạn (RBAC) |
-| `organization` | `/admin/departments` | Phòng ban, ngân sách |
-| `config` | `/admin/settings` | Cấu hình tham số hệ thống |
-| `audit` | `/admin/audit-logs` | Nhật ký kiểm toán |
-| `notification` | `/notifications` | Thông báo real-time |
+| Backend Module | Frontend Route                     | Ghi chú                                             |
+| -------------- | ---------------------------------- | --------------------------------------------------- |
+| `auth`         | `/login`                           | `/register` tồn tại nhưng không có endpoint backend |
+| `wallet`       | `/wallet/*`                        | Ví, nạp/rút tiền, lịch sử giao dịch                 |
+| `request`      | `/requests/*`                      | Tạm ứng, thanh toán, hoàn ứng (3 flows)             |
+| `project`      | `/projects/*`                      | Dự án, phase, category budget, thành viên           |
+| `accounting`   | `/payroll/*`, `/admin/system-fund` | Kỳ lương, phiếu lương, quỹ hệ thống, sổ cái         |
+| `user`         | `/admin/users`                     | Quản lý nhân sự                                     |
+| `user.Role`    | `/admin/roles`                     | Vai trò & quyền hạn (RBAC)                          |
+| `organization` | `/admin/departments`               | Phòng ban, ngân sách                                |
+| `config`       | `/admin/settings`                  | Cấu hình tham số hệ thống                           |
+| `audit`        | `/admin/audit-logs`                | Nhật ký kiểm toán                                   |
+| `notification` | `/notifications`                   | Thông báo real-time                                 |
 
 ---
 
 ## Pages chưa implement
 
-| Route | Cần cho | API endpoint |
-|---|---|---|
+| Route                         | Cần cho                    | API endpoint                             |
+| ----------------------------- | -------------------------- | ---------------------------------------- |
 | `app/(auth)/change-password/` | `isFirstLogin = true` flow | `POST /api/v1/auth/first-login/complete` |
-| `app/(auth)/create-pin/` | Legacy flow cũ | Orphaned (không dùng trong contract mới) |
+| `app/(auth)/create-pin/`      | Legacy flow cũ             | Orphaned (không dùng trong contract mới) |

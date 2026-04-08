@@ -21,4 +21,4 @@
 
 ---
 
-*This file is now an index page for Tier 4 split prompts.*
+_This file is now an index page for Tier 4 split prompts._

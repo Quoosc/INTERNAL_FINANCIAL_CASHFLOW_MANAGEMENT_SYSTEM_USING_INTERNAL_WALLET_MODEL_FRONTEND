@@ -240,6 +240,23 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
         },
       ];
 
+    case RoleName.CFO:
+      return [
+        {
+          label: "Menu chính",
+          items: [...shared, notifications],
+        },
+        {
+          label: "CFO",
+          items: [
+            { label: "Duyệt ngân sách PB", href: "/admin/approvals", icon: icons.approvals },
+            { label: "Quỹ hệ thống", href: "/admin/system-fund", icon: icons.systemFund },
+            { label: "Cấu hình", href: "/admin/settings", icon: icons.settings },
+            { label: "Nhật ký hệ thống", href: "/admin/audit-logs", icon: icons.auditLogs },
+          ],
+        },
+      ];
+
     default:
       // Fallback: chỉ shared items (khi role chưa load)
       return [{ label: "Menu chính", items: [...shared, notifications] }];
@@ -264,6 +281,7 @@ function Sidebar() {
     [RoleName.TEAM_LEADER]: "Team Leader",
     [RoleName.MANAGER]:     "Manager",
     [RoleName.ACCOUNTANT]:  "Kế toán",
+    [RoleName.CFO]:         "CFO",
     [RoleName.ADMIN]:       "Quản trị viên",
   };
 
@@ -365,7 +383,11 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-950">
       <Sidebar />
-      <main className="ml-64 p-6 min-h-screen">{children}</main>
+      <main className="ml-64 p-6 min-h-screen">
+        <React.Suspense fallback={<div className="text-slate-400 text-sm">Dang tai du lieu trang...</div>}>
+          {children}
+        </React.Suspense>
+      </main>
     </div>
   );
 }

@@ -42,6 +42,7 @@ export default function DashboardPage() {
   }
 
   if (hasRole(RoleName.ADMIN)) return <AdminDashboard />;
+  if (hasRole(RoleName.CFO)) return <AdminDashboard />;
   if (hasRole(RoleName.ACCOUNTANT)) return <AccountantDashboard />;
   if (hasRole(RoleName.MANAGER)) return <ManagerDashboard />;
   if (hasRole(RoleName.TEAM_LEADER)) return <TeamLeaderDashboard />;

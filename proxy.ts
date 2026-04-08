@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // =============================================================
-// Next.js Middleware - JWT Route Protection
+// Next.js Proxy - JWT Route Protection
 // =============================================================
 
 // Routes that DON'T require authentication
-const PUBLIC_ROUTES = ["/login", "/register", "/change-password", "/create-pin"];
+const PUBLIC_ROUTES = ["/login", "/register", "/change-password"];
 
 // Static file patterns to skip
 const STATIC_PATTERNS = [
@@ -15,7 +15,7 @@ const STATIC_PATTERNS = [
   "/api", // API routes are handled by rewrites, not middleware
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip static files and API routes

@@ -18,6 +18,19 @@ interface LedgerTransactionView extends TransactionResponse {
 
 const PAGE_LIMIT = 20;
 
+interface SpringPage<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
+type LedgerListApi =
+  | SpringPage<TransactionResponse>
+  | PaginatedResponse<TransactionResponse>
+  | TransactionResponse[];
+
 const MOCK_SUMMARY: LedgerSummaryResponse = {
   currentBalance: 1_248_500_000,
   totalInflow: 2_500_000_000,
@@ -131,8 +144,32 @@ function parseType(value: string | null): TransactionType | undefined {
   return values.includes(value as TransactionType) ? (value as TransactionType) : undefined;
 }
 
-function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
-  return Array.isArray(payload) ? payload : payload.items;
+function normalizeList(payload: LedgerListApi, fallbackPage: number) {
+  if (Array.isArray(payload)) {
+    const total = payload.length;
+    return {
+      items: payload,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / PAGE_LIMIT)),
+      page: fallbackPage,
+    };
+  }
+
+  if ("content" in payload) {
+    return {
+      items: payload.content,
+      total: payload.totalElements,
+      totalPages: Math.max(1, payload.totalPages),
+      page: Math.max(1, payload.number + 1),
+    };
+  }
+
+  return {
+    items: payload.items,
+    total: payload.total,
+    totalPages: Math.max(1, payload.totalPages),
+    page: Math.max(1, payload.page),
+  };
 }
 
 function getTypeClass(type: TransactionType): string {
@@ -157,13 +194,13 @@ function getTypeClass(type: TransactionType): string {
 function filterMock(
   source: LedgerTransactionView[],
   type?: TransactionType,
-  startDate?: string,
-  endDate?: string,
+  from?: string,
+  to?: string,
   search?: string
 ): LedgerTransactionView[] {
   const q = search?.trim().toLowerCase() ?? "";
-  const start = startDate ? new Date(`${startDate}T00:00:00`).getTime() : null;
-  const end = endDate ? new Date(`${endDate}T23:59:59`).getTime() : null;
+  const start = from ? new Date(`${from}T00:00:00`).getTime() : null;
+  const end = to ? new Date(`${to}T23:59:59`).getTime() : null;
 
   return source.filter((item) => {
     if (type && item.type !== type) return false;
@@ -195,8 +232,14 @@ export default function AccountantLedgerPage() {
   const searchParamsString = searchParams.toString();
   const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
   const type = useMemo(() => parseType(searchParams.get("type")), [searchParams]);
-  const startDate = useMemo(() => searchParams.get("startDate") ?? "", [searchParams]);
-  const endDate = useMemo(() => searchParams.get("endDate") ?? "", [searchParams]);
+  const from = useMemo(
+    () => searchParams.get("from") ?? searchParams.get("startDate") ?? "",
+    [searchParams]
+  );
+  const to = useMemo(
+    () => searchParams.get("to") ?? searchParams.get("endDate") ?? "",
+    [searchParams]
+  );
   const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
 
   const [summary, setSummary] = useState<LedgerSummaryResponse | null>(null);
@@ -246,6 +289,19 @@ export default function AccountantLedgerPage() {
   );
 
   useEffect(() => {
+    const legacyFrom = searchParams.get("startDate");
+    const legacyTo = searchParams.get("endDate");
+    if (!legacyFrom && !legacyTo) return;
+
+    const params = new URLSearchParams(searchParamsString);
+    if (legacyFrom && !params.get("from")) params.set("from", legacyFrom);
+    if (legacyTo && !params.get("to")) params.set("to", legacyTo);
+    params.delete("startDate");
+    params.delete("endDate");
+    pushWithParams(params);
+  }, [pushWithParams, searchParams, searchParamsString]);
+
+  useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       const trimmed = searchInput.trim();
       if (trimmed === search) return;
@@ -268,43 +324,45 @@ export default function AccountantLedgerPage() {
         const filters = {
           type,
           page,
-          limit: PAGE_LIMIT,
+          size: PAGE_LIMIT,
           search: search.trim() || undefined,
-          from: startDate || undefined,
-          to: endDate || undefined,
+          from: from || undefined,
+          to: to || undefined,
         };
 
         const query = new URLSearchParams();
         if (filters.type) query.set("type", filters.type);
         if (filters.search) query.set("search", filters.search);
-        if (startDate) query.set("startDate", startDate);
-        if (endDate) query.set("endDate", endDate);
+        if (filters.from) query.set("from", filters.from);
+        if (filters.to) query.set("to", filters.to);
         query.set("page", String(filters.page ?? 1));
-        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
+        query.set("size", String(filters.size ?? PAGE_LIMIT));
+        query.set("limit", String(filters.size ?? PAGE_LIMIT));
 
         const [summaryRes, listRes] = await Promise.all([
           api.get<LedgerSummaryResponse>("/api/v1/accountant/ledger/summary"),
-          api.get<PaginatedResponse<TransactionResponse> | TransactionResponse[]>(
+          api.get<LedgerListApi>(
             `/api/v1/accountant/ledger?${query.toString()}`
           ),
         ]);
 
         if (cancelled) return;
 
-        const listItems = pickItems(listRes.data).map((item) => ({ ...item }));
-        const apiTotal = Array.isArray(listRes.data) ? listItems.length : listRes.data.total;
-        const apiTotalPages = Array.isArray(listRes.data)
-          ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
-          : listRes.data.totalPages;
+        const normalized = normalizeList(listRes.data, page);
+        const listItems = normalized.items.map((item) => ({ ...item }));
 
         setSummary(summaryRes.data);
         setItems(listItems);
-        setTotal(apiTotal);
-        setTotalPages(apiTotalPages);
+        setTotal(normalized.total);
+        setTotalPages(normalized.totalPages);
+        const safePage = Math.min(page, Math.max(1, normalized.totalPages));
+        if (safePage !== page) {
+          goToPage(safePage);
+        }
       } catch {
         if (cancelled) return;
 
-        const filtered = filterMock(MOCK_TRANSACTIONS, type, startDate, endDate, search);
+        const filtered = filterMock(MOCK_TRANSACTIONS, type, from, to, search);
         const mockTotal = filtered.length;
         const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
         const safePage = Math.min(page, mockTotalPages);
@@ -330,7 +388,7 @@ export default function AccountantLedgerPage() {
     return () => {
       cancelled = true;
     };
-  }, [endDate, goToPage, page, search, startDate, type]);
+  }, [from, goToPage, page, search, to, type]);
 
   const handleExportCsv = () => {
     const csvRows = [
@@ -370,14 +428,14 @@ export default function AccountantLedgerPage() {
           <p className="text-slate-400 mt-1">Tat ca giao dich he thong theo nguyen tac double-entry immutable.</p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-500/40 bg-slate-500/15 text-slate-300 text-sm font-medium">
-          Immutable — Chỉ đọc
+          Immutable - Chi doc
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SummaryCard label="Tong nap vao" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-300" />
         <SummaryCard label="Tong chi ra" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-300" />
-        <SummaryCard label="Số dư ròng" value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-white" />
+        <SummaryCard label="So du rong" value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-white" />
       </div>
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
@@ -395,15 +453,15 @@ export default function AccountantLedgerPage() {
 
           <input
             type="date"
-            value={startDate}
-            onChange={(event) => updateParam("startDate", event.target.value || undefined)}
+            value={from}
+            onChange={(event) => updateParam("from", event.target.value || undefined)}
             className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
           />
 
           <input
             type="date"
-            value={endDate}
-            onChange={(event) => updateParam("endDate", event.target.value || undefined)}
+            value={to}
+            onChange={(event) => updateParam("to", event.target.value || undefined)}
             className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
           />
 
@@ -445,7 +503,7 @@ export default function AccountantLedgerPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Không có giao dịch phù hợp bộ lọc.</td>
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Khong co giao dich phu hop bo loc.</td>
                 </tr>
               ) : (
                 items.map((item) => (
@@ -477,7 +535,7 @@ export default function AccountantLedgerPage() {
 
         <div className="px-4 py-3 flex items-center justify-between border-t border-white/10 bg-slate-900/30">
           <p className="text-sm text-slate-400">
-            Trang {page}/{totalPages} • Tong {total} giao dich
+            Trang {page}/{totalPages} - Tong {total} giao dich
           </p>
 
           <div className="flex items-center gap-2">
@@ -526,3 +584,4 @@ function SummaryCard({
     </div>
   );
 }
+

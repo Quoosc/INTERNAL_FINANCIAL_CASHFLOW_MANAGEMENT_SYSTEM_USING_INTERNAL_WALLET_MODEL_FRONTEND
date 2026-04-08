@@ -10,7 +10,6 @@ import {
   TransactionResponse,
   TransactionStatus,
   TransactionType,
-  WalletResponse,
 } from "@/types";
 
 // TODO: Replace with API call when Sprint 3 is complete

@@ -32,6 +32,8 @@ import {
 const MOCK_DASHBOARD: EmployeeDashboardResponse = {
   wallet: {
     balance: 15_500_000,
+    lockedBalance: 2_300_000,
+    availableBalance: 13_200_000,
     pendingBalance: 2_300_000,
     debtBalance: 3_200_000,
   },
@@ -224,6 +226,8 @@ const REQUEST_STATUS_CONFIG: Record<
     cls: "text-blue-400",
   },
   [RequestStatus.APPROVED_BY_TEAM_LEADER]: { label: "Đã duyệt", cls: "text-emerald-400" },
+  [RequestStatus.APPROVED_BY_MANAGER]: { label: "Manager đã duyệt", cls: "text-emerald-400" },
+  [RequestStatus.APPROVED_BY_CFO]: { label: "CFO đã duyệt", cls: "text-emerald-400" },
   [RequestStatus.PAID]: { label: "Đã chi", cls: "text-emerald-400" },
   [RequestStatus.REJECTED]: { label: "Từ chối", cls: "text-rose-400" },
   [RequestStatus.CANCELLED]: { label: "Đã hủy", cls: "text-slate-400" },
@@ -428,8 +432,13 @@ export function EmployeeDashboard() {
   const chartData = MOCK_MONTHLY.slice(-chartRange);
 
   const availableBalance = data
-    ? data.wallet.balance - data.wallet.pendingBalance
+    ? data.wallet.availableBalance ??
+      (data.wallet.balance - (data.wallet.lockedBalance ?? data.wallet.pendingBalance ?? 0))
     : 0;
+  const lockedBalance = data
+    ? data.wallet.lockedBalance ?? data.wallet.pendingBalance ?? 0
+    : 0;
+  const debtBalance = data?.wallet.debtBalance ?? 0;
 
   const today = new Date().toLocaleDateString("vi-VN", {
     weekday: "long",
@@ -524,9 +533,9 @@ export function EmployeeDashboard() {
           }
         />
         <StatCard
-          title="Tiền treo"
-          value={formatCurrency(data?.wallet.pendingBalance ?? 0)}
-          sub="Đang chờ xử lý"
+          title="Tiền đang khóa"
+          value={formatCurrency(lockedBalance)}
+          sub="Dang cho xu ly"
           gradient="hover:shadow-amber-500/10 hover:shadow-lg"
           iconBg="bg-amber-500/20"
           iconColor="text-amber-400"
@@ -548,7 +557,7 @@ export function EmployeeDashboard() {
         />
         <StatCard
           title="Dư nợ tạm ứng"
-          value={formatCurrency(data?.wallet.debtBalance ?? 0)}
+          value={formatCurrency(debtBalance)}
           sub="Sẽ trừ vào lương tháng sau"
           gradient="hover:shadow-rose-500/10 hover:shadow-lg"
           iconBg="bg-rose-500/20"

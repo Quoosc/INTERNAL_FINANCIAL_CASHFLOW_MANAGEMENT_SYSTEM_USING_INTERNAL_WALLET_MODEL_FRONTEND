@@ -9,8 +9,11 @@
 export interface EmployeeDashboardResponse {
   wallet: {
     balance: number;
-    pendingBalance: number;
-    debtBalance: number;
+    lockedBalance: number;
+    availableBalance: number;
+    // Legacy fallback fields (for older mock data)
+    pendingBalance?: number;
+    debtBalance?: number;
   };
   pendingRequestsCount: number;
   recentTransactions: {

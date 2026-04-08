@@ -21,6 +21,18 @@ export interface FirstLoginChangePasswordRequest {
   newPassword: string;
 }
 
+/**
+ * POST /auth/first-login/complete — thiết lập tài khoản lần đầu (1 bước)
+ * Gộp đổi mật khẩu + tạo PIN trong 1 request duy nhất.
+ * setupToken lấy từ LoginResponse.setupToken khi requiresSetup = true.
+ */
+export interface FirstLoginSetupRequest {
+  setupToken: string;
+  newPassword: string;
+  confirmPassword: string;
+  pin: string; // 5 chữ số
+}
+
 /** POST /auth/forgot-password */
 export interface ForgotPasswordRequest {
   email: string;
@@ -59,9 +71,13 @@ export interface AuthUser {
 
 /** POST /auth/login — response */
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: AuthUser;
+  accessToken: string | null;
+  refreshToken: string | null;
+  user: AuthUser | null;
+  /** true khi user đăng nhập lần đầu — chưa phát access/refresh token */
+  requiresSetup: boolean;
+  /** Short-lived token (15 phút) để xác thực POST /auth/first-login/complete. Chỉ có khi requiresSetup = true */
+  setupToken: string | null;
 }
 
 /** POST /auth/refresh-token — response */

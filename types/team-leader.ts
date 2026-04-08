@@ -91,7 +91,7 @@ export interface TLRejectBody {
 export interface TLApproveResponse {
   id: number;
   requestCode: string;
-  status: "PENDING_ACCOUNTANT";
+  status: "PENDING_ACCOUNTANT_EXECUTION";
   approvedAmount: number;
   comment: string | null;
 }

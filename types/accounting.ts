@@ -1,5 +1,7 @@
 // =============================================================
-// Accounting Types - khớp với backend API_Spec.md v2.0
+// Accounting Types - khớp với backend modules/accounting (v3.0)
+// Cập nhật: SystemFund → CompanyFundResponse
+//           Thêm ReconciliationReportResponse, SystemTopupRequest
 // =============================================================
 
 // --- Enums ---
@@ -183,14 +185,74 @@ export interface UpdatePayslipEntryBody {
   advanceDeduct?: number;
 }
 
-// --- System Fund ---
+// --- Company Fund (thay thế SystemFund cũ) ---
 
-/** accounting.entity.SystemFund */
-export interface SystemFund {
+/**
+ * GET /api/v1/company-fund — response
+ * khớp với accounting.dto.response.CompanyFundResponse
+ *
+ * Balance tracking bởi Wallet(COMPANY_FUND) — entity này chỉ là metadata.
+ */
+export interface CompanyFundResponse {
   id: number;
-  totalBalance: number;
-  bankAccount: string | null;
-  bankName: string | null;
+  bankName: string;
+  bankAccount: string;
+  /** Current balance tracked by Wallet(COMPANY_FUND) — authoritative */
+  currentWalletBalance: number;
+  /** Last known external bank balance entered by Accountant */
+  externalBankBalance: number;
+  /** currentWalletBalance − externalBankBalance (expected = 0) */
+  bankDiscrepancy: number;
+  lastStatementDate: string | null;    // "YYYY-MM-DD"
+  lastStatementUpdatedBy: string | null;
+}
+
+/**
+ * GET /api/v1/company-fund/reconciliation — response
+ * khớp với accounting.dto.response.ReconciliationReportResponse
+ *
+ * Kiểm tra 2 điều:
+ *   1. FLOAT_MAIN invariant (internal integrity)
+ *   2. Bank statement match (external reconciliation)
+ */
+export interface ReconciliationReportResponse {
+  generatedAt: string;
+
+  // System Integrity Check (FLOAT_MAIN invariant)
+  floatMainBalance: number;
+  computedWalletSum: number;
+  systemDiscrepancy: number;         // Expected = 0
+  systemIntegrityValid: boolean;
+
+  // Wallet Breakdown
+  companyFundBalance: number;
+  totalDeptWallets: number;
+  totalProjectWallets: number;
+  totalUserWallets: number;
+
+  // Bank Statement Check (external reconciliation)
+  externalBankBalance: number;
+  lastStatementDate: string | null;
+  bankDiscrepancy: number;           // Expected = 0
+}
+
+/**
+ * POST /api/v1/company-fund/topup — body
+ * khớp với accounting.dto.request.SystemTopupRequest
+ */
+export interface SystemTopupRequest {
+  amount: number;
+  paymentRef?: string;
+  description?: string;
+}
+
+/**
+ * PUT /api/v1/company-fund/bank-statement — body
+ * khớp với accounting.dto.request.UpdateBankStatementRequest
+ */
+export interface UpdateBankStatementRequest {
+  externalBankBalance: number;
+  lastStatementDate: string;     // "YYYY-MM-DD"
 }
 
 // --- Ledger DTOs ---

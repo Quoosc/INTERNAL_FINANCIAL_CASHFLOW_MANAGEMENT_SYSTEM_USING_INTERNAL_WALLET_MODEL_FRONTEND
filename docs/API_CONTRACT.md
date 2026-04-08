@@ -1,7 +1,7 @@
 # API_CONTRACT.md — Đồng bộ API giữa Frontend & Backend
 
-> **Version:** 2.0 — Aligned với Backend `API_Spec.md` (09/03/2026)
-> **Kiến trúc:** 5 Roles, 3 Flows, 4-tầng Quỹ, NO Escalation
+> **Version:** 3.0 — Aligned với Backend v3.0 (06/04/2026)
+> **Kiến trúc:** 6 Roles (thêm CFO), 3 Flows, 4-tầng Quỹ (CompanyFund thay SystemFund)
 
 ## Base URL & Proxy
 
@@ -41,13 +41,18 @@ TypeScript: `PaginatedResponse<T>` — page **1-indexed**
 
 | Method | Endpoint | Body | Response | Auth |
 |--------|----------|------|----------|:----:|
-| POST | `/auth/login` | `LoginRequest` | `LoginResponse` | ❌ |
+| POST | `/auth/login` | `LoginRequest` | `LoginResponse` (+ `requiresSetup`, `setupToken`) | ❌ |
 | POST | `/auth/logout` | — | `{ message }` | ✅ |
 | POST | `/auth/refresh-token` | `RefreshTokenRequest` | `RefreshTokenResponse` | ❌ |
+| POST | `/auth/first-login/complete` | `FirstLoginSetupRequest` | `LoginResponse` | ❌ |
 | POST | `/auth/change-password` | `ChangePasswordRequest` | `{ message }` | ✅ |
 | POST | `/auth/forgot-password` | `ForgotPasswordRequest` | `{ message }` | ❌ |
+| POST | `/auth/verify-password-reset` | `VerifyOtpPasswordResetRequest` | `{ message }` | ❌ |
 | POST | `/auth/reset-password` | `ResetPasswordRequest` | `{ message }` | ❌ |
 | GET | `/auth/me` | — | `AuthUser` | ✅ |
+
+> ⚠ `login` khi `requiresSetup=true`: KHÔNG có accessToken. Frontend lưu `setupToken` vào `sessionStorage["setup_token"]` rồi redirect `/change-password`.
+> ⚠ `first-login/complete` trả về tokens đầy đủ sau setup.
 
 ---
 
@@ -75,22 +80,78 @@ TypeScript: `PaginatedResponse<T>` — page **1-indexed**
 
 ---
 
-## 4. Common Data
+## 4. User Onboard (`/users`) ✅ READY
 
-| Method | Endpoint | Response | Sprint |
+| Method | Endpoint | Body | Response | Auth |
+|--------|----------|------|----------|:----:|
+| POST | `/users/onboard` | `OnboardUserRequest` | `OnboardUserResponse` | ✅ ADMIN |
+
+---
+
+## 5. Wallet (`/wallet` + `/withdrawals`) — Partial READY
+
+| Method | Endpoint | Response | Status |
 |--------|----------|----------|:------:|
-| GET | `/banks` | `BankOption[]` | 1 |
-| GET | `/wallet` | `WalletResponse` | 3 |
-| GET | `/wallet/transactions` | `PaginatedResponse<TransactionResponse>` | 3 |
-| POST | `/wallet/withdraw` | `WithdrawResponse` | 3 |
-| POST | `/wallet/deposit/generate-qr` | `DepositQRResponse` | 3 |
-| GET | `/projects` | `PaginatedResponse<ProjectListItem>` | 4 |
-| GET | `/projects/:id/phases` | `ProjectPhasesResponse` | 4 |
-| GET | `/payslips` | `PaginatedResponse<PayslipListItem>` | 7 |
-| GET | `/payslips/:id` | `PayslipDetailResponse` | 7 |
-| GET | `/notifications` | `NotificationListResponse` | 8 |
-| PUT | `/notifications/:id/read` | `MarkReadResponse` | 8 |
-| PUT | `/notifications/read-all` | `MarkAllReadResponse` | 8 |
+| GET | `/wallet` | `WalletResponse` | 🔮 |
+| GET | `/wallet/transactions` | `SpringPage<TransactionResponse>` | 🔮 |
+| POST | `/wallet/deposit/generate-qr` | `DepositQRResponse` | 🔮 |
+
+### Withdrawals ✅ READY — `/withdrawals`
+
+| Method | Endpoint | Body | Response | Permission |
+|--------|----------|------|----------|:----------:|
+| POST | `/withdrawals` | `CreateWithdrawRequest` | `WithdrawRequestResponse` | WALLET_WITHDRAW |
+| DELETE | `/withdrawals/:id` | — | `WithdrawRequestResponse` | WALLET_WITHDRAW (owner) |
+| GET | `/withdrawals/my` | `?page&size` | `SpringPage<WithdrawRequestResponse>` | WALLET_WITHDRAW |
+| GET | `/withdrawals` | `?status&page&size` | `SpringPage<WithdrawRequestResponse>` | TRANSACTION_APPROVE_WITHDRAW |
+| PUT | `/withdrawals/:id/execute` | `ProcessWithdrawRequest?` | `WithdrawRequestResponse` | TRANSACTION_APPROVE_WITHDRAW |
+| PUT | `/withdrawals/:id/reject` | `ProcessWithdrawRequest` | `WithdrawRequestResponse` | TRANSACTION_APPROVE_WITHDRAW |
+
+---
+
+## 6. Company Fund (`/company-fund`) ✅ READY
+
+| Method | Endpoint | Body | Response | Permission |
+|--------|----------|------|----------|:----------:|
+| GET | `/company-fund` | — | `CompanyFundResponse` | COMPANY_FUND_VIEW |
+| POST | `/company-fund/topup` | `SystemTopupRequest` | `TransactionResponse` | COMPANY_FUND_TOPUP |
+| PUT | `/company-fund/bank-statement` | `UpdateBankStatementRequest` | `CompanyFundResponse` | COMPANY_FUND_TOPUP |
+| GET | `/company-fund/reconciliation` | — | `ReconciliationReportResponse` | COMPANY_FUND_VIEW |
+
+---
+
+## 7. System Config (`/system-configs`) ✅ READY
+
+| Method | Endpoint | Body | Response | Permission |
+|--------|----------|------|----------|:----------:|
+| GET | `/system-configs` | — | `SystemConfigResponse[]` | SYSTEM_CONFIG_MANAGE |
+| GET | `/system-configs/:key` | — | `SystemConfigResponse` | SYSTEM_CONFIG_MANAGE |
+| PUT | `/system-configs/:key` | `SystemConfigRequest` | `string` | SYSTEM_CONFIG_MANAGE |
+| POST | `/system-configs/:key` | `SystemConfigRequest` | `string` | SYSTEM_CONFIG_MANAGE |
+| DELETE | `/system-configs/:key/cache` | — | `void` | SYSTEM_CONFIG_MANAGE |
+| DELETE | `/system-configs/cache` | — | `void` | SYSTEM_CONFIG_MANAGE |
+
+---
+
+## 8. Notifications (`/notifications`) ✅ READY
+
+| Method | Endpoint | Response |
+|--------|----------|----------|
+| GET | `/notifications?unreadOnly=&page=&size=` | `SpringPage<NotificationResponse>` |
+| GET | `/notifications/unread-count` | `number` |
+| PATCH | `/notifications/:id/read` | `NotificationResponse` |
+| PATCH | `/notifications/read-all` | `void` |
+
+---
+
+## 9. Other (🔮 Not yet implemented)
+
+| Method | Endpoint | Response |
+|--------|----------|----------|
+| GET | `/projects` | `PaginatedResponse<ProjectListItem>` |
+| GET | `/projects/:id/phases` | `ProjectPhasesResponse` |
+| GET | `/payslips` | `PaginatedResponse<PayslipListItem>` |
+| GET | `/payslips/:id` | `PayslipDetailResponse` |
 
 ---
 

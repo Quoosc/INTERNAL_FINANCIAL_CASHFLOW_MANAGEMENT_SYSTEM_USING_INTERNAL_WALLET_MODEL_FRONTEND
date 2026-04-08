@@ -13,7 +13,7 @@ export enum UserStatus {
 }
 
 /**
- * Roles mặc định trong hệ thống — 5 roles.
+ * Roles mặc định trong hệ thống — 6 roles.
  * Dùng cho FE logic (menu, routing, permission check).
  * Backend trả role dưới dạng string trong AuthUser.role
  */
@@ -22,6 +22,7 @@ export enum RoleName {
   TEAM_LEADER = "TEAM_LEADER",
   MANAGER = "MANAGER",
   ACCOUNTANT = "ACCOUNTANT",
+  CFO = "CFO",
   ADMIN = "ADMIN",
 }
 
@@ -72,7 +73,7 @@ export enum Permission {
   REQUEST_APPROVE_TEAM_LEADER = "REQUEST_APPROVE_TEAM_LEADER",
   /** Manager: duyệt đơn xin cấp vốn dự án (Flow 2 — PROJECT_TOPUP) */
   REQUEST_APPROVE_PROJECT_TOPUP = "REQUEST_APPROVE_PROJECT_TOPUP",
-  /** Admin: duyệt đơn xin cấp vốn phòng ban (Flow 3 — QUOTA_TOPUP) */
+  /** Admin: duyệt đơn xin cấp vốn phòng ban (Flow 3 — DEPARTMENT_TOPUP) */
   REQUEST_APPROVE_DEPT_TOPUP = "REQUEST_APPROVE_DEPT_TOPUP",
   REQUEST_REJECT = "REQUEST_REJECT",
   REQUEST_VIEW_ALL = "REQUEST_VIEW_ALL",
@@ -84,8 +85,8 @@ export enum Permission {
   PAYROLL_DOWNLOAD = "PAYROLL_DOWNLOAD",
   PAYROLL_MANAGE = "PAYROLL_MANAGE",
   PAYROLL_EXECUTE = "PAYROLL_EXECUTE",
-  SYSTEM_FUND_VIEW = "SYSTEM_FUND_VIEW",
-  SYSTEM_FUND_TOPUP = "SYSTEM_FUND_TOPUP",
+  COMPANY_FUND_VIEW = "COMPANY_FUND_VIEW",
+  COMPANY_FUND_TOPUP = "COMPANY_FUND_TOPUP",
 
   // --- 6. Organization & Config ---
   DEPT_VIEW_DASHBOARD = "DEPT_VIEW_DASHBOARD",

@@ -1,72 +1,86 @@
 // =============================================================
-// Notification Types - khớp với backend API_Spec.md v2.0
+// Notification Types - khớp với backend modules/notification (v3.0)
+// Cập nhật: NotificationType enum, thêm referenceLink, API dùng PATCH
 // =============================================================
 
 // --- Enums ---
 
-/** khớp với notification.entity.NotificationType */
+/**
+ * khớp với notification.entity.NotificationType
+ *
+ * Cập nhật hoàn toàn — 11 loại notification theo 3-flow architecture:
+ *   Flow 1: REQUEST_SUBMITTED → REQUEST_APPROVED_BY_TL → REQUEST_PAID / REQUEST_REJECTED
+ *   Flow 2: PROJECT_TOPUP_APPROVED / PROJECT_TOPUP_REJECTED
+ *   Flow 3: DEPT_TOPUP_APPROVED / DEPT_TOPUP_REJECTED
+ *   Payroll: SALARY_PAID
+ *   System: SYSTEM, SECURITY_ALERT
+ */
 export enum NotificationType {
-  SYSTEM = "SYSTEM",
-  REQUEST_APPROVED = "REQUEST_APPROVED",
+  // Flow 1: Personal Expense (Member → Team Leader → Accountant)
+  REQUEST_SUBMITTED = "REQUEST_SUBMITTED",
+  REQUEST_APPROVED_BY_TL = "REQUEST_APPROVED_BY_TL",
   REQUEST_REJECTED = "REQUEST_REJECTED",
-  SALARY_PAID = "SALARY_PAID",
-  WARN = "WARN",
-}
+  REQUEST_PAID = "REQUEST_PAID",
 
-/** notification.ref_type — loại entity liên quan */
-export enum NotificationRefType {
-  REQUEST = "REQUEST",
-  PAYSLIP = "PAYSLIP",
-  PROJECT = "PROJECT",
+  // Flow 2: Project Fund Top-up
+  PROJECT_TOPUP_APPROVED = "PROJECT_TOPUP_APPROVED",
+  PROJECT_TOPUP_REJECTED = "PROJECT_TOPUP_REJECTED",
+
+  // Flow 3: Department Quota Top-up
+  DEPT_TOPUP_APPROVED = "DEPT_TOPUP_APPROVED",
+  DEPT_TOPUP_REJECTED = "DEPT_TOPUP_REJECTED",
+
+  // Payroll
+  SALARY_PAID = "SALARY_PAID",
+
+  // System
+  SYSTEM = "SYSTEM",
+  SECURITY_ALERT = "SECURITY_ALERT",
 }
 
 // --- Response DTOs ---
 
-/** GET /notifications — response item */
+/**
+ * GET /notifications — response item
+ * khớp với notification.dto.response.NotificationDto
+ *
+ * Cập nhật: thêm referenceLink (link để navigate trên UI)
+ */
 export interface NotificationResponse {
   id: number;
-  type: NotificationType;
+  type: string;                     // NotificationType enum value
   title: string;
   message: string;
+  refId: number | null;
+  refType: string | null;           // "REQUEST", "PAYSLIP", etc.
+  referenceLink: string | null;     // Link để navigate — MỚI
   isRead: boolean;
-  refId: number | null;        // ID đối tượng liên quan (BigInt)
-  refType: NotificationRefType | null;
   createdAt: string;
 }
 
 /**
- * GET /notifications — full paginated response
- * (extends PaginatedResponse but has extra unreadCount)
+ * PATCH /notifications/{id}/read — response
+ * Backend trả về NotificationDto sau khi đánh dấu đọc
  */
-export interface NotificationListResponse {
-  items: NotificationResponse[];
-  unreadCount: number;
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+export type MarkReadResponse = NotificationResponse;
 
-/** PUT /notifications/:id/read — response */
-export interface MarkReadResponse {
-  id: number;
-  isRead: true;
-}
-
-/** PUT /notifications/read-all — response */
-export interface MarkAllReadResponse {
-  message: string;
-  updatedCount: number;
-}
+/**
+ * PATCH /notifications/read-all — response
+ * Backend trả về null data (ApiResponse<Void>)
+ */
+export type MarkAllReadResponse = void;
 
 // --- Filter Params ---
 
-/** GET /notifications — query params */
+/**
+ * GET /notifications — query params
+ * Backend: ?unreadOnly=true&page=0&size=20
+ * Lưu ý: Backend dùng Spring Data Pageable (0-indexed page)
+ */
 export interface NotificationFilterParams {
-  isRead?: boolean;
-  type?: NotificationType;
-  page?: number;
-  limit?: number;
+  unreadOnly?: boolean;
+  page?: number;       // 0-indexed (Spring Data)
+  size?: number;       // default: 20
 }
 
 // --- WebSocket Payloads ---

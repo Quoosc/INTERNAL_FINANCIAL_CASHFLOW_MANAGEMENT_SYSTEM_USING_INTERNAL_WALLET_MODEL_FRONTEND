@@ -6,13 +6,13 @@
 import type { RequestTimelineEntry, RequestStatus } from "./request";
 import type { ApprovalRequester } from "./team-leader";
 
-// --- Admin Approvals (Flow 3 — QUOTA_TOPUP) ---
+// --- Admin/CFO Approvals (Flow 3 — DEPARTMENT_TOPUP) ---
 
 /** GET /admin/approvals — response item */
 export interface AdminApprovalListItem {
   id: number;
   requestCode: string;
-  type: "QUOTA_TOPUP";
+  type: "DEPARTMENT_TOPUP";
   status: RequestStatus;
   amount: number;
   description: string | null;
@@ -30,7 +30,7 @@ export interface AdminApprovalListItem {
 export interface AdminApprovalDetailResponse {
   id: number;
   requestCode: string;
-  type: "QUOTA_TOPUP";
+  type: "DEPARTMENT_TOPUP";
   status: RequestStatus;
   amount: number;
   approvedAmount: number | null;
@@ -69,7 +69,7 @@ export interface AdminRejectBody {
 export interface AdminApproveResponse {
   id: number;
   requestCode: string;
-  status: "PAID";          // auto PAID cho QUOTA_TOPUP
+  status: "PAID";          // auto PAID cho DEPARTMENT_TOPUP
   approvedAmount: number;
   comment: string | null;
 }
@@ -124,8 +124,8 @@ export interface AdminUserDetailResponse {
   };
   wallet: {
     balance: number;
-    pendingBalance: number;
-    debtBalance: number;
+    lockedBalance: number;
+    availableBalance: number;
   } | null;
   securitySettings: {
     hasPIN: boolean;
@@ -176,23 +176,28 @@ export interface UnlockUserResponse {
   status: "ACTIVE";
 }
 
-// --- System Settings ---
+// --- System Config (khớp /api/v1/system-configs) ---
 
-/** GET /admin/settings — config item */
-export interface SystemConfigItem {
+/**
+ * GET /api/v1/system-configs — response item
+ * GET /api/v1/system-configs/{key} — response
+ * khớp với config.dto.response.SystemConfigResponse
+ */
+export interface SystemConfigResponse {
   key: string;
   value: string;
-  description: string;
+  description: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
-/** GET /admin/settings — response */
-export interface SystemSettingsResponse {
-  items: SystemConfigItem[];
-}
-
-/** PUT /admin/settings — body */
-export interface UpdateSettingsBody {
-  configs: { key: string; value: string }[];
+/**
+ * PUT/POST /api/v1/system-configs/{key} — body
+ * khớp với config.dto.request.SystemConfigRequest
+ */
+export interface SystemConfigRequest {
+  value: string;
+  description?: string;
 }
 
 // --- Filter Params ---

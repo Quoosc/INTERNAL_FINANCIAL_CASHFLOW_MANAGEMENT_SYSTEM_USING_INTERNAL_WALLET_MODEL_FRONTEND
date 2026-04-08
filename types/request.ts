@@ -10,26 +10,34 @@
  *
  * Flow 1: ADVANCE, EXPENSE, REIMBURSE → Employee → TL approve → Accountant payout
  * Flow 2: PROJECT_TOPUP → TL → Manager approve → auto PAID
- * Flow 3: QUOTA_TOPUP → Manager → Admin approve → auto PAID
+ * Flow 3: DEPARTMENT_TOPUP → Manager → CFO approve → auto PAID
  */
 export enum RequestType {
   ADVANCE = "ADVANCE",
   EXPENSE = "EXPENSE",
   REIMBURSE = "REIMBURSE",
   PROJECT_TOPUP = "PROJECT_TOPUP",
-  QUOTA_TOPUP = "QUOTA_TOPUP",
+  DEPARTMENT_TOPUP = "DEPARTMENT_TOPUP",
 }
 
 /**
- * khớp với request.entity.RequestStatus — 6 giá trị
+ * khớp với request.entity.RequestStatus — 8 giá trị
  *
- * PENDING_APPROVAL: chờ 1 cấp duyệt duy nhất (TL/Manager/Admin tùy type)
- * KHÔNG có PENDING_MANAGER / PENDING_ADMIN
+ * Flow 1 (ADVANCE/EXPENSE/REIMBURSE):
+ *   PENDING → APPROVED_BY_TEAM_LEADER → PENDING_ACCOUNTANT_EXECUTION → PAID
+ *
+ * Flow 2 (PROJECT_TOPUP):
+ *   PENDING → APPROVED_BY_MANAGER → PAID (auto)
+ *
+ * Flow 3 (DEPARTMENT_TOPUP):
+ *   PENDING → APPROVED_BY_CFO → PAID (auto)
  */
 export enum RequestStatus {
-  PENDING_APPROVAL = "PENDING_APPROVAL",
-  PENDING_ACCOUNTANT = "PENDING_ACCOUNTANT",
-  APPROVED = "APPROVED",
+  PENDING = "PENDING",
+  APPROVED_BY_TEAM_LEADER = "APPROVED_BY_TEAM_LEADER",
+  PENDING_ACCOUNTANT_EXECUTION = "PENDING_ACCOUNTANT_EXECUTION",
+  APPROVED_BY_MANAGER = "APPROVED_BY_MANAGER",
+  APPROVED_BY_CFO = "APPROVED_BY_CFO",
   PAID = "PAID",
   REJECTED = "REJECTED",
   CANCELLED = "CANCELLED",
@@ -124,7 +132,7 @@ export interface RequestSummaryResponse {
  *
  * Flow 1 (ADVANCE/EXPENSE/REIMBURSE): projectId + phaseId + categoryId bắt buộc
  * Flow 2 (PROJECT_TOPUP): projectId bắt buộc, phaseId/categoryId = null
- * Flow 3 (QUOTA_TOPUP): projectId/phaseId/categoryId = null
+ * Flow 3 (DEPARTMENT_TOPUP): projectId/phaseId/categoryId = null
  */
 export interface CreateRequestBody {
   type: RequestType;
@@ -136,7 +144,7 @@ export interface CreateRequestBody {
   attachmentFileIds?: number[];    // file_storages.id
 }
 
-/** PUT /requests/:id — body (chỉ khi PENDING_APPROVAL) */
+/** PUT /requests/:id — body (chỉ khi PENDING) */
 export interface UpdateRequestBody {
   amount?: number;
   description?: string;

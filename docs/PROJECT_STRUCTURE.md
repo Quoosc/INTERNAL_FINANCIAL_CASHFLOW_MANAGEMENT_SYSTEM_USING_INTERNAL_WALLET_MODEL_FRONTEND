@@ -1,6 +1,6 @@
 # PROJECT_STRUCTURE.md — Cấu trúc dự án Frontend
 
-> **Cập nhật:** Aligned với filesystem thực tế (types v2.0 — 16 modules, 5 roles)
+> **Cập nhật:** Aligned với filesystem thực tế (types v3.1 — 16 modules, 6 roles)
 
 ## Tổng quan
 
@@ -18,6 +18,7 @@ financial-wallet-frontend/
 │   ├── (auth)/                      # Route Group: public, no sidebar, no providers
 │   │   ├── layout.tsx               # [Server] Centered layout
 │   │   ├── login/page.tsx           # [Client] Form đăng nhập
+│   │   ├── change-password/page.tsx # [Client] First-login setup (1 bước: mật khẩu + PIN)
 │   │   └── register/page.tsx        # [Client] Form đăng ký ⚠ orphaned — no backend endpoint
 │   │
 │   ├── (dashboard)/                 # Route Group: protected, AuthProvider + WalletProvider
@@ -58,11 +59,11 @@ financial-wallet-frontend/
 │   ├── globals.css                  # Tailwind global styles
 │   └── favicon.ico
 │
-│   ⚠ CHƯA TẠO (cần implement cho isFirstLogin flow):
-│      app/(auth)/change-password/page.tsx   → POST /api/v1/auth/change-password
-│      app/(auth)/create-pin/page.tsx        → POST /api/v1/users/me/pin
+│   ⚠ Flow first-login hiện tại:
+│      app/(auth)/change-password/page.tsx   → POST /api/v1/auth/first-login/complete
+│      app/(auth)/create-pin/page.tsx        → orphaned (flow đã gộp)
 │
-├── types/                           # TypeScript DTOs — khớp 100% backend API_Spec.md v2.0
+├── types/                           # TypeScript DTOs — khớp backend contract v3.1
 │   ├── api.ts                       # ApiResponse<T>, PaginatedResponse<T>
 │   ├── auth.ts                      # AuthUser, LoginRequest, LoginResponse, RefreshTokenRequest, ...
 │   ├── user.ts                      # UserStatus, RoleName, Permission (40+), UserProfileResponse, BankInfo, ...
@@ -82,7 +83,7 @@ financial-wallet-frontend/
 │
 ├── lib/                             # Utilities & API client
 │   ├── api-client.ts                # Fetch wrapper: JWT auto-attach, 401 auto-refresh, ApiResponse unwrap, ApiError
-│   └── auth.ts                      # login(), logout(), changePasswordFirstLogin(), forgotPassword(), resetPassword(), getMe()
+│   └── auth.ts                      # login(), logout(), changePasswordFirstLogin(), forgotPassword(), getMe() (+ legacy helpers)
 │
 ├── contexts/                        # React Context providers
 │   ├── auth-context.tsx             # useAuth() → { user, hasRole(), hasAnyRole(), isFirstLogin, logout }
@@ -125,7 +126,7 @@ financial-wallet-frontend/
 | **Route Group** | `(auth)` và `(dashboard)` không ảnh hưởng URL — chỉ chia layout và providers. |
 | **Types** | Đặt trong `types/`, luôn import qua `@/types` (barrel). Không import từ file con. |
 | **API calls** | Chỉ dùng `api.get/post/put/patch/delete` từ `@/lib/api-client`. Không dùng raw fetch/axios. |
-| **Role check** | `useAuth().hasRole(RoleName.ADMIN)` hoặc `useAuth().hasAnyRole([RoleName.ADMIN, RoleName.ACCOUNTANT])` |
+| **Role check** | `useAuth().hasRole(RoleName.ADMIN)` hoặc `useAuth().hasAnyRole([RoleName.CFO, RoleName.ADMIN, RoleName.ACCOUNTANT])` |
 | **Styling** | Tailwind CSS v4 only. Không inline `style={{}}` trừ dynamic values. Không Shadcn (chưa cài). |
 | **Icons** | Inline SVG. Nếu cần library: cài `lucide-react`, import riêng lẻ. |
 
@@ -153,5 +154,5 @@ financial-wallet-frontend/
 
 | Route | Cần cho | API endpoint |
 |---|---|---|
-| `app/(auth)/change-password/` | `isFirstLogin = true` flow | `POST /api/v1/auth/change-password` |
-| `app/(auth)/create-pin/` | `isFirstLogin = true` flow | `POST /api/v1/users/me/pin` |
+| `app/(auth)/change-password/` | `isFirstLogin = true` flow | `POST /api/v1/auth/first-login/complete` |
+| `app/(auth)/create-pin/` | Legacy flow cũ | Orphaned (không dùng trong contract mới) |

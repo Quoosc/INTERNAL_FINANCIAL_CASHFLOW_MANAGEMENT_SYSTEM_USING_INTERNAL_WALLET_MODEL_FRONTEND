@@ -2,7 +2,7 @@
 
 > **Sprint**: 4-5 (APIs chưa sẵn sàng → dùng mock-first pattern)
 > **Role**: `MANAGER`
-> **Business**: Duyệt Flow 2 (PROJECT_TOPUP từ Team Leader), tạo/sửa dự án trong phòng ban, xem thành viên phòng ban, tạo Flow 3 (QUOTA_TOPUP → Admin duyệt)
+> **Business**: Duyệt Flow 2 (PROJECT_TOPUP từ Team Leader), tạo/sửa dự án trong phòng ban, xem thành viên phòng ban, tạo Flow 3 (DEPARTMENT_TOPUP → CFO duyệt)
 >
 > ⚠️ Design ref `d:\src` dùng flow cũ — Manager trong `d:\src` duyệt Flow 1 (chi tiêu cá nhân), KHÔNG copy.
 > Thực tế: Manager chỉ duyệt **PROJECT_TOPUP** (Flow 2).
@@ -32,7 +32,7 @@ Replace stub `components/dashboard/manager-dashboard.tsx` với full dashboard: 
 
 ### ⚠️ Business rules
 - Manager duyệt PROJECT_TOPUP (Flow 2), KHÔNG duyệt ADVANCE/EXPENSE/REIMBURSE
-- Manager tạo QUOTA_TOPUP để xin cấp vốn phòng ban từ Admin (Flow 3)
+- Manager tạo DEPARTMENT_TOPUP để xin cấp vốn phòng ban từ CFO (Flow 3)
 - Dept budget từ `ManagerDashboardResponse.departmentBudget`
 
 ### 📦 Types
@@ -69,7 +69,7 @@ const MOCK_DASHBOARD: ManagerDashboardResponse = {
 const MOCK_PENDING_APPROVALS: ManagerApprovalListItem[] = [
   {
     id: 10, requestCode: "REQ-2026-0050", type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL, amount: 50_000_000,
+    status: RequestStatus.PENDING, amount: 50_000_000,
     description: "Xin cấp vốn bổ sung Phase 2 dự án HTQL nội bộ",
     requester: { id: 4, fullName: "Hoàng Minh Tuấn", avatar: null, employeeCode: "TL001", jobTitle: "Team Leader", email: "tl.it@ifms.vn" },
     project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ", availableBudget: 12_000_000 },
@@ -77,7 +77,7 @@ const MOCK_PENDING_APPROVALS: ManagerApprovalListItem[] = [
   },
   {
     id: 11, requestCode: "REQ-2026-0048", type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL, amount: 30_000_000,
+    status: RequestStatus.PENDING, amount: 30_000_000,
     description: "Cấp vốn cho Phase triển khai dự án hạ tầng mạng",
     requester: { id: 4, fullName: "Hoàng Minh Tuấn", avatar: null, employeeCode: "TL001", jobTitle: "Team Leader", email: "tl.it@ifms.vn" },
     project: { id: 2, projectCode: "PRJ-IT-002", name: "Nâng cấp hạ tầng mạng", availableBudget: 8_500_000 },
@@ -102,7 +102,7 @@ const MOCK_PROJECTS: ManagerProjectListItem[] = [
 3. **2-col layout (lg:grid-cols-3)**:
    - Left (col-span-2): "PROJECT_TOPUP chờ duyệt" — list MOCK_PENDING_APPROVALS (max 3). Mỗi row: badge "Cấp vốn DA" + project.name + requester.fullName + amount. Link "Xem tất cả →"
    - Right (col-span-1): "Dự án phòng ban" — list projects với budget burn bar. Link "Xem tất cả →"
-4. **Quick actions**: "Xin cấp vốn PB" (mở modal tạo QUOTA_TOPUP — amount input + description) | Ví cá nhân → `/wallet`
+4. **Quick actions**: "Xin cấp vốn PB" (mở modal tạo DEPARTMENT_TOPUP — amount input + description) | Ví cá nhân → `/wallet`
 
 ---
 
@@ -118,7 +118,7 @@ Page `/manager/approvals`: danh sách **PROJECT_TOPUP** từ Team Leaders chờ 
 `d:\src\components\pages\approvals-page.tsx` — list/filter structure (NHƯNG chỉ type PROJECT_TOPUP, không có ADVANCE/EXPENSE/REIMBURSE)
 
 ### ⚠️ Business rules
-- Chỉ hiển thị `type = PROJECT_TOPUP`, status `PENDING_APPROVAL`
+- Chỉ hiển thị `type = PROJECT_TOPUP`, status `PENDING`
 - Dữ liệu: `ManagerApprovalListItem` — có `project.currentBudget` và `project.availableBudget`
 - Sau approve: auto PAID (không qua Accountant)
 
@@ -143,7 +143,7 @@ import { api, ApiError } from "@/lib/api-client";
 const MOCK_APPROVALS: ManagerApprovalListItem[] = [
   {
     id: 10, requestCode: "REQ-2026-0050", type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL, amount: 50_000_000,
+    status: RequestStatus.PENDING, amount: 50_000_000,
     description: "Xin cấp vốn bổ sung Phase 2 — nhóm IT thiếu ngân sách phát triển module báo cáo",
     requester: { id: 4, fullName: "Hoàng Minh Tuấn", avatar: null, employeeCode: "TL001", jobTitle: "Team Leader IT", email: "tl.it@ifms.vn" },
     project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ", availableBudget: 12_000_000 },
@@ -151,7 +151,7 @@ const MOCK_APPROVALS: ManagerApprovalListItem[] = [
   },
   {
     id: 11, requestCode: "REQ-2026-0048", type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL, amount: 30_000_000,
+    status: RequestStatus.PENDING, amount: 30_000_000,
     description: "Cấp vốn Phase triển khai — mua thêm server và license phần mềm",
     requester: { id: 4, fullName: "Hoàng Minh Tuấn", avatar: null, employeeCode: "TL001", jobTitle: "Team Leader IT", email: "tl.it@ifms.vn" },
     project: { id: 2, projectCode: "PRJ-IT-002", name: "Nâng cấp hạ tầng mạng", availableBudget: 8_500_000 },
@@ -213,7 +213,7 @@ import { use } from "react";
 // TODO: Replace when Sprint 4-5 is complete
 const MOCK_DETAIL: ManagerApprovalDetailResponse = {
   id: 10, requestCode: "REQ-2026-0050", type: RequestType.PROJECT_TOPUP,
-  status: RequestStatus.PENDING_APPROVAL, amount: 50_000_000,
+  status: RequestStatus.PENDING, amount: 50_000_000,
   approvedAmount: null, description: "Xin cấp vốn bổ sung Phase 2 — nhóm IT thiếu ngân sách phát triển module báo cáo tài chính. Dự kiến dùng cho: nhân công outsource (30M) + infrastructure (20M).",
   rejectReason: null,
   requester: { id: 4, fullName: "Hoàng Minh Tuấn", avatar: null, employeeCode: "TL001", jobTitle: "Team Leader IT", email: "tl.it@ifms.vn", departmentName: "Phòng CNTT" },
@@ -232,7 +232,7 @@ const MOCK_DETAIL: ManagerApprovalDetailResponse = {
 4. **Project budget card**: project.name | Ngân sách hiện tại: X VND | Quỹ khả dụng: Y VND | Yêu cầu thêm: Z VND | Sau phê duyệt: Y+Z VND
 5. **Dept budget indicator**: `department.totalAvailableBalance` — "Quỹ phòng ban khả dụng: {VND}" — nếu amount > dept.totalAvailableBalance → cảnh báo đỏ
 6. **Description** + createdAt
-7. **Action bar** (chỉ khi PENDING_APPROVAL): "Duyệt" (green) + "Từ chối" (red)
+7. **Action bar** (chỉ khi PENDING): "Duyệt" (green) + "Từ chối" (red)
 8. **Approve modal**: confirm amount (default = request.amount, max = min(request.amount, dept.available)) + comment optional
 9. **Reject modal**: required reason ≥10 chars + suggestion chips
 

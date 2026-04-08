@@ -74,8 +74,8 @@
 |-------|-----|--------|-----------|
 | Dashboard (`/dashboard`) | `GET /dashboard/employee` | 9 | [ ] Chờ code |
 | Ví của tôi (`/wallet`) | `GET /wallet` | 3 | [ ] Chờ code |
-| Nạp tiền (`/wallet/deposit`) | `POST /wallet/deposit/generate-qr` | 3 | [ ] Chờ code |
-| Rút tiền (`/wallet/withdraw`) | `POST /wallet/withdraw` | 3 | [ ] Chờ code |
+| Nạp tiền (`/wallet/deposit`) | `POST /wallet/deposit` | 3 | [ ] Chờ code |
+| Rút tiền (`/wallet/withdraw`) | `POST /withdrawals` | 3 | [ ] Chờ code |
 | Lịch sử GD (`/wallet/transactions`) | `GET /wallet/transactions` | 3 | [ ] Chờ code |
 | Danh sách YC (`/requests`) | `GET /requests` | 5 | [ ] Chờ code |
 | Tạo YC mới (`/requests/new`) | `POST /requests` | 5 | [ ] Chờ code |
@@ -113,13 +113,21 @@
 
 ---
 
-### 🏅 Tier 4 — ADMIN *(sau khi Manager xong)*
+### 🏅 Tier 4A — CFO *(sau khi Manager xong)*
 
-> **Role bổ sung**: Duyệt QUOTA_TOPUP (Flow 3), toàn bộ admin panel.
+> **Role bổ sung**: CFO duyệt DEPARTMENT_TOPUP (Flow 3).
 
 | Trang | API | Sprint | Trạng thái |
 |-------|-----|--------|-----------|
-| Duyệt YC hệ thống (`/admin/approvals`) | `GET /admin/approvals` | 6 | [ ] Chờ code |
+| Duyệt YC hệ thống (`/admin/approvals`) | `GET /cfo/approvals` | 6 | [ ] Chờ code |
+| Chi tiết duyệt (`/admin/approvals/[id]`) | `GET /cfo/approvals/:id` | 6 | [ ] Chờ code |
+
+### 🏅 Tier 4B — ADMIN *(song song hoặc sau CFO)*
+
+> **Role bổ sung**: ADMIN quản trị IAM/system.
+
+| Trang | API | Sprint | Trạng thái |
+|-------|-----|--------|-----------|
 | Quản lý nhân sự (`/admin/users`) | `GET /admin/users` | 2 | [ ] Chờ code |
 | Tạo/Sửa user | `POST/PUT /admin/users` | 2 | [ ] Chờ code |
 | Quản lý phòng ban (`/admin/departments`) | `GET /admin/departments` | 2 | [ ] Chờ code |
@@ -149,8 +157,8 @@
 
 | Trang | Ghi chú |
 |-------|---------|
-| Change Password (`/change-password`) | First login flow — cần tạo |
-| Create PIN (`/create-pin`) | First login flow — cần tạo |
+| Change Password (`/change-password`) | First login flow (1 bước: đổi MK + PIN) |
+| Create PIN (`/create-pin`) | Orphaned (flow cũ) |
 | Profile / Settings | Chưa có route riêng |
 
 ---

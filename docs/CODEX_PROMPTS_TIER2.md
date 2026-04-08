@@ -67,7 +67,7 @@ import { api } from "@/lib/api-client";
 ### 🔌 API endpoints
 | Method | Endpoint | Sprint |
 |--------|----------|--------|
-| GET | `/api/v1/team-leader/approvals?limit=3&status=PENDING_APPROVAL` | Sprint 4-5 |
+| GET | `/api/v1/team-leader/approvals?limit=3&status=PENDING` | Sprint 4-5 |
 | GET | `/api/v1/team-leader/projects?limit=3` | Sprint 4 |
 
 ### 📊 Mock data
@@ -76,7 +76,7 @@ import { api } from "@/lib/api-client";
 const MOCK_PENDING: TLApprovalListItem[] = [
   {
     id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 3_500_000,
+    status: RequestStatus.PENDING, amount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm",
     requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", email: "emp.it1@ifms.vn" },
     project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
@@ -85,7 +85,7 @@ const MOCK_PENDING: TLApprovalListItem[] = [
   },
   {
     id: 2, requestCode: "REQ-2026-0042", type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 850_000,
+    status: RequestStatus.PENDING, amount: 850_000,
     description: "Chi phí di chuyển gặp khách hàng",
     requester: { id: 12, fullName: "Vũ Thị Lan", avatar: null, employeeCode: "EMP002", jobTitle: "Backend Developer", email: "emp.it2@ifms.vn" },
     project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
@@ -94,7 +94,7 @@ const MOCK_PENDING: TLApprovalListItem[] = [
   },
   {
     id: 3, requestCode: "REQ-2026-0043", type: RequestType.REIMBURSE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 1_200_000,
+    status: RequestStatus.PENDING, amount: 1_200_000,
     description: "Hoàn ứng chi phí ăn uống team",
     requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", email: "emp.it1@ifms.vn" },
     project: { id: 2, projectCode: "PRJ-IT-002", name: "Nâng cấp hạ tầng mạng" },
@@ -168,7 +168,7 @@ Page `/team-leader/approvals`: danh sách ADVANCE/EXPENSE/REIMBURSE của employ
 `d:\src\components\pages\approvals-page.tsx` — phần list/filter/table (BỎ RequestSheet vì dùng separate page thay vì slide-in panel)
 
 ### ⚠️ Business rules
-- Chỉ hiển thị status `PENDING_APPROVAL` (TL chưa duyệt)
+- Chỉ hiển thị status `PENDING` (TL chưa duyệt)
 - Chỉ Flow 1: ADVANCE, EXPENSE, REIMBURSE — KHÔNG có PROJECT_TOPUP ở đây
 - Phase budget health: cảnh báo nếu `(phase.currentSpent + request.amount) > phase.budgetLimit`
 
@@ -193,7 +193,7 @@ import { api, ApiError } from "@/lib/api-client";
 const MOCK_APPROVALS: TLApprovalListItem[] = [
   {
     id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 3_500_000,
+    status: RequestStatus.PENDING, amount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm",
     requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", email: "emp.it1@ifms.vn" },
     project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
@@ -202,7 +202,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
   },
   {
     id: 2, requestCode: "REQ-2026-0042", type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 850_000,
+    status: RequestStatus.PENDING, amount: 850_000,
     description: "Chi phí di chuyển gặp khách hàng",
     requester: { id: 12, fullName: "Vũ Thị Lan", avatar: null, employeeCode: "EMP002", jobTitle: "Backend Developer", email: "emp.it2@ifms.vn" },
     project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
@@ -211,7 +211,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
   },
   {
     id: 3, requestCode: "REQ-2026-0043", type: RequestType.REIMBURSE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 1_200_000,
+    status: RequestStatus.PENDING, amount: 1_200_000,
     description: "Hoàn ứng chi phí ăn uống team",
     requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", email: "emp.it1@ifms.vn" },
     project: { id: 2, projectCode: "PRJ-IT-002", name: "Nâng cấp hạ tầng mạng" },
@@ -220,7 +220,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
   },
   {
     id: 4, requestCode: "REQ-2026-0038", type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 5_000_000,
+    status: RequestStatus.PENDING, amount: 5_000_000,
     description: "Ứng trước chi phí đào tạo nội bộ",
     requester: { id: 13, fullName: "Phạm Văn Đức", avatar: null, employeeCode: "EMP003", jobTitle: "QA Engineer", email: "emp.sales1@ifms.vn" },
     project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
@@ -229,7 +229,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
   },
   {
     id: 5, requestCode: "REQ-2026-0035", type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_APPROVAL, amount: 2_300_000,
+    status: RequestStatus.PENDING, amount: 2_300_000,
     description: "Mua sách tham khảo kỹ thuật",
     requester: { id: 12, fullName: "Vũ Thị Lan", avatar: null, employeeCode: "EMP002", jobTitle: "Backend Developer", email: "emp.it2@ifms.vn" },
     project: { id: 2, projectCode: "PRJ-IT-002", name: "Nâng cấp hạ tầng mạng" },
@@ -290,10 +290,10 @@ Page `/team-leader/approvals/[id]`: hiển thị full chi tiết request, budget
 
 ### ⚠️ Business rules
 - Endpoint: `GET /team-leader/approvals/:id` trả `RequestDetailResponse` (không phải TLApprovalListItem)
-- Sau approve: status → `PENDING_ACCOUNTANT` (chờ Accountant giải ngân)
+- Sau approve: status → `PENDING_ACCOUNTANT_EXECUTION` (chờ Accountant giải ngân)
 - Sau reject: status → `REJECTED`
 - TL CÓ THỂ điều chỉnh `approvedAmount` ≤ `request.amount` khi duyệt
-- Nếu request không phải `PENDING_APPROVAL` → hiển thị read-only, ẩn action buttons
+- Nếu request không phải `PENDING` → hiển thị read-only, ẩn action buttons
 
 ### 📦 Types
 ```typescript
@@ -317,7 +317,7 @@ import { use } from "react";
 // TODO: Replace when Sprint 4-5 is complete
 const MOCK_DETAIL: RequestDetailResponse = {
   id: 1, requestCode: "REQ-2026-0041",
-  type: RequestType.ADVANCE, status: RequestStatus.PENDING_APPROVAL,
+  type: RequestType.ADVANCE, status: RequestStatus.PENDING,
   amount: 3_500_000, approvedAmount: null,
   description: "Mua vật tư thiết bị thí nghiệm phục vụ dự án. Bao gồm màn hình đo kiểm, cáp kết nối chuyên dụng và bộ nguồn dự phòng UPS.",
   rejectReason: null,
@@ -331,7 +331,7 @@ const MOCK_DETAIL: RequestDetailResponse = {
     { fileId: 2, fileName: "bao_gia_supplier.jpg", url: "#", fileType: "image/jpeg", size: 1_200_000 },
   ],
   timeline: [
-    { id: 1, action: RequestAction.APPROVE, statusAfterAction: RequestStatus.PENDING_APPROVAL, actorId: 11, actorName: "Đỗ Quốc Bảo", comment: null, createdAt: "2026-04-03T09:15:00" },
+    { id: 1, action: RequestAction.APPROVE, statusAfterAction: RequestStatus.PENDING, actorId: 11, actorName: "Đỗ Quốc Bảo", comment: null, createdAt: "2026-04-03T09:15:00" },
   ],
 };
 
@@ -366,7 +366,7 @@ const [actionError, setActionError] = useState<string | null>(null);
    - Nếu vượt budget: banner cảnh báo đỏ "⚠ Yêu cầu này vượt ngân sách phase — xem xét kỹ trước khi duyệt"
 6. **Attachments**: grid 2 cols — file card với icon theo type (PDF/image/excel/doc), fileName, fileSize, link download
 7. **Timeline**: vertical timeline `request.timeline[]` — icon action + actorName + comment + date
-8. **Action bar** (chỉ khi `status === PENDING_APPROVAL`):
+8. **Action bar** (chỉ khi `status === PENDING`):
    - Button "Duyệt" (green) → open Approve modal
    - Button "Từ chối" (red) → open Reject modal
 
@@ -667,7 +667,7 @@ const MOCK_MEMBER_DETAIL: TLTeamMemberDetailResponse = {
     { projectId: 2, projectCode: "PRJ-IT-002", projectName: "Nâng cấp hạ tầng mạng", position: "Developer", joinedAt: "2026-02-15T08:00:00" },
   ],
   recentRequests: [
-    { id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE, amount: 3_500_000, status: RequestStatus.PENDING_APPROVAL, projectCode: "PRJ-IT-001", categoryName: "Thiết bị & Phần cứng", createdAt: "2026-04-03T09:15:00" },
+    { id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE, amount: 3_500_000, status: RequestStatus.PENDING, projectCode: "PRJ-IT-001", categoryName: "Thiết bị & Phần cứng", createdAt: "2026-04-03T09:15:00" },
     { id: 2, requestCode: "REQ-2026-0035", type: RequestType.EXPENSE, amount: 850_000, status: RequestStatus.PAID, projectCode: "PRJ-IT-001", categoryName: "Di chuyển & Công tác", createdAt: "2026-03-28T14:00:00" },
   ],
 };

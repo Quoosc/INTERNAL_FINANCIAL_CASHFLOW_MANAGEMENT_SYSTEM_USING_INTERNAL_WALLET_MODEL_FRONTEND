@@ -20,7 +20,7 @@
 | 14 | UC-TL-04 | Manage Project Members | Team Leader | — |
 | 15 | UC-MGR-01 | Manage Projects | Manager | — |
 | 16 | UC-MGR-02 | Approve/Reject Project Top-up (Flow 2) | Manager | ✅ |
-| 17 | UC-MGR-03 | Request Quota Top-up (Flow 3) | Manager | — |
+| 17 | UC-MGR-03 | Request Department Top-up (Flow 3) | Manager | — |
 | 18 | UC-MGR-04 | View Department Dashboard | Manager | — |
 | 19 | UC-ACC-01 | Manage Disbursement (Flow 1) | Accountant | ✅ |
 | 20 | UC-ACC-02 | Manage Payroll | Accountant | ✅ |
@@ -28,7 +28,7 @@
 | 22 | UC-ACC-04 | Approve Withdrawal | Accountant | — |
 | 23 | UC-ADM-01 | Manage Users | Admin | ✅ |
 | 24 | UC-ADM-02 | Manage Departments | Admin | — |
-| 25 | UC-ADM-03 | Approve/Reject Quota Top-up (Flow 3) | Admin | ✅ |
+| 25 | UC-ADM-03 | Approve/Reject Department Top-up (Flow 3) | CFO (UI namespace `/admin`) | ✅ |
 | 26 | UC-ADM-04 | Manage Roles & Permissions | Admin | — |
 | 27 | UC-ADM-05 | Manage System Settings | Admin | — |
 | 28 | UC-ADM-06 | View Audit Logs | Admin | — |

@@ -14,18 +14,18 @@
 > **Thiết kế mẫu trong `d:\src` được xây dựng theo flow CŨ với 4 roles:**
 > `Employee` · `Manager` · `Accountant` · `Admin`
 >
-> **Dự án thực tế (`financial-wallet-frontend`) implement theo flow MỚI với 5 roles:**
-> `EMPLOYEE` · `TEAM_LEADER` · `MANAGER` · `ACCOUNTANT` · `ADMIN`
+> **Dự án thực tế (`financial-wallet-frontend`) implement theo flow MỚI với 6 roles:**
+> `EMPLOYEE` · `TEAM_LEADER` · `MANAGER` · `ACCOUNTANT` · `CFO` · `ADMIN`
 >
 > **Hệ quả — những thứ KHÔNG được copy thẳng từ `d:\src`:**
 > - ❌ **Role logic & routing**: `d:\src` không có role `TEAM_LEADER` — sidebar, page guards, và toàn bộ routing cho TL phải viết mới hoàn toàn
 > - ❌ **Approval flow**: `d:\src` dùng chain Manager → Admin → Accountant. Flow thực tế:
 >   - Flow 1 (ADVANCE/EXPENSE/REIMBURSE): `Employee` tạo → `Team Leader` duyệt → `Accountant` giải ngân (nhập PIN) → **KHÔNG qua Manager hay Admin**
 >   - Flow 2 (PROJECT_TOPUP): `Team Leader` tạo → `Manager` duyệt → Auto PAID (không qua Accountant)
->   - Flow 3 (QUOTA_TOPUP): `Manager` tạo → `Admin` duyệt → Auto PAID (không qua Accountant)
-> - ❌ **RequestStatus enum**: `d:\src` dùng `PENDING_MANAGER | PENDING_ADMIN`. Thực tế: `PENDING_APPROVAL | PENDING_ACCOUNTANT | APPROVED | PAID | REJECTED | CANCELLED` — không có `PENDING_MANAGER` hay `APPROVED_L1`
+>   - Flow 3 (DEPARTMENT_TOPUP): `Manager` tạo → `CFO` duyệt → Auto PAID (không qua Accountant)
+> - ❌ **RequestStatus enum**: `d:\src` dùng `PENDING_MANAGER | PENDING_ADMIN`. Thực tế dùng flow-specific status: `PENDING`, `APPROVED_BY_TEAM_LEADER`, `PENDING_ACCOUNTANT_EXECUTION`, `APPROVED_BY_MANAGER`, `APPROVED_BY_CFO`, `PAID`, `REJECTED`, `CANCELLED`
 > - ❌ **Manager Approvals page** trong `d:\src`: xử lý Flow 1 (chi tiêu cá nhân). Thực tế Manager chỉ duyệt Flow 2 (PROJECT_TOPUP)
-> - ❌ **Admin Approvals page** trong `d:\src`: xử lý Flow 2. Thực tế Admin chỉ duyệt Flow 3 (QUOTA_TOPUP)
+> - ❌ **Admin Approvals page** trong `d:\src`: xử lý Flow 2. Thực tế Flow 3 do CFO duyệt (frontend có thể vẫn đặt UI dưới namespace `/admin`)
 > - ❌ **Types**: `UserRole`, `RequestStatus`, `RequestType` trong `d:\src\lib\` đều sai — luôn dùng từ `@/types`
 >
 > ✅ **Chỉ tham khảo UI/UX thuần túy**: layout, màu sắc, component structure, animation, form design, table design.
@@ -320,7 +320,7 @@ interface Transaction {
 ### Request Types
 **File**: `d:\src\lib\request-types.ts`
 ```ts
-type RequestType = 'ADVANCE' | 'EXPENSE' | 'REIMBURSE' | 'QUOTA_TOPUP';
+type RequestType = 'ADVANCE' | 'EXPENSE' | 'REIMBURSE' | 'DEPARTMENT_TOPUP';
 type RequestStatus = 'PENDING_MANAGER' | 'PENDING_ADMIN' | 'APPROVED' | 'PAID' | 'REJECTED';
 
 interface Request {
@@ -454,7 +454,7 @@ interface DashboardStats {
 
 ## ⚠️ Lưu ý khi implement
 
-1. **🚨 FLOW 4-ROLE vs 5-ROLE** — Thiết kế mẫu dùng 4 roles (`Employee, Manager, Accountant, Admin`). Project thực dùng **5 roles**, thêm **`Director`** vào giữa Manager và Admin. Mọi approval chain, routing, sidebar, và business rule liên quan đến role **phải tra cứu từ backend spec, không từ `d:\src`**.
+1. **FLOW 4-ROLE vs 6-ROLE** — Thiết kế mẫu dùng 4 roles (`Employee, Manager, Accountant, Admin`). Project thực dùng 6 roles (`EMPLOYEE`, `TEAM_LEADER`, `MANAGER`, `ACCOUNTANT`, `CFO`, `ADMIN`). Moi approval chain, routing, sidebar, va business rule lien quan den role phai tra cuu tu backend spec, khong tu `d:\src`.
 2. **KHÔNG copy navigation logic** — `lib/navigation-context.tsx` dùng Context API SPA, không phù hợp với Next.js App Router
 3. **KHÔNG copy mock data** — thay bằng `useQuery` / `useMutation` (React Query/TanStack Query)
 4. **Types cần verify** lại với backend Spring Boot contract trước khi dùng (đặc biệt `UserRole`, `RequestStatus`, approval chain)

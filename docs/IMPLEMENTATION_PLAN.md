@@ -1,11 +1,14 @@
 # Implementation Plan: Next.js Frontend Architecture for Internal Financial Cashflow Management System
 
+> [!WARNING]
+> Tài liệu này mang tính lịch sử (giai đoạn khởi tạo). Nguồn chuẩn hiện tại là `docs/API_CONTRACT.md`, `docs/FLOW.md`, và `CLAUDE.md`.
+
 ## Overview
 
-Thiết kế và xây dựng kiến trúc Frontend Next.js (App Router, TypeScript) kết nối với Backend Java Spring Boot hiện có. Backend hiện tại có **11 modules** (auth, wallet, user, project, request, accounting, audit, notification, organization, config, file) với **1 Controller đã hoàn thiện** (`AuthController` - 4 endpoints `/api/v1/auth`) và hàng chục entity classes. Frontend hiện tại là một bare Next.js 16 project với TailwindCSS v4.
+Thiết kế và xây dựng kiến trúc Frontend Next.js (App Router, TypeScript) kết nối với Backend Java Spring Boot. Backend hiện đã có nhiều controller/module được triển khai theo từng sprint; nội dung chi tiết cần đối chiếu từ `docs/API_CONTRACT.md` thay vì giả định trạng thái ban đầu.
 
 > [!IMPORTANT]
-> Backend hiện chỉ có **AuthController** là Controller duy nhất. Các module khác (wallet, project, request, payroll...) **chỉ có Entity** chứ chưa có Controller/Service/DTO riêng. Implementation plan này sẽ tạo sẵn TypeScript types cho TẤT CẢ entities để khi Backend dev thêm Controller, Frontend chỉ cần tạo API function gọi đúng endpoint.
+> Giả định "chỉ có AuthController" đã lỗi thời. Khi triển khai, luôn kiểm tra contract backend mới nhất trước khi code.
 
 ---
 
@@ -65,8 +68,8 @@ Tạo thư mục `types/` tại root project, với các file tổ chức theo m
 - `Transaction` interface (full fields matching Java)
 
 #### [NEW] [request.ts](file:///d:/HK6%20UIT/DA1/financial-wallet-frontend/types/request.ts)
-- `RequestType` enum (ADVANCE, EXPENSE, REIMBURSE, **PROJECT_TOPUP**, QUOTA_TOPUP)
-- `RequestStatus` enum (**PENDING_APPROVAL**, **PENDING_ACCOUNTANT**, APPROVED, PAID, REJECTED, CANCELLED) — Absolute Delegation, không Escalation
+- `RequestType` enum (ADVANCE, EXPENSE, REIMBURSE, **PROJECT_TOPUP**, DEPARTMENT_TOPUP)
+- `RequestStatus` enum (**PENDING**, **PENDING_ACCOUNTANT_EXECUTION**, APPROVED, PAID, REJECTED, CANCELLED) — Absolute Delegation, không Escalation
 - `RequestAction` enum (APPROVE, REJECT — **không còn ESCALATE**)
 - `RequestHistoryStatus` enum
 - `Request`, `RequestHistory`, `RequestAttachment` interfaces

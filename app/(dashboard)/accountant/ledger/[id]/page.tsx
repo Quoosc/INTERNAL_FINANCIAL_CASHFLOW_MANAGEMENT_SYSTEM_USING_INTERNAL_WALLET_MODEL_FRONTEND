@@ -3,24 +3,38 @@
 import Link from "next/link";
 import React, { use, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api-client";
-import {
-  PaymentProvider,
-  ReferenceType,
-  TransactionDetailResponse,
-  TransactionStatus,
-  TransactionType,
-} from "@/types";
+import { ReferenceType, TransactionStatus, TransactionType } from "@/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-interface LedgerTxnDetailView extends TransactionDetailResponse {
+interface LedgerTxnDetailView {
+  id: number;
+  transactionCode: string;
+  type: TransactionType;
+  status: TransactionStatus;
+  amount: number;
+  balanceAfter: number;
+  referenceId: number | null;
+  referenceType: ReferenceType | null;
+  description: string;
+  createdAt: string;
+  updatedAt?: string;
+
+  // Optional fields for richer detail when backend returns them
+  paymentRef?: string | null;
+  gatewayProvider?: string | null;
+  walletId?: number | null;
+  walletOwnerName?: string | null;
+  actorId?: number | null;
+  actorName?: string | null;
+  relatedTransactionId?: number | null;
   ipAddress?: string | null;
   referenceCode?: string | null;
 }
 
-// TODO: Replace when Sprint 7 is complete
+// Fallback mock data
 const MOCK_TXN: LedgerTxnDetailView = {
   id: 1,
   transactionCode: "TXN-2026-0001A",
@@ -31,9 +45,9 @@ const MOCK_TXN: LedgerTxnDetailView = {
   referenceId: 1,
   referenceType: ReferenceType.REQUEST,
   referenceCode: "REQ-2026-0041",
-  description: "Giai ngan tam ung thiet bi phan cung",
+  description: "Giai ngan tam ung thiet bi",
   paymentRef: null,
-  gatewayProvider: PaymentProvider.INTERNAL_WALLET,
+  gatewayProvider: "INTERNAL",
   walletId: 101,
   walletOwnerName: "Do Quoc Bao",
   actorId: 7,
@@ -70,6 +84,7 @@ function getTypeClass(type: TransactionType): string {
     case TransactionType.PAYSLIP_PAYMENT:
       return "bg-blue-500/15 border-blue-500/30 text-blue-300";
     case TransactionType.DEPOSIT:
+    case TransactionType.SYSTEM_TOPUP:
       return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
     case TransactionType.WITHDRAW:
       return "bg-rose-500/15 border-rose-500/30 text-rose-300";
@@ -90,6 +105,8 @@ function getStatusClass(status: TransactionStatus): string {
       return "bg-amber-500/15 border-amber-500/30 text-amber-300";
     case TransactionStatus.FAILED:
       return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+    case TransactionStatus.CANCELLED:
+      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
     default:
       return "bg-slate-500/15 border-slate-500/30 text-slate-300";
   }
@@ -125,14 +142,10 @@ function getSourceLink(txn: LedgerTxnDetailView): { label: string; href?: string
   }
 
   if (txn.referenceType === ReferenceType.SYSTEM) {
-    return {
-      label: "Giao dich quy he thong",
-    };
+    return { label: "Giao dich quy he thong" };
   }
 
-  return {
-    label: "Giao dich truc tiep",
-  };
+  return { label: "Giao dich truc tiep" };
 }
 
 export default function AccountantLedgerDetailPage({ params }: PageProps) {
@@ -150,10 +163,14 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        const res = await api.get<TransactionDetailResponse>(`/api/v1/accountant/ledger/${id}`);
+        const res = await api.get<LedgerTxnDetailView>(`/api/v1/accountant/ledger/${id}`);
 
         if (cancelled) return;
-        setTxn({ ...res.data });
+
+        setTxn({
+          ...res.data,
+          updatedAt: res.data.updatedAt ?? res.data.createdAt,
+        });
       } catch {
         if (cancelled) return;
 
@@ -195,7 +212,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
-          Quay lại Sổ cái
+          Quay lai So cai
         </Link>
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-8 text-center text-slate-400">
           Khong tim thay giao dich.
@@ -209,7 +226,9 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-slate-400">
-        <Link href="/accountant/ledger" className="hover:text-slate-200 transition-colors">So cai</Link>
+        <Link href="/accountant/ledger" className="hover:text-slate-200 transition-colors">
+          So cai
+        </Link>
         <span>/</span>
         <span className="text-slate-300 font-mono">{txn.transactionCode}</span>
       </div>
@@ -235,10 +254,10 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <InfoCard label="So tien" value={formatCurrency(txn.amount)} tone={txn.amount >= 0 ? "text-emerald-300" : "text-rose-300"} />
-          <InfoCard label="Vi nhan" value={`${txn.walletOwnerName} (#${txn.walletId})`} />
-          <InfoCard label="Mo ta" value={txn.description ?? "-"} />
-          <InfoCard label="Số dư trước" value={formatCurrency(balanceBefore)} />
-          <InfoCard label="Số dư sau" value={formatCurrency(txn.balanceAfter)} />
+          <InfoCard label="Vi nhan" value={txn.walletOwnerName ? `${txn.walletOwnerName} (#${txn.walletId ?? "-"})` : "Khong co"} />
+          <InfoCard label="Mo ta" value={txn.description || "-"} />
+          <InfoCard label="So du truoc" value={formatCurrency(balanceBefore)} />
+          <InfoCard label="So du sau" value={formatCurrency(txn.balanceAfter)} />
           <InfoCard label="Gateway" value={txn.gatewayProvider ?? "INTERNAL"} />
         </div>
       </div>
@@ -264,15 +283,12 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
         <h2 className="text-lg font-semibold text-white">Audit & Traceability</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <InfoCard label="Người thực hiện" value={txn.actorName ? `${txn.actorName} (#${txn.actorId ?? "-"})` : "Hệ thống"} />
+          <InfoCard label="Nguoi thuc hien" value={txn.actorName ? `${txn.actorName} (#${txn.actorId ?? "-"})` : "He thong"} />
           <InfoCard label="IP" value={txn.ipAddress ?? "N/A"} mono />
           <InfoCard label="Thoi gian tao" value={formatDateTime(txn.createdAt)} />
-          <InfoCard label="Cap nhat" value={formatDateTime(txn.updatedAt)} />
+          <InfoCard label="Cap nhat" value={formatDateTime(txn.updatedAt ?? txn.createdAt)} />
           <InfoCard label="Payment Ref" value={txn.paymentRef ?? "-"} mono />
-          <InfoCard
-            label="Opposing entry"
-            value={txn.relatedTransactionId ? `#${txn.relatedTransactionId}` : "Không có"}
-          />
+          <InfoCard label="Opposing entry" value={txn.relatedTransactionId ? `#${txn.relatedTransactionId}` : "Khong co"} />
         </div>
 
         {txn.relatedTransactionId && (
@@ -298,7 +314,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
         </svg>
-        Quay lại Sổ cái
+        Quay lai So cai
       </Link>
     </div>
   );
@@ -322,3 +338,4 @@ function InfoCard({
     </div>
   );
 }
+

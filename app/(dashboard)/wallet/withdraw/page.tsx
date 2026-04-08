@@ -1,14 +1,12 @@
 ﻿"use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/contexts/wallet-context";
-import { ApiError, api } from "@/lib/api-client";
-import { WithdrawRequest, WithdrawResponse } from "@/types";
-
-type WithdrawStep = "form" | "pin" | "success";
-
+import { ApiError } from "@/lib/api-client";
+import { createWithdrawRequest } from "@/lib/api";
+import { WithdrawRequestResponse } from "@/types";
 
 function formatVnd(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
@@ -20,10 +18,11 @@ function formatVnd(amount: number): string {
 
 function formatInputAmount(raw: string): string {
   if (!raw) return "";
-  return `${Number(raw).toLocaleString("vi-VN")} ₫`;
+  return `${Number(raw).toLocaleString("vi-VN")} ?`;
 }
 
-function formatDateTime(iso: string): string {
+function formatDateTime(iso: string | null): string {
+  if (!iso) return "-";
   return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
     month: "2-digit",
@@ -35,46 +34,41 @@ function formatDateTime(iso: string): string {
 
 export default function WithdrawPage() {
   const router = useRouter();
-  const { wallet, isLoading: walletLoading, fetchWallet, optimisticUpdate } = useWallet();
+  const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [pin, setPin] = useState("");
-  const [step, setStep] = useState<WithdrawStep>("form");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [result, setResult] = useState<WithdrawResponse | null>(null);
-
-  const pinRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const [result, setResult] = useState<WithdrawRequestResponse | null>(null);
 
   const amountNumber = useMemo(() => Number(amount || 0), [amount]);
   const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
   const currentBalance = wallet?.balance ?? 0;
+  const availableBalance = wallet?.availableBalance ?? wallet?.balance ?? 0;
 
   useEffect(() => {
     void fetchWallet();
   }, [fetchWallet]);
 
-  useEffect(() => {
-    if (step === "pin") {
-      pinRefs.current[0]?.focus();
-    }
-  }, [step]);
-
   const validateAmount = (): boolean => {
     if (!wallet) {
-      setError("Không thể tải thông tin ví. Vui lòng thử lại.");
+      setError("Khong the tai thong tin vi. Vui long thu lai.");
       return false;
     }
 
     if (amountNumber <= 0) {
-      setError("Vui lòng nhập số tiền hợp lệ.");
+      setError("Vui long nhap so tien hop le.");
       return false;
     }
 
-    if (amountNumber > wallet.balance) {
-      setError("Số tiền rút không được vượt quá số dư hiện tại.");
+    if (amountNumber < 10_000) {
+      setError("So tien rut toi thieu la 10,000 VND.");
+      return false;
+    }
+
+    if (amountNumber > availableBalance) {
+      setError("So tien rut khong duoc vuot qua so du kha dung.");
       return false;
     }
 
@@ -86,102 +80,27 @@ export default function WithdrawPage() {
     setAmount(digitsOnly);
   };
 
-  const handleContinueToPin = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmitWithdraw = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
     if (!validateAmount()) return;
 
-    setPin("");
-    setStep("pin");
-  };
-
-  const handlePinChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
-
-    const next = Array.from({ length: 6 }, (_, i) => pin[i] ?? "");
-    next[index] = value;
-    const nextPin = next.join("");
-    setPin(nextPin);
-
-    if (value && index < 5) {
-      pinRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handlePinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace") {
-      if (pin[index]) {
-        const next = Array.from({ length: 6 }, (_, i) => pin[i] ?? "");
-        next[index] = "";
-        setPin(next.join(""));
-        return;
-      }
-
-      if (index > 0) {
-        pinRefs.current[index - 1]?.focus();
-      }
-    }
-
-    if (e.key === "ArrowLeft" && index > 0) {
-      pinRefs.current[index - 1]?.focus();
-    }
-
-    if (e.key === "ArrowRight" && index < 5) {
-      pinRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handlePinPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-
-    e.preventDefault();
-
-    const next = Array.from({ length: 6 }, (_, i) => pasted[i] ?? "");
-    const nextPin = next.join("");
-    setPin(nextPin);
-
-    const targetIndex = Math.min(pasted.length, 6) - 1;
-    if (targetIndex >= 0) {
-      pinRefs.current[targetIndex]?.focus();
-    }
-  };
-
-  const handleSubmitWithdraw = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!validateAmount()) {
-      setStep("form");
-      return;
-    }
-
-    if (!/^\d{6}$/.test(pin)) {
-      setError("Vui lòng nhập đầy đủ mã PIN gồm 6 chữ số.");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const payload: WithdrawRequest & { note?: string } = {
+      const res = await createWithdrawRequest({
         amount: amountNumber,
-        pin,
-        note: note.trim() || undefined,
-      };
+        userNote: note.trim() || undefined,
+      });
 
-      // const res = await api.post<WithdrawResponse>('/api/v1/wallet/withdraw', { amount: Number(amount), pin, note })
-      const res = await api.post<WithdrawResponse>("/api/v1/wallet/withdraw", payload);
-
-      optimisticUpdate(-amountNumber);
       setResult(res.data);
-      setStep("success");
+      await fetchWallet();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
-        setError("Không thể kết nối API. Vui lòng thử lại.");
+        setError("Khong the ket noi API. Vui long thu lai.");
       }
     } finally {
       setLoading(false);
@@ -198,28 +117,31 @@ export default function WithdrawPage() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
         </svg>
-        Quay lại
+        Quay lai
       </button>
 
       <div>
-        <h1 className="text-2xl font-bold text-white">Rút tiền</h1>
-        <p className="text-slate-400 mt-1">Rút tiền từ ví nội bộ về tài khoản ngân hàng.</p>
+        <h1 className="text-2xl font-bold text-white">Rut tien</h1>
+        <p className="text-slate-400 mt-1">Tao yeu cau rut tien tu vi noi bo ve tai khoan ngan hang.</p>
       </div>
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-6">
-        <p className="text-sm text-slate-400">Số dư hiện tại</p>
+        <p className="text-sm text-slate-400">So du hien tai</p>
         {walletLoading ? (
           <div className="mt-2 h-9 w-48 rounded bg-slate-700 animate-pulse" />
         ) : (
-          <p className="text-3xl font-bold text-white mt-2">{formatVnd(currentBalance)}</p>
+          <>
+            <p className="text-3xl font-bold text-white mt-2">{formatVnd(currentBalance)}</p>
+            <p className="text-sm text-slate-400 mt-1">Kha dung: {formatVnd(availableBalance)}</p>
+          </>
         )}
       </div>
 
-      {step === "form" && (
-        <form onSubmit={handleContinueToPin} className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-4">
+      {!result ? (
+        <form onSubmit={handleSubmitWithdraw} className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-4">
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-slate-300 mb-2">
-              Số tiền rút
+              So tien rut
             </label>
             <input
               id="amount"
@@ -227,21 +149,21 @@ export default function WithdrawPage() {
               inputMode="numeric"
               value={amountDisplay}
               onChange={(e) => handleAmountChange(e.target.value)}
-              placeholder="Nhập số tiền"
+              placeholder="Nhap so tien"
               className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
           </div>
 
           <div>
             <label htmlFor="note" className="block text-sm font-medium text-slate-300 mb-2">
-              Ghi chú (không bắt buộc)
+              Ghi chu (khong bat buoc)
             </label>
             <textarea
               id="note"
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Ví dụ: Rút tiền chi tiêu cá nhân"
+              placeholder="Vi du: Rut tien chi tieu ca nhan"
               className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
           </div>
@@ -254,84 +176,13 @@ export default function WithdrawPage() {
 
           <button
             type="submit"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
           >
-            Tiếp tục
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-            </svg>
+            {loading ? "Dang gui yeu cau..." : "Gui yeu cau rut tien"}
           </button>
         </form>
-      )}
-
-      {step === "pin" && (
-        <form onSubmit={handleSubmitWithdraw} className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-5">
-          <div>
-            <h2 className="text-lg font-semibold text-white">Xác nhận mã PIN</h2>
-            <p className="text-sm text-slate-400 mt-1">Nhập mã PIN 6 chữ số để hoàn tất giao dịch rút tiền.</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-slate-300 mb-3">Số tiền rút: <span className="font-semibold text-white">{formatVnd(amountNumber)}</span></p>
-            <div className="flex gap-2 sm:gap-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <input
-                  key={index}
-                  ref={(el) => {
-                    pinRefs.current[index] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={pin[index] ?? ""}
-                  onChange={(e) => handlePinChange(index, e.target.value)}
-                  onKeyDown={(e) => handlePinKeyDown(index, e)}
-                  onPaste={handlePinPaste}
-                  className="w-11 h-12 sm:w-12 sm:h-14 text-center text-lg font-bold rounded-xl bg-slate-900 border border-white/15 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-              ))}
-            </div>
-          </div>
-
-          {error && (
-            <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setStep("form");
-                setError(null);
-              }}
-              className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
-            >
-              Quay lại
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Đang xử lý...
-                </>
-              ) : (
-                "Xác nhận rút tiền"
-              )}
-            </button>
-          </div>
-        </form>
-      )}
-
-      {step === "success" && result && (
+      ) : (
         <div className="bg-slate-800 border border-emerald-500/30 rounded-2xl p-6 space-y-4">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
@@ -340,31 +191,40 @@ export default function WithdrawPage() {
               </svg>
             </span>
             <div>
-              <h2 className="text-lg font-semibold text-white">Rút tiền thành công</h2>
-              <p className="text-sm text-slate-400">Giao dịch đã được ghi nhận.</p>
+              <h2 className="text-lg font-semibold text-white">Da tao yeu cau rut tien</h2>
+              <p className="text-sm text-slate-400">Yeu cau dang cho xu ly boi ke toan.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <InfoRow label="Mã giao dịch" value={result.transactionCode} />
-            <InfoRow label="Thời gian" value={formatDateTime(result.createdAt)} />
-            <InfoRow label="Số tiền rút" value={formatVnd(result.amount)} />
-            <InfoRow label="Số dư mới" value={formatVnd(result.balanceAfter)} />
+            <InfoRow label="Ma yeu cau" value={result.withdrawCode} />
+            <InfoRow label="Trang thai" value={result.status} />
+            <InfoRow label="So tien" value={formatVnd(result.amount)} />
+            <InfoRow label="Thoi gian tao" value={formatDateTime(result.createdAt)} />
+            <InfoRow label="Ngan hang" value={result.creditBankName} />
+            <InfoRow label="Tai khoan" value={`${result.creditAccountName} - ${result.creditAccount}`} />
           </div>
 
-          {error && (
-            <p className="text-xs text-amber-400">{error}</p>
-          )}
-
-          <Link
-            href="/wallet"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
-          >
-            Về ví
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/wallet"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+            >
+              Ve vi
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setResult(null);
+                setAmount("");
+                setNote("");
+                setError(null);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
+            >
+              Tao yeu cau moi
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -379,3 +239,4 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

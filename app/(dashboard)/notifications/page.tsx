@@ -1,125 +1,84 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError, api } from "@/lib/api-client";
-import {
-  MarkAllReadResponse,
-  MarkReadResponse,
-  NotificationFilterParams,
-  NotificationListResponse,
-  NotificationRefType,
-  NotificationResponse,
-  NotificationType,
-} from "@/types";
+import { ApiError } from "@/lib/api-client";
+import { getNotifications, markAllAsRead, markAsRead } from "@/lib/api";
+import { NotificationResponse, NotificationType } from "@/types";
 
-const PAGE_LIMIT = 20;
+const PAGE_SIZE = 20;
 
-// TODO: Replace with real API calls when Sprint 8 is complete
+type NotificationFilterTab = "ALL" | "UNREAD";
+
+// Fallback mock data when backend is unavailable
 const MOCK_NOTIFICATIONS: NotificationResponse[] = [
   {
     id: 1,
-    type: NotificationType.REQUEST_APPROVED,
-    title: "Yêu cầu đã được duyệt",
-    message: "REQ-EMP-0326-001 đã được Team Leader duyệt.",
+    type: NotificationType.REQUEST_SUBMITTED,
+    title: "Yeu cau moi duoc tao",
+    message: "REQ-2026-0101 da duoc gui cho Team Leader.",
     isRead: false,
     refId: 101,
-    refType: NotificationRefType.REQUEST,
-    createdAt: "2026-04-03T11:20:00",
+    refType: "REQUEST",
+    referenceLink: "/requests/101",
+    createdAt: "2026-04-08T09:30:00",
   },
   {
     id: 2,
-    type: NotificationType.REQUEST_REJECTED,
-    title: "Yêu cầu bị từ chối",
-    message: "REQ-EMP-0326-005 bị từ chối do thiếu chứng từ.",
+    type: NotificationType.REQUEST_APPROVED_BY_TL,
+    title: "Yeu cau da duoc Team Leader duyet",
+    message: "REQ-2026-0100 da chuyen sang Ke toan.",
     isRead: false,
-    refId: 105,
-    refType: NotificationRefType.REQUEST,
-    createdAt: "2026-04-03T09:10:00",
+    refId: 100,
+    refType: "REQUEST",
+    referenceLink: "/requests/100",
+    createdAt: "2026-04-08T08:15:00",
   },
   {
     id: 3,
-    type: NotificationType.SALARY_PAID,
-    title: "Lương đã được thanh toán",
-    message: "Phiếu lương tháng 03/2026 đã được chuyển vào ví của bạn.",
+    type: NotificationType.REQUEST_PAID,
+    title: "Yeu cau da duoc giai ngan",
+    message: "REQ-2026-0095 da duoc chi tra.",
     isRead: true,
-    refId: 2001,
-    refType: NotificationRefType.PAYSLIP,
-    createdAt: "2026-04-02T10:05:00",
+    refId: 95,
+    refType: "REQUEST",
+    referenceLink: "/requests/95",
+    createdAt: "2026-04-07T16:40:00",
   },
   {
     id: 4,
-    type: NotificationType.SYSTEM,
-    title: "Nạp tiền thành công",
-    message: "Bạn đã nạp thành công 500.000 ₫ vào ví.",
-    isRead: false,
-    refId: null,
-    refType: null,
-    createdAt: "2026-04-02T07:45:00",
+    type: NotificationType.SALARY_PAID,
+    title: "Luong da duoc thanh toan",
+    message: "Ban da nhan luong thang 03/2026.",
+    isRead: true,
+    refId: 77,
+    refType: "PAYSLIP",
+    referenceLink: "/payroll/77",
+    createdAt: "2026-04-07T08:00:00",
   },
   {
     id: 5,
-    type: NotificationType.WARN,
-    title: "Cảnh báo số dư",
-    message: "Số dư khả dụng của bạn đang thấp hơn mức khuyến nghị.",
-    isRead: true,
+    type: NotificationType.SECURITY_ALERT,
+    title: "Canh bao bao mat",
+    message: "Phat hien dang nhap tu thiet bi moi.",
+    isRead: false,
     refId: null,
     refType: null,
-    createdAt: "2026-04-01T17:30:00",
+    referenceLink: null,
+    createdAt: "2026-04-06T20:10:00",
   },
   {
     id: 6,
-    type: NotificationType.REQUEST_APPROVED,
-    title: "Yêu cầu chờ kế toán",
-    message: "REQ-EMP-0326-007 đã được duyệt và chuyển sang kế toán.",
-    isRead: false,
-    refId: 107,
-    refType: NotificationRefType.REQUEST,
-    createdAt: "2026-04-01T14:10:00",
-  },
-  {
-    id: 7,
     type: NotificationType.SYSTEM,
-    title: "Cập nhật hệ thống",
-    message: "Hệ thống sẽ bảo trì từ 23:00 đến 23:30 hôm nay.",
+    title: "Thong bao he thong",
+    message: "He thong se bao tri tu 23:00 den 23:30.",
     isRead: true,
     refId: null,
     refType: null,
-    createdAt: "2026-03-31T21:00:00",
-  },
-  {
-    id: 8,
-    type: NotificationType.SALARY_PAID,
-    title: "Phiếu lương mới",
-    message: "Phiếu lương tháng 02/2026 đã sẵn sàng để xem.",
-    isRead: false,
-    refId: 1998,
-    refType: NotificationRefType.PAYSLIP,
-    createdAt: "2026-03-31T08:40:00",
-  },
-  {
-    id: 9,
-    type: NotificationType.REQUEST_REJECTED,
-    title: "Yêu cầu cần chỉnh sửa",
-    message: "REQ-EMP-0326-008 thiếu thông tin dự án, vui lòng cập nhật.",
-    isRead: true,
-    refId: 108,
-    refType: NotificationRefType.REQUEST,
-    createdAt: "2026-03-30T15:25:00",
-  },
-  {
-    id: 10,
-    type: NotificationType.SYSTEM,
-    title: "Giao dịch ví mới",
-    message: "Có giao dịch mới được ghi nhận trong lịch sử ví.",
-    isRead: false,
-    refId: null,
-    refType: null,
-    createdAt: "2026-03-29T10:10:00",
+    referenceLink: null,
+    createdAt: "2026-04-06T13:20:00",
   },
 ];
-
-type NotificationFilterTab = "ALL" | "UNREAD";
 
 function formatTimeAgo(iso: string): string {
   const now = Date.now();
@@ -129,11 +88,11 @@ function formatTimeAgo(iso: string): string {
   const hour = 60 * minute;
   const day = 24 * hour;
 
-  if (diff < 5 * minute) return "Vừa xong";
-  if (diff < hour) return `${Math.floor(diff / minute)} phút trước`;
-  if (diff < day) return `${Math.floor(diff / hour)} giờ trước`;
-  if (diff < 2 * day) return "Hôm qua";
-  if (diff < 7 * day) return `${Math.floor(diff / day)} ngày trước`;
+  if (diff < 5 * minute) return "Vua xong";
+  if (diff < hour) return `${Math.floor(diff / minute)} phut truoc`;
+  if (diff < day) return `${Math.floor(diff / hour)} gio truoc`;
+  if (diff < 2 * day) return "Hom qua";
+  if (diff < 7 * day) return `${Math.floor(diff / day)} ngay truoc`;
 
   return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
@@ -142,15 +101,19 @@ function formatTimeAgo(iso: string): string {
   }).format(new Date(iso));
 }
 
-function getTypeIcon(type: NotificationType): React.ReactNode {
+function getTypeIcon(type: string): React.ReactNode {
   switch (type) {
-    case NotificationType.REQUEST_APPROVED:
+    case NotificationType.REQUEST_SUBMITTED:
+    case NotificationType.REQUEST_APPROVED_BY_TL:
+    case NotificationType.REQUEST_PAID:
       return (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 12l2 2 4-4m7 2A9 9 0 113 12a9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       );
     case NotificationType.REQUEST_REJECTED:
+    case NotificationType.PROJECT_TOPUP_REJECTED:
+    case NotificationType.DEPT_TOPUP_REJECTED:
       return (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 18L18 6M6 6l12 12" />
@@ -159,83 +122,65 @@ function getTypeIcon(type: NotificationType): React.ReactNode {
     case NotificationType.SALARY_PAID:
       return (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.6}
-            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
         </svg>
       );
-    case NotificationType.WARN:
+    case NotificationType.SECURITY_ALERT:
       return (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.6}
-            d="M12 9v4m0 4h.01M10.29 3.86l-8.03 14A2 2 0 004 21h16a2 2 0 001.74-3.14l-8.03-14a2 2 0 00-3.48 0z"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M12 9v2m0 4h.01M10.29 3.86l-8.03 14A2 2 0 004 21h16a2 2 0 001.74-3.14l-8.03-14a2 2 0 00-3.48 0z" />
         </svg>
       );
-    case NotificationType.SYSTEM:
     default:
       return (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.6}
-            d="M15 17h5l-1.4-1.4A2 2 0 0118 14.16V11a6 6 0 00-4-5.66V5a2 2 0 10-4 0v.34A6 6 0 006 11v3.16c0 .53-.21 1.04-.6 1.43L4 17h5m6 0a3 3 0 11-6 0"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M15 17h5l-1.4-1.4A2 2 0 0118 14.16V11a6 6 0 00-4-5.66V5a2 2 0 10-4 0v.34A6 6 0 006 11v3.16c0 .53-.21 1.04-.6 1.43L4 17h5" />
         </svg>
       );
   }
 }
 
-function getTypeIconClass(type: NotificationType): string {
+function getTypeIconClass(type: string): string {
   switch (type) {
-    case NotificationType.REQUEST_APPROVED:
+    case NotificationType.REQUEST_SUBMITTED:
+    case NotificationType.REQUEST_APPROVED_BY_TL:
+    case NotificationType.REQUEST_PAID:
+    case NotificationType.PROJECT_TOPUP_APPROVED:
+    case NotificationType.DEPT_TOPUP_APPROVED:
       return "bg-emerald-500/20 text-emerald-300";
     case NotificationType.REQUEST_REJECTED:
+    case NotificationType.PROJECT_TOPUP_REJECTED:
+    case NotificationType.DEPT_TOPUP_REJECTED:
       return "bg-rose-500/20 text-rose-300";
     case NotificationType.SALARY_PAID:
       return "bg-blue-500/20 text-blue-300";
-    case NotificationType.WARN:
+    case NotificationType.SECURITY_ALERT:
       return "bg-amber-500/20 text-amber-300";
-    case NotificationType.SYSTEM:
     default:
       return "bg-slate-600/40 text-slate-200";
   }
 }
 
-function buildMockPage(
-  source: NotificationResponse[],
-  filter: NotificationFilterTab,
-  page: number
-): { items: NotificationResponse[]; total: number; totalPages: number } {
+function buildMockPage(source: NotificationResponse[], filter: NotificationFilterTab, page: number) {
   const filtered = filter === "UNREAD" ? source.filter((n) => !n.isRead) : source;
   const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * PAGE_LIMIT;
-  const items = filtered.slice(start, start + PAGE_LIMIT);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(Math.max(page, 0), totalPages - 1);
+  const start = safePage * PAGE_SIZE;
 
-  return { items, total, totalPages };
+  return {
+    items: filtered.slice(start, start + PAGE_SIZE),
+    total,
+    totalPages,
+  };
 }
 
 function getNotificationTarget(item: NotificationResponse): string | null {
-  if (item.refType === NotificationRefType.REQUEST && item.refId) {
-    return `/requests/${item.refId}`;
-  }
+  if (item.referenceLink) return item.referenceLink;
 
-  if (item.refType === NotificationRefType.PAYSLIP && item.refId) {
-    return `/payroll/${item.refId}`;
-  }
-
-  if (item.refType === NotificationRefType.PROJECT && item.refId) {
-    return `/projects/${item.refId}`;
-  }
+  if (item.refType === "REQUEST" && item.refId) return `/requests/${item.refId}`;
+  if (item.refType === "PAYSLIP" && item.refId) return `/payroll/${item.refId}`;
+  if (item.refType === "PROJECT" && item.refId) return `/projects/${item.refId}`;
 
   return null;
 }
@@ -245,7 +190,7 @@ export default function NotificationsPage() {
 
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<NotificationFilterTab>("ALL");
   const [loading, setLoading] = useState(false);
@@ -258,26 +203,14 @@ export default function NotificationsPage() {
       setLoading(true);
       setError(null);
 
-      const params: NotificationFilterParams = {
-        page,
-        limit: PAGE_LIMIT,
-        isRead: filter === "UNREAD" ? false : undefined,
-      };
-
       try {
-        const query = new URLSearchParams();
-        if (typeof params.page === "number") query.set("page", String(params.page));
-        if (typeof params.limit === "number") query.set("limit", String(params.limit));
-        if (typeof params.isRead === "boolean") query.set("isRead", String(params.isRead));
-        if (filter === "UNREAD") query.set("unreadOnly", "true");
-
-        // const res = await api.get<NotificationListResponse>('/api/v1/notifications', { params: { unreadOnly: filter === 'UNREAD', page, limit: 20 } })
-        const res = await api.get<NotificationListResponse>(`/api/v1/notifications?${query.toString()}`);
+        const res = await getNotifications(filter === "UNREAD", page, PAGE_SIZE);
 
         if (cancelled) return;
-        setNotifications(res.data.items);
-        setTotal(res.data.total);
-        setTotalPages(res.data.totalPages);
+
+        setNotifications(res.data.content);
+        setTotal(res.data.totalElements);
+        setTotalPages(Math.max(1, res.data.totalPages));
       } catch (err) {
         if (cancelled) return;
 
@@ -289,7 +222,7 @@ export default function NotificationsPage() {
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải thông báo từ API, đang hiển thị dữ liệu mẫu.");
+          setError("Khong the tai thong bao tu API, dang hien thi du lieu mau.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -303,47 +236,47 @@ export default function NotificationsPage() {
     };
   }, [filter, page]);
 
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
   const handleTabChange = (nextFilter: NotificationFilterTab) => {
     if (nextFilter === filter) return;
     setFilter(nextFilter);
-    setPage(1);
+    setPage(0);
   };
 
   const handleMarkAllRead = async () => {
     try {
-      // await api.put<MarkAllReadResponse>('/api/v1/notifications/read-all')
-      await api.put<MarkAllReadResponse>("/api/v1/notifications/read-all");
+      await markAllAsRead();
     } catch {
-      // Ignore API error; still update UI optimistically
+      // keep optimistic behavior
     }
 
     if (filter === "UNREAD") {
       setNotifications([]);
       setTotal(0);
       setTotalPages(1);
-      setPage(1);
+      setPage(0);
       return;
     }
 
-    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
   const handleOpenNotification = async (item: NotificationResponse) => {
     if (!item.isRead) {
       try {
-        // await api.put<MarkReadResponse>(`/api/v1/notifications/${item.id}/read`)
-        await api.put<MarkReadResponse>(`/api/v1/notifications/${item.id}/read`);
+        await markAsRead(item.id);
       } catch {
-        // Ignore API error; still update UI optimistically
+        // keep optimistic behavior
       }
 
       if (filter === "UNREAD") {
         setNotifications((prev) => prev.filter((n) => n.id !== item.id));
-        setTotal((prev) => {
-          const nextTotal = Math.max(0, prev - 1);
-          const nextTotalPages = Math.max(1, Math.ceil(nextTotal / PAGE_LIMIT));
-          setTotalPages(nextTotalPages);
-          setPage((currentPage) => Math.min(currentPage, nextTotalPages));
+        setTotal((prevTotal) => {
+          const nextTotal = Math.max(0, prevTotal - 1);
+          const nextPages = Math.max(1, Math.ceil(nextTotal / PAGE_SIZE));
+          setTotalPages(nextPages);
+          setPage((prevPage) => Math.min(prevPage, nextPages - 1));
           return nextTotal;
         });
       } else {
@@ -354,13 +287,11 @@ export default function NotificationsPage() {
     }
 
     const target = getNotificationTarget(item);
-    if (target) {
-      router.push(target);
-    }
+    if (target) router.push(target);
   };
 
   const handlePageChange = (nextPage: number) => {
-    if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
+    if (nextPage < 0 || nextPage >= totalPages || nextPage === page) return;
     setPage(nextPage);
   };
 
@@ -368,8 +299,8 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Thông báo</h1>
-          <p className="text-slate-400 mt-1">Biến động số dư, trạng thái yêu cầu, lương và cảnh báo hệ thống.</p>
+          <h1 className="text-2xl font-bold text-white">Thong bao</h1>
+          <p className="text-slate-400 mt-1">Cap nhat yeu cau, luong va canh bao he thong.</p>
         </div>
 
         <button
@@ -380,7 +311,7 @@ export default function NotificationsPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M5 13l4 4L19 7" />
           </svg>
-          Đánh dấu tất cả đã đọc
+          Danh dau tat ca da doc
         </button>
       </div>
 
@@ -394,7 +325,7 @@ export default function NotificationsPage() {
               : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700"
           }`}
         >
-          Tất cả
+          Tat ca
         </button>
         <button
           type="button"
@@ -405,23 +336,15 @@ export default function NotificationsPage() {
               : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700"
           }`}
         >
-          Chưa đọc
+          Chua doc ({filter === "UNREAD" ? total : unreadCount})
         </button>
       </div>
 
       <div className="bg-slate-900 border border-white/10 rounded-2xl overflow-hidden">
         {loading ? (
-          <div className="py-14 text-center text-slate-400 text-sm">
-            <span className="inline-flex items-center gap-2">
-              <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.37 0 0 5.37 0 12h4z" />
-              </svg>
-              Đang tải thông báo...
-            </span>
-          </div>
+          <div className="py-14 text-center text-slate-400 text-sm">Dang tai thong bao...</div>
         ) : notifications.length === 0 ? (
-          <div className="py-14 text-center text-slate-500 text-sm">Không có thông báo phù hợp.</div>
+          <div className="py-14 text-center text-slate-500 text-sm">Khong co thong bao phu hop.</div>
         ) : (
           <ul className="divide-y divide-white/5">
             {notifications.map((item) => (
@@ -434,9 +357,7 @@ export default function NotificationsPage() {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center ${getTypeIconClass(item.type)}`}
-                    >
+                    <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center ${getTypeIconClass(item.type)}`}>
                       {getTypeIcon(item.type)}
                     </div>
 
@@ -448,9 +369,7 @@ export default function NotificationsPage() {
                       <p className="text-sm text-slate-300 mt-1 line-clamp-2">{item.message}</p>
                     </div>
 
-                    {!item.isRead && (
-                      <span className="mt-1 inline-flex w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0" />
-                    )}
+                    {!item.isRead && <span className="mt-1 inline-flex w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0" />}
                   </div>
                 </button>
               </li>
@@ -460,21 +379,21 @@ export default function NotificationsPage() {
 
         <div className="px-4 py-3 border-t border-white/10 bg-slate-900/70 flex items-center justify-between">
           <p className="text-sm text-slate-400">
-            Tổng {total} thông báo • Trang {page}/{totalPages}
+            Tong {total} thong bao • Trang {page + 1}/{totalPages}
           </p>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => handlePageChange(page - 1)}
-              disabled={page <= 1}
+              disabled={page <= 0}
               className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
             >
-              Trước
+              Truoc
             </button>
             <button
               type="button"
               onClick={() => handlePageChange(page + 1)}
-              disabled={page >= totalPages}
+              disabled={page >= totalPages - 1}
               className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
             >
               Sau
@@ -487,3 +406,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

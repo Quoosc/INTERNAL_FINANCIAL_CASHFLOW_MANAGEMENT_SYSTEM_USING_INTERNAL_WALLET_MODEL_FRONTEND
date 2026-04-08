@@ -4,6 +4,7 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import {
+  PhaseStatus,
   ProjectDetailResponse,
   ProjectRole,
   ProjectStatus,
@@ -35,7 +36,7 @@ const MOCK_PROJECT: ProjectDetailResponse = {
       name: "Phase 1 - Phân tích",
       budgetLimit: 50_000_000,
       currentSpent: 47_000_000,
-      status: "ACTIVE",
+      status: PhaseStatus.ACTIVE,
       startDate: "2026-01-10",
       endDate: "2026-03-31",
     },
@@ -45,7 +46,7 @@ const MOCK_PROJECT: ProjectDetailResponse = {
       name: "Phase 2 - Phát triển",
       budgetLimit: 80_000_000,
       currentSpent: 14_500_000,
-      status: "ACTIVE",
+      status: PhaseStatus.ACTIVE,
       startDate: "2026-04-01",
       endDate: "2026-07-31",
     },

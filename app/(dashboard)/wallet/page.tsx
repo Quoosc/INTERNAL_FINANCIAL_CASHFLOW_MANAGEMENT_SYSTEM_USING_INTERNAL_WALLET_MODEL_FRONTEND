@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
@@ -6,9 +6,7 @@ import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
 import {
   PaginatedResponse,
-  PaymentProvider,
   ReferenceType,
-  TransactionDetailResponse,
   TransactionResponse,
   TransactionStatus,
   TransactionType,
@@ -23,8 +21,7 @@ const MOCK_TRANSACTIONS: TransactionResponse[] = [
     type: TransactionType.DEPOSIT,
     status: TransactionStatus.SUCCESS,
     amount: 3_000_000,
-    balanceAfter: 18_500_000,
-    referenceType: ReferenceType.SYSTEM,
+    referenceType: ReferenceType.DEPOSIT,
     referenceId: 1001,
     description: "Nạp tiền qua QR",
     createdAt: "2026-04-02T10:30:00",
@@ -35,7 +32,6 @@ const MOCK_TRANSACTIONS: TransactionResponse[] = [
     type: TransactionType.REQUEST_PAYMENT,
     status: TransactionStatus.SUCCESS,
     amount: 1_200_000,
-    balanceAfter: 15_500_000,
     referenceType: ReferenceType.REQUEST,
     referenceId: 301,
     description: "Giải ngân tạm ứng công tác",
@@ -47,9 +43,8 @@ const MOCK_TRANSACTIONS: TransactionResponse[] = [
     type: TransactionType.WITHDRAW,
     status: TransactionStatus.PENDING,
     amount: -800_000,
-    balanceAfter: 14_300_000,
-    referenceType: null,
-    referenceId: null,
+    referenceType: ReferenceType.WITHDRAWAL,
+    referenceId: 501,
     description: "Yêu cầu rút tiền về ngân hàng MB",
     createdAt: "2026-03-31T09:15:00",
   },
@@ -59,7 +54,6 @@ const MOCK_TRANSACTIONS: TransactionResponse[] = [
     type: TransactionType.PAYSLIP_PAYMENT,
     status: TransactionStatus.SUCCESS,
     amount: 12_500_000,
-    balanceAfter: 15_100_000,
     referenceType: ReferenceType.PAYSLIP,
     referenceId: 77,
     description: "Chi lương kỳ Tháng 3/2026",
@@ -71,35 +65,12 @@ const MOCK_TRANSACTIONS: TransactionResponse[] = [
     type: TransactionType.SYSTEM_ADJUSTMENT,
     status: TransactionStatus.SUCCESS,
     amount: -150_000,
-    balanceAfter: 2_600_000,
     referenceType: ReferenceType.SYSTEM,
     referenceId: 901,
     description: "Điều chỉnh phí hệ thống",
     createdAt: "2026-03-22T13:20:00",
   },
 ];
-
-// TODO: Replace with API call when Sprint 3 is complete
-const MOCK_TRANSACTION_DETAIL: TransactionDetailResponse = {
-  id: 5101,
-  transactionCode: "TXN-5A8C29A1",
-  type: TransactionType.DEPOSIT,
-  status: TransactionStatus.SUCCESS,
-  amount: 3_000_000,
-  balanceAfter: 18_500_000,
-  referenceType: ReferenceType.SYSTEM,
-  referenceId: 1001,
-  description: "Nạp tiền qua QR",
-  createdAt: "2026-04-02T10:30:00",
-  paymentRef: "PAYOS-5A8C29A1",
-  gatewayProvider: PaymentProvider.PAYOS,
-  walletId: 17,
-  walletOwnerName: "Nguyễn Văn A",
-  actorId: 17,
-  actorName: "Nguyễn Văn A",
-  relatedTransactionId: null,
-  updatedAt: "2026-04-02T10:30:21",
-};
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
@@ -119,21 +90,22 @@ function formatDateTime(iso: string): string {
   }).format(new Date(iso));
 }
 
-function getAvailableBalance(wallet: WalletResponse | null): number {
-  if (!wallet) return 0;
-  return wallet.balance - wallet.pendingBalance;
-}
-
 function getTransactionTypeLabel(type: TransactionType): string {
   switch (type) {
     case TransactionType.DEPOSIT:
       return "Nạp tiền";
     case TransactionType.WITHDRAW:
       return "Rút tiền";
+    case TransactionType.SYSTEM_TOPUP:
+      return "Nạp quỹ công ty";
     case TransactionType.REQUEST_PAYMENT:
       return "Giải ngân yêu cầu";
     case TransactionType.PAYSLIP_PAYMENT:
       return "Nhận lương";
+    case TransactionType.ADVANCE_RETURN:
+      return "Hoàn trả tạm ứng";
+    case TransactionType.REVERSAL:
+      return "Hoàn tiền";
     case TransactionType.SYSTEM_ADJUSTMENT:
       return "Điều chỉnh hệ thống";
     case TransactionType.DEPT_QUOTA_ALLOCATION:
@@ -171,24 +143,6 @@ function getTransactionStatusClass(status: TransactionStatus): string {
   }
 }
 
-function buildMockDetail(transaction: TransactionResponse): TransactionDetailResponse {
-  return {
-    ...MOCK_TRANSACTION_DETAIL,
-    id: transaction.id,
-    transactionCode: transaction.transactionCode,
-    type: transaction.type,
-    status: transaction.status,
-    amount: transaction.amount,
-    balanceAfter: transaction.balanceAfter,
-    referenceType: transaction.referenceType,
-    referenceId: transaction.referenceId,
-    description: transaction.description,
-    createdAt: transaction.createdAt,
-    paymentRef: transaction.transactionCode,
-    updatedAt: transaction.createdAt,
-  };
-}
-
 export default function WalletPage() {
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
@@ -197,16 +151,12 @@ export default function WalletPage() {
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
 
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
-  const [detailData, setDetailData] = useState<TransactionDetailResponse | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
 
   const loadRecentTransactions = useCallback(async () => {
     setTransactionsLoading(true);
     setTransactionsError(null);
 
     try {
-      // const res = await api.get<PaginatedResponse<TransactionResponse>>('/api/v1/wallet/transactions', { params: { limit: 5, page: 1 } })
       const res = await api.get<PaginatedResponse<TransactionResponse>>(
         "/api/v1/wallet/transactions?limit=5&page=1"
       );
@@ -228,34 +178,12 @@ export default function WalletPage() {
     void loadRecentTransactions();
   }, [fetchWallet, loadRecentTransactions]);
 
-  const handleOpenDetail = useCallback(async (transaction: TransactionResponse) => {
+  const handleOpenDetail = useCallback((transaction: TransactionResponse) => {
     setSelectedTransaction(transaction);
-    setDetailLoading(true);
-    setDetailError(null);
-    setDetailData(null);
-
-    try {
-      const res = await api.get<TransactionDetailResponse>(
-        `/api/v1/wallet/transactions/${transaction.id}`
-      );
-      setDetailData(res.data);
-    } catch (err) {
-      setDetailData(buildMockDetail(transaction));
-      if (err instanceof ApiError) {
-        setDetailError(err.apiMessage);
-      } else {
-        setDetailError("Không thể tải chi tiết giao dịch, đang hiển thị dữ liệu mẫu.");
-      }
-    } finally {
-      setDetailLoading(false);
-    }
   }, []);
 
   const closeDetail = useCallback(() => {
     setSelectedTransaction(null);
-    setDetailData(null);
-    setDetailError(null);
-    setDetailLoading(false);
   }, []);
 
   return (
@@ -297,10 +225,10 @@ export default function WalletPage() {
         {walletLoading ? (
           <div className="mt-2 h-10 w-56 rounded bg-slate-700 animate-pulse" />
         ) : (
-          <p className="text-3xl font-bold text-white mt-2">{formatCurrency(getAvailableBalance(wallet))}</p>
+          <p className="text-3xl font-bold text-white mt-2">{formatCurrency(wallet?.availableBalance ?? 0)}</p>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
           <div className="bg-slate-900/50 rounded-xl border border-white/10 p-4">
             <p className="text-xs text-slate-500">Tổng số dư</p>
             <p className="text-lg font-semibold text-white mt-1">
@@ -308,15 +236,9 @@ export default function WalletPage() {
             </p>
           </div>
           <div className="bg-slate-900/50 rounded-xl border border-white/10 p-4">
-            <p className="text-xs text-slate-500">Tiền treo</p>
+            <p className="text-xs text-slate-500">Tiền đang khóa</p>
             <p className="text-lg font-semibold text-amber-400 mt-1">
-              {wallet ? formatCurrency(wallet.pendingBalance) : "---"}
-            </p>
-          </div>
-          <div className="bg-slate-900/50 rounded-xl border border-white/10 p-4">
-            <p className="text-xs text-slate-500">Dư nợ tạm ứng</p>
-            <p className="text-lg font-semibold text-rose-400 mt-1">
-              {wallet ? formatCurrency(wallet.debtBalance) : "---"}
+              {wallet ? formatCurrency(wallet.lockedBalance) : "---"}
             </p>
           </div>
         </div>
@@ -409,53 +331,37 @@ export default function WalletPage() {
               </button>
             </div>
 
-            {detailLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <svg className="animate-spin h-8 w-8 text-blue-500" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+            <div className="space-y-5">
+              <div className="bg-slate-800 border border-white/10 rounded-xl p-5">
+                <p className="text-xs text-slate-400 mb-1">Số tiền</p>
+                <p
+                  className={`text-3xl font-bold ${
+                    selectedTransaction.amount >= 0 ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {selectedTransaction.amount >= 0 ? "+" : ""}
+                  {formatCurrency(selectedTransaction.amount)}
+                </p>
               </div>
-            ) : detailData ? (
-              <div className="space-y-5">
-                <div className="bg-slate-800 border border-white/10 rounded-xl p-5">
-                  <p className="text-xs text-slate-400 mb-1">Số tiền</p>
-                  <p
-                    className={`text-3xl font-bold ${
-                      detailData.amount >= 0 ? "text-emerald-400" : "text-rose-400"
-                    }`}
-                  >
-                    {detailData.amount >= 0 ? "+" : ""}
-                    {formatCurrency(detailData.amount)}
-                  </p>
-                </div>
 
-                <DetailItem label="Mã giao dịch" value={detailData.transactionCode} />
-                <DetailItem label="Loại" value={getTransactionTypeLabel(detailData.type)} />
-                <DetailItem
-                  label="Trạng thái"
-                  value={getTransactionStatusLabel(detailData.status)}
-                  className={
-                    detailData.status === TransactionStatus.SUCCESS
-                      ? "text-emerald-400"
-                      : detailData.status === TransactionStatus.PENDING
-                        ? "text-amber-400"
-                        : "text-rose-400"
-                  }
-                />
-                <DetailItem label="Thời gian tạo" value={formatDateTime(detailData.createdAt)} />
-                <DetailItem label="Mô tả" value={detailData.description ?? "Không có"} />
-                <DetailItem label="Số dư sau GD" value={formatCurrency(detailData.balanceAfter)} />
-                <DetailItem label="Nguồn tham chiếu" value={detailData.referenceType ?? "—"} />
-                <DetailItem label="Reference ID" value={detailData.referenceId?.toString() ?? "—"} />
-                <DetailItem label="Payment Ref" value={detailData.paymentRef ?? "—"} />
-                <DetailItem label="Cập nhật lúc" value={formatDateTime(detailData.updatedAt)} />
-              </div>
-            ) : (
-              <p className="text-slate-400">Không có dữ liệu chi tiết giao dịch.</p>
-            )}
-
-            {detailError && <p className="text-amber-400 text-xs mt-4">{detailError}</p>}
+              <DetailItem label="Mã giao dịch" value={selectedTransaction.transactionCode} />
+              <DetailItem label="Loại" value={getTransactionTypeLabel(selectedTransaction.type)} />
+              <DetailItem
+                label="Trạng thái"
+                value={getTransactionStatusLabel(selectedTransaction.status)}
+                className={
+                  selectedTransaction.status === TransactionStatus.SUCCESS
+                    ? "text-emerald-400"
+                    : selectedTransaction.status === TransactionStatus.PENDING
+                      ? "text-amber-400"
+                      : "text-rose-400"
+                }
+              />
+              <DetailItem label="Thời gian tạo" value={formatDateTime(selectedTransaction.createdAt)} />
+              <DetailItem label="Mô tả" value={selectedTransaction.description ?? "Không có"} />
+              <DetailItem label="Nguồn tham chiếu" value={selectedTransaction.referenceType ?? "—"} />
+              <DetailItem label="Reference ID" value={selectedTransaction.referenceId?.toString() ?? "—"} />
+            </div>
           </aside>
         </div>
       )}

@@ -2,6 +2,7 @@ import {
   LoginRequest,
   LoginResponse,
   FirstLoginChangePasswordRequest,
+  FirstLoginSetupRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   AuthUser,
@@ -10,11 +11,14 @@ import { api, setTokens, setTokenCookie, clearTokens, clearTokenCookie } from ".
 
 // =============================================================
 // Auth Service - Gọi các API Authentication
-// Cập nhật: align với API_Spec v2.0 (camelCase tokens, bỏ register)
+// Cập nhật: align với backend v3.0 (first-login flow gộp 1 bước)
 // =============================================================
 
 /**
  * Đăng nhập - POST /api/v1/auth/login
+ *
+ * Nếu requiresSetup = true: KHÔNG lưu tokens (backend không cấp).
+ * Chỉ lưu tokens khi requiresSetup = false (login bình thường).
  */
 export async function login(request: LoginRequest): Promise<LoginResponse> {
   const response = await api.post<LoginResponse>(
@@ -23,11 +27,41 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
     { skipAuth: true }
   );
 
-  // Lưu tokens (accessToken, refreshToken — camelCase)
-  setTokens(response.data.accessToken, response.data.refreshToken);
-  setTokenCookie(response.data.accessToken);
+  const data = response.data;
 
-  return response.data;
+  // Chỉ lưu tokens khi login bình thường (không phải first-login setup)
+  if (!data.requiresSetup && data.accessToken && data.refreshToken) {
+    setTokens(data.accessToken, data.refreshToken);
+    setTokenCookie(data.accessToken);
+  }
+
+  return data;
+}
+
+/**
+ * Hoàn tất thiết lập tài khoản lần đầu - POST /api/v1/auth/first-login/complete
+ * Gộp đổi mật khẩu + tạo PIN trong 1 request.
+ * Nhận setupToken từ LoginResponse.setupToken (requiresSetup = true).
+ * Trả về AccessToken + RefreshToken đầy đủ sau khi setup xong.
+ */
+export async function firstLoginSetup(
+  request: FirstLoginSetupRequest
+): Promise<LoginResponse> {
+  const response = await api.post<LoginResponse>(
+    "/api/v1/auth/first-login/complete",
+    request,
+    { skipAuth: true }
+  );
+
+  const data = response.data;
+
+  // Backend trả về tokens đầy đủ sau setup
+  if (data.accessToken && data.refreshToken) {
+    setTokens(data.accessToken, data.refreshToken);
+    setTokenCookie(data.accessToken);
+  }
+
+  return data;
 }
 
 /**
@@ -45,8 +79,8 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * Đổi mật khẩu lần đầu - POST /api/v1/auth/change-password
- * Chỉ gọi khi user.isFirstLogin = true
+ * Đổi mật khẩu lần đầu (legacy) - POST /api/v1/auth/change-password
+ * @deprecated Dùng firstLoginSetup() thay thế cho first-login flow mới
  */
 export async function changePasswordFirstLogin(
   request: FirstLoginChangePasswordRequest

@@ -173,11 +173,16 @@ export default function LoginPage() {
     try {
       // Chỉ gửi email + password — backend tự xác định role từ JWT
       const response = await login(form);
-      setUser(response.user);
 
-      if (response.user.isFirstLogin) {
+      if (response.requiresSetup) {
+        // First-login: backend cấp setupToken thay vì accessToken
+        // Lưu setupToken tạm thời vào sessionStorage để trang change-password dùng
+        if (response.setupToken) {
+          sessionStorage.setItem("setup_token", response.setupToken);
+        }
         router.push("/change-password");
-      } else {
+      } else if (response.user) {
+        setUser(response.user);
         router.push("/dashboard");
       }
     } catch (err) {

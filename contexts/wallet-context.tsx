@@ -6,7 +6,7 @@ import { api } from "@/lib/api-client";
 
 // =============================================================
 // Wallet Context - Quản lý trạng thái ví thời gian thực
-// Cập nhật: Wallet → WalletResponse, bỏ availableBalance (computed BE-side)
+// Cập nhật v3.0: WalletResponse fields đổi (lockedBalance, availableBalance)
 // =============================================================
 
 interface WalletState {
@@ -20,7 +20,11 @@ interface WalletContextType extends WalletState {
   refreshBalance: () => Promise<void>;
   optimisticUpdate: (balanceChange: number) => void;
   /** Cập nhật wallet state từ WebSocket message */
-  updateFromWS: (data: { balance: number; pendingBalance: number; debtBalance: number; version: number }) => void;
+  updateFromWS: (data: {
+    balance: number;
+    lockedBalance: number;
+    availableBalance: number;
+  }) => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -78,6 +82,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         wallet: {
           ...prev.wallet,
           balance: prev.wallet.balance + balanceChange,
+          availableBalance: prev.wallet.availableBalance + balanceChange,
         },
       };
     });
@@ -85,22 +90,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Cập nhật từ WebSocket /user/queue/wallet message
-   * Đảm bảo version mới hơn trước khi update
    */
   const updateFromWS = useCallback(
-    (data: { balance: number; pendingBalance: number; debtBalance: number; version: number }) => {
+    (data: {
+      balance: number;
+      lockedBalance: number;
+      availableBalance: number;
+    }) => {
       setState((prev) => {
         if (!prev.wallet) return prev;
-        // Chỉ update nếu version mới hơn (Optimistic Lock)
-        if (data.version <= prev.wallet.version) return prev;
         return {
           ...prev,
           wallet: {
             ...prev.wallet,
             balance: data.balance,
-            pendingBalance: data.pendingBalance,
-            debtBalance: data.debtBalance,
-            version: data.version,
+            lockedBalance: data.lockedBalance,
+            availableBalance: data.availableBalance,
           },
         };
       });

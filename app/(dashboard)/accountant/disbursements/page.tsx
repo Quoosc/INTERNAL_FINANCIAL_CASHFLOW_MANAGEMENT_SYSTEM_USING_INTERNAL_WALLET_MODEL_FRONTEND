@@ -28,7 +28,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 1,
     requestCode: "REQ-2026-0041",
     type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT",
+    status: "PENDING_ACCOUNTANT_EXECUTION",
     amount: 3_500_000,
     approvedAmount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm cho phase 1.",
@@ -66,7 +66,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 2,
     requestCode: "REQ-2026-0042",
     type: RequestType.EXPENSE,
-    status: "PENDING_ACCOUNTANT",
+    status: "PENDING_ACCOUNTANT_EXECUTION",
     amount: 850_000,
     approvedAmount: 850_000,
     description: "Chi phí mua license công cụ.",
@@ -104,7 +104,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 3,
     requestCode: "REQ-2026-0038",
     type: RequestType.REIMBURSE,
-    status: "PENDING_ACCOUNTANT",
+    status: "PENDING_ACCOUNTANT_EXECUTION",
     amount: 1_200_000,
     approvedAmount: 1_200_000,
     description: "Hoàn ứng chi phí kiểm thử QA.",
@@ -142,7 +142,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 4,
     requestCode: "REQ-2026-0035",
     type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT",
+    status: "PENDING_ACCOUNTANT_EXECUTION",
     amount: 5_000_000,
     approvedAmount: 4_500_000,
     description: "Tạm ứng chi phí triển khai thiết bị.",
@@ -268,7 +268,7 @@ function filterMockData(
   const q = search?.trim().toLowerCase() ?? "";
 
   return source.filter((item) => {
-    if (item.status !== "PENDING_ACCOUNTANT") return false;
+    if (item.status !== "PENDING_ACCOUNTANT_EXECUTION") return false;
     if (type && item.type !== type) return false;
 
     if (!q) return true;
@@ -371,7 +371,7 @@ export default function AccountantDisbursementsPage() {
         };
 
         const query = new URLSearchParams();
-        query.set("status", "PENDING_ACCOUNTANT");
+        query.set("status", "PENDING_ACCOUNTANT_EXECUTION");
         if (filters.type) query.set("type", filters.type);
         if (filters.search) query.set("search", filters.search);
         query.set("page", String(filters.page ?? 1));
@@ -384,7 +384,7 @@ export default function AccountantDisbursementsPage() {
         if (cancelled) return;
 
         const apiItems = pickItems(res.data)
-          .filter((item) => item.status === "PENDING_ACCOUNTANT")
+          .filter((item) => item.status === "PENDING_ACCOUNTANT_EXECUTION")
           .map((item) => ({ ...item }));
 
         const apiTotal = Array.isArray(res.data) ? apiItems.length : res.data.total;

@@ -19,7 +19,7 @@ const MOCK_APPROVALS: ManagerApprovalListItem[] = [
     id: 10,
     requestCode: "REQ-2026-0050",
     type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 50_000_000,
     description: "Xin cấp vốn bổ sung Phase 2 - nhóm IT thiếu ngân sách phát triển module báo cáo",
     requester: {
@@ -42,7 +42,7 @@ const MOCK_APPROVALS: ManagerApprovalListItem[] = [
     id: 11,
     requestCode: "REQ-2026-0048",
     type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 30_000_000,
     description: "Cấp vốn phase triển khai - mua thêm server và license phần mềm",
     requester: {
@@ -65,7 +65,7 @@ const MOCK_APPROVALS: ManagerApprovalListItem[] = [
     id: 12,
     requestCode: "REQ-2026-0045",
     type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 9_000_000,
     description: "Topup dự phòng cho giai đoạn test hiệu năng",
     requester: {
@@ -113,7 +113,7 @@ function filterMock(items: ManagerApprovalListItem[], search = ""): ManagerAppro
   const q = search.trim().toLowerCase();
   return items.filter((item) => {
     if (item.type !== RequestType.PROJECT_TOPUP) return false;
-    if (item.status !== RequestStatus.PENDING_APPROVAL) return false;
+    if (item.status !== RequestStatus.PENDING) return false;
 
     if (!q) return true;
 
@@ -219,7 +219,7 @@ export default function ManagerApprovalsPage() {
         const filteredItems = pickItems(res.data).filter(
           (item) =>
             item.type === RequestType.PROJECT_TOPUP &&
-            item.status === RequestStatus.PENDING_APPROVAL
+            item.status === RequestStatus.PENDING
         );
 
         const apiTotal = Array.isArray(res.data) ? filteredItems.length : res.data.total;

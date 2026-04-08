@@ -33,7 +33,7 @@ const MOCK_REQUEST: RequestDetailResponse = {
   id: 501,
   requestCode: "REQ-EMP-0426-001",
   type: RequestType.ADVANCE,
-  status: RequestStatus.PENDING_ACCOUNTANT,
+  status: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
   amount: 1_500_000,
   approvedAmount: 1_300_000,
   description:
@@ -71,7 +71,7 @@ const MOCK_REQUEST: RequestDetailResponse = {
     {
       id: 1,
       action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING_ACCOUNTANT,
+      statusAfterAction: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
       actorId: 23,
       actorName: "Trần Thị B - Team Leader",
       comment: "Duyệt với mức phù hợp ngân sách.",
@@ -117,7 +117,7 @@ function getTypeClass(type: RequestType): string {
       return "bg-teal-500/15 border-teal-500/30 text-teal-300";
     case RequestType.PROJECT_TOPUP:
       return "bg-amber-500/15 border-amber-500/30 text-amber-300";
-    case RequestType.QUOTA_TOPUP:
+    case RequestType.DEPARTMENT_TOPUP:
       return "bg-rose-500/15 border-rose-500/30 text-rose-300";
     default:
       return "bg-slate-500/15 border-slate-500/30 text-slate-300";
@@ -134,8 +134,8 @@ function getTypeLabel(type: RequestType): string {
       return "Hoàn ứng";
     case RequestType.PROJECT_TOPUP:
       return "Nạp quỹ DA";
-    case RequestType.QUOTA_TOPUP:
-      return "Nạp quota";
+    case RequestType.DEPARTMENT_TOPUP:
+      return "Nạp quota phòng ban";
     default:
       return type;
   }
@@ -143,11 +143,14 @@ function getTypeLabel(type: RequestType): string {
 
 function getStatusClass(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       return "bg-amber-500/15 border-amber-500/30 text-amber-300";
-    case RequestStatus.PENDING_ACCOUNTANT:
+    case RequestStatus.APPROVED_BY_TEAM_LEADER:
+      return "bg-green-500/15 border-green-500/30 text-green-300";
+    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
       return "bg-blue-500/15 border-blue-500/30 text-blue-300";
-    case RequestStatus.APPROVED:
+    case RequestStatus.APPROVED_BY_MANAGER:
+    case RequestStatus.APPROVED_BY_CFO:
       return "bg-green-500/15 border-green-500/30 text-green-300";
     case RequestStatus.PAID:
       return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
@@ -162,12 +165,16 @@ function getStatusClass(status: RequestStatus): string {
 
 function getStatusLabel(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
-      return "Chờ Team Leader duyệt";
-    case RequestStatus.PENDING_ACCOUNTANT:
+    case RequestStatus.PENDING:
+      return "Chờ duyệt";
+    case RequestStatus.APPROVED_BY_TEAM_LEADER:
+      return "Team Leader đã duyệt";
+    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
       return "Chờ Kế toán giải ngân";
-    case RequestStatus.APPROVED:
-      return "Đã duyệt";
+    case RequestStatus.APPROVED_BY_MANAGER:
+      return "Manager đã duyệt";
+    case RequestStatus.APPROVED_BY_CFO:
+      return "CFO đã duyệt";
     case RequestStatus.PAID:
       return "Đã chi";
     case RequestStatus.REJECTED:
@@ -247,7 +254,7 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
   });
 
   switch (request.status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       rows.push({
         title: "Đang chờ Team Leader duyệt",
         subtitle: "Chưa có quyết định phê duyệt",
@@ -255,7 +262,15 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
         tone: "current",
       });
       break;
-    case RequestStatus.PENDING_ACCOUNTANT:
+    case RequestStatus.APPROVED_BY_TEAM_LEADER:
+      rows.push({
+        title: "Team Leader đã duyệt",
+        subtitle: "Đang chờ Accountant xử lý giải ngân",
+        time: "Hiện tại",
+        tone: "current",
+      });
+      break;
+    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
       rows.push({
         title: "Đang chờ Kế toán giải ngân",
         subtitle: "Đã được Team Leader duyệt",
@@ -263,12 +278,20 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
         tone: "current",
       });
       break;
-    case RequestStatus.APPROVED:
+    case RequestStatus.APPROVED_BY_MANAGER:
       rows.push({
-        title: "Yêu cầu đã duyệt hoàn tất",
-        subtitle: "Sẵn sàng cho bước tiếp theo",
+        title: "Manager đã duyệt — đang xử lý",
+        subtitle: "Hệ thống sẽ tự động cấp vốn",
         time: "Hiện tại",
-        tone: "done",
+        tone: "current",
+      });
+      break;
+    case RequestStatus.APPROVED_BY_CFO:
+      rows.push({
+        title: "CFO đã duyệt — đang xử lý",
+        subtitle: "Hệ thống sẽ tự động cấp quota",
+        time: "Hiện tại",
+        tone: "current",
       });
       break;
     case RequestStatus.PAID:
@@ -404,7 +427,7 @@ export default function RequestDetailPage({ params }: PageProps) {
   const parsed = useMemo(() => parseDescription(request?.description ?? ""), [request]);
   const timelineRows = useMemo(() => (request ? buildTimelineRows(request) : []), [request]);
 
-  const canEditOrCancel = request?.status === RequestStatus.PENDING_APPROVAL;
+  const canEditOrCancel = request?.status === RequestStatus.PENDING;
 
   const openEdit = () => {
     if (!request) return;

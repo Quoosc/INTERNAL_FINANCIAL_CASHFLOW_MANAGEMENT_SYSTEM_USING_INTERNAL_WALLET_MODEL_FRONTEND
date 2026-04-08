@@ -123,7 +123,7 @@ const MOCK_MEMBER_DETAIL: ManagerDeptMemberDetailResponse = {
       requestCode: "REQ-2026-0041",
       type: "ADVANCE",
       amount: 3_500_000,
-      status: RequestStatus.PENDING_APPROVAL,
+      status: RequestStatus.PENDING,
       createdAt: "2026-04-03T09:15:00",
     },
     {

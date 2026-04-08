@@ -77,7 +77,7 @@ const MOCK_MEMBER_DETAIL: TLTeamMemberDetailResponse = {
     { projectId: 2, projectCode: "PRJ-IT-002", projectName: "Nâng cấp hạ tầng mạng", position: "Developer", joinedAt: "2026-02-15T08:00:00" },
   ],
   recentRequests: [
-    { id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE, amount: 3_500_000, status: RequestStatus.PENDING_APPROVAL, projectCode: "PRJ-IT-001", categoryName: "Thiết bị", createdAt: "2026-04-03T09:15:00" },
+    { id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE, amount: 3_500_000, status: RequestStatus.PENDING, projectCode: "PRJ-IT-001", categoryName: "Thiết bị", createdAt: "2026-04-03T09:15:00" },
     { id: 2, requestCode: "REQ-2026-0035", type: RequestType.EXPENSE, amount: 850_000, status: RequestStatus.PAID, projectCode: "PRJ-IT-001", categoryName: "Công tác", createdAt: "2026-03-28T14:00:00" },
   ],
 };

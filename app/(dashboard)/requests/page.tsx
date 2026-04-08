@@ -31,7 +31,7 @@ const MOCK_REQUESTS: RequestListItem[] = [
     id: 101,
     requestCode: "REQ-EMP-0326-001",
     type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 1_200_000,
     approvedAmount: null,
     description: "Tạm ứng chi phí công tác Đà Nẵng",
@@ -49,7 +49,7 @@ const MOCK_REQUESTS: RequestListItem[] = [
     id: 102,
     requestCode: "REQ-EMP-0326-002",
     type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_ACCOUNTANT,
+    status: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
     amount: 700_000,
     approvedAmount: 700_000,
     description: "Chi phí mua vật tư văn phòng",
@@ -67,7 +67,7 @@ const MOCK_REQUESTS: RequestListItem[] = [
     id: 103,
     requestCode: "REQ-EMP-0326-003",
     type: RequestType.REIMBURSE,
-    status: RequestStatus.APPROVED,
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 450_000,
     approvedAmount: 450_000,
     description: "Hoàn ứng chi phí tiếp khách",
@@ -139,7 +139,7 @@ const MOCK_REQUESTS: RequestListItem[] = [
     id: 107,
     requestCode: "REQ-EMP-0326-007",
     type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 950_000,
     approvedAmount: null,
     description: "Tạm ứng workshop khách hàng",
@@ -193,11 +193,14 @@ function formatDateTime(iso: string): string {
 
 function getStatusClass(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       return "bg-amber-500/15 border-amber-500/30 text-amber-300";
-    case RequestStatus.PENDING_ACCOUNTANT:
+    case RequestStatus.APPROVED_BY_TEAM_LEADER:
+      return "bg-green-500/15 border-green-500/30 text-green-300";
+    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
       return "bg-blue-500/15 border-blue-500/30 text-blue-300";
-    case RequestStatus.APPROVED:
+    case RequestStatus.APPROVED_BY_MANAGER:
+    case RequestStatus.APPROVED_BY_CFO:
       return "bg-green-500/15 border-green-500/30 text-green-300";
     case RequestStatus.PAID:
       return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
@@ -212,12 +215,16 @@ function getStatusClass(status: RequestStatus): string {
 
 function getStatusLabel(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       return "Chờ duyệt";
-    case RequestStatus.PENDING_ACCOUNTANT:
+    case RequestStatus.APPROVED_BY_TEAM_LEADER:
+      return "TL đã duyệt";
+    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
       return "Chờ kế toán";
-    case RequestStatus.APPROVED:
-      return "Đã duyệt";
+    case RequestStatus.APPROVED_BY_MANAGER:
+      return "Manager đã duyệt";
+    case RequestStatus.APPROVED_BY_CFO:
+      return "CFO đã duyệt";
     case RequestStatus.PAID:
       return "Đã chi";
     case RequestStatus.REJECTED:
@@ -252,8 +259,8 @@ function getTypeLabel(type: RequestType): string {
       return "Hoàn ứng";
     case RequestType.PROJECT_TOPUP:
       return "Nạp quỹ DA";
-    case RequestType.QUOTA_TOPUP:
-      return "Nạp quota";
+    case RequestType.DEPARTMENT_TOPUP:
+      return "Nạp quota phòng ban";
     default:
       return type;
   }

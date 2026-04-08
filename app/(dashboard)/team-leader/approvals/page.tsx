@@ -18,7 +18,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
     id: 1,
     requestCode: "REQ-2026-0041",
     type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm",
     requester: {
@@ -45,7 +45,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
     id: 2,
     requestCode: "REQ-2026-0042",
     type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 850_000,
     description: "Chi phí di chuyển gặp khách hàng",
     requester: {
@@ -72,7 +72,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
     id: 3,
     requestCode: "REQ-2026-0043",
     type: RequestType.REIMBURSE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 1_200_000,
     description: "Hoàn ứng chi phí ăn uống team",
     requester: {
@@ -99,7 +99,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
     id: 4,
     requestCode: "REQ-2026-0038",
     type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 5_000_000,
     description: "Ứng trước chi phí đào tạo nội bộ",
     requester: {
@@ -126,7 +126,7 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
     id: 5,
     requestCode: "REQ-2026-0035",
     type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 2_300_000,
     description: "Mua sách tham khảo kỹ thuật",
     requester: {
@@ -215,7 +215,7 @@ function parsePage(value: string | null): number {
 function filterMock(source: TLApprovalListItem[], type?: RequestType, search = ""): TLApprovalListItem[] {
   const q = search.trim().toLowerCase();
   return source.filter((item) => {
-    if (item.status !== RequestStatus.PENDING_APPROVAL) return false;
+    if (item.status !== RequestStatus.PENDING) return false;
     if (type && item.type !== type) return false;
     if (q) {
       const haystack = `${item.requestCode} ${item.requester.fullName}`.toLowerCase();
@@ -313,7 +313,7 @@ export default function TLApprovalsPage() {
 
         if (cancelled) return;
 
-        setItems(res.data.items.filter((item) => item.status === RequestStatus.PENDING_APPROVAL));
+        setItems(res.data.items.filter((item) => item.status === RequestStatus.PENDING));
         setTotal(res.data.total);
         setTotalPages(res.data.totalPages);
       } catch (err) {

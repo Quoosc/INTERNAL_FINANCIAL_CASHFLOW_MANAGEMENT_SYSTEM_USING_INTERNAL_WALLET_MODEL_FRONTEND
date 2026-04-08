@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -7,7 +7,6 @@ import {
   LedgerSummaryResponse,
   PaginatedResponse,
   ReferenceType,
-  TransactionFilterParams,
   TransactionResponse,
   TransactionStatus,
   TransactionType,
@@ -34,7 +33,6 @@ const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
     type: TransactionType.REQUEST_PAYMENT,
     status: TransactionStatus.SUCCESS,
     amount: -3_500_000,
-    balanceAfter: 1_246_500_000,
     referenceId: 1,
     referenceType: ReferenceType.REQUEST,
     referenceCode: "REQ-2026-0041",
@@ -47,7 +45,6 @@ const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
     type: TransactionType.PAYSLIP_PAYMENT,
     status: TransactionStatus.SUCCESS,
     amount: -13_500_000,
-    balanceAfter: 1_233_000_000,
     referenceId: 101,
     referenceType: ReferenceType.PAYSLIP,
     referenceCode: "PS-2026-03-001",
@@ -57,11 +54,10 @@ const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
   {
     id: 3,
     transactionCode: "TXN-2026-0003C",
-    type: TransactionType.DEPOSIT,
+    type: TransactionType.SYSTEM_TOPUP,
     status: TransactionStatus.SUCCESS,
     amount: 500_000_000,
-    balanceAfter: 1_500_000_000,
-    referenceId: null,
+    referenceId: 1,
     referenceType: ReferenceType.SYSTEM,
     referenceCode: null,
     description: "Nap tien vao Quy he thong",
@@ -73,7 +69,6 @@ const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
     type: TransactionType.DEPT_QUOTA_ALLOCATION,
     status: TransactionStatus.SUCCESS,
     amount: -200_000_000,
-    balanceAfter: 1_300_000_000,
     referenceId: 20,
     referenceType: ReferenceType.DEPARTMENT,
     referenceCode: "DEPT-Q2-2026",
@@ -86,7 +81,6 @@ const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
     type: TransactionType.PROJECT_QUOTA_ALLOCATION,
     status: TransactionStatus.SUCCESS,
     amount: -50_000_000,
-    balanceAfter: 1_250_000_000,
     referenceId: 10,
     referenceType: ReferenceType.PROJECT,
     referenceCode: "PRJ-IT-001",
@@ -99,9 +93,8 @@ const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
     type: TransactionType.WITHDRAW,
     status: TransactionStatus.SUCCESS,
     amount: -2_000_000,
-    balanceAfter: 1_248_000_000,
-    referenceId: null,
-    referenceType: null,
+    referenceId: 501,
+    referenceType: ReferenceType.WITHDRAWAL,
     referenceCode: null,
     description: "Rut tien vi nhan vien",
     createdAt: "2026-03-30T14:00:00",
@@ -272,7 +265,7 @@ export default function AccountantLedgerPage() {
       setError(null);
 
       try {
-        const filters: TransactionFilterParams = {
+        const filters = {
           type,
           page,
           limit: PAGE_LIMIT,
@@ -359,10 +352,13 @@ export default function AccountantLedgerPage() {
   const typeOptions = [
     TransactionType.REQUEST_PAYMENT,
     TransactionType.PAYSLIP_PAYMENT,
+    TransactionType.SYSTEM_TOPUP,
     TransactionType.DEPOSIT,
     TransactionType.WITHDRAW,
     TransactionType.DEPT_QUOTA_ALLOCATION,
     TransactionType.PROJECT_QUOTA_ALLOCATION,
+    TransactionType.ADVANCE_RETURN,
+    TransactionType.REVERSAL,
     TransactionType.SYSTEM_ADJUSTMENT,
   ];
 

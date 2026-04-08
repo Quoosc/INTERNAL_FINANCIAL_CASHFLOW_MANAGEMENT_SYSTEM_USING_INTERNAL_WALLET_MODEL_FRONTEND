@@ -143,7 +143,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 1,
     requestCode: "REQ-2026-0041",
     type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT",
+    status: "PENDING_ACCOUNTANT_EXECUTION",
     amount: 3_500_000,
     approvedAmount: 3_500_000,
     description: "Mua vật tư thiết bị cho phase 1.",
@@ -167,8 +167,6 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
       id: 1,
       phaseCode: "PH-001",
       name: "Phase 1 - Phân tích",
-      budgetLimit: 50_000_000,
-      currentSpent: 47_000_000,
     },
     attachments: [],
     createdAt: "2026-04-03T09:15:00",
@@ -177,7 +175,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 2,
     requestCode: "REQ-2026-0042",
     type: RequestType.EXPENSE,
-    status: "PENDING_ACCOUNTANT",
+    status: "PENDING_ACCOUNTANT_EXECUTION",
     amount: 850_000,
     approvedAmount: 850_000,
     description: "Chi phí mua license công cụ.",
@@ -201,8 +199,6 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
       id: 1,
       phaseCode: "PH-001",
       name: "Phase 1 - Phân tích",
-      budgetLimit: 50_000_000,
-      currentSpent: 47_000_000,
     },
     attachments: [],
     createdAt: "2026-04-02T14:30:00",
@@ -211,7 +207,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 3,
     requestCode: "REQ-2026-0038",
     type: RequestType.REIMBURSE,
-    status: "PENDING_ACCOUNTANT",
+    status: "PENDING_ACCOUNTANT_EXECUTION",
     amount: 1_200_000,
     approvedAmount: 1_200_000,
     description: "Hoàn ứng chi phí QA.",
@@ -235,8 +231,6 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
       id: 4,
       phaseCode: "PH-004",
       name: "Phase 1 - Triển khai",
-      budgetLimit: 80_000_000,
-      currentSpent: 71_500_000,
     },
     attachments: [],
     createdAt: "2026-04-01T10:00:00",
@@ -279,7 +273,7 @@ export function AccountantDashboard() {
 
       const dashboardReq = api.get<AccountantDashboardResponse>("/api/v1/dashboard/accountant");
       const disbursementsReq = api.get<PaginatedResponse<DisbursementListItem> | DisbursementListItem[]>(
-        "/api/v1/accountant/disbursements?limit=3&status=PENDING_ACCOUNTANT"
+        "/api/v1/accountant/disbursements?limit=3&status=PENDING_ACCOUNTANT_EXECUTION"
       );
       const payrollReq = api.get<PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]>(
         "/api/v1/accountant/payroll?limit=1"
@@ -306,7 +300,7 @@ export function AccountantDashboard() {
 
       if (disbursementsResult.status === "fulfilled") {
         nextDisbursements = pickItems(disbursementsResult.value.data)
-          .filter((item) => item.status === "PENDING_ACCOUNTANT")
+          .filter((item) => item.status === "PENDING_ACCOUNTANT_EXECUTION")
           .slice(0, 3);
       } else if (!nextError && disbursementsResult.reason instanceof ApiError) {
         nextError = disbursementsResult.reason.apiMessage;
@@ -409,7 +403,7 @@ export function AccountantDashboard() {
           <p className="text-2xl font-bold text-amber-300 mt-1">
             {dashboard?.pendingDisbursementsCount ?? pendingDisbursements.length}
           </p>
-          <p className="text-xs text-slate-500 mt-1">PENDING_ACCOUNTANT</p>
+          <p className="text-xs text-slate-500 mt-1">PENDING_ACCOUNTANT_EXECUTION</p>
         </Link>
 
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">

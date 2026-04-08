@@ -19,7 +19,7 @@ const MOCK_PENDING: TLApprovalListItem[] = [
     id: 1,
     requestCode: "REQ-2026-0041",
     type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm",
     requester: {
@@ -50,7 +50,7 @@ const MOCK_PENDING: TLApprovalListItem[] = [
     id: 2,
     requestCode: "REQ-2026-0042",
     type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 850_000,
     description: "Chi phí di chuyển gặp khách hàng",
     requester: {
@@ -81,7 +81,7 @@ const MOCK_PENDING: TLApprovalListItem[] = [
     id: 3,
     requestCode: "REQ-2026-0043",
     type: RequestType.REIMBURSE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 1_200_000,
     description: "Hoàn ứng chi phí ăn uống team",
     requester: {
@@ -298,7 +298,7 @@ export function TeamLeaderDashboard() {
       try {
         const [approvalRes, projectRes] = await Promise.all([
           api.get<PaginatedResponse<TLApprovalListItem> | TLApprovalListItem[]>(
-            "/api/v1/team-leader/approvals?limit=3&status=PENDING_APPROVAL"
+            "/api/v1/team-leader/approvals?limit=3&status=PENDING"
           ),
           api.get<PaginatedResponse<TLProjectListItem> | TLProjectListItem[]>(
             "/api/v1/team-leader/projects?limit=3"

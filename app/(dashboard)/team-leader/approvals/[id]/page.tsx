@@ -37,7 +37,7 @@ const MOCK_DETAIL: TLApprovalDetailView = {
   id: 1,
   requestCode: "REQ-2026-0041",
   type: RequestType.ADVANCE,
-  status: RequestStatus.PENDING_APPROVAL,
+  status: RequestStatus.PENDING,
   amount: 3_500_000,
   approvedAmount: null,
   description:
@@ -79,7 +79,7 @@ const MOCK_DETAIL: TLApprovalDetailView = {
     {
       id: 1,
       action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING_APPROVAL,
+      statusAfterAction: RequestStatus.PENDING,
       actorId: 11,
       actorName: "Đỗ Quốc Bảo",
       comment: "Tạo yêu cầu",
@@ -145,9 +145,9 @@ function getTypeLabel(type: RequestType): string {
 
 function getStatusClass(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       return "bg-amber-500/15 border-amber-500/30 text-amber-300";
-    case RequestStatus.PENDING_ACCOUNTANT:
+    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
       return "bg-blue-500/15 border-blue-500/30 text-blue-300";
     case RequestStatus.PAID:
       return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
@@ -162,9 +162,9 @@ function getStatusClass(status: RequestStatus): string {
 
 function getStatusLabel(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       return "Chờ duyệt";
-    case RequestStatus.PENDING_ACCOUNTANT:
+    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
       return "Chờ kế toán";
     case RequestStatus.PAID:
       return "Đã chi";
@@ -364,7 +364,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
     };
   }, [request]);
 
-  const canTakeAction = request?.status === RequestStatus.PENDING_APPROVAL;
+  const canTakeAction = request?.status === RequestStatus.PENDING;
 
   const openApproveModal = () => {
     if (!request) return;

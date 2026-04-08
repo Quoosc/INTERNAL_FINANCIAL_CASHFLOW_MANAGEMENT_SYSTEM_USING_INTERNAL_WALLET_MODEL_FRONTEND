@@ -25,7 +25,7 @@ import {
 // =============================================================
 // Employee Dashboard Page
 // API: GET /dashboard/employee  (Sprint 9 — chưa sẵn sàng)
-//      GET /requests?status=PENDING_APPROVAL&limit=3  (Sprint 5)
+//      GET /requests?status=PENDING&limit=3  (Sprint 5)
 // =============================================================
 
 // ─── MOCK DATA (xóa khi backend sẵn sàng) ───────────────────
@@ -92,7 +92,7 @@ const MOCK_PENDING_REQUESTS: RequestListItem[] = [
     id: 101,
     requestCode: "REQ-IT-0326-001",
     type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 1_200_000,
     approvedAmount: null,
     description: "Tạm ứng chi phí đi công tác Đà Nẵng",
@@ -110,7 +110,7 @@ const MOCK_PENDING_REQUESTS: RequestListItem[] = [
     id: 102,
     requestCode: "REQ-IT-0326-002",
     type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 450_000,
     approvedAmount: null,
     description: "Hoàn ứng mua văn phòng phẩm",
@@ -128,7 +128,7 @@ const MOCK_PENDING_REQUESTS: RequestListItem[] = [
     id: 103,
     requestCode: "REQ-IT-0326-003",
     type: RequestType.REIMBURSE,
-    status: RequestStatus.PENDING_ACCOUNTANT,
+    status: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
     amount: 850_000,
     approvedAmount: 850_000,
     description: "Hoàn tiền mua thiết bị văn phòng",
@@ -205,7 +205,7 @@ const REQUEST_TYPE_CONFIG: Record<
     label: "Nạp DA",
     badgeCls: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
   },
-  [RequestType.QUOTA_TOPUP]: {
+  [RequestType.DEPARTMENT_TOPUP]: {
     label: "Nạp Quota",
     badgeCls: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
   },
@@ -215,15 +215,15 @@ const REQUEST_STATUS_CONFIG: Record<
   RequestStatus,
   { label: string; cls: string }
 > = {
-  [RequestStatus.PENDING_APPROVAL]: {
+  [RequestStatus.PENDING]: {
     label: "Chờ duyệt",
     cls: "text-amber-400",
   },
-  [RequestStatus.PENDING_ACCOUNTANT]: {
+  [RequestStatus.PENDING_ACCOUNTANT_EXECUTION]: {
     label: "Chờ giải ngân",
     cls: "text-blue-400",
   },
-  [RequestStatus.APPROVED]: { label: "Đã duyệt", cls: "text-emerald-400" },
+  [RequestStatus.APPROVED_BY_TEAM_LEADER]: { label: "Đã duyệt", cls: "text-emerald-400" },
   [RequestStatus.PAID]: { label: "Đã chi", cls: "text-emerald-400" },
   [RequestStatus.REJECTED]: { label: "Từ chối", cls: "text-rose-400" },
   [RequestStatus.CANCELLED]: { label: "Đã hủy", cls: "text-slate-400" },
@@ -406,7 +406,7 @@ export function EmployeeDashboard() {
         // const [dashRes, reqRes] = await Promise.all([
         //   api.get<EmployeeDashboardResponse>("/api/v1/dashboard/employee"),
         //   api.get<PaginatedResponse<RequestListItem>>("/api/v1/requests", {
-        //     params: { status: "PENDING_APPROVAL", limit: 3 },
+        //     params: { status: "PENDING", limit: 3 },
         //   }),
         // ]);
         // setData(dashRes.data);

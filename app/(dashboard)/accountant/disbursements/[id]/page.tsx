@@ -28,7 +28,7 @@ const MOCK_DETAIL: DisbursementDetailResponse = {
   id: 1,
   requestCode: "REQ-2026-0041",
   type: RequestType.ADVANCE,
-  status: "PENDING_ACCOUNTANT",
+  status: "PENDING_ACCOUNTANT_EXECUTION",
   amount: 3_500_000,
   approvedAmount: 3_500_000,
   description:
@@ -77,7 +77,7 @@ const MOCK_DETAIL: DisbursementDetailResponse = {
     {
       id: 1,
       action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING_APPROVAL,
+      statusAfterAction: RequestStatus.PENDING,
       actorId: 11,
       actorName: "Đỗ Quốc Bảo",
       comment: "Tạo yêu cầu",
@@ -86,7 +86,7 @@ const MOCK_DETAIL: DisbursementDetailResponse = {
     {
       id: 2,
       action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING_ACCOUNTANT,
+      statusAfterAction: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
       actorId: 4,
       actorName: "Hoàng Minh Tuấn",
       comment: "Đồng ý — đây là thiết bị cần thiết",
@@ -256,7 +256,7 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
     return detail.timeline.find(
       (entry) =>
         entry.action === RequestAction.APPROVE &&
-        entry.statusAfterAction === RequestStatus.PENDING_ACCOUNTANT
+        entry.statusAfterAction === RequestStatus.PENDING_ACCOUNTANT_EXECUTION
     );
   }, [detail]);
 
@@ -606,7 +606,7 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
               {submitting ? "Đang giải ngân..." : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
             </button>
 
-            {detail.status === "PENDING_ACCOUNTANT" && (
+            {detail.status === "PENDING_ACCOUNTANT_EXECUTION" && (
               <button
                 type="button"
                 onClick={() => {
@@ -827,3 +827,4 @@ function ChecklistItem({
     </label>
   );
 }
+

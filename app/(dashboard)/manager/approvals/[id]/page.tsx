@@ -24,7 +24,7 @@ const MOCK_DETAIL: ManagerApprovalDetailResponse = {
   id: 10,
   requestCode: "REQ-2026-0050",
   type: RequestType.PROJECT_TOPUP,
-  status: RequestStatus.PENDING_APPROVAL,
+  status: RequestStatus.PENDING,
   amount: 50_000_000,
   approvedAmount: null,
   description:
@@ -55,7 +55,7 @@ const MOCK_DETAIL: ManagerApprovalDetailResponse = {
     {
       id: 1,
       action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING_APPROVAL,
+      statusAfterAction: RequestStatus.PENDING,
       actorId: 4,
       actorName: "Hoàng Minh Tuấn",
       comment: "Tạo yêu cầu cấp vốn",
@@ -86,7 +86,7 @@ function formatDateTime(iso: string): string {
 
 function statusClass(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       return "bg-amber-500/15 border-amber-500/30 text-amber-300";
     case RequestStatus.PAID:
       return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
@@ -99,7 +99,7 @@ function statusClass(status: RequestStatus): string {
 
 function statusLabel(status: RequestStatus): string {
   switch (status) {
-    case RequestStatus.PENDING_APPROVAL:
+    case RequestStatus.PENDING:
       return "Chờ duyệt";
     case RequestStatus.PAID:
       return "Đã cấp vốn";
@@ -227,7 +227,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
     return Math.min(fromInput, maxApprovable || request.amount);
   }, [approvedAmount, maxApprovable, request]);
 
-  const canTakeAction = request?.status === RequestStatus.PENDING_APPROVAL;
+  const canTakeAction = request?.status === RequestStatus.PENDING;
 
   const openApproveModal = () => {
     if (!request) return;

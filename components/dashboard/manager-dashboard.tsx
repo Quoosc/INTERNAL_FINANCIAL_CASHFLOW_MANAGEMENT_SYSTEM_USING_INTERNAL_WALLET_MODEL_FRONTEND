@@ -32,7 +32,7 @@ const MOCK_PENDING_APPROVALS: ManagerApprovalListItem[] = [
     id: 10,
     requestCode: "REQ-2026-0050",
     type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 50_000_000,
     description: "Xin cấp vốn bổ sung Phase 2 dự án HTQL nội bộ",
     requester: {
@@ -55,7 +55,7 @@ const MOCK_PENDING_APPROVALS: ManagerApprovalListItem[] = [
     id: 11,
     requestCode: "REQ-2026-0048",
     type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING_APPROVAL,
+    status: RequestStatus.PENDING,
     amount: 30_000_000,
     description: "Cấp vốn cho Phase triển khai dự án hạ tầng mạng",
     requester: {
@@ -263,7 +263,7 @@ export function ManagerDashboard() {
           .filter(
             (item) =>
               item.type === RequestType.PROJECT_TOPUP &&
-              item.status === RequestStatus.PENDING_APPROVAL
+              item.status === RequestStatus.PENDING
           )
           .slice(0, 3);
 
@@ -334,7 +334,7 @@ export function ManagerDashboard() {
 
     try {
       await api.post("/api/v1/requests", {
-        type: RequestType.QUOTA_TOPUP,
+        type: RequestType.DEPARTMENT_TOPUP,
         amount: amountNumber,
         description: quotaDescription.trim(),
       });
@@ -601,7 +601,7 @@ export function ManagerDashboard() {
 
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
             <h3 className="text-xl font-bold text-white">Xin cấp vốn phòng ban</h3>
-            <p className="text-sm text-slate-400">Flow 3: QUOTA_TOPUP gửi Admin phê duyệt.</p>
+            <p className="text-sm text-slate-400">Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.</p>
 
             <div>
               <label className="block text-sm text-slate-300 mb-2">Số tiền cần cấp</label>

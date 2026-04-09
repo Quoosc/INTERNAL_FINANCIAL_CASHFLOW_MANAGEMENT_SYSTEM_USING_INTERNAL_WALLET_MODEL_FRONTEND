@@ -203,7 +203,7 @@ import { api, ApiError } from "@/lib/api-client";
 
 ### Muc tieu
 
-Page `/admin/system-fund`: tong quan System Fund (Tier 1): balance, inflow/outflow, fund health.
+Page `/admin/system-fund`: tong quan Company Fund (Tier 1 — COMPANY_FUND wallet): balance, inflow/outflow, fund health, bank reconciliation.
 
 ### Target file
 
@@ -211,14 +211,16 @@ Page `/admin/system-fund`: tong quan System Fund (Tier 1): balance, inflow/outfl
 
 ### Business rules
 
-- System Fund la Tier 1 trong 4-tier fund structure
-- Admin chi xem, khong thuc hien disbursement
-- Co the dung data tu ledger summary neu backend expose chung
+- Company Fund la Tier 1 trong 4-tier fund structure (truoc day goi la SystemFund)
+- Admin chi xem, khong thuc hien disbursement hay topup
+- `CompanyFundResponse` cung cap balance + bank reconciliation info
+- `LedgerSummaryResponse` cung cap inflow/outflow stats
+- ⚠ `SystemFund` da doi ten thanh `CompanyFundResponse` — KHONG dung `SystemFund`
 
 ### Types
 
 ```typescript
-import { SystemFund, LedgerSummaryResponse } from "@/types";
+import { CompanyFundResponse, LedgerSummaryResponse } from "@/types";
 import { api } from "@/lib/api-client";
 ```
 
@@ -226,14 +228,16 @@ import { api } from "@/lib/api-client";
 
 | Method | Endpoint                            | Sprint   |
 | ------ | ----------------------------------- | -------- |
+| GET    | `/api/v1/company-fund`              | Sprint 6 |
 | GET    | `/api/v1/accountant/ledger/summary` | Sprint 7 |
 
 ### UI layout
 
-1. Header + subtitle Tier 1
-2. Fund health card
-3. Stats row inflow/outflow/net
-4. Department budget table
+1. Header "Quy he thong" + subtitle Tier 1 (COMPANY_FUND)
+2. Fund health card: `currentWalletBalance` VND — health badge >=500M=HEALTHY, 100-500M=LOW, <100M=CRITICAL
+3. Bank reconciliation: `externalBankBalance` vs `currentWalletBalance` — `bankDiscrepancy` (cam bao neu != 0)
+4. Stats row (tu LedgerSummaryResponse): tong nap vao / tong chi ra / so luong GD
+5. Quick links: Xem so cai → `/accountant/ledger`
 
 ---
 

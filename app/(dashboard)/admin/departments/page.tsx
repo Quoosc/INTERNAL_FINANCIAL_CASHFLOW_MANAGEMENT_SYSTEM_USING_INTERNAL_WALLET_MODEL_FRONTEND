@@ -437,7 +437,7 @@ export default function AdminDepartmentsPage() {
               </div>
 
               <div className="space-y-1 text-sm text-slate-300">
-                <p>Manager: {department.manager?.fullName ?? "Chưa gán"}</p>
+                <p>Trưởng phòng: {department.manager?.fullName ?? "Chưa gán"}</p>
                 <p>Quota: {formatCurrency(department.totalProjectQuota)}</p>
                 <p>Khả dụng: {formatCurrency(department.totalAvailableBalance)}</p>
               </div>
@@ -537,13 +537,13 @@ export default function AdminDepartmentsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Manager</label>
+                <label className="block text-sm text-slate-300 mb-2">Trưởng phòng</label>
                 <select
                   value={formManagerId}
                   onChange={(event) => setFormManagerId(event.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
                 >
-                  <option value="">Chưa gán manager</option>
+                  <option value="">Chưa gán trưởng phòng</option>
                   {managers.map((manager) => (
                     <option key={manager.id} value={String(manager.id)}>
                       {manager.fullName} ({manager.employeeCode ?? manager.email})

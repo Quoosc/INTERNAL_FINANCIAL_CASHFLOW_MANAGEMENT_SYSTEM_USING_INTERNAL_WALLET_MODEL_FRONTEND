@@ -292,7 +292,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
           <div>
             <p className="text-xs text-slate-500 font-mono">{department.code}</p>
             <h1 className="text-2xl font-bold text-white mt-1">{department.name}</h1>
-            <p className="text-sm text-slate-400 mt-1">Manager: {department.manager?.fullName ?? "Chưa gán"}</p>
+            <p className="text-sm text-slate-400 mt-1">Trưởng phòng: {department.manager?.fullName ?? "Chưa gán"}</p>
           </div>
 
           <button
@@ -386,13 +386,13 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Manager</label>
+                <label className="block text-sm text-slate-300 mb-2">Trưởng phòng</label>
                 <select
                   value={editManagerId}
                   onChange={(event) => setEditManagerId(event.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
                 >
-                  <option value="">Chưa gán manager</option>
+                  <option value="">Chưa gán trưởng phòng</option>
                   {managers.map((manager) => (
                     <option key={manager.id} value={String(manager.id)}>
                       {manager.fullName} ({manager.employeeCode ?? manager.email})

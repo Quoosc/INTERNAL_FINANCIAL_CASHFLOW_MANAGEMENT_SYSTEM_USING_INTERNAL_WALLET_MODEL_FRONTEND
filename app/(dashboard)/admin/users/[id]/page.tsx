@@ -415,9 +415,9 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold text-white">Thông tin ví</h2>
             {user.wallet ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <InfoCard label="Balance" value={formatCurrency(user.wallet.balance)} tone="text-white" />
-                <InfoCard label="Locked" value={formatCurrency(user.wallet.lockedBalance)} tone="text-amber-300" />
-                <InfoCard label="Available" value={formatCurrency(user.wallet.availableBalance)} tone="text-emerald-300" />
+                <InfoCard label="Tổng số dư" value={formatCurrency(user.wallet.balance)} tone="text-white" />
+                <InfoCard label="Số dư khóa" value={formatCurrency(user.wallet.lockedBalance)} tone="text-amber-300" />
+                <InfoCard label="Số dư khả dụng" value={formatCurrency(user.wallet.availableBalance)} tone="text-emerald-300" />
               </div>
             ) : (
               <p className="text-sm text-slate-500">User chưa có ví.</p>
@@ -429,9 +429,9 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
             <h2 className="text-lg font-semibold text-white">Bảo mật</h2>
             <InfoCard label="Đã có PIN" value={user.securitySettings.hasPIN ? "Có" : "Chưa"} />
-            <InfoCard label="PIN Locked Until" value={user.securitySettings.pinLockedUntil ?? "—"} />
-            <InfoCard label="Retry Count" value={String(user.securitySettings.retryCount)} />
-            <InfoCard label="First Login" value={user.isFirstLogin ? "Yes" : "No"} />
+            <InfoCard label="PIN khóa đến" value={user.securitySettings.pinLockedUntil ?? "—"} />
+            <InfoCard label="Số lần nhập sai PIN" value={String(user.securitySettings.retryCount)} />
+            <InfoCard label="Đăng nhập lần đầu" value={user.isFirstLogin ? "Có" : "Không"} />
           </div>
 
           <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">

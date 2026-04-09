@@ -61,11 +61,10 @@ export interface AuditLogResponse {
 
 /** GET /admin/audit — query params */
 export interface AuditLogFilterParams {
-  actorId?: number;
+  actor?: string;
   action?: AuditAction;
-  entityName?: string;
-  from?: string;              // "YYYY-MM-DD"
-  to?: string;                // "YYYY-MM-DD"
+  startDate?: string;         // "YYYY-MM-DD"
+  endDate?: string;           // "YYYY-MM-DD"
   page?: number;
   limit?: number;
 }

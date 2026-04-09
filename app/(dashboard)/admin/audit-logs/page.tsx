@@ -83,6 +83,10 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
 }
 
+function getTotal<T>(payload: PaginatedResponse<T> | T[]): number {
+  return Array.isArray(payload) ? payload.length : payload.total;
+}
+
 function filterMock(
   audits: AuditLogResponse[],
   actor = "",
@@ -199,23 +203,19 @@ export default function AuditLogsPage() {
 
       try {
         const filters: AuditLogFilterParams = {
+          actor: actorFilter.trim() || undefined,
           action: actionFilter ? (actionFilter as AuditAction) : undefined,
-          from: startDate || undefined,
-          to: endDate || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
           page,
           limit: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
-        if (actorFilter.trim()) {
-          const actorNumber = Number(actorFilter);
-          if (Number.isFinite(actorNumber)) {
-            query.set("actorId", actorFilter.trim());
-          }
-        }
+        if (filters.actor) query.set("actor", filters.actor);
         if (filters.action) query.set("action", filters.action);
-        if (filters.from) query.set("from", filters.from);
-        if (filters.to) query.set("to", filters.to);
+        if (filters.startDate) query.set("startDate", filters.startDate);
+        if (filters.endDate) query.set("endDate", filters.endDate);
         query.set("page", String(filters.page ?? 1));
         query.set("limit", String(filters.limit ?? PAGE_LIMIT));
 
@@ -225,19 +225,13 @@ export default function AuditLogsPage() {
 
         if (cancelled) return;
 
-        const apiItems = pickItems(res.data).filter((item) => {
-          if (!actorFilter.trim()) return true;
-          return `${item.actorName ?? ""} ${item.actorId ?? ""}`
-            .toLowerCase()
-            .includes(actorFilter.trim().toLowerCase());
-        });
-
-        const apiTotal = Array.isArray(res.data) ? apiItems.length : res.data.total;
+        const list = pickItems(res.data);
+        const apiTotal = getTotal(res.data);
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
           : res.data.totalPages;
 
-        setItems(apiItems);
+        setItems(Array.isArray(res.data) ? list.slice((page - 1) * PAGE_LIMIT, page * PAGE_LIMIT) : list);
         setTotal(apiTotal);
         setTotalPages(apiTotalPages);
       } catch (err) {
@@ -258,7 +252,7 @@ export default function AuditLogsPage() {
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          setError("Khong the tai du lieu API, dang hien thi du lieu mau.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -278,15 +272,15 @@ export default function AuditLogsPage() {
   };
 
   const handleExport = () => {
-    setNotice("Export CSV sẽ được bổ sung ở Sprint tiếp theo.");
+    setNotice("Xuat CSV se duoc bo sung o Sprint tiep theo.");
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Nhật ký hệ thống</h1>
-          <p className="text-slate-400 mt-1">Audit trail bất biến cho mọi thao tác quan trọng trong hệ thống.</p>
+          <h1 className="text-2xl font-bold text-white">Nhat ky he thong</h1>
+          <p className="text-slate-400 mt-1">Audit trail bat bien cho moi thao tac quan trong trong he thong.</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -298,7 +292,7 @@ export default function AuditLogsPage() {
             onClick={handleExport}
             className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm text-white"
           >
-            Export CSV
+            Xuat CSV
           </button>
         </div>
       </div>
@@ -307,7 +301,7 @@ export default function AuditLogsPage() {
         <input
           value={actorInput}
           onChange={(event) => setActorInput(event.target.value)}
-          placeholder="Actor (ID/tên)"
+          placeholder="Nguoi thuc hien (ID/ten)"
           className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
         />
 
@@ -316,7 +310,7 @@ export default function AuditLogsPage() {
           onChange={(event) => updateParam("action", event.target.value || undefined)}
           className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
         >
-          <option value="">Tất cả hành động</option>
+          <option value="">Tat ca hanh dong</option>
           {Object.values(AuditAction).map((action) => (
             <option key={action} value={action}>
               {action}
@@ -344,11 +338,11 @@ export default function AuditLogsPage() {
           <table className="w-full min-w-[980px]">
             <thead>
               <tr className="border-b border-white/10 bg-slate-900/60">
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Thời gian</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Actor</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Action</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Entity</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Chi tiết</th>
+                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Thoi gian</th>
+                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Nguoi thuc hien</th>
+                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Hanh dong</th>
+                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Doi tuong</th>
+                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Chi tiet</th>
               </tr>
             </thead>
             <tbody>
@@ -363,7 +357,7 @@ export default function AuditLogsPage() {
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center text-slate-500 text-sm py-12">
-                    Không có bản ghi audit phù hợp.
+                    Khong co ban ghi audit phu hop.
                   </td>
                 </tr>
               ) : (
@@ -383,7 +377,7 @@ export default function AuditLogsPage() {
                     <td className="px-4 py-3 text-sm text-slate-300">
                       {item.entityName}#{item.entityId}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-400">Xem chi tiết →</td>
+                    <td className="px-4 py-3 text-sm text-slate-400">Xem chi tiet</td>
                   </tr>
                 ))
               )}
@@ -394,7 +388,7 @@ export default function AuditLogsPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-400">
-          Trang {page}/{totalPages} • Tổng {total} bản ghi
+          Trang {page}/{totalPages} • Tong {total} ban ghi
         </p>
 
         <div className="flex items-center gap-2">
@@ -404,7 +398,7 @@ export default function AuditLogsPage() {
             disabled={page <= 1}
             className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
           >
-            Trước
+            Truoc
           </button>
           <button
             type="button"
@@ -435,13 +429,13 @@ export default function AuditLogsPage() {
             type="button"
             className="absolute inset-0 bg-black/70"
             onClick={() => setShowDetailModal(false)}
-            aria-label="Đóng modal chi tiết audit"
+            aria-label="Dong modal chi tiet audit"
           />
 
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-3xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-xl font-bold text-white">Chi tiết audit #{selectedLog.id}</h3>
+                <h3 className="text-xl font-bold text-white">Chi tiet audit #{selectedLog.id}</h3>
                 <p className="text-sm text-slate-400 mt-1">{formatDateTime(selectedLog.createdAt)}</p>
               </div>
               <button
@@ -449,19 +443,19 @@ export default function AuditLogsPage() {
                 onClick={() => setShowDetailModal(false)}
                 className="text-slate-500 hover:text-white"
               >
-                ✕
+                X
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <InfoCard label="Actor" value={selectedLog.actorName ?? "System"} />
-              <InfoCard label="Action" value={selectedLog.action} />
-              <InfoCard label="Entity" value={`${selectedLog.entityName}#${selectedLog.entityId}`} />
+              <InfoCard label="Nguoi thuc hien" value={selectedLog.actorName ?? "System"} />
+              <InfoCard label="Hanh dong" value={selectedLog.action} />
+              <InfoCard label="Doi tuong" value={`${selectedLog.entityName}#${selectedLog.entityId}`} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <JsonCard title="Old Values" value={selectedLog.oldValues} />
-              <JsonCard title="New Values" value={selectedLog.newValues} />
+              <JsonCard title="Gia tri cu" value={selectedLog.oldValues} />
+              <JsonCard title="Gia tri moi" value={selectedLog.newValues} />
             </div>
           </div>
         </div>

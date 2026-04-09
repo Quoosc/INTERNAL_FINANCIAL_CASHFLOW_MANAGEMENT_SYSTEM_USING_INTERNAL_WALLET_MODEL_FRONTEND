@@ -16,7 +16,7 @@ import { WalletProvider } from "@/contexts/wallet-context";
 //   TEAM_LEADER  → Dashboard, Wallet, TL-Approvals, TL-Projects, TL-Team, Notifications
 //   MANAGER      → Dashboard, Wallet, Mgr-Approvals, Mgr-Projects, Mgr-Department, Notifications
 //   ACCOUNTANT   → Dashboard, Wallet, Disbursements, Acc-Payroll, Ledger, System Fund, Notifications
-//   ADMIN        → Dashboard, Wallet, Admin-Approvals, Users, Departments, System Fund,
+//   ADMIN        → Dashboard, Wallet, Users, Departments, System Fund,
 //                  Settings, Audit Logs, Notifications
 // =============================================================
 
@@ -230,7 +230,6 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
         {
           label: "Quản trị",
           items: [
-            { label: "Duyệt ngân sách PB", href: "/admin/approvals",   icon: icons.approvals },
             { label: "Nhân sự",             href: "/admin/users",       icon: icons.users },
             { label: "Phòng ban",           href: "/admin/departments", icon: icons.department },
             { label: "Quỹ hệ thống",        href: "/admin/system-fund", icon: icons.systemFund },

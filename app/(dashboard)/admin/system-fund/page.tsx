@@ -1,15 +1,11 @@
 ﻿"use client";
 
+import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api-client";
-import {
-  CompanyFundResponse,
-  DepartmentListItem,
-  LedgerSummaryResponse,
-  PaginatedResponse,
-} from "@/types";
+import { CompanyFundResponse, LedgerSummaryResponse } from "@/types";
 
-// TODO: Replace when Sprint 7 is complete
+// TODO: Replace when Sprint 6 is complete
 const MOCK_COMPANY_FUND: CompanyFundResponse = {
   id: 1,
   bankName: "Vietcombank",
@@ -29,40 +25,6 @@ const MOCK_LEDGER_SUMMARY: LedgerSummaryResponse = {
   transactionCount: 245,
 };
 
-// TODO: Replace when Sprint 2 is complete
-const MOCK_DEPARTMENTS: DepartmentListItem[] = [
-  {
-    id: 1,
-    name: "Phòng CNTT",
-    code: "IT",
-    manager: { id: 5, fullName: "Trần Thị Bích" },
-    employeeCount: 20,
-    totalProjectQuota: 800_000_000,
-    totalAvailableBalance: 524_500_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 2,
-    name: "Phòng Kinh doanh",
-    code: "SALES",
-    manager: { id: 6, fullName: "Nguyễn Văn Tùng" },
-    employeeCount: 15,
-    totalProjectQuota: 500_000_000,
-    totalAvailableBalance: 230_000_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 3,
-    name: "Phòng Tài chính",
-    code: "FIN",
-    manager: { id: 7, fullName: "Phạm Hoài Nam" },
-    employeeCount: 10,
-    totalProjectQuota: 450_000_000,
-    totalAvailableBalance: 190_000_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-];
-
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -71,10 +33,41 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+function getFundHealth(balance: number): {
+  label: "HEALTHY" | "LOW" | "CRITICAL";
+  tone: string;
+  borderTone: string;
+  bgTone: string;
+} {
+  if (balance >= 500_000_000) {
+    return {
+      label: "HEALTHY",
+      tone: "text-emerald-300",
+      borderTone: "border-emerald-500/40",
+      bgTone: "bg-emerald-500/10",
+    };
+  }
+
+  if (balance >= 100_000_000) {
+    return {
+      label: "LOW",
+      tone: "text-amber-300",
+      borderTone: "border-amber-500/40",
+      bgTone: "bg-amber-500/10",
+    };
+  }
+
+  return {
+    label: "CRITICAL",
+    tone: "text-rose-300",
+    borderTone: "border-rose-500/40",
+    bgTone: "bg-rose-500/10",
+  };
+}
+
 export default function SystemFundPage() {
   const [companyFund, setCompanyFund] = useState<CompanyFundResponse | null>(null);
   const [summary, setSummary] = useState<LedgerSummaryResponse | null>(null);
-  const [departments, setDepartments] = useState<DepartmentListItem[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,30 +80,25 @@ export default function SystemFundPage() {
       setError(null);
 
       try {
-        const [fundRes, summaryRes, deptRes] = await Promise.all([
+        const [fundRes, summaryRes] = await Promise.all([
           api.get<CompanyFundResponse>("/api/v1/company-fund"),
           api.get<LedgerSummaryResponse>("/api/v1/accountant/ledger/summary"),
-          api.get<PaginatedResponse<DepartmentListItem> | DepartmentListItem[]>(
-            "/api/v1/admin/departments?page=1&limit=100"
-          ),
         ]);
 
         if (cancelled) return;
 
         setCompanyFund(fundRes.data);
         setSummary(summaryRes.data);
-        setDepartments(Array.isArray(deptRes.data) ? deptRes.data : deptRes.data.items);
       } catch (err) {
         if (cancelled) return;
 
         setCompanyFund(MOCK_COMPANY_FUND);
         setSummary(MOCK_LEDGER_SUMMARY);
-        setDepartments(MOCK_DEPARTMENTS);
 
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          setError("Khong the tai du lieu API, dang hien thi du lieu mau.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -124,105 +112,96 @@ export default function SystemFundPage() {
     };
   }, []);
 
-  const netFlow = useMemo(() => {
-    if (!summary) return 0;
-    return summary.totalInflow - summary.totalOutflow;
-  }, [summary]);
-
+  const currentBalance = companyFund?.currentWalletBalance ?? 0;
+  const externalBalance = companyFund?.externalBankBalance ?? 0;
   const discrepancy = companyFund?.bankDiscrepancy ?? 0;
-  const isHealthy = Math.abs(discrepancy) === 0;
+
+  const health = useMemo(() => getFundHealth(currentBalance), [currentBalance]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Quỹ hệ thống</h1>
-        <p className="text-slate-400 mt-1">Tier 1 Fund - tổng quan dòng tiền và sức khỏe ngân quỹ hệ thống.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Quy he thong</h1>
+          <p className="text-slate-400 mt-1">Tier 1 (COMPANY_FUND) - Admin chi co quyen xem so lieu quy.</p>
+        </div>
+
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-500/40 bg-slate-500/15 text-slate-300 text-sm font-medium">
+          Read-only
+        </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-slate-800 border border-white/10 rounded-2xl p-5">
-          <p className="text-sm text-slate-400">Số dư quỹ hệ thống hiện tại</p>
-          <p className="text-3xl font-bold text-white mt-2">
-            {loading ? "Đang tải..." : formatCurrency(companyFund?.currentWalletBalance ?? 0)}
+        <div className="lg:col-span-2 bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-slate-400">So du vi COMPANY_FUND hien tai</p>
+            <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-semibold ${health.borderTone} ${health.bgTone} ${health.tone}`}>
+              {health.label}
+            </span>
+          </div>
+
+          <p className="text-3xl font-bold text-white">
+            {loading ? "Dang tai..." : formatCurrency(currentBalance)}
           </p>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
-              <p className="text-xs text-slate-500">Số dư ngân hàng đối soát</p>
-              <p className="text-sm font-semibold text-slate-200 mt-1">
-                {formatCurrency(companyFund?.externalBankBalance ?? 0)}
-              </p>
-            </div>
-            <div
-              className={`rounded-xl border p-3 ${
-                isHealthy
-                  ? "border-emerald-500/30 bg-emerald-500/10"
-                  : "border-rose-500/30 bg-rose-500/10"
-              }`}
-            >
-              <p className={`text-xs ${isHealthy ? "text-emerald-300" : "text-rose-300"}`}>
-                Fund health
-              </p>
-              <p className={`text-sm font-semibold mt-1 ${isHealthy ? "text-emerald-200" : "text-rose-200"}`}>
-                {isHealthy ? "Balanced" : `Lệch ${formatCurrency(discrepancy)}`}
-              </p>
-            </div>
+
+          <div className="rounded-xl border border-white/10 bg-slate-900 p-3 text-sm text-slate-300">
+            Quy tac suc khoe quy: HEALTHY neu lon hon hoac bang 500 trieu, LOW neu tu 100 den duoi 500 trieu,
+            CRITICAL neu duoi 100 trieu.
           </div>
         </div>
 
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-          <h2 className="text-lg font-semibold text-white">Thông tin quỹ</h2>
-          <InfoRow label="Ngân hàng" value={companyFund?.bankName ?? "—"} />
-          <InfoRow label="Tài khoản" value={companyFund?.bankAccount ?? "—"} />
-          <InfoRow label="Ngày đối soát" value={companyFund?.lastStatementDate ?? "—"} />
-          <InfoRow label="Cập nhật bởi" value={companyFund?.lastStatementUpdatedBy ?? "—"} />
+          <h2 className="text-lg font-semibold text-white">Thong tin doi soat</h2>
+          <InfoRow label="Ngan hang" value={companyFund?.bankName ?? "-"} />
+          <InfoRow label="So tai khoan" value={companyFund?.bankAccount ?? "-"} />
+          <InfoRow label="Ngay sao ke" value={companyFund?.lastStatementDate ?? "-"} />
+          <InfoRow label="Cap nhat boi" value={companyFund?.lastStatementUpdatedBy ?? "-"} />
         </div>
       </div>
 
+      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-white">Doi soat ngan hang</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <StatCard title="So du vi noi bo" value={formatCurrency(currentBalance)} tone="text-white" />
+          <StatCard title="So du sao ke ngan hang" value={formatCurrency(externalBalance)} tone="text-slate-200" />
+          <StatCard
+            title="Chenh lech doi soat"
+            value={formatCurrency(discrepancy)}
+            tone={Math.abs(discrepancy) === 0 ? "text-emerald-300" : "text-rose-300"}
+          />
+        </div>
+
+        {Math.abs(discrepancy) !== 0 && (
+          <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+            Canh bao: so du vi noi bo va so du sao ke ngan hang dang lech nhau.
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard title="Inflow" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-300" />
-        <StatCard title="Outflow" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-300" />
+        <StatCard title="Tong nap vao" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-300" />
+        <StatCard title="Tong chi ra" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-300" />
         <StatCard
-          title="Net Flow"
-          value={formatCurrency(netFlow)}
-          tone={netFlow >= 0 ? "text-blue-300" : "text-amber-300"}
+          title="So luong giao dich"
+          value={String(summary?.transactionCount ?? 0)}
+          tone="text-blue-300"
         />
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Phân bổ quota theo phòng ban</h2>
-
-        {departments.length === 0 ? (
-          <p className="text-sm text-slate-500">Chưa có dữ liệu phòng ban.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[780px]">
-              <thead>
-                <tr className="border-b border-white/10 bg-slate-900/60">
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Mã PB</th>
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Tên phòng ban</th>
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Manager</th>
-                  <th className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Quota</th>
-                  <th className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Khả dụng</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departments.map((department) => (
-                  <tr key={department.id} className="border-b border-white/5 last:border-b-0">
-                    <td className="px-4 py-3 text-sm text-slate-300">{department.code}</td>
-                    <td className="px-4 py-3 text-sm text-white font-medium">{department.name}</td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{department.manager?.fullName ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-300 text-right">
-                      {formatCurrency(department.totalProjectQuota)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-emerald-300 text-right">
-                      {formatCurrency(department.totalAvailableBalance)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
+        <h2 className="text-lg font-semibold text-white">Truy cap nhanh</h2>
+        <div className="mt-3">
+          <Link
+            href="/accountant/ledger"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
+          >
+            Xem so cai
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14m-7-7l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
       </div>
 
       {error && (

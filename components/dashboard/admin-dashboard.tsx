@@ -8,8 +8,8 @@ import {
   AdminDashboardResponse,
   AdminUserListItem,
   AuditLogResponse,
+  CompanyFundResponse,
   DepartmentListItem,
-  LedgerSummaryResponse,
   PaginatedResponse,
 } from "@/types";
 
@@ -141,7 +141,7 @@ export function AdminDashboard() {
         setDashboard(res.data);
       } catch (dashboardErr) {
         try {
-          const [usersRes, departmentsRes, auditsRes, ledgerRes] = await Promise.all([
+          const [usersRes, departmentsRes, auditsRes, companyFundRes] = await Promise.all([
             api.get<PaginatedResponse<AdminUserListItem> | AdminUserListItem[]>(
               "/api/v1/admin/users?page=1&limit=1"
             ),
@@ -151,7 +151,7 @@ export function AdminDashboard() {
             api.get<PaginatedResponse<AuditLogResponse> | AuditLogResponse[]>(
               "/api/v1/admin/audit?page=1&limit=5"
             ),
-            api.get<LedgerSummaryResponse>("/api/v1/accountant/ledger/summary"),
+            api.get<CompanyFundResponse>("/api/v1/company-fund"),
           ]);
 
           if (cancelled) return;
@@ -161,7 +161,7 @@ export function AdminDashboard() {
           setDashboard({
             totalUsers: getTotal(usersRes.data),
             totalDepartments: getTotal(departmentsRes.data),
-            totalWalletBalance: ledgerRes.data.currentBalance,
+            totalWalletBalance: companyFundRes.data.currentWalletBalance,
             recentAuditEvents: audits.map((item) => ({
               id: item.id,
               actorName: item.actorName,
@@ -265,7 +265,7 @@ export function AdminDashboard() {
             />
 
             <StatCard
-              title="Tổng số dư ví"
+              title="Số dư quỹ hệ thống"
               value={formatCurrency(dashboard?.totalWalletBalance ?? 0)}
               href="/admin/system-fund"
               accent="text-amber-300"
@@ -282,7 +282,7 @@ export function AdminDashboard() {
             />
 
             <StatCard
-              title="Recent activity"
+              title="Hoạt động gần đây"
               value={String(recentActivity)}
               href="/admin/audit-logs"
               accent="text-violet-300"
@@ -307,7 +307,7 @@ export function AdminDashboard() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
-              <p className="text-xs text-slate-500">Users / Department</p>
+              <p className="text-xs text-slate-500">Người dùng / phòng ban</p>
               <p className="text-base font-semibold text-white mt-1">
                 {dashboard && dashboard.totalDepartments > 0
                   ? (dashboard.totalUsers / dashboard.totalDepartments).toFixed(1)

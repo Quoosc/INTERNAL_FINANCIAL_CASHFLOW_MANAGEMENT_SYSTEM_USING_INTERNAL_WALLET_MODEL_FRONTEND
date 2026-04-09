@@ -2,20 +2,16 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api-client";
-import { SystemConfigRequest, SystemConfigResponse } from "@/types";
+import { SystemConfigItem, SystemSettingsResponse, UpdateSettingsBody } from "@/types";
 
-type SettingsCategory = "SECURITY" | "MAIL" | "SYSTEM";
-
-type SettingViewItem = SystemConfigResponse & {
-  category: SettingsCategory;
-};
+type SettingsCategory = SystemConfigItem["category"];
 
 // TODO: Replace when Sprint 6 is complete
-const MOCK_SETTINGS: SettingViewItem[] = [
+const MOCK_SETTINGS: SystemConfigItem[] = [
   {
     key: "PIN_MAX_RETRY",
     value: "5",
-    description: "Số lần nhập sai PIN tối đa trước khi khóa",
+    description: "So lan nhap sai PIN toi da truoc khi khoa",
     createdAt: null,
     updatedAt: null,
     category: "SECURITY",
@@ -23,7 +19,7 @@ const MOCK_SETTINGS: SettingViewItem[] = [
   {
     key: "PIN_LOCK_DURATION_MINUTES",
     value: "30",
-    description: "Thời gian khóa PIN (phút)",
+    description: "Thoi gian khoa PIN (phut)",
     createdAt: null,
     updatedAt: null,
     category: "SECURITY",
@@ -31,7 +27,7 @@ const MOCK_SETTINGS: SettingViewItem[] = [
   {
     key: "WITHDRAWAL_LIMIT",
     value: "50000000",
-    description: "Hạn mức rút tiền tối đa mỗi giao dịch",
+    description: "Han muc rut tien toi da moi giao dich",
     createdAt: null,
     updatedAt: null,
     category: "SECURITY",
@@ -39,7 +35,7 @@ const MOCK_SETTINGS: SettingViewItem[] = [
   {
     key: "MAIL_ENABLED",
     value: "true",
-    description: "Bật/tắt gửi email hệ thống",
+    description: "Bat/tat gui email he thong",
     createdAt: null,
     updatedAt: null,
     category: "MAIL",
@@ -47,7 +43,7 @@ const MOCK_SETTINGS: SettingViewItem[] = [
   {
     key: "SYSTEM_TIMEZONE",
     value: "Asia/Ho_Chi_Minh",
-    description: "Timezone mặc định cho hệ thống",
+    description: "Timezone mac dinh cho he thong",
     createdAt: null,
     updatedAt: null,
     category: "SYSTEM",
@@ -62,8 +58,8 @@ function inferCategory(key: string): SettingsCategory {
     upper.includes("WITHDRAW") ||
     upper.includes("RETRY") ||
     upper.includes("LOCK") ||
-    upper.includes("MAX_FILE") ||
-    upper.includes("MINIMUM_REQUEST")
+    upper.includes("OTP") ||
+    upper.includes("AUTH")
   ) {
     return "SECURITY";
   }
@@ -75,15 +71,35 @@ function inferCategory(key: string): SettingsCategory {
   return "SYSTEM";
 }
 
-function normalizeItems(items: SystemConfigResponse[]): SettingViewItem[] {
-  return items.map((item) => ({
-    ...item,
-    category: inferCategory(item.key),
-  }));
+function normalizeItem(
+  item: Partial<SystemConfigItem> & { key: string; value: string }
+): SystemConfigItem {
+  return {
+    key: item.key,
+    value: item.value,
+    description: item.description ?? null,
+    category: item.category ?? inferCategory(item.key),
+    createdAt: item.createdAt ?? null,
+    updatedAt: item.updatedAt ?? null,
+  };
+}
+
+function normalizeItems(
+  items: Array<Partial<SystemConfigItem> & { key: string; value: string }>
+): SystemConfigItem[] {
+  return items.map(normalizeItem);
+}
+
+function pickSettingsItems(payload: SystemSettingsResponse | SystemConfigItem[]): SystemConfigItem[] {
+  if (Array.isArray(payload)) {
+    return normalizeItems(payload);
+  }
+
+  return normalizeItems(payload.items);
 }
 
 export default function AdminSettingsPage() {
-  const [items, setItems] = useState<SettingViewItem[]>([]);
+  const [items, setItems] = useState<SystemConfigItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,25 +113,18 @@ export default function AdminSettingsPage() {
       setError(null);
 
       try {
-        const adminRes = await api.get<{ items: SystemConfigResponse[] }>("/api/v1/admin/settings");
+        const res = await api.get<SystemSettingsResponse | SystemConfigItem[]>("/api/v1/admin/settings");
         if (cancelled) return;
-        setItems(normalizeItems(adminRes.data.items));
-      } catch (adminErr) {
-        try {
-          const fallbackRes = await api.get<SystemConfigResponse[]>("/api/v1/system-configs");
-          if (cancelled) return;
-          setItems(normalizeItems(fallbackRes.data));
-        } catch (fallbackErr) {
-          if (cancelled) return;
-          setItems(MOCK_SETTINGS);
+        setItems(pickSettingsItems(res.data));
+      } catch (err) {
+        if (cancelled) return;
 
-          if (adminErr instanceof ApiError) {
-            setError(adminErr.apiMessage);
-          } else if (fallbackErr instanceof ApiError) {
-            setError(fallbackErr.apiMessage);
-          } else {
-            setError("Không thể tải settings từ API, đang hiển thị dữ liệu mẫu.");
-          }
+        setItems(MOCK_SETTINGS);
+
+        if (err instanceof ApiError) {
+          setError(err.apiMessage);
+        } else {
+          setError("Khong the tai cau hinh tu API, dang hien thi du lieu mau.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -129,13 +138,14 @@ export default function AdminSettingsPage() {
     };
   }, []);
 
-  const grouped = useMemo(() => {
-    return {
+  const grouped = useMemo(
+    () => ({
       SECURITY: items.filter((item) => item.category === "SECURITY"),
       MAIL: items.filter((item) => item.category === "MAIL"),
       SYSTEM: items.filter((item) => item.category === "SYSTEM"),
-    };
-  }, [items]);
+    }),
+    [items]
+  );
 
   const updateValue = (key: string, value: string) => {
     setItems((prev) => prev.map((item) => (item.key === key ? { ...item, value } : item)));
@@ -145,27 +155,21 @@ export default function AdminSettingsPage() {
     setSaving(true);
     setNotice(null);
 
-    const payload = {
-      configs: items.map((item) => ({ key: item.key, value: item.value })),
+    const payload: UpdateSettingsBody = {
+      items: items.map((item) => ({ key: item.key, value: item.value })),
     };
 
     try {
-      await api.put<{ items: SystemConfigResponse[] }>("/api/v1/admin/settings", payload);
-      setNotice("Đã lưu cấu hình hệ thống.");
-    } catch {
-      try {
-        await Promise.all(
-          items.map((item) => {
-            const body: SystemConfigRequest = {
-              value: item.value,
-              description: item.description ?? undefined,
-            };
-            return api.put<SystemConfigResponse>(`/api/v1/system-configs/${item.key}`, body);
-          })
-        );
-        setNotice("Đã lưu cấu hình qua endpoint /system-configs.");
-      } catch {
-        setNotice("API chưa sẵn sàng, đã mô phỏng lưu cấu hình.");
+      const res = await api.put<SystemSettingsResponse | SystemConfigItem[]>("/api/v1/admin/settings", payload);
+
+      // Khi API tra danh sach settings moi, dong bo lai UI ngay.
+      setItems(pickSettingsItems(res.data));
+      setNotice("Da luu cau hinh he thong.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setNotice(`API loi: ${err.apiMessage}. Da giu du lieu hien tai tren UI.`);
+      } else {
+        setNotice("API chua san sang, da mo phong thao tac luu cau hinh.");
       }
     } finally {
       setSaving(false);
@@ -175,12 +179,12 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Cấu hình hệ thống</h1>
-        <p className="text-slate-400 mt-1">Quản trị thông số vận hành và bảo mật hệ thống.</p>
+        <h1 className="text-2xl font-bold text-white">Cau hinh he thong</h1>
+        <p className="text-slate-400 mt-1">Quan tri thong so van hanh va bao mat he thong.</p>
       </div>
 
       <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
-        Thay đổi cấu hình có hiệu lực ngay lập tức. Kiểm tra kỹ trước khi lưu.
+        Thay doi cau hinh co hieu luc ngay lap tuc. Kiem tra ky truoc khi luu.
       </div>
 
       {loading ? (
@@ -193,21 +197,21 @@ export default function AdminSettingsPage() {
         <>
           <SettingsGroup
             title="SECURITY"
-            description="PIN, giới hạn giao dịch, chính sách bảo mật"
+            description="PIN, OTP, gioi han giao dich va chinh sach bao mat"
             items={grouped.SECURITY}
             onChange={updateValue}
           />
 
           <SettingsGroup
             title="MAIL"
-            description="SMTP, gửi thông báo email hệ thống"
+            description="SMTP, gui thong bao email he thong"
             items={grouped.MAIL}
             onChange={updateValue}
           />
 
           <SettingsGroup
             title="SYSTEM"
-            description="Các tham số vận hành chung"
+            description="Cac tham so van hanh chung"
             items={grouped.SYSTEM}
             onChange={updateValue}
           />
@@ -221,7 +225,7 @@ export default function AdminSettingsPage() {
           disabled={saving || loading}
           className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
         >
-          {saving ? "Đang lưu..." : "Lưu cấu hình"}
+          {saving ? "Dang luu..." : "Luu cau hinh"}
         </button>
       </div>
 
@@ -248,7 +252,7 @@ function SettingsGroup({
 }: {
   title: SettingsCategory;
   description: string;
-  items: SettingViewItem[];
+  items: SystemConfigItem[];
   onChange: (key: string, value: string) => void;
 }) {
   return (
@@ -259,7 +263,7 @@ function SettingsGroup({
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-slate-500">Không có cấu hình trong nhóm này.</p>
+        <p className="text-sm text-slate-500">Khong co cau hinh trong nhom nay.</p>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
@@ -267,7 +271,7 @@ function SettingsGroup({
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <p className="text-sm font-medium text-white">{item.key}</p>
-                  <p className="text-xs text-slate-500 mt-1">{item.description ?? "Không có mô tả"}</p>
+                  <p className="text-xs text-slate-500 mt-1">{item.description ?? "Khong co mo ta"}</p>
                 </div>
                 <input
                   value={item.value}

@@ -200,6 +200,29 @@ export interface SystemConfigRequest {
   description?: string;
 }
 
+/** GET /api/v1/admin/settings — config item */
+export interface SystemConfigItem {
+  key: string;
+  value: string;
+  description: string | null;
+  category: "SECURITY" | "MAIL" | "SYSTEM";
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+/** GET /api/v1/admin/settings — response */
+export interface SystemSettingsResponse {
+  items: SystemConfigItem[];
+}
+
+/** PUT /api/v1/admin/settings — body */
+export interface UpdateSettingsBody {
+  items: Array<{
+    key: string;
+    value: string;
+  }>;
+}
+
 // --- Filter Params ---
 
 /** GET /admin/approvals — query params */

@@ -1,6 +1,6 @@
 # PROJECT_STRUCTURE.md — Cấu trúc dự án Frontend
 
-> **Cập nhật:** Aligned với filesystem thực tế (types v3.1 — 16 modules, 6 roles)
+> **Cập nhật:** Aligned với filesystem thực tế (types v3.2 — 16 modules, 6 roles)
 
 ## Tổng quan
 
@@ -134,25 +134,30 @@ financial-wallet-frontend/
 
 ## Mapping Backend ↔ Frontend
 
-| Backend Module | Frontend Route                     | Ghi chú                                             |
-| -------------- | ---------------------------------- | --------------------------------------------------- |
-| `auth`         | `/login`                           | `/register` tồn tại nhưng không có endpoint backend |
-| `wallet`       | `/wallet/*`                        | Ví, nạp/rút tiền, lịch sử giao dịch                 |
-| `request`      | `/requests/*`                      | Tạm ứng, thanh toán, hoàn ứng (3 flows)             |
-| `project`      | `/projects/*`                      | Dự án, phase, category budget, thành viên           |
-| `accounting`   | `/payroll/*`, `/admin/system-fund` | Kỳ lương, phiếu lương, quỹ hệ thống, sổ cái         |
-| `user`         | `/admin/users`                     | Quản lý nhân sự                                     |
-| `user.Role`    | `/admin/roles`                     | Vai trò & quyền hạn (RBAC)                          |
-| `organization` | `/admin/departments`               | Phòng ban, ngân sách                                |
-| `config`       | `/admin/settings`                  | Cấu hình tham số hệ thống                           |
-| `audit`        | `/admin/audit-logs`                | Nhật ký kiểm toán                                   |
-| `notification` | `/notifications`                   | Thông báo real-time                                 |
+| Backend Module | Frontend Route | API prefix | Ghi chú |
+|---|---|---|---|
+| `auth` | `/login`, `/change-password` | `/auth` | `/register` orphaned — no backend endpoint |
+| `wallet` | `/wallet/*` | `/wallet` | Ví, nạp tiền (VNPay), rút tiền, lịch sử GD |
+| `request` | `/requests/*` | `/requests` | Employee: tạo/xem YC cá nhân (3 flows) |
+| `team-leader` | `/team-leader/*` | `/team-leader` | Approvals Flow 1, quản lý project/team |
+| `manager` | `/manager/*` | `/manager` | Approvals Flow 2, tạo/quản lý projects |
+| `accountant` | `/accountant/*` | `/accountant` | Giải ngân, payroll, sổ cái |
+| `cfo` | `/admin/approvals/*` | `/cfo` | Approvals Flow 3 (DEPARTMENT_TOPUP) |
+| `project` | `/projects/*` | `/projects` | Read-only view dự án cho mọi role |
+| `payslip` | `/payroll/*` | `/payslips` | Employee xem phiếu lương của mình |
+| `user` | `/admin/users` | `/admin/users` | Quản lý nhân sự (ADMIN only) |
+| `organization` | `/admin/departments` | `/admin/departments` | Phòng ban (ADMIN only) |
+| `company-fund` | `/admin/system-fund` | `/company-fund` | Quỹ hệ thống (ACCOUNTANT + CFO) |
+| `config` | `/admin/settings` | `/admin/settings` | Cấu hình hệ thống (ADMIN only) |
+| `audit` | `/admin/audit-logs` | `/admin/audit` | Nhật ký kiểm toán (ADMIN only) |
+| `notification` | `/notifications` | `/notifications` | Thông báo real-time (mọi role) |
 
 ---
 
 ## Pages chưa implement
 
-| Route                         | Cần cho                    | API endpoint                             |
-| ----------------------------- | -------------------------- | ---------------------------------------- |
+| Route | Cần cho | API endpoint |
+|---|---|---|
 | `app/(auth)/change-password/` | `isFirstLogin = true` flow | `POST /api/v1/auth/first-login/complete` |
-| `app/(auth)/create-pin/`      | Legacy flow cũ             | Orphaned (không dùng trong contract mới) |
+| `app/(auth)/create-pin/` | Legacy flow cũ | Orphaned — không dùng trong contract mới |
+| `app/(auth)/register/` | Đăng ký mới | Orphaned — không có backend `/auth/register` |

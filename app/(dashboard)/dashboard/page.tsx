@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { RoleName } from "@/types";
 import { EmployeeDashboard } from "@/components/dashboard/employee-dashboard";
@@ -8,6 +7,7 @@ import { TeamLeaderDashboard } from "@/components/dashboard/team-leader-dashboar
 import { ManagerDashboard } from "@/components/dashboard/manager-dashboard";
 import { AccountantDashboard } from "@/components/dashboard/accountant-dashboard";
 import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
+import { CfoDashboard } from "@/components/dashboard/cfo-dashboard";
 
 export default function DashboardPage() {
   const { isLoading, hasRole } = useAuth();
@@ -42,7 +42,7 @@ export default function DashboardPage() {
   }
 
   if (hasRole(RoleName.ADMIN)) return <AdminDashboard />;
-  if (hasRole(RoleName.CFO)) return <AdminDashboard />;
+  if (hasRole(RoleName.CFO)) return <CfoDashboard />;
   if (hasRole(RoleName.ACCOUNTANT)) return <AccountantDashboard />;
   if (hasRole(RoleName.MANAGER)) return <ManagerDashboard />;
   if (hasRole(RoleName.TEAM_LEADER)) return <TeamLeaderDashboard />;

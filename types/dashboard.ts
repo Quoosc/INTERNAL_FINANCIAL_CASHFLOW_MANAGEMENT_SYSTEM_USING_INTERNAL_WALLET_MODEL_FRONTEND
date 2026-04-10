@@ -69,6 +69,24 @@ export interface AccountantDashboardResponse {
   };
 }
 
+// --- CFO Dashboard ---
+
+/** GET /dashboard/cfo — response */
+export interface CfoDashboardResponse {
+  companyFundBalance: number;
+  pendingApprovalsCount: number;
+  monthlyApprovedAmount: number;
+  monthlyRejectedCount: number;
+  recentApprovals: {
+    id: number;
+    requestCode: string;
+    departmentName: string;
+    amount: number;
+    status: string;
+    createdAt: string;
+  }[];
+}
+
 // --- Admin Dashboard ---
 
 /** GET /dashboard/admin — response */

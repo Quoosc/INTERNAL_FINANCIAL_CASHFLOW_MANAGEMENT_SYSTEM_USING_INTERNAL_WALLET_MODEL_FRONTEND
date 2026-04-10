@@ -87,7 +87,7 @@ Tạo thư mục `types/` tại root project, với các file tổ chức theo m
 #### [NEW] [accounting.ts](file:///d:/HK6%20UIT/DA1/financial-wallet-frontend/types/accounting.ts)
 
 - `PayrollStatus`, `PayslipStatus` enums
-- `PayrollPeriod`, `Payslip`, `SystemFund` interfaces
+- `PayrollPeriod`, `Payslip`, `CompanyFundResponse` interfaces (⚠ `SystemFund` đã đổi tên)
 
 #### [NEW] [organization.ts](file:///d:/HK6%20UIT/DA1/financial-wallet-frontend/types/organization.ts)
 

@@ -4,7 +4,10 @@
 > **Role**: `CFO`
 > **Business**: Duyet Flow 3 (DEPARTMENT_TOPUP tu Manager) va quyet dinh cap ngan sach cap phong ban.
 >
-> Luu y: namespace route hien tai o frontend van dung `/admin/approvals`, nhung API contract backend la `/cfo/approvals`.
+> ⚠️ CFO co route rieng tai `app/(dashboard)/cfo/` — KHONG code chung vao `/admin/`. ADMIN khong co approval flow.
+> - Sidebar CFO dung: `/cfo/approvals`, `/cfo/system-fund`, `/cfo/settings`, `/cfo/audit-logs`
+> - API backend prefix: `/cfo/*`
+> - `app/(dashboard)/admin/approvals/` khong nen ton tai — neu dang co re-export thi doi code that sang `/cfo/`
 
 ---
 
@@ -26,7 +29,7 @@ Page approvals cho CFO: danh sach DEPARTMENT_TOPUP tu Managers cho duyet (Flow 3
 
 ### Target file
 
-`app/(dashboard)/admin/approvals/page.tsx`
+`app/(dashboard)/cfo/approvals/page.tsx`
 
 ### Design reference
 
@@ -130,7 +133,7 @@ Page chi tiet DEPARTMENT_TOPUP: thong tin phong ban, system fund impact, approve
 
 ### Target file
 
-`app/(dashboard)/admin/approvals/[id]/page.tsx`
+`app/(dashboard)/cfo/approvals/[id]/page.tsx`
 
 ### Design reference
 

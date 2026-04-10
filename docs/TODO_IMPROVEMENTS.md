@@ -117,16 +117,18 @@
 
 ### 🏅 Tier 4A — CFO _(sau khi Manager xong)_
 
-> **Role bổ sung**: CFO duyệt DEPARTMENT_TOPUP (Flow 3).
+> **Role bổ sung**: CFO duyệt DEPARTMENT_TOPUP (Flow 3), quản lý quỹ hệ thống.
+> ⚠ Route riêng tại `/cfo/*` — KHÔNG dùng chung `/admin/*`.
 
 | Trang | API endpoint | Sprint | Trạng thái |
 |---|---|---|---|
-| Duyệt YC cấp quota (`/admin/approvals`) | `GET /cfo/approvals` | 6 | [ ] Chờ code |
-| Chi tiết duyệt (`/admin/approvals/[id]`) | `GET /cfo/approvals/:id` | 6 | [ ] Chờ code |
+| Duyệt YC cấp quota (`/cfo/approvals`) | `GET /cfo/approvals` | 6 | [ ] Chờ code |
+| Chi tiết duyệt (`/cfo/approvals/[id]`) | `GET /cfo/approvals/:id` | 6 | [ ] Chờ code |
+| Quỹ hệ thống (`/cfo/system-fund`) | `GET /company-fund` | 6 | [ ] Chờ code |
 
 ### 🏅 Tier 4B — ADMIN _(song song hoặc sau CFO)_
 
-> **Role bổ sung**: ADMIN quản trị IAM/system.
+> **Role bổ sung**: ADMIN quản trị IAM/system — KHÔNG tham gia duyệt tài chính.
 
 | Trang | API endpoint | Sprint | Trạng thái |
 |---|---|---|---|
@@ -151,7 +153,7 @@
 | Auto-netting & Run payroll | `POST /accountant/payroll/:id/auto-netting` + `/run` | 7 | [ ] Chờ code |
 | Sổ cái (`/accountant/ledger`) | `GET /accountant/ledger` | 7 | [ ] Chờ code |
 | Chi tiết giao dịch sổ cái | `GET /accountant/ledger/:transactionId` | 7 | [ ] Chờ code |
-| Quỹ hệ thống (`/admin/system-fund`) | `GET /company-fund` + reconciliation | 7 | [ ] Chờ code |
+| Quỹ hệ thống — Accountant view (`/admin/system-fund`) | `GET /company-fund` + reconciliation | 7 | [ ] Chờ code |
 
 ---
 

@@ -19,9 +19,8 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-interface DisburseSuccessView extends DisburseResponse {
-  walletBalance?: number;
-}
+// DisburseResponse v3.0: id, requestCode, status, transactionCode, amount, disbursedAt
+type DisburseSuccessView = DisburseResponse;
 
 // TODO: Replace when Sprint 6 is complete
 const MOCK_DETAIL: DisbursementDetailResponse = {
@@ -306,8 +305,8 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
       //   `/api/v1/accountant/disbursements/${id}/disburse`,
       //   body
       // );
-      // setSuccessData({ ...res.data, walletBalance: 18_000_000 });
       // TODO: Replace when Sprint 6 is complete - simulate success
+      // setSuccessData(res.data);
       void body;
       setSuccessData({
         id: detail.id,
@@ -316,7 +315,6 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
         transactionCode: `TXN-2026-${String(detail.id).padStart(4, "0")}A`,
         amount: detail.approvedAmount,
         disbursedAt: new Date().toISOString(),
-        walletBalance: 18_000_000,
       });
       setShowSuccess(true);
     } catch (err) {
@@ -717,11 +715,6 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
               <p className="text-sm text-slate-300">
                 Số tiền: <span className="font-semibold text-emerald-300">{formatCurrency(successData.amount)}</span>
               </p>
-              {typeof successData.walletBalance === "number" && (
-                <p className="text-sm text-slate-300">
-                  Số dư ví mới: <span className="font-semibold text-white">{formatCurrency(successData.walletBalance)}</span>
-                </p>
-              )}
             </div>
 
             <button

@@ -1,61 +1,33 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import React, { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api-client";
-import { ReferenceType, TransactionStatus, TransactionType } from "@/types";
+import { ReferenceType, TransactionResponse, TransactionStatus, TransactionType } from "@/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-interface LedgerTxnDetailView {
-  id: number;
-  transactionCode: string;
-  type: TransactionType;
-  status: TransactionStatus;
-  amount: number;
-  balanceAfter: number;
-  referenceId: number | null;
-  referenceType: ReferenceType | null;
-  description: string;
-  createdAt: string;
-  updatedAt?: string;
-
-  // Optional fields for richer detail when backend returns them
-  paymentRef?: string | null;
-  gatewayProvider?: string | null;
-  walletId?: number | null;
-  walletOwnerName?: string | null;
-  actorId?: number | null;
-  actorName?: string | null;
-  relatedTransactionId?: number | null;
-  ipAddress?: string | null;
+// ⚠ TransactionResponse v3.0 — fields removed: balanceAfter, paymentRef, gatewayProvider,
+// walletId, walletOwnerName, actorId, actorName, relatedTransactionId, updatedAt.
+// Local type adds referenceCode (enriched from list page or separate lookup).
+type LedgerTxnDetailView = TransactionResponse & {
   referenceCode?: string | null;
-}
+};
 
-// Fallback mock data
+// TODO: Replace when Sprint 7 is complete
 const MOCK_TXN: LedgerTxnDetailView = {
   id: 1,
   transactionCode: "TXN-2026-0001A",
   type: TransactionType.REQUEST_PAYMENT,
-  amount: -3_500_000,
   status: TransactionStatus.SUCCESS,
-  balanceAfter: 18_000_000,
+  amount: -3_500_000,
   referenceId: 1,
   referenceType: ReferenceType.REQUEST,
   referenceCode: "REQ-2026-0041",
   description: "Giai ngan tam ung thiet bi",
-  paymentRef: null,
-  gatewayProvider: "INTERNAL",
-  walletId: 101,
-  walletOwnerName: "Do Quoc Bao",
-  actorId: 7,
-  actorName: "Le Van Cuong",
-  relatedTransactionId: 1001,
-  ipAddress: "192.168.1.10",
   createdAt: "2026-04-03T11:00:00",
-  updatedAt: "2026-04-03T11:00:00",
 };
 
 function formatCurrency(amount: number): string {
@@ -135,10 +107,7 @@ function getSourceLink(txn: LedgerTxnDetailView): { label: string; href?: string
   }
 
   if (txn.referenceType === ReferenceType.DEPARTMENT) {
-    return {
-      label: "Phan bo quy cap phong ban",
-      href: "/manager/department",
-    };
+    return { label: "Phan bo quy cap phong ban", href: "/manager/department" };
   }
 
   if (txn.referenceType === ReferenceType.SYSTEM) {
@@ -163,14 +132,10 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
+        // TODO: Replace when Sprint 7 is complete
         const res = await api.get<LedgerTxnDetailView>(`/api/v1/accountant/ledger/${id}`);
-
         if (cancelled) return;
-
-        setTxn({
-          ...res.data,
-          updatedAt: res.data.updatedAt ?? res.data.createdAt,
-        });
+        setTxn(res.data);
       } catch {
         if (cancelled) return;
 
@@ -200,7 +165,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
       <div className="space-y-6">
         <div className="h-8 w-60 rounded bg-slate-800 animate-pulse" />
         <div className="h-40 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-96 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-64 rounded-2xl bg-slate-800 animate-pulse" />
       </div>
     );
   }
@@ -221,10 +186,9 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
     );
   }
 
-  const balanceBefore = txn.balanceAfter - txn.amount;
-
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-400">
         <Link href="/accountant/ledger" className="hover:text-slate-200 transition-colors">
           So cai
@@ -233,37 +197,52 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
         <span className="text-slate-300 font-mono">{txn.transactionCode}</span>
       </div>
 
+      {/* Immutable notice */}
       <div className="rounded-2xl border border-slate-500/30 bg-slate-500/10 px-4 py-3 text-slate-200 text-sm">
         Giao dich nay duoc ghi nhan boi he thong va KHONG THE SUA DOI.
       </div>
 
+      {/* Header card */}
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Financials</h2>
-
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
             <p className="text-xs text-slate-500">Ma giao dich</p>
             <p className="text-2xl font-bold text-white font-mono mt-1">{txn.transactionCode}</p>
           </div>
-
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs ${getTypeClass(txn.type)}`}>{txn.type}</span>
-            <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs ${getStatusClass(txn.status)}`}>{txn.status}</span>
+            <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs ${getTypeClass(txn.type)}`}>
+              {txn.type}
+            </span>
+            <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs ${getStatusClass(txn.status)}`}>
+              {txn.status}
+            </span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <InfoCard label="So tien" value={formatCurrency(txn.amount)} tone={txn.amount >= 0 ? "text-emerald-300" : "text-rose-300"} />
-          <InfoCard label="Vi nhan" value={txn.walletOwnerName ? `${txn.walletOwnerName} (#${txn.walletId ?? "-"})` : "Khong co"} />
-          <InfoCard label="Mo ta" value={txn.description || "-"} />
-          <InfoCard label="So du truoc" value={formatCurrency(balanceBefore)} />
-          <InfoCard label="So du sau" value={formatCurrency(txn.balanceAfter)} />
-          <InfoCard label="Gateway" value={txn.gatewayProvider ?? "INTERNAL"} />
+          <InfoCard
+            label="So tien"
+            value={formatCurrency(txn.amount)}
+            tone={txn.amount >= 0 ? "text-emerald-300" : "text-rose-300"}
+          />
+          <InfoCard label="Mo ta" value={txn.description ?? "-"} />
+          <InfoCard label="Thoi gian" value={formatDateTime(txn.createdAt)} />
         </div>
       </div>
 
+      {/* Reference / source */}
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Source</h2>
+        <h2 className="text-lg font-semibold text-white">Nguon goc giao dich</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <InfoCard label="Loai tham chieu" value={txn.referenceType ?? "Khong co"} />
+          <InfoCard
+            label="Ma tham chieu"
+            value={txn.referenceCode ?? (txn.referenceId ? `#${txn.referenceId}` : "Khong co")}
+            mono
+          />
+        </div>
+
         {source?.href ? (
           <Link
             href={source.href}
@@ -276,28 +255,6 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           </Link>
         ) : (
           <p className="text-sm text-slate-300">{source?.label}</p>
-        )}
-      </div>
-
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Audit & Traceability</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <InfoCard label="Nguoi thuc hien" value={txn.actorName ? `${txn.actorName} (#${txn.actorId ?? "-"})` : "He thong"} />
-          <InfoCard label="IP" value={txn.ipAddress ?? "N/A"} mono />
-          <InfoCard label="Thoi gian tao" value={formatDateTime(txn.createdAt)} />
-          <InfoCard label="Cap nhat" value={formatDateTime(txn.updatedAt ?? txn.createdAt)} />
-          <InfoCard label="Payment Ref" value={txn.paymentRef ?? "-"} mono />
-          <InfoCard label="Opposing entry" value={txn.relatedTransactionId ? `#${txn.relatedTransactionId}` : "Khong co"} />
-        </div>
-
-        {txn.relatedTransactionId && (
-          <Link
-            href={`/accountant/ledger/${txn.relatedTransactionId}`}
-            className="inline-flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200"
-          >
-            Xem opposing entry #{txn.relatedTransactionId}
-          </Link>
         )}
       </div>
 
@@ -338,4 +295,3 @@ function InfoCard({
     </div>
   );
 }
-

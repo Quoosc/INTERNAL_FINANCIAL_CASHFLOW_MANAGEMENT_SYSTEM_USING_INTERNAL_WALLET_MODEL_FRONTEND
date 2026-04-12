@@ -7,76 +7,6 @@ import { PaginatedResponse, ProjectListItem, ProjectStatus } from "@/types";
 
 const PAGE_LIMIT = 9;
 
-// TODO: Replace with real API call when Sprint 4 is complete
-const MOCK_PROJECTS: ProjectListItem[] = [
-  {
-    id: 1,
-    projectCode: "PRJ-IT-001",
-    name: "Hệ thống quản lý nội bộ",
-    status: ProjectStatus.ACTIVE,
-    departmentId: 10,
-    totalBudget: 500_000_000,
-    totalSpent: 185_000_000,
-    currentPhaseId: 12,
-    currentPhaseName: "Phase 2 - Development",
-  },
-  {
-    id: 2,
-    projectCode: "PRJ-IT-002",
-    name: "Ứng dụng mobile nhân sự",
-    status: ProjectStatus.ACTIVE,
-    departmentId: 10,
-    totalBudget: 350_000_000,
-    totalSpent: 90_000_000,
-    currentPhaseId: 21,
-    currentPhaseName: "Phase 1 - Planning",
-  },
-  {
-    id: 3,
-    projectCode: "PRJ-IT-003",
-    name: "Nâng cấp BI Dashboard",
-    status: ProjectStatus.ACTIVE,
-    departmentId: 10,
-    totalBudget: 280_000_000,
-    totalSpent: 120_000_000,
-    currentPhaseId: 31,
-    currentPhaseName: "Phase 3 - UAT",
-  },
-  {
-    id: 4,
-    projectCode: "PRJ-HR-001",
-    name: "Chuyển đổi hệ thống HR",
-    status: ProjectStatus.PLANNING,
-    departmentId: 8,
-    totalBudget: 420_000_000,
-    totalSpent: 0,
-    currentPhaseId: null,
-    currentPhaseName: null,
-  },
-  {
-    id: 5,
-    projectCode: "PRJ-FIN-001",
-    name: "Tích hợp cổng thanh toán",
-    status: ProjectStatus.PAUSED,
-    departmentId: 12,
-    totalBudget: 200_000_000,
-    totalSpent: 75_000_000,
-    currentPhaseId: null,
-    currentPhaseName: null,
-  },
-  {
-    id: 6,
-    projectCode: "PRJ-IT-004",
-    name: "ERP Nâng cấp modul kho",
-    status: ProjectStatus.CLOSED,
-    departmentId: 10,
-    totalBudget: 150_000_000,
-    totalSpent: 148_000_000,
-    currentPhaseId: null,
-    currentPhaseName: null,
-  },
-];
-
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -143,21 +73,6 @@ function parsePage(value: string | null): number {
   return Number.isFinite(n) && n > 0 ? n : 1;
 }
 
-function filterMock(
-  source: ProjectListItem[],
-  status: StatusFilter,
-  search: string
-): ProjectListItem[] {
-  return source.filter((item) => {
-    if (status !== "ALL" && item.status !== status) return false;
-    if (search) {
-      const q = search.toLowerCase().trim();
-      if (!`${item.projectCode} ${item.name}`.toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
-}
-
 export default function ProjectsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -201,7 +116,6 @@ export default function ProjectsPage() {
         query.set("page", String(page));
         query.set("limit", String(PAGE_LIMIT));
 
-        // const res = await api.get<PaginatedResponse<ProjectListItem>>('/api/v1/projects', { params: filters })
         const res = await api.get<PaginatedResponse<ProjectListItem>>(
           `/api/v1/projects?${query.toString()}`
         );
@@ -213,25 +127,14 @@ export default function ProjectsPage() {
       } catch (err) {
         if (cancelled) return;
 
-        const filtered = filterMock(MOCK_PROJECTS, statusFilter, search);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const currentPage = Math.min(page, mockTotalPages);
-        const start = (currentPage - 1) * PAGE_LIMIT;
-
-        setProjects(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-
-        if (currentPage !== page) {
-          setPage(currentPage);
-          syncUrl(statusFilter, search, currentPage);
-        }
+        setProjects([]);
+        setTotal(0);
+        setTotalPages(1);
 
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải danh sách dự án từ API, đang hiển thị dữ liệu mẫu.");
+          setError("Không thể tải danh sách dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);

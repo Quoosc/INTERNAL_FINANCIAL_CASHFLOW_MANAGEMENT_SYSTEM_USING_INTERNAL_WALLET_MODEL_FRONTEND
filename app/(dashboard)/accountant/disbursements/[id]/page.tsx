@@ -21,80 +21,6 @@ interface PageProps {
 // DisburseResponse v3.0: id, requestCode, status, transactionCode, amount, disbursedAt
 type DisburseSuccessView = DisburseResponse;
 
-// TODO: Replace when Sprint 6 is complete
-const MOCK_DETAIL: DisbursementDetailResponse = {
-  id: 1,
-  requestCode: "REQ-2026-0041",
-  type: RequestType.ADVANCE,
-  status: "PENDING_ACCOUNTANT_EXECUTION",
-  amount: 3_500_000,
-  approvedAmount: 3_500_000,
-  description:
-    "Mua vật tư thiết bị thí nghiệm phục vụ dự án. Bao gồm màn hình đo kiểm, cáp kết nối và bộ nguồn dự phòng UPS.",
-  rejectReason: null,
-  requester: {
-    id: 11,
-    fullName: "Đỗ Quốc Bảo",
-    avatar: null,
-    employeeCode: "EMP001",
-    jobTitle: "Frontend Developer",
-    departmentName: "Phòng IT",
-    bankName: "Vietcombank",
-    bankAccountNum: "001100220011",
-    bankAccountOwner: "DO QUOC BAO",
-  },
-  project: {
-    id: 1,
-    projectCode: "PRJ-IT-001",
-    name: "Hệ thống quản lý nội bộ",
-  },
-  phase: {
-    id: 1,
-    phaseCode: "PH-001",
-    name: "Phase 1 - Phân tích",
-    budgetLimit: 50_000_000,
-    currentSpent: 47_000_000,
-  },
-  attachments: [
-    {
-      fileId: 1,
-      fileName: "hoa_don_thiet_bi.pdf",
-      url: "#",
-      fileType: "application/pdf",
-      size: 245_000,
-    },
-    {
-      fileId: 2,
-      fileName: "bao_gia_supplier.jpg",
-      url: "#",
-      fileType: "image/jpeg",
-      size: 1_200_000,
-    },
-  ],
-  timeline: [
-    {
-      id: 1,
-      action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING,
-      actorId: 11,
-      actorName: "Đỗ Quốc Bảo",
-      comment: "Tạo yêu cầu",
-      createdAt: "2026-04-03T09:15:00",
-    },
-    {
-      id: 2,
-      action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
-      actorId: 4,
-      actorName: "Hoàng Minh Tuấn",
-      comment: "Đồng ý — đây là thiết bị cần thiết",
-      createdAt: "2026-04-03T10:00:00",
-    },
-  ],
-  createdAt: "2026-04-03T09:15:00",
-  updatedAt: "2026-04-03T10:00:00",
-};
-
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -222,17 +148,12 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
       } catch (err) {
         if (cancelled) return;
 
-        const safeId = Number(id);
-        setDetail({
-          ...MOCK_DETAIL,
-          id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_DETAIL.id,
-          requestCode: `REQ-2026-${String(id).padStart(4, "0")}`,
-        });
+        setDetail(null);
 
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          setError("Không thể tải dữ liệu giải ngân.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -381,6 +302,12 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-8 text-center text-slate-400">
           Không tìm thấy yêu cầu giải ngân.
         </div>
+
+        {error && (
+          <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+            {error}
+          </div>
+        )}
       </div>
     );
   }

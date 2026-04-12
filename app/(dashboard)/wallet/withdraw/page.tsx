@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError } from "@/lib/api-client";
-import { createWithdrawRequest } from "@/lib/api";
-import { WithdrawRequestResponse } from "@/types";
+import { cancelWithdrawRequest, createWithdrawRequest, getMyWithdrawRequests } from "@/lib/api";
+import { WithdrawRequestResponse, WithdrawStatus } from "@/types";
 
 function formatVnd(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
@@ -32,6 +32,45 @@ function formatDateTime(iso: string | null): string {
   }).format(new Date(iso));
 }
 
+function getWithdrawStatusClass(status: WithdrawStatus): string {
+  if (status === WithdrawStatus.PENDING) {
+    return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+  }
+
+  if (status === WithdrawStatus.COMPLETED || status === ("APPROVED" as WithdrawStatus)) {
+    return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+  }
+
+  if (
+    status === WithdrawStatus.REJECTED ||
+    status === WithdrawStatus.CANCELLED ||
+    status === WithdrawStatus.FAILED
+  ) {
+    return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+  }
+
+  return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+}
+
+function getWithdrawStatusLabel(status: WithdrawStatus): string {
+  switch (status) {
+    case WithdrawStatus.PENDING:
+      return "Dang cho";
+    case WithdrawStatus.COMPLETED:
+      return "Hoan tat";
+    case WithdrawStatus.REJECTED:
+      return "Tu choi";
+    case WithdrawStatus.CANCELLED:
+      return "Da huy";
+    case WithdrawStatus.FAILED:
+      return "That bai";
+    case WithdrawStatus.PROCESSING:
+      return "Dang xu ly";
+    default:
+      return status;
+  }
+}
+
 export default function WithdrawPage() {
   const router = useRouter();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
@@ -41,14 +80,38 @@ export default function WithdrawPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<WithdrawRequestResponse | null>(null);
+  const [history, setHistory] = useState<WithdrawRequestResponse[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const amountNumber = useMemo(() => Number(amount || 0), [amount]);
   const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
   const currentBalance = wallet?.balance ?? 0;
   const availableBalance = wallet?.availableBalance ?? wallet?.balance ?? 0;
 
+  const loadWithdrawHistory = async () => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+
+    try {
+      const res = await getMyWithdrawRequests(0, 10);
+      setHistory(res.data.content);
+    } catch (err) {
+      setHistory([]);
+      if (err instanceof ApiError) {
+        setHistoryError(err.apiMessage);
+      } else {
+        setHistoryError("Khong the tai lich su rut tien.");
+      }
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   useEffect(() => {
     void fetchWallet();
+    void loadWithdrawHistory();
   }, [fetchWallet]);
 
   const validateAmount = (): boolean => {
@@ -96,6 +159,7 @@ export default function WithdrawPage() {
 
       setResult(res.data);
       await fetchWallet();
+      await loadWithdrawHistory();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
@@ -104,6 +168,25 @@ export default function WithdrawPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelRequest = async (id: number) => {
+    setCancellingId(id);
+    setHistoryError(null);
+
+    try {
+      await cancelWithdrawRequest(id);
+      await fetchWallet();
+      await loadWithdrawHistory();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setHistoryError(err.apiMessage);
+      } else {
+        setHistoryError("Khong the huy yeu cau rut tien.");
+      }
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -227,6 +310,74 @@ export default function WithdrawPage() {
           </div>
         </div>
       )}
+
+      <section className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white">Lich su yeu cau rut tien</h2>
+          <button
+            type="button"
+            onClick={() => void loadWithdrawHistory()}
+            disabled={historyLoading}
+            className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-medium"
+          >
+            Tai lai
+          </button>
+        </div>
+
+        {historyLoading ? (
+          <div className="py-8 text-center text-slate-400 text-sm">Dang tai lich su...</div>
+        ) : history.length === 0 ? (
+          <div className="py-8 text-center text-slate-500 text-sm">Chua co yeu cau rut tien nao.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-180">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">So tien</th>
+                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">Trang thai</th>
+                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">Ghi chu</th>
+                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">Thoi gian tao</th>
+                  <th className="px-3 py-2 text-right text-xs text-slate-400 uppercase tracking-wider">Thao tac</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((request) => (
+                  <tr key={request.id} className="border-b border-white/5">
+                    <td className="px-3 py-3 text-sm text-white font-medium">{formatVnd(request.amount)}</td>
+                    <td className="px-3 py-3">
+                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getWithdrawStatusClass(request.status)}`}>
+                        {getWithdrawStatusLabel(request.status)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-sm text-slate-300 max-w-70 truncate">{request.userNote || "-"}</td>
+                    <td className="px-3 py-3 text-sm text-slate-400">{formatDateTime(request.createdAt)}</td>
+                    <td className="px-3 py-3 text-right">
+                      {request.status === WithdrawStatus.PENDING ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleCancelRequest(request.id)}
+                          disabled={cancellingId === request.id}
+                          className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
+                        >
+                          {cancellingId === request.id ? "Dang huy..." : "Huy"}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-slate-500">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {historyError && (
+          <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+            {historyError}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

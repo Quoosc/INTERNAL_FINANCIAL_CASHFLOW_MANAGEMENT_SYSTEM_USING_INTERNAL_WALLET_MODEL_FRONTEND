@@ -9,7 +9,6 @@ import {
   DisburseResponse,
   DisbursementDetailResponse,
   DisbursementRejectBody,
-  DisbursementRejectResponse,
   RequestAction,
   RequestStatus,
   RequestType,
@@ -291,11 +290,6 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
       return;
     }
 
-    if (pin !== "12345") {
-      setPinError("Mã PIN không đúng");
-      return;
-    }
-
     setSubmitting(true);
     setPinError(null);
 
@@ -351,13 +345,6 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
       // );
       // TODO: Replace when Sprint 6 is complete - simulate reject
       void (body as DisbursementRejectBody);
-      const _mockReject: DisbursementRejectResponse = {
-        id: Number(id),
-        requestCode: detail?.requestCode ?? `REQ-2026-${String(id).padStart(4, "0")}`,
-        status: "REJECTED",
-        rejectReason: rejectReason.trim(),
-      };
-      void _mockReject;
       router.push("/accountant/disbursements");
     } catch (err) {
       if (err instanceof ApiError) {

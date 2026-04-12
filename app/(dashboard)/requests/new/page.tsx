@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ApiError, api } from "@/lib/api-client";
 import {
   CreateRequestBody,
+  ExpenseCategoryResponse,
   PhaseStatus,
   PaginatedResponse,
   ProjectListItem,
@@ -101,30 +102,6 @@ const MOCK_PHASES: ProjectPhasesResponse = {
   ],
 };
 
-const MOCK_CATEGORIES_BY_PHASE: Record<number, CategoryOption[]> = {
-  11: [
-    { id: 101, name: "Khảo sát" },
-    { id: 102, name: "Văn phòng phẩm" },
-  ],
-  12: [
-    { id: 103, name: "Di chuyển" },
-    { id: 104, name: "Thiết bị" },
-    { id: 105, name: "Dịch vụ cloud" },
-  ],
-  13: [
-    { id: 106, name: "Kiểm thử" },
-    { id: 107, name: "Hỗ trợ triển khai" },
-  ],
-  21: [
-    { id: 108, name: "Workshop" },
-    { id: 109, name: "Thiết kế UI" },
-  ],
-  31: [
-    { id: 110, name: "Báo cáo" },
-    { id: 111, name: "Đào tạo" },
-  ],
-};
-
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -140,20 +117,6 @@ function formatInputAmount(raw?: number): string {
 
 function isImage(file: File): boolean {
   return file.type.startsWith("image/");
-}
-
-function buildCategoryOptions(phases: ProjectPhasesResponse | null, phaseId?: number): CategoryOption[] {
-  if (!phases || !phaseId) return [];
-
-  const selectedPhase = phases.phases.find((p) => p.id === phaseId) as
-    | (typeof phases.phases[number] & { categories?: CategoryOption[] })
-    | undefined;
-
-  if (selectedPhase?.categories && selectedPhase.categories.length > 0) {
-    return selectedPhase.categories;
-  }
-
-  return MOCK_CATEGORIES_BY_PHASE[phaseId] ?? [];
 }
 
 async function uploadAttachments(files: UploadFileItem[]): Promise<number[]> {
@@ -189,6 +152,7 @@ export default function NewRequestPage() {
 
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [phases, setPhases] = useState<ProjectPhasesResponse | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
 
   const [files, setFiles] = useState<UploadFileItem[]>([]);
 
@@ -196,9 +160,9 @@ export default function NewRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const categoryOptions = useMemo(
-    () => buildCategoryOptions(phases, form.phaseId),
-    [phases, form.phaseId]
+  const isProjectBasedType = useMemo(
+    () => form.type === RequestType.ADVANCE || form.type === RequestType.EXPENSE,
+    [form.type]
   );
 
   useEffect(() => {
@@ -245,8 +209,9 @@ export default function NewRequestPage() {
       phaseId: undefined,
       categoryId: undefined,
     }));
+    setCategoryOptions([]);
 
-    if (!projectId) {
+    if (!projectId || !isProjectBasedType) {
       setPhases(null);
       return;
     }
@@ -290,7 +255,57 @@ export default function NewRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, [form.projectId, projects]);
+  }, [form.projectId, projects, isProjectBasedType]);
+
+  useEffect(() => {
+    const phaseId = form.phaseId;
+
+    setForm((prev) => ({
+      ...prev,
+      categoryId: undefined,
+    }));
+
+    if (!phaseId || !isProjectBasedType) {
+      setCategoryOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadCategories = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await api.get<{ items: ExpenseCategoryResponse[] } | ExpenseCategoryResponse[]>(
+          `/api/v1/projects/${phaseId}`
+        );
+
+        if (cancelled) return;
+
+        const categories = Array.isArray(res.data) ? res.data : res.data.items;
+        setCategoryOptions(categories.map((category) => ({ id: category.id, name: category.name })));
+      } catch (err) {
+        if (cancelled) return;
+
+        setCategoryOptions([]);
+
+        if (err instanceof ApiError) {
+          setError(err.apiMessage);
+        } else {
+          setError("Khong the tai danh sach hang muc chi phi.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.phaseId, isProjectBasedType]);
 
   useEffect(() => {
     return () => {
@@ -339,9 +354,11 @@ export default function NewRequestPage() {
     if (!form.amount || form.amount <= 0) return "Vui lòng nhập số tiền hợp lệ.";
     if (!title.trim()) return "Vui lòng nhập tiêu đề yêu cầu.";
     if (!form.description?.trim()) return "Vui lòng nhập mô tả yêu cầu.";
-    if (!form.projectId) return "Vui lòng chọn dự án.";
-    if (!form.phaseId) return "Vui lòng chọn phase.";
-    if (!form.categoryId) return "Vui lòng chọn category.";
+    if (isProjectBasedType) {
+      if (!form.projectId) return "Vui lòng chọn dự án.";
+      if (!form.phaseId) return "Vui lòng chọn phase.";
+      if (!form.categoryId) return "Vui lòng chọn hạng mục chi phí.";
+    }
     if (!expenseDate) return "Vui lòng chọn ngày chi tiêu.";
 
     return null;
@@ -488,7 +505,8 @@ export default function NewRequestPage() {
                   projectId: Number.isFinite(value) && value > 0 ? value : undefined,
                 }));
               }}
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              disabled={!isProjectBasedType || loading}
+              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="">Chọn dự án</option>
               {projects.map((project) => (
@@ -511,7 +529,7 @@ export default function NewRequestPage() {
                   categoryId: undefined,
                 }));
               }}
-              disabled={!form.projectId || loading}
+              disabled={!isProjectBasedType || !form.projectId || loading}
               className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="">{form.projectId ? "Chọn phase" : "Chọn dự án trước"}</option>
@@ -524,7 +542,7 @@ export default function NewRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Hang muc chi phi</label>
             <select
               value={form.categoryId?.toString() ?? ""}
               onChange={(e) => {
@@ -534,10 +552,10 @@ export default function NewRequestPage() {
                   categoryId: Number.isFinite(value) && value > 0 ? value : undefined,
                 }));
               }}
-              disabled={!form.phaseId}
+              disabled={!isProjectBasedType || !form.phaseId}
               className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
-              <option value="">{form.phaseId ? "Chọn category" : "Chọn phase trước"}</option>
+              <option value="">{form.phaseId ? "Chọn hạng mục" : "Chọn phase trước"}</option>
               {categoryOptions.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}

@@ -10,76 +10,6 @@ const PAGE_SIZE = 20;
 
 type NotificationFilterTab = "ALL" | "UNREAD";
 
-// Fallback mock data when backend is unavailable
-const MOCK_NOTIFICATIONS: NotificationResponse[] = [
-  {
-    id: 1,
-    type: NotificationType.REQUEST_SUBMITTED,
-    title: "Yeu cau moi duoc tao",
-    message: "REQ-2026-0101 da duoc gui cho Team Leader.",
-    isRead: false,
-    refId: 101,
-    refType: "REQUEST",
-    referenceLink: "/requests/101",
-    createdAt: "2026-04-08T09:30:00",
-  },
-  {
-    id: 2,
-    type: NotificationType.REQUEST_APPROVED_BY_TL,
-    title: "Yeu cau da duoc Team Leader duyet",
-    message: "REQ-2026-0100 da chuyen sang Ke toan.",
-    isRead: false,
-    refId: 100,
-    refType: "REQUEST",
-    referenceLink: "/requests/100",
-    createdAt: "2026-04-08T08:15:00",
-  },
-  {
-    id: 3,
-    type: NotificationType.REQUEST_PAID,
-    title: "Yeu cau da duoc giai ngan",
-    message: "REQ-2026-0095 da duoc chi tra.",
-    isRead: true,
-    refId: 95,
-    refType: "REQUEST",
-    referenceLink: "/requests/95",
-    createdAt: "2026-04-07T16:40:00",
-  },
-  {
-    id: 4,
-    type: NotificationType.SALARY_PAID,
-    title: "Luong da duoc thanh toan",
-    message: "Ban da nhan luong thang 03/2026.",
-    isRead: true,
-    refId: 77,
-    refType: "PAYSLIP",
-    referenceLink: "/payroll/77",
-    createdAt: "2026-04-07T08:00:00",
-  },
-  {
-    id: 5,
-    type: NotificationType.SECURITY_ALERT,
-    title: "Canh bao bao mat",
-    message: "Phat hien dang nhap tu thiet bi moi.",
-    isRead: false,
-    refId: null,
-    refType: null,
-    referenceLink: null,
-    createdAt: "2026-04-06T20:10:00",
-  },
-  {
-    id: 6,
-    type: NotificationType.SYSTEM,
-    title: "Thong bao he thong",
-    message: "He thong se bao tri tu 23:00 den 23:30.",
-    isRead: true,
-    refId: null,
-    refType: null,
-    referenceLink: null,
-    createdAt: "2026-04-06T13:20:00",
-  },
-];
-
 function formatTimeAgo(iso: string): string {
   const now = Date.now();
   const target = new Date(iso).getTime();
@@ -161,20 +91,6 @@ function getTypeIconClass(type: string): string {
   }
 }
 
-function buildMockPage(source: NotificationResponse[], filter: NotificationFilterTab, page: number) {
-  const filtered = filter === "UNREAD" ? source.filter((n) => !n.isRead) : source;
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const safePage = Math.min(Math.max(page, 0), totalPages - 1);
-  const start = safePage * PAGE_SIZE;
-
-  return {
-    items: filtered.slice(start, start + PAGE_SIZE),
-    total,
-    totalPages,
-  };
-}
-
 function getNotificationTarget(item: NotificationResponse): string | null {
   if (item.referenceLink) return item.referenceLink;
 
@@ -213,16 +129,14 @@ export default function NotificationsPage() {
         setTotalPages(Math.max(1, res.data.totalPages));
       } catch (err) {
         if (cancelled) return;
-
-        const mock = buildMockPage(MOCK_NOTIFICATIONS, filter, page);
-        setNotifications(mock.items);
-        setTotal(mock.total);
-        setTotalPages(mock.totalPages);
+        setNotifications([]);
+        setTotal(0);
+        setTotalPages(1);
 
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Khong the tai thong bao tu API, dang hien thi du lieu mau.");
+          setError("Khong the tai thong bao tu API.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -247,6 +161,7 @@ export default function NotificationsPage() {
   const handleMarkAllRead = async () => {
     try {
       await markAllAsRead();
+      window.dispatchEvent(new Event("notifications:changed"));
     } catch {
       // keep optimistic behavior
     }
@@ -266,6 +181,7 @@ export default function NotificationsPage() {
     if (!item.isRead) {
       try {
         await markAsRead(item.id);
+        window.dispatchEvent(new Event("notifications:changed"));
       } catch {
         // keep optimistic behavior
       }

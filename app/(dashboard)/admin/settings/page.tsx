@@ -1,54 +1,11 @@
 ﻿"use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { ApiError, api } from "@/lib/api-client";
-import { SystemConfigItem, SystemSettingsResponse, UpdateSettingsBody } from "@/types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ApiError } from "@/lib/api-client";
+import { evictAllConfigCache, getAllConfigs, updateConfig } from "@/lib/api";
+import { SystemConfigItem, SystemConfigResponse } from "@/types";
 
 type SettingsCategory = SystemConfigItem["category"];
-
-// TODO: Replace when Sprint 6 is complete
-const MOCK_SETTINGS: SystemConfigItem[] = [
-  {
-    key: "PIN_MAX_RETRY",
-    value: "5",
-    description: "So lan nhap sai PIN toi da truoc khi khoa",
-    createdAt: null,
-    updatedAt: null,
-    category: "SECURITY",
-  },
-  {
-    key: "PIN_LOCK_DURATION_MINUTES",
-    value: "30",
-    description: "Thoi gian khoa PIN (phut)",
-    createdAt: null,
-    updatedAt: null,
-    category: "SECURITY",
-  },
-  {
-    key: "WITHDRAWAL_LIMIT",
-    value: "50000000",
-    description: "Han muc rut tien toi da moi giao dich",
-    createdAt: null,
-    updatedAt: null,
-    category: "SECURITY",
-  },
-  {
-    key: "MAIL_ENABLED",
-    value: "true",
-    description: "Bat/tat gui email he thong",
-    createdAt: null,
-    updatedAt: null,
-    category: "MAIL",
-  },
-  {
-    key: "SYSTEM_TIMEZONE",
-    value: "Asia/Ho_Chi_Minh",
-    description: "Timezone mac dinh cho he thong",
-    createdAt: null,
-    updatedAt: null,
-    category: "SYSTEM",
-  },
-];
 
 function inferCategory(key: string): SettingsCategory {
   const upper = key.toUpperCase();
@@ -72,7 +29,7 @@ function inferCategory(key: string): SettingsCategory {
 }
 
 function normalizeItem(
-  item: Partial<SystemConfigItem> & { key: string; value: string }
+  item: SystemConfigResponse & { category?: SettingsCategory }
 ): SystemConfigItem {
   return {
     key: item.key,
@@ -84,59 +41,34 @@ function normalizeItem(
   };
 }
 
-function normalizeItems(
-  items: Array<Partial<SystemConfigItem> & { key: string; value: string }>
-): SystemConfigItem[] {
-  return items.map(normalizeItem);
-}
-
-function pickSettingsItems(payload: SystemSettingsResponse | SystemConfigItem[]): SystemConfigItem[] {
-  if (Array.isArray(payload)) {
-    return normalizeItems(payload);
-  }
-
-  return normalizeItems(payload.items);
-}
-
 export default function AdminSettingsPage() {
   const [items, setItems] = useState<SystemConfigItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [evictingCache, setEvictingCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const loadSettings = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await getAllConfigs();
+      setItems(res.data.map(normalizeItem));
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.apiMessage);
+      } else {
+        setError("Khong the tai cau hinh he thong.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadSettings = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const res = await api.get<SystemSettingsResponse | SystemConfigItem[]>("/api/v1/admin/settings");
-        if (cancelled) return;
-        setItems(pickSettingsItems(res.data));
-      } catch (err) {
-        if (cancelled) return;
-
-        setItems(MOCK_SETTINGS);
-
-        if (err instanceof ApiError) {
-          setError(err.apiMessage);
-        } else {
-          setError("Khong the tai cau hinh tu API, dang hien thi du lieu mau.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
     void loadSettings();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [loadSettings]);
 
   const grouped = useMemo(
     () => ({
@@ -151,28 +83,42 @@ export default function AdminSettingsPage() {
     setItems((prev) => prev.map((item) => (item.key === key ? { ...item, value } : item)));
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const handleSaveItem = async (key: string) => {
+    const item = items.find((entry) => entry.key === key);
+    if (!item) return;
+
+    setSavingKey(key);
     setNotice(null);
 
-    const payload: UpdateSettingsBody = {
-      items: items.map((item) => ({ key: item.key, value: item.value })),
-    };
-
     try {
-      const res = await api.put<SystemSettingsResponse | SystemConfigItem[]>("/api/v1/admin/settings", payload);
-
-      // Khi API tra danh sach settings moi, dong bo lai UI ngay.
-      setItems(pickSettingsItems(res.data));
-      setNotice("Da luu cau hinh he thong.");
+      await updateConfig(item.key, { value: item.value });
+      setNotice(`Da cap nhat cau hinh ${item.key}.`);
     } catch (err) {
       if (err instanceof ApiError) {
-        setNotice(`API loi: ${err.apiMessage}. Da giu du lieu hien tai tren UI.`);
+        setNotice(`API loi: ${err.apiMessage}`);
       } else {
-        setNotice("API chua san sang, da mo phong thao tac luu cau hinh.");
+        setNotice("Khong the cap nhat cau hinh.");
       }
     } finally {
-      setSaving(false);
+      setSavingKey(null);
+    }
+  };
+
+  const handleEvictAllCache = async () => {
+    setEvictingCache(true);
+    setNotice(null);
+
+    try {
+      await evictAllConfigCache();
+      setNotice("Da lam moi cache cau hinh.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setNotice(`API loi: ${err.apiMessage}`);
+      } else {
+        setNotice("Khong the lam moi cache cau hinh.");
+      }
+    } finally {
+      setEvictingCache(false);
     }
   };
 
@@ -200,6 +146,8 @@ export default function AdminSettingsPage() {
             description="PIN, OTP, gioi han giao dich va chinh sach bao mat"
             items={grouped.SECURITY}
             onChange={updateValue}
+            onSave={handleSaveItem}
+            savingKey={savingKey}
           />
 
           <SettingsGroup
@@ -207,6 +155,8 @@ export default function AdminSettingsPage() {
             description="SMTP, gui thong bao email he thong"
             items={grouped.MAIL}
             onChange={updateValue}
+            onSave={handleSaveItem}
+            savingKey={savingKey}
           />
 
           <SettingsGroup
@@ -214,18 +164,28 @@ export default function AdminSettingsPage() {
             description="Cac tham so van hanh chung"
             items={grouped.SYSTEM}
             onChange={updateValue}
+            onSave={handleSaveItem}
+            savingKey={savingKey}
           />
         </>
       )}
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-3">
         <button
           type="button"
-          onClick={handleSave}
-          disabled={saving || loading}
+          onClick={() => void loadSettings()}
+          disabled={loading}
+          className="px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+        >
+          Tai lai
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleEvictAllCache()}
+          disabled={evictingCache || loading}
           className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
         >
-          {saving ? "Dang luu..." : "Luu cau hinh"}
+          {evictingCache ? "Dang lam moi cache..." : "Lam moi cache"}
         </button>
       </div>
 
@@ -249,11 +209,15 @@ function SettingsGroup({
   description,
   items,
   onChange,
+  onSave,
+  savingKey,
 }: {
   title: SettingsCategory;
   description: string;
   items: SystemConfigItem[];
   onChange: (key: string, value: string) => void;
+  onSave: (key: string) => Promise<void>;
+  savingKey: string | null;
 }) {
   return (
     <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
@@ -278,6 +242,14 @@ function SettingsGroup({
                   onChange={(event) => onChange(item.key, event.target.value)}
                   className="w-full md:w-72 px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-slate-100 text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => void onSave(item.key)}
+                  disabled={savingKey !== null}
+                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+                >
+                  {savingKey === item.key ? "Dang luu..." : "Luu"}
+                </button>
               </div>
             </div>
           ))}

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { getUnreadCount } from "@/lib/api";
 import { RoleName } from "@/types";
 import { AuthProvider } from "@/contexts/auth-context";
 import { WalletProvider } from "@/contexts/wallet-context";
@@ -209,6 +210,21 @@ const icons = {
       />
     </svg>
   ),
+  profile: (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M5.121 17.804A9 9 0 1118.88 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+  ),
   systemFund: (
     <svg
       className="w-5 h-5"
@@ -273,6 +289,7 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
   const shared: NavItem[] = [
     { label: "Tổng quan", href: "/dashboard", icon: icons.dashboard },
     { label: "Ví của tôi", href: "/wallet", icon: icons.wallet },
+    { label: "Hồ sơ cá nhân", href: "/profile", icon: icons.profile },
   ];
   const notifications: NavItem = {
     label: "Thông báo",
@@ -394,6 +411,11 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
             },
             { label: "Sổ cái", href: "/accountant/ledger", icon: icons.ledger },
             {
+              label: "Yeu cau rut tien",
+              href: "/accountant/withdrawals",
+              icon: icons.wallet,
+            },
+            {
               label: "Quỹ hệ thống",
               href: "/admin/system-fund",
               icon: icons.systemFund,
@@ -482,6 +504,35 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
 function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  const refreshUnreadCount = React.useCallback(async () => {
+    try {
+      const res = await getUnreadCount();
+      setUnreadCount(Math.max(0, res.data));
+    } catch {
+      // keep previous count when API temporarily fails
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void refreshUnreadCount();
+
+    const intervalId = window.setInterval(() => {
+      void refreshUnreadCount();
+    }, 60000);
+
+    const onNotificationsChanged = () => {
+      void refreshUnreadCount();
+    };
+
+    window.addEventListener("notifications:changed", onNotificationsChanged);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("notifications:changed", onNotificationsChanged);
+    };
+  }, [refreshUnreadCount]);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -547,7 +598,14 @@ function Sidebar() {
                   }`}
                 >
                   {item.icon}
-                  {item.label}
+                  <span className="flex items-center gap-2">
+                    <span>{item.label}</span>
+                    {item.href === "/notifications" && unreadCount > 0 && (
+                      <span className="inline-flex min-w-5 h-5 px-1.5 items-center justify-center rounded-full bg-rose-500 text-white text-[11px] font-semibold leading-none">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               ))}
             </div>

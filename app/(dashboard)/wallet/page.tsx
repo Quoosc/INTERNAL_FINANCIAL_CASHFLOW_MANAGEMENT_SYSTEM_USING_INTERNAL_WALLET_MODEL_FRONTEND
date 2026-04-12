@@ -1,75 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
 import {
   PaginatedResponse,
-  ReferenceType,
   TransactionResponse,
   TransactionStatus,
   TransactionType,
 } from "@/types";
 
-// TODO: Replace with API call when Sprint 3 is complete
-const MOCK_TRANSACTIONS: TransactionResponse[] = [
-  {
-    id: 5101,
-    transactionCode: "TXN-5A8C29A1",
-    type: TransactionType.DEPOSIT,
-    status: TransactionStatus.SUCCESS,
-    amount: 3_000_000,
-    referenceType: ReferenceType.DEPOSIT,
-    referenceId: 1001,
-    description: "Nạp tiền qua QR",
-    createdAt: "2026-04-02T10:30:00",
-  },
-  {
-    id: 5102,
-    transactionCode: "TXN-8D7B11F2",
-    type: TransactionType.REQUEST_PAYMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: 1_200_000,
-    referenceType: ReferenceType.REQUEST,
-    referenceId: 301,
-    description: "Giải ngân tạm ứng công tác",
-    createdAt: "2026-04-01T16:45:00",
-  },
-  {
-    id: 5103,
-    transactionCode: "TXN-2C4F99B3",
-    type: TransactionType.WITHDRAW,
-    status: TransactionStatus.PENDING,
-    amount: -800_000,
-    referenceType: ReferenceType.WITHDRAWAL,
-    referenceId: 501,
-    description: "Yêu cầu rút tiền về ngân hàng MB",
-    createdAt: "2026-03-31T09:15:00",
-  },
-  {
-    id: 5104,
-    transactionCode: "TXN-7E3A60D4",
-    type: TransactionType.PAYSLIP_PAYMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: 12_500_000,
-    referenceType: ReferenceType.PAYSLIP,
-    referenceId: 77,
-    description: "Chi lương kỳ Tháng 3/2026",
-    createdAt: "2026-03-25T08:00:00",
-  },
-  {
-    id: 5105,
-    transactionCode: "TXN-1B0D44E5",
-    type: TransactionType.SYSTEM_ADJUSTMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: -150_000,
-    referenceType: ReferenceType.SYSTEM,
-    referenceId: 901,
-    description: "Điều chỉnh phí hệ thống",
-    createdAt: "2026-03-22T13:20:00",
-  },
-];
+interface SpringPage<T> {
+  content: T[];
+}
+
+type WalletTransactionsResponse =
+  | PaginatedResponse<TransactionResponse>
+  | SpringPage<TransactionResponse>
+  | TransactionResponse[];
+
+function normalizeTransactions(payload: WalletTransactionsResponse): TransactionResponse[] {
+  if (Array.isArray(payload)) return payload;
+  if ("content" in payload) return payload.content;
+  return payload.items;
+}
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
@@ -143,25 +99,24 @@ function getTransactionStatusClass(status: TransactionStatus): string {
 }
 
 export default function WalletPage() {
+  const router = useRouter();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
 
-  const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
-
   const loadRecentTransactions = useCallback(async () => {
     setTransactionsLoading(true);
     setTransactionsError(null);
 
     try {
-      const res = await api.get<PaginatedResponse<TransactionResponse>>(
-        "/api/v1/wallet/transactions?limit=5&page=1"
+      const res = await api.get<WalletTransactionsResponse>(
+        "/api/v1/wallet/transactions?page=0&size=5"
       );
-      setTransactions(res.data.items.slice(0, 5));
+      setTransactions(normalizeTransactions(res.data).slice(0, 5));
     } catch (err) {
-      setTransactions(MOCK_TRANSACTIONS);
+      setTransactions([]);
       if (err instanceof ApiError) {
         setTransactionsError(err.apiMessage);
       } else {
@@ -176,14 +131,6 @@ export default function WalletPage() {
     void fetchWallet();
     void loadRecentTransactions();
   }, [fetchWallet, loadRecentTransactions]);
-
-  const handleOpenDetail = useCallback((transaction: TransactionResponse) => {
-    setSelectedTransaction(transaction);
-  }, []);
-
-  const closeDetail = useCallback(() => {
-    setSelectedTransaction(null);
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -271,7 +218,7 @@ export default function WalletPage() {
                 <button
                   key={transaction.id}
                   type="button"
-                  onClick={() => void handleOpenDetail(transaction)}
+                  onClick={() => router.push(`/wallet/transactions/${transaction.id}`)}
                   className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border border-white/5 hover:border-white/20 hover:bg-slate-700/40 transition-all text-left"
                 >
                   <div className="min-w-0">
@@ -301,86 +248,9 @@ export default function WalletPage() {
         )}
 
         {transactionsError && (
-          <p className="text-amber-400 text-xs mt-3">
-            {transactionsError} Đang hiển thị dữ liệu mẫu để tiếp tục trải nghiệm.
-          </p>
+          <p className="text-amber-400 text-xs mt-3">{transactionsError}</p>
         )}
       </div>
-
-      {selectedTransaction && (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/60"
-            onClick={closeDetail}
-            aria-label="Đóng chi tiết giao dịch"
-          />
-          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-slate-900 border-l border-white/10 shadow-2xl p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Chi tiết giao dịch</h3>
-              <button
-                type="button"
-                onClick={closeDetail}
-                className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors"
-                aria-label="Đóng"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-5">
-              <div className="bg-slate-800 border border-white/10 rounded-xl p-5">
-                <p className="text-xs text-slate-400 mb-1">Số tiền</p>
-                <p
-                  className={`text-3xl font-bold ${
-                    selectedTransaction.amount >= 0 ? "text-emerald-400" : "text-rose-400"
-                  }`}
-                >
-                  {selectedTransaction.amount >= 0 ? "+" : ""}
-                  {formatCurrency(selectedTransaction.amount)}
-                </p>
-              </div>
-
-              <DetailItem label="Mã giao dịch" value={selectedTransaction.transactionCode} />
-              <DetailItem label="Loại" value={getTransactionTypeLabel(selectedTransaction.type)} />
-              <DetailItem
-                label="Trạng thái"
-                value={getTransactionStatusLabel(selectedTransaction.status)}
-                className={
-                  selectedTransaction.status === TransactionStatus.SUCCESS
-                    ? "text-emerald-400"
-                    : selectedTransaction.status === TransactionStatus.PENDING
-                      ? "text-amber-400"
-                      : "text-rose-400"
-                }
-              />
-              <DetailItem label="Thời gian tạo" value={formatDateTime(selectedTransaction.createdAt)} />
-              <DetailItem label="Mô tả" value={selectedTransaction.description ?? "Không có"} />
-              <DetailItem label="Nguồn tham chiếu" value={selectedTransaction.referenceType ?? "—"} />
-              <DetailItem label="Reference ID" value={selectedTransaction.referenceId?.toString() ?? "—"} />
-            </div>
-          </aside>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DetailItem({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
-  return (
-    <div className="bg-slate-800 border border-white/10 rounded-xl p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm font-medium text-white mt-1 break-all ${className ?? ""}`}>{value}</p>
     </div>
   );
 }

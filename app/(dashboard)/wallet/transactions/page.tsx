@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import {
-  ReferenceType,
   TransactionResponse,
   TransactionStatus,
   TransactionType,
@@ -41,65 +40,6 @@ interface TransactionFiltersState {
   search?: string;
 }
 
-// Fallback mock data
-const MOCK_TRANSACTIONS: TransactionResponse[] = [
-  {
-    id: 1,
-    transactionCode: "TXN-001",
-    type: TransactionType.DEPOSIT,
-    status: TransactionStatus.SUCCESS,
-    amount: 1_000_000,
-    referenceType: ReferenceType.DEPOSIT,
-    referenceId: 101,
-    description: "Nap tien qua QR",
-    createdAt: "2026-04-03T09:10:00",
-  },
-  {
-    id: 2,
-    transactionCode: "TXN-002",
-    type: TransactionType.WITHDRAW,
-    status: TransactionStatus.PENDING,
-    amount: -500_000,
-    referenceType: ReferenceType.WITHDRAWAL,
-    referenceId: 501,
-    description: "Yeu cau rut tien",
-    createdAt: "2026-04-03T11:30:00",
-  },
-  {
-    id: 3,
-    transactionCode: "TXN-003",
-    type: TransactionType.REQUEST_PAYMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: -1_200_000,
-    referenceType: ReferenceType.REQUEST,
-    referenceId: 301,
-    description: "Chi phi cong tac",
-    createdAt: "2026-04-02T08:20:00",
-  },
-  {
-    id: 4,
-    transactionCode: "TXN-004",
-    type: TransactionType.PAYSLIP_PAYMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: 12_500_000,
-    referenceType: ReferenceType.PAYSLIP,
-    referenceId: 78,
-    description: "Luong thang 03/2026",
-    createdAt: "2026-04-01T08:00:00",
-  },
-  {
-    id: 5,
-    transactionCode: "TXN-005",
-    type: TransactionType.SYSTEM_ADJUSTMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: 150_000,
-    referenceType: ReferenceType.SYSTEM,
-    referenceId: 202,
-    description: "Dieu chinh cong tien",
-    createdAt: "2026-03-30T17:05:00",
-  },
-];
-
 function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
@@ -121,25 +61,25 @@ function formatCurrency(amount: number): string {
 function getTypeLabel(type: TransactionType): string {
   switch (type) {
     case TransactionType.DEPOSIT:
-      return "Nap tien";
+      return "Nạp tiền";
     case TransactionType.WITHDRAW:
-      return "Rut tien";
+      return "Rút tiền";
     case TransactionType.SYSTEM_TOPUP:
-      return "Nap quy cong ty";
+      return "Nạp quỹ công ty";
     case TransactionType.REQUEST_PAYMENT:
-      return "Thanh toan yeu cau";
+      return "Thanh toán yêu cầu";
     case TransactionType.PAYSLIP_PAYMENT:
-      return "Nhan luong";
+      return "Nhận lương";
     case TransactionType.ADVANCE_RETURN:
-      return "Hoan tam ung";
+      return "Hoàn tạm ứng";
     case TransactionType.REVERSAL:
-      return "Hoan tien";
+      return "Hoàn tiền";
     case TransactionType.DEPT_QUOTA_ALLOCATION:
-      return "Cap quy phong ban";
+      return "Cấp quỹ phòng ban";
     case TransactionType.PROJECT_QUOTA_ALLOCATION:
-      return "Cap quy du an";
+      return "Cấp quỹ dự án";
     case TransactionType.SYSTEM_ADJUSTMENT:
-      return "Dieu chinh he thong";
+      return "Điều chỉnh hệ thống";
     default:
       return type;
   }
@@ -164,13 +104,13 @@ function getTypeBadgeClass(type: TransactionType): string {
 function getStatusLabel(status: TransactionStatus): string {
   switch (status) {
     case TransactionStatus.SUCCESS:
-      return "Thanh cong";
+      return "Thành công";
     case TransactionStatus.PENDING:
-      return "Dang cho";
+      return "Đang chờ";
     case TransactionStatus.FAILED:
-      return "That bai";
+      return "Thất bại";
     case TransactionStatus.CANCELLED:
-      return "Da huy";
+      return "Đã hủy";
     default:
       return status;
   }
@@ -245,30 +185,6 @@ function normalizeList(payload: WalletTransactionsApi, fallbackPage: number) {
   };
 }
 
-function filterMockData(source: TransactionResponse[], filters: TransactionFiltersState) {
-  return source.filter((tx) => {
-    if (filters.type && tx.type !== filters.type) return false;
-
-    if (filters.from) {
-      const fromDate = new Date(`${filters.from}T00:00:00`).getTime();
-      if (new Date(tx.createdAt).getTime() < fromDate) return false;
-    }
-
-    if (filters.to) {
-      const toDate = new Date(`${filters.to}T23:59:59`).getTime();
-      if (new Date(tx.createdAt).getTime() > toDate) return false;
-    }
-
-    if (filters.search) {
-      const q = filters.search.toLowerCase().trim();
-      const target = `${tx.transactionCode} ${tx.description}`.toLowerCase();
-      if (!target.includes(q)) return false;
-    }
-
-    return true;
-  });
-}
-
 export default function TransactionsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -329,25 +245,14 @@ export default function TransactionsPage() {
       } catch (err) {
         if (cancelled) return;
 
-        const filtered = filterMockData(MOCK_TRANSACTIONS, filters);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_SIZE));
-        const currentPage = Math.min(page, mockTotalPages - 1);
-        const start = currentPage * PAGE_SIZE;
-
-        setTransactions(filtered.slice(start, start + PAGE_SIZE));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-
-        if (currentPage !== page) {
-          setPage(currentPage);
-          syncUrl(filters, currentPage);
-        }
+        setTransactions([]);
+        setTotal(0);
+        setTotalPages(1);
 
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Khong the tai giao dich tu API, dang hien thi du lieu mau.");
+          setError("Không thể tải dữ liệu giao dịch.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -413,8 +318,8 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Lich su giao dich</h1>
-        <p className="text-slate-400 mt-1">Theo doi toan bo bien dong vi cua ban.</p>
+        <h1 className="text-2xl font-bold text-white">Lịch sử giao dịch</h1>
+        <p className="text-slate-400 mt-1">Theo dõi toàn bộ biến động ví của bạn.</p>
       </div>
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 md:p-5 space-y-3">
@@ -424,7 +329,7 @@ export default function TransactionsPage() {
             onChange={(e) => handleTypeChange(e.target.value)}
             className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
-            <option value="ALL">Tat ca loai</option>
+            <option value="ALL">Tất cả loại</option>
             {Object.values(TransactionType).map((type) => (
               <option key={type} value={type}>
                 {type}
@@ -451,7 +356,7 @@ export default function TransactionsPage() {
             onClick={handleResetFilters}
             className="px-3 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
           >
-            Xoa bo loc
+            Xóa bộ lọc
           </button>
         </div>
 
@@ -460,29 +365,29 @@ export default function TransactionsPage() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Tim theo ma giao dich hoac mo ta..."
+            placeholder="Tìm theo mã giao dịch hoặc mô tả..."
             className="flex-1 px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
           <button
             type="submit"
             className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
           >
-            Tim
+            Tìm
           </button>
         </form>
       </div>
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-215">
+          <table className="w-full min-w-[860px]">
             <thead>
               <tr className="border-b border-white/10 bg-slate-900/40">
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Ngay</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Loai</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Mo ta</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">So tien</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Trang thai</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Chi tiet</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Ngày</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Loại</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Mô tả</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Số tiền</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Trạng thái</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Chi tiết</th>
               </tr>
             </thead>
 
@@ -490,13 +395,13 @@ export default function TransactionsPage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">
-                    Dang tai giao dich...
+                    Đang tải giao dịch...
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">
-                    Khong co giao dich phu hop bo loc hien tai.
+                    Không có giao dịch phù hợp bộ lọc hiện tại.
                   </td>
                 </tr>
               ) : (
@@ -526,7 +431,7 @@ export default function TransactionsPage() {
                         href={`/wallet/transactions/${tx.id}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-600/30 transition-colors"
                       >
-                        Xem chi tiet
+                        Xem chi tiết
                       </Link>
                     </td>
                   </tr>
@@ -538,7 +443,7 @@ export default function TransactionsPage() {
 
         <div className="px-4 py-3 flex items-center justify-between border-t border-white/10 bg-slate-900/30">
           <p className="text-sm text-slate-400">
-            Tong {total} giao dich • Trang {page + 1}/{totalPages}
+            Tổng {total} giao dịch • Trang {page + 1}/{totalPages}
           </p>
 
           <div className="flex items-center gap-2">
@@ -548,7 +453,7 @@ export default function TransactionsPage() {
               disabled={page <= 0}
               className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
             >
-              Truoc
+              Trước
             </button>
             <button
               type="button"

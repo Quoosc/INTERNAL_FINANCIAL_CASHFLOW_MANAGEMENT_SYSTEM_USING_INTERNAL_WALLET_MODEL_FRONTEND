@@ -7,75 +7,10 @@ import { PaginatedResponse, PayslipListItem, PayslipStatus } from "@/types";
 
 interface PayrollFilters {
   year?: number;
-  month?: number;
   status?: PayslipStatus;
 }
 
-const PAGE_LIMIT = 8;
-
-// TODO: Replace with real API call when Sprint 7 is complete
-const MOCK_PAYSLIPS: PayslipListItem[] = [
-  {
-    id: 101,
-    payslipCode: "PS-2026-01-EMP017",
-    periodId: 5001,
-    periodName: "Tháng 1/2026",
-    month: 1,
-    year: 2026,
-    status: PayslipStatus.PAID,
-    finalNetSalary: 11_800_000,
-  },
-  {
-    id: 102,
-    payslipCode: "PS-2026-02-EMP017",
-    periodId: 5002,
-    periodName: "Tháng 2/2026",
-    month: 2,
-    year: 2026,
-    status: PayslipStatus.PAID,
-    finalNetSalary: 12_000_000,
-  },
-  {
-    id: 103,
-    payslipCode: "PS-2026-03-EMP017",
-    periodId: 5003,
-    periodName: "Tháng 3/2026",
-    month: 3,
-    year: 2026,
-    status: PayslipStatus.PAID,
-    finalNetSalary: 12_500_000,
-  },
-  {
-    id: 104,
-    payslipCode: "PS-2026-04-EMP017",
-    periodId: 5004,
-    periodName: "Tháng 4/2026",
-    month: 4,
-    year: 2026,
-    status: PayslipStatus.DRAFT,
-    finalNetSalary: 12_700_000,
-  },
-  {
-    id: 105,
-    payslipCode: "PS-2026-05-EMP017",
-    periodId: 5005,
-    periodName: "Tháng 5/2026",
-    month: 5,
-    year: 2026,
-    status: PayslipStatus.DRAFT,
-    finalNetSalary: 12_900_000,
-  },
-  {
-    id: 106,
-    payslipCode: "PS-2026-06-EMP017",
-    periodId: 5006,
-    periodName: "Tháng 6/2026",
-    month: 6,
-    year: 2026,
-    status: PayslipStatus.PAID,
-    finalNetSalary: 13_100_000,
-  },
-];
+const PAGE_LIMIT = 12;
 
 function formatVnd(amount: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(amount)} ₫`;
@@ -125,25 +60,14 @@ function buildInitialState(searchParams: { get: (key: string) => string | null }
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
   const yearRaw = Number(searchParams.get("year") ?? "");
-  const monthRaw = Number(searchParams.get("month") ?? "");
 
   return {
     filters: {
       year: Number.isFinite(yearRaw) && yearRaw > 0 ? yearRaw : undefined,
-      month: Number.isFinite(monthRaw) && monthRaw >= 1 && monthRaw <= 12 ? monthRaw : undefined,
       status: parseStatus(searchParams.get("status")),
     },
     page,
   };
-}
-
-function filterMock(source: PayslipListItem[], filters: PayrollFilters): PayslipListItem[] {
-  return source.filter((item) => {
-    if (filters.year && item.year !== filters.year) return false;
-    if (filters.month && item.month !== filters.month) return false;
-    if (filters.status && item.status !== filters.status) return false;
-    return true;
-  });
 }
 
 export default function PayrollPage() {
@@ -171,7 +95,6 @@ export default function PayrollPage() {
     (nextFilters: PayrollFilters, nextPage: number) => {
       const params = new URLSearchParams();
       if (nextFilters.year) params.set("year", String(nextFilters.year));
-      if (nextFilters.month) params.set("month", String(nextFilters.month));
       if (nextFilters.status) params.set("status", nextFilters.status);
       if (nextPage > 1) params.set("page", String(nextPage));
 
@@ -191,19 +114,16 @@ export default function PayrollPage() {
       try {
         const query = new URLSearchParams();
         if (filters.year) query.set("year", String(filters.year));
-        if (filters.month) query.set("month", String(filters.month));
         if (filters.status) query.set("status", filters.status);
         query.set("page", String(page));
         query.set("limit", String(PAGE_LIMIT));
 
         const summaryQuery = new URLSearchParams();
         if (filters.year) summaryQuery.set("year", String(filters.year));
-        if (filters.month) summaryQuery.set("month", String(filters.month));
         if (filters.status) summaryQuery.set("status", filters.status);
         summaryQuery.set("page", "1");
         summaryQuery.set("limit", "200");
 
-        // const res = await api.get<PaginatedResponse<PayslipListItem>>('/api/v1/payslips', { params: filters })
         const [res, summaryRes] = await Promise.all([
           api.get<PaginatedResponse<PayslipListItem>>(`/api/v1/payslips?${query.toString()}`),
           api.get<PaginatedResponse<PayslipListItem>>(`/api/v1/payslips?${summaryQuery.toString()}`),
@@ -218,26 +138,15 @@ export default function PayrollPage() {
       } catch (err) {
         if (cancelled) return;
 
-        const filtered = filterMock(MOCK_PAYSLIPS, filters);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const currentPage = Math.min(page, mockTotalPages);
-        const start = (currentPage - 1) * PAGE_LIMIT;
-
-        setPayslips(filtered.slice(start, start + PAGE_LIMIT));
-        setSummaryItems(filtered);
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-
-        if (currentPage !== page) {
-          setPage(currentPage);
-          syncUrl(filters, currentPage);
-        }
+        setPayslips([]);
+        setSummaryItems([]);
+        setTotal(0);
+        setTotalPages(1);
 
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải API phiếu lương, đang hiển thị dữ liệu mẫu.");
+          setError("Không thể tải danh sách phiếu lương.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -292,7 +201,7 @@ export default function PayrollPage() {
     .reduce((sum, item) => sum + item.finalNetSalary, 0);
 
   const yearOptions = useMemo(() => {
-    const years = new Set<number>([currentYear, ...MOCK_PAYSLIPS.map((item) => item.year)]);
+    const years = new Set<number>([currentYear]);
     summaryItems.forEach((item) => years.add(item.year));
     return Array.from(years).sort((a, b) => b - a);
   }, [currentYear, summaryItems]);
@@ -317,7 +226,7 @@ export default function PayrollPage() {
       </div>
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <select
             value={filters.year ?? ""}
             onChange={(e) => handleFilterChange("year", e.target.value)}
@@ -327,19 +236,6 @@ export default function PayrollPage() {
             {yearOptions.map((year) => (
               <option key={year} value={year}>
                 {year}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={filters.month ?? ""}
-            onChange={(e) => handleFilterChange("month", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-          >
-            <option value="">Tất cả tháng</option>
-            {Array.from({ length: 12 }).map((_, idx) => (
-              <option key={idx + 1} value={idx + 1}>
-                Tháng {idx + 1}
               </option>
             ))}
           </select>

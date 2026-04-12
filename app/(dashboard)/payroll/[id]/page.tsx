@@ -14,34 +14,6 @@ interface BreakdownItem {
   amount: number;
 }
 
-// TODO: Replace with real API call when Sprint 7 is complete
-const MOCK_PAYSLIP: PayslipDetailResponse = {
-  id: 2001,
-  payslipCode: "PS-2026-03-EMP017",
-  periodId: 5003,
-  periodName: "Tháng 3/2026",
-  month: 3,
-  year: 2026,
-  status: PayslipStatus.PAID,
-  baseSalary: 11_000_000,
-  bonus: 1_500_000,
-  allowance: 1_200_000,
-  totalEarnings: 13_700_000,
-  deduction: 1_000_000,
-  advanceDeduct: 700_000,
-  totalDeduction: 1_700_000,
-  finalNetSalary: 12_000_000,
-  employee: {
-    id: 17,
-    fullName: "Nguyễn Văn A",
-    employeeCode: "EMP017",
-    departmentName: "Phòng IT",
-    jobTitle: "Frontend Developer",
-    bankName: "Vietcombank",
-    bankAccountNum: "****6789",
-  },
-};
-
 function formatVnd(amount: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(amount)} ₫`;
 }
@@ -111,7 +83,6 @@ export default function PayslipDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        // const res = await api.get<PayslipDetailResponse>(`/api/v1/payslips/${id}`)
         const res = await api.get<PayslipDetailResponse>(`/api/v1/payslips/${id}`);
 
         if (cancelled) return;
@@ -119,16 +90,10 @@ export default function PayslipDetailPage({ params }: PageProps) {
       } catch (err) {
         if (cancelled) return;
 
-        setPayslip({
-          ...MOCK_PAYSLIP,
-          id: Number(id),
-          payslipCode: `PS-2026-03-EMP${String(id).padStart(3, "0")}`,
-        });
-
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải API phiếu lương, đang hiển thị dữ liệu mẫu.");
+          setError("Không thể tải chi tiết phiếu lương.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -179,6 +144,12 @@ export default function PayslipDetailPage({ params }: PageProps) {
         <div className="bg-slate-800 border border-white/10 rounded-2xl p-6 text-center text-slate-400">
           Không tìm thấy phiếu lương.
         </div>
+
+        {error && (
+          <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+            {error}
+          </div>
+        )}
       </div>
     );
   }

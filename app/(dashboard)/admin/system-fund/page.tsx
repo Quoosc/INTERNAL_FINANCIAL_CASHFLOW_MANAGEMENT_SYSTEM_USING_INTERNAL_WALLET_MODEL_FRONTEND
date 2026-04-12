@@ -1,29 +1,15 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
-import { ApiError, api } from "@/lib/api-client";
-import { CompanyFundResponse, LedgerSummaryResponse } from "@/types";
-
-// TODO: Replace when Sprint 6 is complete
-const MOCK_COMPANY_FUND: CompanyFundResponse = {
-  id: 1,
-  bankName: "Vietcombank",
-  bankAccount: "1234-5678-9999",
-  currentWalletBalance: 1_248_500_000,
-  externalBankBalance: 1_248_500_000,
-  bankDiscrepancy: 0,
-  lastStatementDate: "2026-04-08",
-  lastStatementUpdatedBy: "acc.ifms@ifms.vn",
-};
-
-// TODO: Replace when Sprint 7 is complete
-const MOCK_LEDGER_SUMMARY: LedgerSummaryResponse = {
-  currentBalance: 1_248_500_000,
-  totalInflow: 3_500_000_000,
-  totalOutflow: 2_251_500_000,
-  transactionCount: 245,
-};
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ApiError } from "@/lib/api-client";
+import {
+  getCompanyFund,
+  getReconciliationReport,
+  topupCompanyFund,
+  updateBankStatement,
+} from "@/lib/api";
+import { CompanyFundResponse, ReconciliationReportResponse } from "@/types";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
@@ -33,161 +19,213 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-function getFundHealth(balance: number): {
-  label: "HEALTHY" | "LOW" | "CRITICAL";
-  tone: string;
-  borderTone: string;
-  bgTone: string;
-} {
-  if (balance >= 500_000_000) {
-    return {
-      label: "HEALTHY",
-      tone: "text-emerald-300",
-      borderTone: "border-emerald-500/40",
-      bgTone: "bg-emerald-500/10",
-    };
-  }
-
-  if (balance >= 100_000_000) {
-    return {
-      label: "LOW",
-      tone: "text-amber-300",
-      borderTone: "border-amber-500/40",
-      bgTone: "bg-amber-500/10",
-    };
-  }
-
-  return {
-    label: "CRITICAL",
-    tone: "text-rose-300",
-    borderTone: "border-rose-500/40",
-    bgTone: "bg-rose-500/10",
-  };
-}
-
-export default function SystemFundPage() {
+export default function AdminSystemFundPage() {
   const [companyFund, setCompanyFund] = useState<CompanyFundResponse | null>(null);
-  const [summary, setSummary] = useState<LedgerSummaryResponse | null>(null);
+  const [reconciliation, setReconciliation] = useState<ReconciliationReportResponse | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const [showTopupModal, setShowTopupModal] = useState(false);
+  const [showStatementModal, setShowStatementModal] = useState(false);
 
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
+  const [topupAmount, setTopupAmount] = useState("");
+  const [topupDescription, setTopupDescription] = useState("");
+  const [topupReferenceCode, setTopupReferenceCode] = useState("");
+  const [statementBalance, setStatementBalance] = useState("");
 
-      try {
-        const [fundRes, summaryRes] = await Promise.all([
-          api.get<CompanyFundResponse>("/api/v1/company-fund"),
-          api.get<LedgerSummaryResponse>("/api/v1/accountant/ledger/summary"),
-        ]);
+  const [topupSubmitting, setTopupSubmitting] = useState(false);
+  const [statementSubmitting, setStatementSubmitting] = useState(false);
 
-        if (cancelled) return;
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-        setCompanyFund(fundRes.data);
-        setSummary(summaryRes.data);
-      } catch (err) {
-        if (cancelled) return;
+    try {
+      const [fundRes, reconRes] = await Promise.all([
+        getCompanyFund(),
+        getReconciliationReport(),
+      ]);
 
-        setCompanyFund(MOCK_COMPANY_FUND);
-        setSummary(MOCK_LEDGER_SUMMARY);
-
-        if (err instanceof ApiError) {
-          setError(err.apiMessage);
-        } else {
-          setError("Khong the tai du lieu API, dang hien thi du lieu mau.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+      setCompanyFund(fundRes.data);
+      setReconciliation(reconRes.data);
+      setStatementBalance(String(fundRes.data.externalBankBalance ?? 0));
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.apiMessage);
+      } else {
+        setError("Khong the tai du lieu quy he thong.");
       }
-    };
-
-    void loadData();
-
-    return () => {
-      cancelled = true;
-    };
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const currentBalance = companyFund?.currentWalletBalance ?? 0;
-  const externalBalance = companyFund?.externalBankBalance ?? 0;
-  const discrepancy = companyFund?.bankDiscrepancy ?? 0;
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
-  const health = useMemo(() => getFundHealth(currentBalance), [currentBalance]);
+  const handleTopup = async () => {
+    const amount = Number(topupAmount.replace(/\D/g, ""));
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError("So tien nap khong hop le.");
+      return;
+    }
+
+    setTopupSubmitting(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      await topupCompanyFund({
+        amount,
+        description: topupDescription.trim() || undefined,
+        paymentRef: topupReferenceCode.trim() || undefined,
+      });
+      setShowTopupModal(false);
+      setTopupAmount("");
+      setTopupDescription("");
+      setTopupReferenceCode("");
+      setNotice("Da nap tien vao quy he thong.");
+      await loadData();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.apiMessage);
+      } else {
+        setError("Khong the nap tien vao quy he thong.");
+      }
+    } finally {
+      setTopupSubmitting(false);
+    }
+  };
+
+  const handleUpdateStatement = async () => {
+    const bankBalance = Number(statementBalance.replace(/\D/g, ""));
+    if (!Number.isFinite(bankBalance) || bankBalance < 0) {
+      setError("So du ngan hang khong hop le.");
+      return;
+    }
+
+    setStatementSubmitting(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      await updateBankStatement({
+        externalBankBalance: bankBalance,
+        lastStatementDate: new Date().toISOString().slice(0, 10),
+      });
+      setShowStatementModal(false);
+      setNotice("Da cap nhat so du ngan hang.");
+      await loadData();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.apiMessage);
+      } else {
+        setError("Khong the cap nhat so du ngan hang.");
+      }
+    } finally {
+      setStatementSubmitting(false);
+    }
+  };
+
+  const reconEntries = useMemo(() => {
+    if (!reconciliation) return [];
+
+    const raw = reconciliation as ReconciliationReportResponse & {
+      entries?: Array<{ label?: string; description?: string; amount?: number }>;
+    };
+
+    return raw.entries ?? [];
+  }, [reconciliation]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Quy he thong</h1>
-          <p className="text-slate-400 mt-1">Tier 1 (COMPANY_FUND) - Admin chi co quyen xem so lieu quy.</p>
+          <p className="text-slate-400 mt-1">Quan ly quy company fund va doi soat ngan hang.</p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-500/40 bg-slate-500/15 text-slate-300 text-sm font-medium">
-          Read-only
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-slate-400">So du vi COMPANY_FUND hien tai</p>
-            <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-semibold ${health.borderTone} ${health.bgTone} ${health.tone}`}>
-              {health.label}
-            </span>
-          </div>
-
-          <p className="text-3xl font-bold text-white">
-            {loading ? "Dang tai..." : formatCurrency(currentBalance)}
-          </p>
-
-          <div className="rounded-xl border border-white/10 bg-slate-900 p-3 text-sm text-slate-300">
-            Quy tac suc khoe quy: HEALTHY neu lon hon hoac bang 500 trieu, LOW neu tu 100 den duoi 500 trieu,
-            CRITICAL neu duoi 100 trieu.
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setShowTopupModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
+          >
+            Nap tien tu ngan hang
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowStatementModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold"
+          >
+            Cap nhat so du ngan hang
+          </button>
+          <button
+            type="button"
+            onClick={() => void loadData()}
+            disabled={loading}
+            className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+          >
+            Tai lai
+          </button>
         </div>
-
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-          <h2 className="text-lg font-semibold text-white">Thong tin doi soat</h2>
-          <InfoRow label="Ngan hang" value={companyFund?.bankName ?? "-"} />
-          <InfoRow label="So tai khoan" value={companyFund?.bankAccount ?? "-"} />
-          <InfoRow label="Ngay sao ke" value={companyFund?.lastStatementDate ?? "-"} />
-          <InfoRow label="Cap nhat boi" value={companyFund?.lastStatementUpdatedBy ?? "-"} />
-        </div>
-      </div>
-
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Doi soat ngan hang</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard title="So du vi noi bo" value={formatCurrency(currentBalance)} tone="text-white" />
-          <StatCard title="So du sao ke ngan hang" value={formatCurrency(externalBalance)} tone="text-slate-200" />
-          <StatCard
-            title="Chenh lech doi soat"
-            value={formatCurrency(discrepancy)}
-            tone={Math.abs(discrepancy) === 0 ? "text-emerald-300" : "text-rose-300"}
-          />
-        </div>
-
-        {Math.abs(discrepancy) !== 0 && (
-          <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
-            Canh bao: so du vi noi bo va so du sao ke ngan hang dang lech nhau.
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard title="Tong nap vao" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-300" />
-        <StatCard title="Tong chi ra" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-300" />
         <StatCard
-          title="So luong giao dich"
-          value={String(summary?.transactionCount ?? 0)}
-          tone="text-blue-300"
+          title="So du he thong"
+          value={formatCurrency(companyFund?.currentWalletBalance ?? 0)}
+          tone="text-white"
+        />
+        <StatCard
+          title="So du ngan hang"
+          value={formatCurrency(companyFund?.externalBankBalance ?? 0)}
+          tone="text-slate-200"
+        />
+        <StatCard
+          title="Chenh lech doi soat"
+          value={formatCurrency(companyFund?.bankDiscrepancy ?? 0)}
+          tone={Math.abs(companyFund?.bankDiscrepancy ?? 0) > 0 ? "text-rose-300" : "text-emerald-300"}
         />
       </div>
+
+      <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-white">Bao cao doi soat</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <InfoRow
+            label="System balance"
+            value={formatCurrency(reconciliation?.companyFundBalance ?? 0)}
+          />
+          <InfoRow
+            label="Bank balance"
+            value={formatCurrency(reconciliation?.externalBankBalance ?? 0)}
+          />
+          <InfoRow
+            label="Discrepancy"
+            value={formatCurrency(reconciliation?.bankDiscrepancy ?? 0)}
+          />
+          <InfoRow
+            label="Last reconciliation"
+            value={reconciliation?.generatedAt ?? "-"}
+          />
+        </div>
+
+        {reconEntries.length > 0 && (
+          <div className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-2">
+            <p className="text-sm text-white font-medium">Chi tiet doi soat</p>
+            {reconEntries.map((entry, index) => (
+              <div key={`${entry.label ?? "entry"}-${index}`} className="text-sm text-slate-300 flex items-center justify-between gap-2">
+                <span>{entry.label ?? entry.description ?? `Entry ${index + 1}`}</span>
+                <span>{typeof entry.amount === "number" ? formatCurrency(entry.amount) : "-"}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
         <h2 className="text-lg font-semibold text-white">Truy cap nhanh</h2>
@@ -197,17 +235,92 @@ export default function SystemFundPage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
           >
             Xem so cai
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14m-7-7l7 7-7 7" />
-            </svg>
           </Link>
         </div>
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
           {error}
         </div>
+      )}
+
+      {notice && (
+        <div className="px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-sm">
+          {notice}
+        </div>
+      )}
+
+      {showTopupModal && (
+        <Modal title="Nap tien tu ngan hang" onClose={() => setShowTopupModal(false)}>
+          <div className="space-y-3">
+            <InputField
+              label="So tien"
+              value={topupAmount}
+              onChange={setTopupAmount}
+              placeholder="Nhap so tien"
+            />
+            <InputField
+              label="Ghi chu"
+              value={topupDescription}
+              onChange={setTopupDescription}
+              placeholder="Mo ta giao dich"
+            />
+            <InputField
+              label="Ma tham chieu ngan hang"
+              value={topupReferenceCode}
+              onChange={setTopupReferenceCode}
+              placeholder="VD: VCB-2026-001"
+            />
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowTopupModal(false)}
+                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm"
+              >
+                Huy
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleTopup()}
+                disabled={topupSubmitting}
+                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+              >
+                {topupSubmitting ? "Dang xu ly..." : "Xac nhan nap"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {showStatementModal && (
+        <Modal title="Cap nhat so du ngan hang" onClose={() => setShowStatementModal(false)}>
+          <div className="space-y-3">
+            <InputField
+              label="So du ngan hang thuc te"
+              value={statementBalance}
+              onChange={setStatementBalance}
+              placeholder="Nhap so du"
+            />
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowStatementModal(false)}
+                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm"
+              >
+                Huy
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleUpdateStatement()}
+                disabled={statementSubmitting}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+              >
+                {statementSubmitting ? "Dang cap nhat..." : "Luu so du"}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
@@ -226,7 +339,45 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-slate-200 mt-1">{value}</p>
+      <p className="text-sm text-slate-200 mt-1 break-all">{value}</p>
+    </div>
+  );
+}
+
+function InputField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-sm text-slate-300 mb-2">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white"
+      />
+    </label>
+  );
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50">
+      <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl p-5">
+          <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

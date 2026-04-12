@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import {
@@ -283,8 +284,6 @@ export default function TransactionsPage() {
   const [searchInput, setSearchInput] = useState(initialState.filters.search ?? "");
 
   const [loading, setLoading] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
-
   const [error, setError] = useState<string | null>(null);
 
   const syncUrl = useCallback(
@@ -475,7 +474,7 @@ export default function TransactionsPage() {
 
       <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px]">
+          <table className="w-full min-w-215">
             <thead>
               <tr className="border-b border-white/10 bg-slate-900/40">
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Ngay</th>
@@ -483,29 +482,26 @@ export default function TransactionsPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Mo ta</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">So tien</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Trang thai</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Chi tiet</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">
                     Dang tai giao dich...
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-500 text-sm">
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">
                     Khong co giao dich phu hop bo loc hien tai.
                   </td>
                 </tr>
               ) : (
                 transactions.map((tx) => (
-                  <tr
-                    key={tx.id}
-                    onClick={() => setSelectedTransaction(tx)}
-                    className="border-b border-white/5 hover:bg-slate-700/30 transition-colors cursor-pointer"
-                  >
+                  <tr key={tx.id} className="border-b border-white/5 hover:bg-slate-700/30 transition-colors">
                     <td className="px-4 py-3 text-sm text-slate-300">{formatDateTime(tx.createdAt)}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeBadgeClass(tx.type)}`}>
@@ -524,6 +520,14 @@ export default function TransactionsPage() {
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(tx.status)}`}>
                         {getStatusLabel(tx.status)}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/wallet/transactions/${tx.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-600/30 transition-colors"
+                      >
+                        Xem chi tiet
+                      </Link>
                     </td>
                   </tr>
                 ))
@@ -559,52 +563,6 @@ export default function TransactionsPage() {
       </div>
 
       {error && <p className="text-amber-400 text-sm">{error}</p>}
-
-      {selectedTransaction && (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setSelectedTransaction(null)}
-            aria-label="Dong chi tiet giao dich"
-          />
-
-          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-slate-900 border-l border-white/10 shadow-2xl p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Chi tiet giao dich</h2>
-              <button
-                type="button"
-                onClick={() => setSelectedTransaction(null)}
-                className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors"
-                aria-label="Dong"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <DetailRow label="Ma giao dich" value={selectedTransaction.transactionCode} />
-              <DetailRow label="Loai" value={getTypeLabel(selectedTransaction.type)} />
-              <DetailRow label="Ngay tao" value={formatDateTime(selectedTransaction.createdAt)} />
-              <DetailRow label="Mo ta" value={selectedTransaction.description} />
-              <DetailRow label="So tien" value={formatCurrency(selectedTransaction.amount)} />
-              <DetailRow label="Nguon tham chieu" value={selectedTransaction.referenceType} />
-              <DetailRow label="Reference ID" value={String(selectedTransaction.referenceId)} />
-            </div>
-          </aside>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-slate-800 border border-white/10 rounded-xl px-4 py-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-white font-medium mt-1 break-all">{value}</p>
     </div>
   );
 }

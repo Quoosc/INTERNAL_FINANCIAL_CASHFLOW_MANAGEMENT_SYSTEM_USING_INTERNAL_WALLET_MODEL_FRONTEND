@@ -201,21 +201,31 @@ export interface ProcessWithdrawRequest {
   note?: string;
 }
 
-/** POST /wallet/deposit/generate-qr — body */
+/** POST /wallet/deposit — body */
 export interface DepositQRRequest {
   amount: number;
   description?: string;
 }
 
-/** POST /wallet/deposit/generate-qr — response */
+/** POST /wallet/deposit — response (VNPay flow) */
 export interface DepositQRResponse {
-  qrCodeUrl: string;
+  gateway?: PaymentProvider | string;
+  depositCode?: string;
+  transactionRef: string;
+  paymentUrl: string;
+  qrDataUrl?: string | null;
   amount: number;
-  bankAccount: string;
-  bankName: string;
-  accountOwner: string;
-  description: string;
-  expiresAt: string;
+  status?: string;
+  message?: string;
+  expiredAt: string;
+}
+
+/** GET /payments/status?transactionRef=... — response */
+export interface PaymentStatusResponse {
+  transactionRef: string;
+  status: string;
+  message?: string;
+  amount?: number;
 }
 
 // --- Filter Params ---

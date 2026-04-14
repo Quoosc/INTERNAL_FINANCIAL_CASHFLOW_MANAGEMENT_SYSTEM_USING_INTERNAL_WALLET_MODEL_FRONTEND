@@ -121,8 +121,13 @@ export async function apiClient<T>(
 
   let res = await fetch(url, { headers, ...rest });
 
-  // Auto-refresh on 401
+  // Auto-refresh on 401 — skipped in mock-auth mode (UI preview without backend)
   if (res.status === 401 && !skipAuth) {
+    const mockAuth =
+      typeof window !== "undefined" && localStorage.getItem("mock_auth") === "true";
+    if (mockAuth) {
+      throw new ApiError(401, "Mock auth: backend unavailable");
+    }
     const newToken = await refreshAccessToken();
     if (newToken) {
       headers["Authorization"] = `Bearer ${newToken}`;

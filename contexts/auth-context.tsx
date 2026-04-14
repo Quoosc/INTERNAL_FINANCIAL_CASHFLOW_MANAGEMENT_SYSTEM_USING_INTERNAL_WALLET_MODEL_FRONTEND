@@ -77,7 +77,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await authLogout();
+    const isMock = localStorage.getItem("mock_auth") === "true";
+    if (!isMock) {
+      await authLogout();
+    } else {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      document.cookie = "access_token=; path=/; max-age=0";
+    }
+    localStorage.removeItem("mock_auth");
     localStorage.removeItem("user_info");
     setState({ user: null, isAuthenticated: false, isLoading: false });
     window.location.href = "/login";

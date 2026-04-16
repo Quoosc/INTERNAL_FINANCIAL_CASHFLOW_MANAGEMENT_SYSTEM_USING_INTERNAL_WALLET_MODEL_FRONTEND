@@ -142,9 +142,12 @@ function parseTypeValue(typeParam: string | null): TransactionType | undefined {
   return undefined;
 }
 
-function getInitialState(searchParams: { get: (key: string) => string | null }) {
+function getInitialState(searchParams: {
+  get: (key: string) => string | null;
+}) {
   const pageParam = Number(searchParams.get("page") ?? "1");
-  const parsedPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam - 1 : 0;
+  const parsedPage =
+    Number.isFinite(pageParam) && pageParam > 0 ? pageParam - 1 : 0;
 
   return {
     filters: {
@@ -189,15 +192,22 @@ export default function TransactionsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialState = useMemo(() => getInitialState(searchParams), [searchParams]);
+  const initialState = useMemo(
+    () => getInitialState(searchParams),
+    [searchParams],
+  );
 
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(initialState.page);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [filters, setFilters] = useState<TransactionFiltersState>(initialState.filters);
-  const [searchInput, setSearchInput] = useState(initialState.filters.search ?? "");
+  const [filters, setFilters] = useState<TransactionFiltersState>(
+    initialState.filters,
+  );
+  const [searchInput, setSearchInput] = useState(
+    initialState.filters.search ?? "",
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -213,9 +223,11 @@ export default function TransactionsPage() {
       if (nextPage > 0) params.set("page", String(nextPage + 1));
 
       const query = params.toString();
-      router.replace(query ? `/wallet/transactions?${query}` : "/wallet/transactions");
+      router.replace(
+        query ? `/wallet/transactions?${query}` : "/wallet/transactions",
+      );
     },
-    [router]
+    [router],
   );
 
   useEffect(() => {
@@ -234,7 +246,9 @@ export default function TransactionsPage() {
         query.set("page", String(page));
         query.set("size", String(PAGE_SIZE));
 
-        const res = await api.get<WalletTransactionsApi>(`/api/v1/wallet/transactions?${query.toString()}`);
+        const res = await api.get<WalletTransactionsApi>(
+          `/api/v1/wallet/transactions?${query.toString()}`,
+        );
 
         if (cancelled) return;
 
@@ -319,7 +333,9 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Lịch sử giao dịch</h1>
-        <p className="text-slate-500 mt-1">Theo dõi toàn bộ biến động ví của bạn.</p>
+        <p className="text-slate-500 mt-1">
+          Theo dõi toàn bộ biến động ví của bạn.
+        </p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 space-y-3">
@@ -382,47 +398,80 @@ export default function TransactionsPage() {
           <table className="w-full min-w-215">
             <thead>
               <tr className="border-b border-slate-200 bg-white/40">
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Ngày</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Loại</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Mô tả</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Số tiền</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Trạng thái</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Chi tiết</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Ngày
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Loại
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Mô tả
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Số tiền
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Trạng thái
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Chi tiết
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-12 text-center text-slate-500 text-sm"
+                  >
                     Đang tải giao dịch...
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-12 text-center text-slate-500 text-sm"
+                  >
                     Không có giao dịch phù hợp bộ lọc hiện tại.
                   </td>
                 </tr>
               ) : (
                 transactions.map((tx) => (
-                  <tr key={tx.id} className="border-b border-slate-200 hover:bg-blue-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(tx.createdAt)}</td>
+                  <tr
+                    key={tx.id}
+                    className="border-b border-slate-200 hover:bg-blue-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {formatDateTime(tx.createdAt)}
+                    </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeBadgeClass(tx.type)}`}>
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeBadgeClass(tx.type)}`}
+                      >
                         {getTypeLabel(tx.type)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm text-slate-900 truncate max-w-[320px]">{tx.description}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{tx.transactionCode}</p>
+                      <p className="text-sm text-slate-900 truncate max-w-[320px]">
+                        {tx.description}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {tx.transactionCode}
+                      </p>
                     </td>
-                    <td className={`px-4 py-3 text-right text-sm font-semibold ${tx.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                    <td
+                      className={`px-4 py-3 text-right text-sm font-semibold ${tx.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                    >
                       {tx.amount >= 0 ? "+" : ""}
                       {formatCurrency(tx.amount)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(tx.status)}`}>
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(tx.status)}`}
+                      >
                         {getStatusLabel(tx.status)}
                       </span>
                     </td>
@@ -471,4 +520,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-

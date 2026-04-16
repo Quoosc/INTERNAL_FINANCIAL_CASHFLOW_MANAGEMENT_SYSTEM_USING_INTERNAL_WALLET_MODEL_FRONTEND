@@ -258,9 +258,13 @@ const MOCK_PAYROLL_PERIODS: PayrollPeriodListItem[] = [
 export function AccountantDashboard() {
   const { user, hasRole } = useAuth();
 
-  const [dashboard, setDashboard] = useState<AccountantDashboardResponse | null>(null);
-  const [pendingDisbursements, setPendingDisbursements] = useState<DisbursementListItem[]>([]);
-  const [latestPayroll, setLatestPayroll] = useState<PayrollPeriodListItem | null>(null);
+  const [dashboard, setDashboard] =
+    useState<AccountantDashboardResponse | null>(null);
+  const [pendingDisbursements, setPendingDisbursements] = useState<
+    DisbursementListItem[]
+  >([]);
+  const [latestPayroll, setLatestPayroll] =
+    useState<PayrollPeriodListItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -271,19 +275,20 @@ export function AccountantDashboard() {
       setLoading(true);
       setError(null);
 
-      const dashboardReq = api.get<AccountantDashboardResponse>("/api/v1/dashboard/accountant");
-      const disbursementsReq = api.get<PaginatedResponse<DisbursementListItem> | DisbursementListItem[]>(
-        "/api/v1/accountant/disbursements?limit=3&status=PENDING_ACCOUNTANT_EXECUTION"
+      const dashboardReq = api.get<AccountantDashboardResponse>(
+        "/api/v1/dashboard/accountant",
       );
-      const payrollReq = api.get<PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]>(
-        "/api/v1/accountant/payroll?limit=1"
+      const disbursementsReq = api.get<
+        PaginatedResponse<DisbursementListItem> | DisbursementListItem[]
+      >(
+        "/api/v1/accountant/disbursements?limit=3&status=PENDING_ACCOUNTANT_EXECUTION",
       );
+      const payrollReq = api.get<
+        PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]
+      >("/api/v1/accountant/payroll?limit=1");
 
-      const [dashboardResult, disbursementsResult, payrollResult] = await Promise.allSettled([
-        dashboardReq,
-        disbursementsReq,
-        payrollReq,
-      ]);
+      const [dashboardResult, disbursementsResult, payrollResult] =
+        await Promise.allSettled([dashboardReq, disbursementsReq, payrollReq]);
 
       if (cancelled) return;
 
@@ -319,7 +324,8 @@ export function AccountantDashboard() {
           disbursementsResult.status === "rejected" ||
           payrollResult.status === "rejected")
       ) {
-        nextError = "Không thể tải đầy đủ dữ liệu API, đang hiển thị dữ liệu mẫu.";
+        nextError =
+          "Không thể tải đầy đủ dữ liệu API, đang hiển thị dữ liệu mẫu.";
       }
 
       setDashboard(nextDashboard);
@@ -349,31 +355,44 @@ export function AccountantDashboard() {
     ? `${String(latestPayroll.month).padStart(2, "0")}/${latestPayroll.year}`
     : (dashboard?.payrollStatus.latestPeriod ?? "Chưa có dữ liệu");
 
-  const monthlyNetFlow = (dashboard?.monthlyInflow ?? 0) - (dashboard?.monthlyOutflow ?? 0);
+  const monthlyNetFlow =
+    (dashboard?.monthlyInflow ?? 0) - (dashboard?.monthlyOutflow ?? 0);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bảng điều khiển Kế toán</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Bảng điều khiển Kế toán
+          </h1>
           <p className="text-slate-500 mt-1">
             Theo dõi giải ngân Flow 1, bảng lương và sổ cái hệ thống.
           </p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-100 text-cyan-700 text-sm font-medium">
-          {hasRole(RoleName.ACCOUNTANT) ? "Kế toán" : user?.role ?? "ACCOUNTANT"}
+          {hasRole(RoleName.ACCOUNTANT)
+            ? "Kế toán"
+            : (user?.role ?? "ACCOUNTANT")}
         </span>
       </div>
 
       <div className="bg-linear-to-br from-cyan-100 via-blue-100 to-blue-50 border border-cyan-200 rounded-2xl p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.16em] text-cyan-200/80">System Fund</p>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{formatCurrency(fundBalance)}</p>
-            <p className="text-sm text-slate-600 mt-1">Sức khỏe quỹ hệ thống theo ngưỡng vận hành.</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-cyan-200/80">
+              System Fund
+            </p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">
+              {formatCurrency(fundBalance)}
+            </p>
+            <p className="text-sm text-slate-600 mt-1">
+              Sức khỏe quỹ hệ thống theo ngưỡng vận hành.
+            </p>
           </div>
 
-          <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm font-semibold ${getFundHealthClass(health)}`}>
+          <span
+            className={`inline-flex px-3 py-1.5 rounded-full border text-sm font-semibold ${getFundHealthClass(health)}`}
+          >
             {health}
           </span>
         </div>
@@ -386,7 +405,11 @@ export function AccountantDashboard() {
           <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden">
             <div
               className={`h-full ${
-                health === "HEALTHY" ? "bg-emerald-500" : health === "LOW" ? "bg-amber-500" : "bg-rose-500"
+                health === "HEALTHY"
+                  ? "bg-emerald-500"
+                  : health === "LOW"
+                    ? "bg-amber-500"
+                    : "bg-rose-500"
               }`}
               style={{ width: `${fundProgress}%` }}
             />
@@ -401,20 +424,29 @@ export function AccountantDashboard() {
         >
           <p className="text-xs text-slate-500">Chờ giải ngân</p>
           <p className="text-3xl font-bold text-amber-700 mt-1">
-            {dashboard?.pendingDisbursementsCount ?? pendingDisbursements.length}
+            {dashboard?.pendingDisbursementsCount ??
+              pendingDisbursements.length}
           </p>
-          <p className="text-xs text-slate-500 mt-1">PENDING_ACCOUNTANT_EXECUTION</p>
+          <p className="text-xs text-slate-500 mt-1">
+            PENDING_ACCOUNTANT_EXECUTION
+          </p>
         </Link>
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
           <p className="text-xs text-slate-500">Dòng tiền vào tháng này</p>
-          <p className="text-3xl font-bold text-emerald-700 mt-1">{formatCurrency(dashboard?.monthlyInflow ?? 0)}</p>
+          <p className="text-3xl font-bold text-emerald-700 mt-1">
+            {formatCurrency(dashboard?.monthlyInflow ?? 0)}
+          </p>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
           <p className="text-xs text-slate-500">Dòng tiền ra tháng này</p>
-          <p className="text-3xl font-bold text-rose-700 mt-1">{formatCurrency(dashboard?.monthlyOutflow ?? 0)}</p>
-          <p className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+          <p className="text-3xl font-bold text-rose-700 mt-1">
+            {formatCurrency(dashboard?.monthlyOutflow ?? 0)}
+          </p>
+          <p
+            className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+          >
             Dòng tiền ròng: {formatCurrency(monthlyNetFlow)}
           </p>
         </div>
@@ -423,8 +455,13 @@ export function AccountantDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Chờ giải ngân</h2>
-            <Link href="/accountant/disbursements" className="text-sm text-blue-700 hover:text-blue-600">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Chờ giải ngân
+            </h2>
+            <Link
+              href="/accountant/disbursements"
+              className="text-sm text-blue-700 hover:text-blue-600"
+            >
               Xem tất cả →
             </Link>
           </div>
@@ -432,7 +469,10 @@ export function AccountantDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`accountant-disbursement-loading-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
+                <div
+                  key={`accountant-disbursement-loading-${index}`}
+                  className="h-24 rounded-xl bg-white animate-pulse"
+                />
               ))}
             </div>
           ) : pendingDisbursements.length === 0 ? (
@@ -450,20 +490,31 @@ export function AccountantDashboard() {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className={`inline-flex px-2 py-1 rounded-full border ${getRequestTypeClass(item.type)}`}>
+                        <span
+                          className={`inline-flex px-2 py-1 rounded-full border ${getRequestTypeClass(item.type)}`}
+                        >
                           {getRequestTypeLabel(item.type)}
                         </span>
-                        <span className="font-mono text-slate-600">{item.requestCode}</span>
-                        <span className="text-slate-500">{formatRelativeTime(item.createdAt)}</span>
+                        <span className="font-mono text-slate-600">
+                          {item.requestCode}
+                        </span>
+                        <span className="text-slate-500">
+                          {formatRelativeTime(item.createdAt)}
+                        </span>
                       </div>
                       <p className="text-sm text-slate-900 truncate">
-                        {item.requester.fullName} <span className="text-slate-500">({item.requester.employeeCode})</span>
+                        {item.requester.fullName}{" "}
+                        <span className="text-slate-500">
+                          ({item.requester.employeeCode})
+                        </span>
                       </p>
                       <p className="text-xs text-slate-500 truncate">
                         {item.project.name} • {item.phase.name}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-amber-700">{formatCurrency(item.approvedAmount)}</p>
+                    <p className="text-sm font-semibold text-amber-700">
+                      {formatCurrency(item.approvedAmount)}
+                    </p>
                   </div>
                 </Link>
               ))}
@@ -473,23 +524,38 @@ export function AccountantDashboard() {
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Kỳ lương gần nhất</h2>
-            <Link href="/accountant/payroll" className="text-sm text-blue-700 hover:text-blue-600">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Kỳ lương gần nhất
+            </h2>
+            <Link
+              href="/accountant/payroll"
+              className="text-sm text-blue-700 hover:text-blue-600"
+            >
               Quản lý lương →
             </Link>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
             <p className="text-xs text-slate-500">Kỳ lương</p>
-            <p className="text-lg font-semibold text-slate-900">{latestPayroll?.name ?? payrollPeriodLabel}</p>
+            <p className="text-lg font-semibold text-slate-900">
+              {latestPayroll?.name ?? payrollPeriodLabel}
+            </p>
             <div className="flex items-center justify-between gap-2">
-              <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs ${getPayrollStatusClass(payrollStatus)}`}>
+              <span
+                className={`inline-flex px-2.5 py-1 rounded-full border text-xs ${getPayrollStatusClass(payrollStatus)}`}
+              >
                 {getPayrollStatusLabel(payrollStatus)}
               </span>
-              {latestPayroll && <span className="text-xs text-slate-500">{latestPayroll.employeeCount} nhân viên</span>}
+              {latestPayroll && (
+                <span className="text-xs text-slate-500">
+                  {latestPayroll.employeeCount} nhân viên
+                </span>
+              )}
             </div>
             {latestPayroll && (
-              <p className="text-sm text-emerald-700">Tổng net: {formatCurrency(latestPayroll.totalNetPayroll)}</p>
+              <p className="text-sm text-emerald-700">
+                Tổng net: {formatCurrency(latestPayroll.totalNetPayroll)}
+              </p>
             )}
           </div>
 

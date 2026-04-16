@@ -530,7 +530,10 @@ function Sidebar() {
 
     return () => {
       window.clearInterval(intervalId);
-      window.removeEventListener("notifications:changed", onNotificationsChanged);
+      window.removeEventListener(
+        "notifications:changed",
+        onNotificationsChanged,
+      );
     };
   }, [refreshUnreadCount]);
 

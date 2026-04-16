@@ -22,7 +22,8 @@ const ROLE_LABEL: Record<RoleName, string> = {
 };
 
 const ROLE_DESCRIPTION: Record<RoleName, string> = {
-  [RoleName.EMPLOYEE]: "Tạo yêu cầu chi tiêu cá nhân, theo dõi ví và phiếu lương.",
+  [RoleName.EMPLOYEE]:
+    "Tạo yêu cầu chi tiêu cá nhân, theo dõi ví và phiếu lương.",
   [RoleName.TEAM_LEADER]: "Duyệt Flow 1 và quản lý dự án/nhóm được phân công.",
   [RoleName.MANAGER]: "Duyệt Flow 2, quản lý dự án và quỹ phòng ban.",
   [RoleName.ACCOUNTANT]: "Giải ngân, vận hành bảng lương và theo dõi sổ cái.",
@@ -229,16 +230,24 @@ export default function AdminRolesPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Vai trò hệ thống</h1>
         <p className="text-slate-500 mt-1">
-          Vai trò được định nghĩa cố định theo nghiệp vụ hệ thống. Không hỗ trợ thêm, sửa hoặc xóa vai trò.
+          Vai trò được định nghĩa cố định theo nghiệp vụ hệ thống. Không hỗ trợ
+          thêm, sửa hoặc xóa vai trò.
         </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {ROLE_ORDER.map((role) => (
-          <div key={role} className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div
+            key={role}
+            className="bg-white border border-slate-200 rounded-2xl p-5"
+          >
             <p className="text-xs text-slate-500 font-mono">{role}</p>
-            <h2 className="text-lg font-semibold text-slate-900 mt-1">{ROLE_LABEL[role]}</h2>
-            <p className="text-sm text-slate-600 mt-2">{ROLE_DESCRIPTION[role]}</p>
+            <h2 className="text-lg font-semibold text-slate-900 mt-1">
+              {ROLE_LABEL[role]}
+            </h2>
+            <p className="text-sm text-slate-600 mt-2">
+              {ROLE_DESCRIPTION[role]}
+            </p>
             <p className="text-xs text-slate-500 mt-3">
               Tổng quyền đang gán: {ROLE_PERMISSION_SET[role].size}
             </p>
@@ -247,22 +256,34 @@ export default function AdminRolesPage() {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Ma trận quyền theo nhóm chức năng</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          Ma trận quyền theo nhóm chức năng
+        </h2>
 
         <div className="space-y-4">
           {PERMISSION_GROUPS.map((group) => (
-            <div key={group.groupName} className="rounded-xl border border-slate-200 overflow-hidden">
+            <div
+              key={group.groupName}
+              className="rounded-xl border border-slate-200 overflow-hidden"
+            >
               <div className="px-4 py-3 border-b border-slate-200 bg-white/60">
-                <h3 className="text-sm font-semibold text-slate-900">{group.groupName}</h3>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {group.groupName}
+                </h3>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full min-w-245">
                   <thead>
                     <tr className="border-b border-slate-200 bg-blue-50">
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Permission</th>
+                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">
+                        Permission
+                      </th>
                       {ROLE_ORDER.map((role) => (
-                        <th key={role} className="px-3 py-3 text-center text-xs uppercase tracking-wider text-slate-500">
+                        <th
+                          key={role}
+                          className="px-3 py-3 text-center text-xs uppercase tracking-wider text-slate-500"
+                        >
                           {role}
                         </th>
                       ))}
@@ -270,12 +291,21 @@ export default function AdminRolesPage() {
                   </thead>
                   <tbody>
                     {group.permissions.map((permission) => (
-                      <tr key={permission} className="border-b border-slate-200 last:border-b-0">
-                        <td className="px-4 py-3 text-xs text-slate-600 font-mono">{permission}</td>
+                      <tr
+                        key={permission}
+                        className="border-b border-slate-200 last:border-b-0"
+                      >
+                        <td className="px-4 py-3 text-xs text-slate-600 font-mono">
+                          {permission}
+                        </td>
                         {ROLE_ORDER.map((role) => {
-                          const allowed = ROLE_PERMISSION_SET[role].has(permission);
+                          const allowed =
+                            ROLE_PERMISSION_SET[role].has(permission);
                           return (
-                            <td key={`${permission}-${role}`} className="px-3 py-3 text-center">
+                            <td
+                              key={`${permission}-${role}`}
+                              className="px-3 py-3 text-center"
+                            >
                               <span
                                 className={`inline-flex w-6 h-6 rounded-full items-center justify-center border text-xs ${
                                   allowed

@@ -76,24 +76,59 @@ function getAttachmentIcon(fileType: string): React.ReactNode {
 
   if (lower.includes("pdf")) {
     return (
-      <svg className="w-5 h-5 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 3h7l5 5v13H7V3zm7 0v5h5" />
+      <svg
+        className="w-5 h-5 text-rose-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M7 3h7l5 5v13H7V3zm7 0v5h5"
+        />
       </svg>
     );
   }
 
   if (lower.includes("image")) {
     return (
-      <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11l3 3 2-2 4 4" />
+      <svg
+        className="w-5 h-5 text-emerald-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M8 11l3 3 2-2 4 4"
+        />
       </svg>
     );
   }
 
   return (
-    <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 3h10l4 4v14H7V3zm10 0v4h4" />
+    <svg
+      className="w-5 h-5 text-slate-600"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M7 3h10l4 4v14H7V3zm10 0v4h4"
+      />
     </svg>
   );
 }
@@ -106,7 +141,9 @@ function getInitials(name: string): string {
     .join("");
 }
 
-export default function AccountantDisbursementDetailPage({ params }: PageProps) {
+export default function AccountantDisbursementDetailPage({
+  params,
+}: PageProps) {
   const router = useRouter();
   const { id } = use(params);
 
@@ -126,7 +163,9 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
   const [pinError, setPinError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successData, setSuccessData] = useState<DisburseSuccessView | null>(null);
+  const [successData, setSuccessData] = useState<DisburseSuccessView | null>(
+    null,
+  );
 
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -141,7 +180,9 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
       setError(null);
 
       try {
-        const res = await api.get<DisbursementDetailResponse>(`/api/v1/accountant/disbursements/${id}`);
+        const res = await api.get<DisbursementDetailResponse>(
+          `/api/v1/accountant/disbursements/${id}`,
+        );
 
         if (cancelled) return;
         setDetail(res.data);
@@ -167,7 +208,10 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
     };
   }, [id]);
 
-  const allChecked = useMemo(() => Object.values(checklist).every(Boolean), [checklist]);
+  const allChecked = useMemo(
+    () => Object.values(checklist).every(Boolean),
+    [checklist],
+  );
 
   const tlApprovalEntry = useMemo(() => {
     if (!detail) return null;
@@ -175,7 +219,7 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
     return detail.timeline.find(
       (entry) =>
         entry.action === RequestAction.APPROVE &&
-        entry.statusAfterAction === RequestStatus.PENDING_ACCOUNTANT_EXECUTION
+        entry.statusAfterAction === RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
     );
   }, [detail]);
 
@@ -293,9 +337,22 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
   if (!detail) {
     return (
       <div className="space-y-4">
-        <Link href="/accountant/disbursements" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+        <Link
+          href="/accountant/disbursements"
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Quay lại danh sách
         </Link>
@@ -315,7 +372,10 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/accountant/disbursements" className="hover:text-slate-700 transition-colors">
+        <Link
+          href="/accountant/disbursements"
+          className="hover:text-slate-700 transition-colors"
+        >
           Giải ngân
         </Link>
         <span>/</span>
@@ -328,20 +388,30 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs text-slate-500">Mã yêu cầu</p>
-                <h1 className="text-2xl font-bold text-slate-900 font-mono mt-1">{detail.requestCode}</h1>
-                <p className="text-sm text-slate-500 mt-1">Tạo lúc {formatDateTime(detail.createdAt)}</p>
+                <h1 className="text-2xl font-bold text-slate-900 font-mono mt-1">
+                  {detail.requestCode}
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                  Tạo lúc {formatDateTime(detail.createdAt)}
+                </p>
               </div>
               <div className="flex flex-col items-start lg:items-end gap-2">
-                <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getTypeClass(detail.type)}`}>
+                <span
+                  className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getTypeClass(detail.type)}`}
+                >
                   {getTypeLabel(detail.type)}
                 </span>
-                <p className="text-2xl font-bold text-amber-700">{formatCurrency(detail.approvedAmount)}</p>
+                <p className="text-2xl font-bold text-amber-700">
+                  {formatCurrency(detail.approvedAmount)}
+                </p>
               </div>
             </div>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Approval chain</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Approval chain
+            </h2>
 
             <div className="space-y-3">
               <TimelineStep
@@ -354,7 +424,11 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
               <TimelineStep
                 title="Bước 2: Team Leader duyệt"
                 subtitle={tlApprovalEntry?.actorName ?? "Team Leader"}
-                time={tlApprovalEntry ? formatDateTime(tlApprovalEntry.createdAt) : "Chưa có dữ liệu"}
+                time={
+                  tlApprovalEntry
+                    ? formatDateTime(tlApprovalEntry.createdAt)
+                    : "Chưa có dữ liệu"
+                }
                 note={tlApprovalEntry?.comment ?? undefined}
                 completed={Boolean(tlApprovalEntry)}
               />
@@ -369,31 +443,56 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Thông tin người nhận</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Thông tin người nhận
+            </h2>
 
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center text-sm font-semibold">
                 {getInitials(detail.requester.fullName)}
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900">{detail.requester.fullName}</p>
-                <p className="text-xs text-slate-500">{detail.requester.employeeCode} • {detail.requester.departmentName}</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {detail.requester.fullName}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {detail.requester.employeeCode} •{" "}
+                  {detail.requester.departmentName}
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Ngân hàng" value={detail.requester.bankName} />
-              <InfoCard label="Số tài khoản" value={detail.requester.bankAccountNum} mono />
-              <InfoCard label="Chủ tài khoản" value={detail.requester.bankAccountOwner} />
-              <InfoCard label="Chức danh" value={detail.requester.jobTitle ?? "—"} />
+              <InfoCard
+                label="Số tài khoản"
+                value={detail.requester.bankAccountNum}
+                mono
+              />
+              <InfoCard
+                label="Chủ tài khoản"
+                value={detail.requester.bankAccountOwner}
+              />
+              <InfoCard
+                label="Chức danh"
+                value={detail.requester.jobTitle ?? "—"}
+              />
             </div>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Thông tin yêu cầu</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Thông tin yêu cầu
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <InfoCard label="Dự án" value={`${detail.project.projectCode} • ${detail.project.name}`} />
-              <InfoCard label="Phase" value={`${detail.phase.phaseCode} • ${detail.phase.name}`} />
+              <InfoCard
+                label="Dự án"
+                value={`${detail.project.projectCode} • ${detail.project.name}`}
+              />
+              <InfoCard
+                label="Phase"
+                value={`${detail.phase.phaseCode} • ${detail.phase.name}`}
+              />
               <InfoCard
                 label="Ngân sách phase"
                 value={`${formatCurrency(detail.phase.currentSpent)} / ${formatCurrency(detail.phase.budgetLimit)}`}
@@ -407,12 +506,16 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
 
             <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">Mô tả</p>
-              <p className="text-sm text-slate-700 mt-1 whitespace-pre-line">{detail.description ?? "Không có mô tả"}</p>
+              <p className="text-sm text-slate-700 mt-1 whitespace-pre-line">
+                {detail.description ?? "Không có mô tả"}
+              </p>
             </div>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Compliance checklist</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Compliance checklist
+            </h2>
 
             <ChecklistItem
               checked={checklist.identityVerified}
@@ -436,7 +539,11 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
               checked={checklist.budgetAvailable}
               onToggle={() => handleChecklistChange("budgetAvailable")}
               label="Ngân sách phase còn đủ để giải ngân"
-              hint={budgetStillAvailable ? "Ngân sách khả dụng" : "Ngân sách đang sát ngưỡng"}
+              hint={
+                budgetStillAvailable
+                  ? "Ngân sách khả dụng"
+                  : "Ngân sách đang sát ngưỡng"
+              }
             />
 
             <ChecklistItem
@@ -449,19 +556,32 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
 
         <div className="space-y-6">
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Receipt Viewer</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Receipt Viewer
+            </h2>
 
             {detail.attachments.length === 0 ? (
-              <p className="text-sm text-slate-500">Không có chứng từ đính kèm.</p>
+              <p className="text-sm text-slate-500">
+                Không có chứng từ đính kèm.
+              </p>
             ) : (
               <div className="space-y-3">
                 {detail.attachments.map((file) => (
-                  <div key={file.fileId} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
+                  <div
+                    key={file.fileId}
+                    className="rounded-xl border border-slate-200 bg-white p-3 space-y-2"
+                  >
                     <div className="flex items-start gap-2">
-                      <span className="mt-0.5">{getAttachmentIcon(file.fileType)}</span>
+                      <span className="mt-0.5">
+                        {getAttachmentIcon(file.fileType)}
+                      </span>
                       <div className="min-w-0">
-                        <p className="text-sm text-slate-900 truncate">{file.fileName}</p>
-                        <p className="text-xs text-slate-500 mt-1">{formatFileSize(file.size)}</p>
+                        <p className="text-sm text-slate-900 truncate">
+                          {file.fileName}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {formatFileSize(file.size)}
+                        </p>
                       </div>
                     </div>
 
@@ -472,7 +592,12 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
                       className="inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-700"
                     >
                       Xem
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -488,11 +613,19 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Xác nhận giải ngân</h2>
-            <p className="text-sm text-slate-500">Nhập mã PIN của bạn để xác nhận giải ngân.</p>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Xác nhận giải ngân
+            </h2>
+            <p className="text-sm text-slate-500">
+              Nhập mã PIN của bạn để xác nhận giải ngân.
+            </p>
 
-            <div className={`rounded-xl border p-4 ${allChecked ? "border-emerald-200 bg-emerald-500/5" : "border-slate-200 bg-white"}`}>
-              <label className="block text-sm text-slate-600 mb-2">Mã PIN (5 chữ số)</label>
+            <div
+              className={`rounded-xl border p-4 ${allChecked ? "border-emerald-200 bg-emerald-500/5" : "border-slate-200 bg-white"}`}
+            >
+              <label className="block text-sm text-slate-600 mb-2">
+                Mã PIN (5 chữ số)
+              </label>
               <input
                 type="password"
                 inputMode="numeric"
@@ -504,9 +637,13 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
                 className="w-full px-4 py-3 rounded-xl bg-blue-50 border border-slate-200 text-slate-900 tracking-[0.35em] text-center text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
               />
               {!allChecked && (
-                <p className="text-xs text-amber-700 mt-2">Cần hoàn tất checklist trước khi nhập PIN.</p>
+                <p className="text-xs text-amber-700 mt-2">
+                  Cần hoàn tất checklist trước khi nhập PIN.
+                </p>
               )}
-              {pinError && <p className="text-xs text-rose-700 mt-2">{pinError}</p>}
+              {pinError && (
+                <p className="text-xs text-rose-700 mt-2">{pinError}</p>
+              )}
             </div>
 
             <button
@@ -515,7 +652,9 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
               disabled={pin.length < 5 || submitting || !allChecked}
               className="w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
-              {submitting ? "Đang giải ngân..." : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
+              {submitting
+                ? "Đang giải ngân..."
+                : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
             </button>
 
             {detail.status === "PENDING_ACCOUNTANT_EXECUTION" && (
@@ -551,10 +690,14 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
           />
 
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Từ chối giải ngân - {detail.requestCode}</h3>
+            <h3 className="text-xl font-bold text-slate-900">
+              Từ chối giải ngân - {detail.requestCode}
+            </h3>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Lý do từ chối</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Lý do từ chối
+              </label>
               <textarea
                 rows={4}
                 value={rejectReason}
@@ -564,22 +707,27 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {["Thiếu chứng từ", "Số tiền không hợp lý", "Không đúng danh mục", "Vượt ngân sách"].map(
-                (reasonChip) => (
-                  <button
-                    key={reasonChip}
-                    type="button"
-                    onClick={() =>
-                      setRejectReason((prev) =>
-                        prev.trim() ? `${prev.trim()}. ${reasonChip}` : reasonChip
-                      )
-                    }
-                    className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-600 hover:bg-blue-100"
-                  >
-                    {reasonChip}
-                  </button>
-                )
-              )}
+              {[
+                "Thiếu chứng từ",
+                "Số tiền không hợp lý",
+                "Không đúng danh mục",
+                "Vượt ngân sách",
+              ].map((reasonChip) => (
+                <button
+                  key={reasonChip}
+                  type="button"
+                  onClick={() =>
+                    setRejectReason((prev) =>
+                      prev.trim()
+                        ? `${prev.trim()}. ${reasonChip}`
+                        : reasonChip,
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-600 hover:bg-blue-100"
+                >
+                  {reasonChip}
+                </button>
+              ))}
             </div>
 
             {rejectError && (
@@ -615,19 +763,37 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
           <div className="absolute inset-x-0 top-16 mx-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-emerald-200 bg-white p-6 space-y-4">
             <div className="flex items-center gap-3">
               <span className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </span>
-              <h3 className="text-xl font-bold text-slate-900">Giải ngân thành công</h3>
+              <h3 className="text-xl font-bold text-slate-900">
+                Giải ngân thành công
+              </h3>
             </div>
 
             <div className="space-y-2 rounded-xl border border-slate-200 bg-blue-50 p-4">
               <p className="text-sm text-slate-600">
-                Mã giao dịch: <span className="font-mono text-slate-900">{successData.transactionCode}</span>
+                Mã giao dịch:{" "}
+                <span className="font-mono text-slate-900">
+                  {successData.transactionCode}
+                </span>
               </p>
               <p className="text-sm text-slate-600">
-                Số tiền: <span className="font-semibold text-emerald-700">{formatCurrency(successData.amount)}</span>
+                Số tiền:{" "}
+                <span className="font-semibold text-emerald-700">
+                  {formatCurrency(successData.amount)}
+                </span>
               </p>
             </div>
 
@@ -672,8 +838,18 @@ function TimelineStep({
         }`}
       >
         {completed ? (
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 13l4 4L19 7" />
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.8}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         ) : (
           <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -703,7 +879,11 @@ function InfoCard({
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm mt-1 ${tone ?? "text-slate-900"} ${mono ? "font-mono" : ""}`}>{value}</p>
+      <p
+        className={`text-sm mt-1 ${tone ?? "text-slate-900"} ${mono ? "font-mono" : ""}`}
+      >
+        {value}
+      </p>
     </div>
   );
 }
@@ -729,9 +909,10 @@ function ChecklistItem({
       />
       <span className="text-sm text-slate-700">
         {label}
-        {hint && <span className="block text-xs text-slate-500 mt-1">{hint}</span>}
+        {hint && (
+          <span className="block text-xs text-slate-500 mt-1">{hint}</span>
+        )}
       </span>
     </label>
   );
 }
-

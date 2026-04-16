@@ -255,7 +255,7 @@ function getRequestTypeClass(type: RequestType): string {
 function filterMockData(
   source: DisbursementListViewItem[],
   type?: RequestType,
-  search?: string
+  search?: string,
 ): DisbursementListViewItem[] {
   const q = search?.trim().toLowerCase() ?? "";
 
@@ -287,9 +287,18 @@ export default function AccountantDisbursementsPage() {
   const searchParams = useSearchParams();
 
   const searchParamsString = searchParams.toString();
-  const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
-  const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
-  const type = useMemo(() => parseTypeQuery(searchParams.get("type")), [searchParams]);
+  const search = useMemo(
+    () => searchParams.get("search") ?? "",
+    [searchParams],
+  );
+  const page = useMemo(
+    () => parsePage(searchParams.get("page")),
+    [searchParams],
+  );
+  const type = useMemo(
+    () => parseTypeQuery(searchParams.get("type")),
+    [searchParams],
+  );
 
   const [items, setItems] = useState<DisbursementListViewItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -307,7 +316,7 @@ export default function AccountantDisbursementsPage() {
       const query = params.toString();
       router.push(query ? `${pathname}?${query}` : pathname);
     },
-    [pathname, router]
+    [pathname, router],
   );
 
   const updateParam = useCallback(
@@ -322,7 +331,7 @@ export default function AccountantDisbursementsPage() {
       if (key !== "page") params.delete("page");
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   const goToPage = useCallback(
@@ -332,7 +341,7 @@ export default function AccountantDisbursementsPage() {
       else params.set("page", String(nextPage));
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   useEffect(() => {
@@ -369,9 +378,9 @@ export default function AccountantDisbursementsPage() {
         query.set("page", String(filters.page ?? 1));
         query.set("limit", String(filters.limit ?? PAGE_LIMIT));
 
-        const res = await api.get<PaginatedResponse<DisbursementListItem> | DisbursementListItem[]>(
-          `/api/v1/accountant/disbursements?${query.toString()}`
-        );
+        const res = await api.get<
+          PaginatedResponse<DisbursementListItem> | DisbursementListItem[]
+        >(`/api/v1/accountant/disbursements?${query.toString()}`);
 
         if (cancelled) return;
 
@@ -379,7 +388,9 @@ export default function AccountantDisbursementsPage() {
           .filter((item) => item.status === "PENDING_ACCOUNTANT_EXECUTION")
           .map((item) => ({ ...item }));
 
-        const apiTotal = Array.isArray(res.data) ? apiItems.length : res.data.total;
+        const apiTotal = Array.isArray(res.data)
+          ? apiItems.length
+          : res.data.total;
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
           : res.data.totalPages;
@@ -435,7 +446,9 @@ export default function AccountantDisbursementsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Giải ngân</h1>
-          <p className="text-slate-500 mt-1">Danh sách yêu cầu đã được Team Leader duyệt và chờ Kế toán xử lý.</p>
+          <p className="text-slate-500 mt-1">
+            Danh sách yêu cầu đã được Team Leader duyệt và chờ Kế toán xử lý.
+          </p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-300 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ xử lý
@@ -444,9 +457,14 @@ export default function AccountantDisbursementsPage() {
 
       <div className="rounded-2xl border border-cyan-200 bg-linear-to-r from-cyan-50 to-blue-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-slate-900">
-          Quỹ hệ thống: <span className="font-semibold text-slate-900">{formatCurrency(MOCK_SYSTEM_FUND_BALANCE)}</span>
+          Quỹ hệ thống:{" "}
+          <span className="font-semibold text-slate-900">
+            {formatCurrency(MOCK_SYSTEM_FUND_BALANCE)}
+          </span>
         </p>
-        <span className={`inline-flex w-fit px-2.5 py-1 rounded-full border text-xs font-medium ${getFundHealthClass(fundHealth)}`}>
+        <span
+          className={`inline-flex w-fit px-2.5 py-1 rounded-full border text-xs font-medium ${getFundHealthClass(fundHealth)}`}
+        >
           {fundHealth}
         </span>
       </div>
@@ -498,13 +516,21 @@ export default function AccountantDisbursementsPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, index) => (
-            <div key={`disbursement-skeleton-${index}`} className="h-48 rounded-2xl bg-white animate-pulse" />
+            <div
+              key={`disbursement-skeleton-${index}`}
+              className="h-48 rounded-2xl bg-white animate-pulse"
+            />
           ))}
         </div>
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
           <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -513,7 +539,9 @@ export default function AccountantDisbursementsPage() {
               />
             </svg>
           </div>
-          <p className="text-slate-600 mt-4">Không có yêu cầu chờ giải ngân theo bộ lọc hiện tại.</p>
+          <p className="text-slate-600 mt-4">
+            Không có yêu cầu chờ giải ngân theo bộ lọc hiện tại.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -524,35 +552,53 @@ export default function AccountantDisbursementsPage() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => router.push(`/accountant/disbursements/${item.id}`)}
+                onClick={() =>
+                  router.push(`/accountant/disbursements/${item.id}`)
+                }
                 className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className={`inline-flex px-2 py-1 rounded-full border ${getRequestTypeClass(item.type)}`}>
+                    <span
+                      className={`inline-flex px-2 py-1 rounded-full border ${getRequestTypeClass(item.type)}`}
+                    >
                       {getRequestTypeLabel(item.type)}
                     </span>
-                    <span className="font-mono text-slate-600">{item.requestCode}</span>
-                    <span className="text-slate-500">Tạo lúc {formatDateTime(item.createdAt)}</span>
+                    <span className="font-mono text-slate-600">
+                      {item.requestCode}
+                    </span>
+                    <span className="text-slate-500">
+                      Tạo lúc {formatDateTime(item.createdAt)}
+                    </span>
                   </div>
 
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-slate-900">
-                      {item.requester.fullName} <span className="text-slate-500">({item.requester.employeeCode})</span>
+                      {item.requester.fullName}{" "}
+                      <span className="text-slate-500">
+                        ({item.requester.employeeCode})
+                      </span>
                     </p>
                     <p className="text-sm text-slate-600">
-                      {item.project.name} <span className="text-slate-500">({item.project.projectCode})</span>
+                      {item.project.name}{" "}
+                      <span className="text-slate-500">
+                        ({item.project.projectCode})
+                      </span>
                     </p>
                     <p className="text-xs text-slate-500">
                       Duyệt bởi: {item.approver?.fullName ?? "Team Leader"}
-                      {item.approver?.approvedAt ? ` • ${formatDateTime(item.approver.approvedAt)}` : ""}
+                      {item.approver?.approvedAt
+                        ? ` • ${formatDateTime(item.approver.approvedAt)}`
+                        : ""}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
                       <p className="text-xs text-slate-500">Số tiền yêu cầu</p>
-                      <p className="text-sm font-semibold text-slate-900 mt-1">{formatCurrency(item.amount)}</p>
+                      <p className="text-sm font-semibold text-slate-900 mt-1">
+                        {formatCurrency(item.amount)}
+                      </p>
                     </div>
 
                     <div
@@ -562,10 +608,14 @@ export default function AccountantDisbursementsPage() {
                           : "border-slate-200 bg-white"
                       }`}
                     >
-                      <p className={`text-xs ${changedAmount ? "text-amber-700" : "text-slate-500"}`}>
+                      <p
+                        className={`text-xs ${changedAmount ? "text-amber-700" : "text-slate-500"}`}
+                      >
                         Số tiền giải ngân
                       </p>
-                      <p className={`text-sm font-semibold mt-1 ${changedAmount ? "text-amber-200" : "text-slate-900"}`}>
+                      <p
+                        className={`text-sm font-semibold mt-1 ${changedAmount ? "text-amber-200" : "text-slate-900"}`}
+                      >
                         {formatCurrency(item.approvedAmount)}
                       </p>
                     </div>

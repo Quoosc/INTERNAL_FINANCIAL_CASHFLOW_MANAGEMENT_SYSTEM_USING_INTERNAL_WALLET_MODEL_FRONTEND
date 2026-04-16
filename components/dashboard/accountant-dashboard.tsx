@@ -58,13 +58,13 @@ function getRequestTypeLabel(type: RequestType): string {
 function getRequestTypeClass(type: RequestType): string {
   switch (type) {
     case RequestType.ADVANCE:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RequestType.EXPENSE:
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case RequestType.REIMBURSE:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -84,13 +84,13 @@ function getPayrollStatusLabel(status: PayrollStatus | null): string {
 function getPayrollStatusClass(status: PayrollStatus | null): string {
   switch (status) {
     case PayrollStatus.DRAFT:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     case PayrollStatus.PROCESSING:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case PayrollStatus.COMPLETED:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     default:
-      return "bg-slate-500/10 border-slate-500/20 text-slate-400";
+      return "bg-slate-500/10 border-slate-500/20 text-slate-500";
   }
 }
 
@@ -111,13 +111,13 @@ function getFundHealth(balance: number): FundHealth {
 function getFundHealthClass(health: FundHealth): string {
   switch (health) {
     case "HEALTHY":
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case "LOW":
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case "CRITICAL":
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -355,22 +355,22 @@ export function AccountantDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Bảng điều khiển Kế toán</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">Bảng điều khiển Kế toán</h1>
+          <p className="text-slate-500 mt-1">
             Theo dõi giải ngân Flow 1, bảng lương và sổ cái hệ thống.
           </p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-100 text-cyan-700 text-sm font-medium">
           {hasRole(RoleName.ACCOUNTANT) ? "Kế toán" : user?.role ?? "ACCOUNTANT"}
         </span>
       </div>
 
-      <div className="bg-gradient-to-br from-cyan-600/20 via-blue-600/10 to-slate-900 border border-cyan-500/30 rounded-2xl p-5 space-y-4">
+      <div className="bg-gradient-to-br from-cyan-600/20 via-blue-600/10 to-slate-900 border border-cyan-200 rounded-2xl p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.16em] text-cyan-200/80">System Fund</p>
-            <p className="text-3xl font-bold text-white mt-2">{formatCurrency(fundBalance)}</p>
-            <p className="text-sm text-slate-300 mt-1">Sức khỏe quỹ hệ thống theo ngưỡng vận hành.</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{formatCurrency(fundBalance)}</p>
+            <p className="text-sm text-slate-600 mt-1">Sức khỏe quỹ hệ thống theo ngưỡng vận hành.</p>
           </div>
 
           <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm font-semibold ${getFundHealthClass(health)}`}>
@@ -379,11 +379,11 @@ export function AccountantDashboard() {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300">
+          <div className="flex items-center justify-between text-xs text-slate-600">
             <span>Mức quỹ hiện tại</span>
             <span>{fundProgress}%</span>
           </div>
-          <div className="h-3 rounded-full bg-slate-900 border border-white/10 overflow-hidden">
+          <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden">
             <div
               className={`h-full ${
                 health === "HEALTHY" ? "bg-emerald-500" : health === "LOW" ? "bg-amber-500" : "bg-rose-500"
@@ -397,34 +397,34 @@ export function AccountantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           href="/accountant/disbursements"
-          className="bg-slate-800 border border-white/10 rounded-2xl p-4 hover:bg-slate-700/40 hover:border-white/20 transition-all"
+          className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 hover:bg-slate-50 hover:border-slate-300 transition-all"
         >
-          <p className="text-xs text-slate-400">Chờ giải ngân</p>
-          <p className="text-2xl font-bold text-amber-300 mt-1">
+          <p className="text-xs text-slate-500">Chờ giải ngân</p>
+          <p className="text-3xl font-bold text-amber-700 mt-1">
             {dashboard?.pendingDisbursementsCount ?? pendingDisbursements.length}
           </p>
           <p className="text-xs text-slate-500 mt-1">PENDING_ACCOUNTANT_EXECUTION</p>
         </Link>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
-          <p className="text-xs text-slate-400">Dòng tiền vào tháng này</p>
-          <p className="text-2xl font-bold text-emerald-300 mt-1">{formatCurrency(dashboard?.monthlyInflow ?? 0)}</p>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+          <p className="text-xs text-slate-500">Dòng tiền vào tháng này</p>
+          <p className="text-3xl font-bold text-emerald-700 mt-1">{formatCurrency(dashboard?.monthlyInflow ?? 0)}</p>
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
-          <p className="text-xs text-slate-400">Dòng tiền ra tháng này</p>
-          <p className="text-2xl font-bold text-rose-300 mt-1">{formatCurrency(dashboard?.monthlyOutflow ?? 0)}</p>
-          <p className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+          <p className="text-xs text-slate-500">Dòng tiền ra tháng này</p>
+          <p className="text-3xl font-bold text-rose-700 mt-1">{formatCurrency(dashboard?.monthlyOutflow ?? 0)}</p>
+          <p className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
             Dòng tiền ròng: {formatCurrency(monthlyNetFlow)}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Chờ giải ngân</h2>
-            <Link href="/accountant/disbursements" className="text-sm text-blue-300 hover:text-blue-200">
+            <h2 className="text-lg font-semibold text-slate-900">Chờ giải ngân</h2>
+            <Link href="/accountant/disbursements" className="text-sm text-blue-700 hover:text-blue-600">
               Xem tất cả →
             </Link>
           </div>
@@ -432,11 +432,11 @@ export function AccountantDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`accountant-disbursement-loading-${index}`} className="h-24 rounded-xl bg-slate-900 animate-pulse" />
+                <div key={`accountant-disbursement-loading-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
               ))}
             </div>
           ) : pendingDisbursements.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
               Không có yêu cầu đang chờ giải ngân.
             </div>
           ) : (
@@ -445,7 +445,7 @@ export function AccountantDashboard() {
                 <Link
                   key={item.id}
                   href={`/accountant/disbursements/${item.id}`}
-                  className="block rounded-xl border border-white/10 bg-slate-900 p-3 hover:border-white/20 hover:bg-slate-900/70 transition-all"
+                  className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-1.5 min-w-0">
@@ -453,17 +453,17 @@ export function AccountantDashboard() {
                         <span className={`inline-flex px-2 py-1 rounded-full border ${getRequestTypeClass(item.type)}`}>
                           {getRequestTypeLabel(item.type)}
                         </span>
-                        <span className="font-mono text-slate-300">{item.requestCode}</span>
+                        <span className="font-mono text-slate-600">{item.requestCode}</span>
                         <span className="text-slate-500">{formatRelativeTime(item.createdAt)}</span>
                       </div>
-                      <p className="text-sm text-white truncate">
+                      <p className="text-sm text-slate-900 truncate">
                         {item.requester.fullName} <span className="text-slate-500">({item.requester.employeeCode})</span>
                       </p>
-                      <p className="text-xs text-slate-400 truncate">
+                      <p className="text-xs text-slate-500 truncate">
                         {item.project.name} • {item.phase.name}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-amber-300">{formatCurrency(item.approvedAmount)}</p>
+                    <p className="text-sm font-semibold text-amber-700">{formatCurrency(item.approvedAmount)}</p>
                   </div>
                 </Link>
               ))}
@@ -471,17 +471,17 @@ export function AccountantDashboard() {
           )}
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Kỳ lương gần nhất</h2>
-            <Link href="/accountant/payroll" className="text-sm text-blue-300 hover:text-blue-200">
+            <h2 className="text-lg font-semibold text-slate-900">Kỳ lương gần nhất</h2>
+            <Link href="/accountant/payroll" className="text-sm text-blue-700 hover:text-blue-600">
               Quản lý lương →
             </Link>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
             <p className="text-xs text-slate-500">Kỳ lương</p>
-            <p className="text-lg font-semibold text-white">{latestPayroll?.name ?? payrollPeriodLabel}</p>
+            <p className="text-lg font-semibold text-slate-900">{latestPayroll?.name ?? payrollPeriodLabel}</p>
             <div className="flex items-center justify-between gap-2">
               <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs ${getPayrollStatusClass(payrollStatus)}`}>
                 {getPayrollStatusLabel(payrollStatus)}
@@ -489,21 +489,21 @@ export function AccountantDashboard() {
               {latestPayroll && <span className="text-xs text-slate-500">{latestPayroll.employeeCount} nhân viên</span>}
             </div>
             {latestPayroll && (
-              <p className="text-sm text-emerald-300">Tổng net: {formatCurrency(latestPayroll.totalNetPayroll)}</p>
+              <p className="text-sm text-emerald-700">Tổng net: {formatCurrency(latestPayroll.totalNetPayroll)}</p>
             )}
           </div>
 
           <div className="space-y-2">
             <Link
               href="/accountant/ledger"
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-3 py-2.5 text-sm text-slate-200 hover:border-white/20 hover:bg-slate-800 transition-colors"
+              className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 hover:border-slate-300 hover:bg-white transition-colors"
             >
               <span>Sổ cái</span>
               <span>→</span>
             </Link>
             <Link
               href="/admin/system-fund"
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-3 py-2.5 text-sm text-slate-200 hover:border-white/20 hover:bg-slate-800 transition-colors"
+              className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 hover:border-slate-300 hover:bg-white transition-colors"
             >
               <span>Quỹ hệ thống</span>
               <span>→</span>
@@ -513,7 +513,7 @@ export function AccountantDashboard() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

@@ -56,9 +56,9 @@ function getStatusLabel(status: PayrollStatus): string {
 }
 
 function getStatusClass(status: PayrollStatus): string {
-  if (status === PayrollStatus.DRAFT) return "bg-slate-500/15 border-slate-500/30 text-slate-300";
-  if (status === PayrollStatus.PROCESSING) return "bg-amber-500/15 border-amber-500/30 text-amber-300";
-  return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+  if (status === PayrollStatus.DRAFT) return "bg-slate-100 border-slate-200 text-slate-600";
+  if (status === PayrollStatus.PROCESSING) return "bg-amber-100 border-amber-200 text-amber-700";
+  return "bg-emerald-100 border-emerald-200 text-emerald-700";
 }
 
 function sumGross(entries: PayrollEntry[]): number {
@@ -342,9 +342,9 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 rounded bg-slate-800 animate-pulse" />
-        <div className="h-32 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-96 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-8 w-64 rounded bg-white animate-pulse" />
+        <div className="h-32 rounded-2xl bg-white animate-pulse" />
+        <div className="h-96 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
@@ -352,13 +352,13 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   if (!period) {
     return (
       <div className="space-y-4">
-        <Link href="/accountant/payroll" className="inline-flex items-center gap-2 text-slate-300 hover:text-white">
+        <Link href="/accountant/payroll" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
           Quay lại danh sách kỳ lương
         </Link>
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-8 text-center text-slate-400">Không tìm thấy kỳ lương.</div>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500">Không tìm thấy kỳ lương.</div>
       </div>
     );
   }
@@ -367,27 +367,27 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-slate-400">
-        <Link href="/accountant/payroll" className="hover:text-slate-200 transition-colors">Bảng lương</Link>
+      <div className="flex items-center gap-2 text-sm text-slate-500">
+        <Link href="/accountant/payroll" className="hover:text-slate-900 transition-colors">Bảng lương</Link>
         <span>/</span>
-        <span className="text-slate-300 font-mono">{period.periodCode}</span>
+        <span className="text-slate-600 font-mono">{period.periodCode}</span>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500 font-mono">{period.periodCode}</p>
-            <h1 className="text-2xl font-bold text-white mt-1">{period.name}</h1>
-            <p className="text-sm text-slate-400 mt-1">Tháng {period.month}/{period.year}</p>
+            <h1 className="text-2xl font-bold text-slate-900 mt-1">{period.name}</h1>
+            <p className="text-sm text-slate-500 mt-1">Tháng {period.month}/{period.year}</p>
           </div>
           <div className="flex flex-col items-start lg:items-end gap-2">
             <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getStatusClass(period.status)}`}>{getStatusLabel(period.status)}</span>
-            <p className="text-sm text-slate-400">Cập nhật: {formatDateTime(period.updatedAt)}</p>
+            <p className="text-sm text-slate-500">Cập nhật: {formatDateTime(period.updatedAt)}</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {[
             { step: 1 as const, title: "Upload Excel", done: hasEntries },
@@ -398,10 +398,10 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             const active = activeStep === item.step;
             const enabled = canOpenStep(item.step);
             return (
-              <button key={item.step} type="button" disabled={!enabled} onClick={() => setActiveStep(item.step)} className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? "border-blue-500/50 bg-blue-500/15" : enabled ? "border-white/10 bg-slate-900 hover:border-white/20" : "border-white/5 bg-slate-900/40 opacity-60 cursor-not-allowed"}`}>
+              <button key={item.step} type="button" disabled={!enabled} onClick={() => setActiveStep(item.step)} className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? "border-blue-500/50 bg-blue-50" : enabled ? "border-slate-200 bg-white hover:border-slate-300" : "border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed"}`}>
                 <div className="flex items-center gap-2">
-                  <span className={`w-6 h-6 rounded-full border text-xs font-semibold flex items-center justify-center ${item.done ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-300" : active ? "border-blue-500/50 bg-blue-500/20 text-blue-300" : "border-slate-500/40 bg-slate-700/50 text-slate-300"}`}>{item.done ? "✓" : item.step}</span>
-                  <span className="text-sm text-slate-200">{item.title}</span>
+                  <span className={`w-6 h-6 rounded-full border text-xs font-semibold flex items-center justify-center ${item.done ? "border-emerald-500/50 bg-emerald-50 text-emerald-700" : active ? "border-blue-500/50 bg-blue-50 text-blue-700" : "border-slate-500/40 bg-slate-100 text-slate-600"}`}>{item.done ? "✓" : item.step}</span>
+                  <span className="text-sm text-slate-900">{item.title}</span>
                 </div>
               </button>
             );
@@ -410,15 +410,15 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       </div>
 
       {activeStep === 1 && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Bước 1: Upload Excel</h2>
-            <a href="/api/v1/accountant/payroll/template" className="inline-flex w-fit items-center gap-2 text-sm text-blue-300 hover:text-blue-200">Tải template Excel</a>
+            <h2 className="text-lg font-semibold text-slate-900">Bước 1: Upload Excel</h2>
+            <a href="/api/v1/accountant/payroll/template" className="inline-flex w-fit items-center gap-2 text-sm text-blue-700 hover:text-blue-600">Tải template Excel</a>
           </div>
 
-          <label className="block rounded-2xl border border-dashed border-white/20 bg-slate-900/60 p-6 text-center cursor-pointer hover:border-blue-400/50 transition-colors">
+          <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-6 text-center cursor-pointer hover:border-blue-400/50 transition-colors">
             <input type="file" accept=".xlsx,.xls" className="hidden" onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} />
-            <p className="text-sm text-slate-300">Kéo thả hoặc bấm để chọn file Excel (.xlsx, .xls)</p>
+            <p className="text-sm text-slate-600">Kéo thả hoặc bấm để chọn file Excel (.xlsx, .xls)</p>
             <p className="text-xs text-slate-500 mt-2">{selectedFile ? `Đã chọn: ${selectedFile.name}` : "Chưa có file nào được chọn"}</p>
           </label>
 
@@ -427,12 +427,12 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           </div>
 
           {importResult && (
-            <div className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-white">Kết quả import</h3>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-slate-900">Kết quả import</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <SummaryStat label="Tổng dòng" value={String(importResult.totalRows)} />
-                <SummaryStat label="Thành công" value={String(importResult.successCount)} tone="text-emerald-300" />
-                <SummaryStat label="Lỗi" value={String(importResult.errorCount)} tone="text-rose-300" />
+                <SummaryStat label="Thành công" value={String(importResult.successCount)} tone="text-emerald-700" />
+                <SummaryStat label="Lỗi" value={String(importResult.errorCount)} tone="text-rose-700" />
                 <SummaryStat label="Tổng net" value={formatCurrency(importResult.totalNetPayroll)} />
               </div>
             </div>
@@ -445,20 +445,20 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       )}
 
       {activeStep === 2 && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Bước 2: Xem & Sửa danh sách</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Bước 2: Xem & Sửa danh sách</h2>
 
-          <div className="rounded-xl border border-white/10 overflow-x-auto">
+          <div className="rounded-xl border border-slate-200 overflow-x-auto">
             <table className="w-full min-w-[980px]">
               <thead>
-                <tr className="bg-slate-900/70 border-b border-white/10">
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Mã NV</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Họ tên</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Lương gross</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Phụ cấp</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Khấu trừ</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Lương net</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Hành động</th>
+                <tr className="bg-white/70 border-b border-slate-200">
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Mã NV</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Họ tên</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Lương gross</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Phụ cấp</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Khấu trừ</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Lương net</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -467,15 +467,15 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                   const deductionValue = entry.deduction + entry.advanceDeduct;
 
                   return (
-                    <tr key={entry.id} className="border-b border-white/5 last:border-b-0">
-                      <td className="px-4 py-3 text-sm text-slate-200 font-mono">{entry.employeeCode}</td>
-                      <td className="px-4 py-3 text-sm text-white">{entry.fullName}</td>
-                      <td className="px-4 py-3 text-right text-sm text-slate-200">{formatCurrency(gross)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-slate-200">{formatCurrency(entry.allowance)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-rose-300">{formatCurrency(deductionValue)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-emerald-300 font-semibold">{formatCurrency(entry.finalNetSalary)}</td>
+                    <tr key={entry.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-slate-900 font-mono">{entry.employeeCode}</td>
+                      <td className="px-4 py-3 text-sm text-slate-900">{entry.fullName}</td>
+                      <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(gross)}</td>
+                      <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(entry.allowance)}</td>
+                      <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(deductionValue)}</td>
+                      <td className="px-4 py-3 text-right text-sm text-emerald-700 font-semibold">{formatCurrency(entry.finalNetSalary)}</td>
                       <td className="px-4 py-3 text-right">
-                        <button type="button" onClick={() => openEdit(entry)} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs">Sửa</button>
+                        <button type="button" onClick={() => openEdit(entry)} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">Sửa</button>
                       </td>
                     </tr>
                   );
@@ -486,49 +486,49 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <SummaryStat label="Tổng gross" value={formatCurrency(grossTotal)} />
-            <SummaryStat label="Tổng net" value={formatCurrency(netTotal)} tone="text-emerald-300" />
+            <SummaryStat label="Tổng net" value={formatCurrency(netTotal)} tone="text-emerald-700" />
           </div>
 
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => setActiveStep(1)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lại</button>
+            <button type="button" onClick={() => setActiveStep(1)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">← Quay lại</button>
             <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold">Tính bù trừ →</button>
           </div>
         </div>
       )}
 
       {activeStep === 3 && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Bước 3: Auto-netting</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Bước 3: Auto-netting</h2>
 
           <div className="flex justify-end">
             <button type="button" onClick={() => void handleNetting()} disabled={netting || period.entries.length === 0} className="px-4 py-2.5 rounded-xl bg-amber-500/80 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 text-sm font-semibold">{netting ? "Đang tính..." : "Tính bù trừ nợ tạm ứng"}</button>
           </div>
 
           {!nettingResult ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-10 text-center text-slate-500 text-sm">Chưa có dữ liệu auto-netting. Bấm &quot;Tính bù trừ nợ tạm ứng&quot; để tiếp tục.</div>
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-10 text-center text-slate-500 text-sm">Chưa có dữ liệu auto-netting. Bấm &quot;Tính bù trừ nợ tạm ứng&quot; để tiếp tục.</div>
           ) : (
             <>
-              <div className="rounded-xl border border-white/10 overflow-x-auto">
+              <div className="rounded-xl border border-slate-200 overflow-x-auto">
                 <table className="w-full min-w-[920px]">
                   <thead>
-                    <tr className="bg-slate-900/70 border-b border-white/10">
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Mã NV</th>
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Họ tên</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Dư nợ</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Khấu trừ</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Lương thực lĩnh</th>
+                    <tr className="bg-white/70 border-b border-slate-200">
+                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Mã NV</th>
+                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Họ tên</th>
+                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Dư nợ</th>
+                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Khấu trừ</th>
+                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Lương thực lĩnh</th>
                     </tr>
                   </thead>
                   <tbody>
                     {nettingResult.summary.map((item) => {
                       const netSalary = period.entries.find((entry) => entry.userId === item.userId)?.finalNetSalary ?? 0;
                       return (
-                        <tr key={item.userId} className={`border-b border-white/5 last:border-b-0 ${item.deductedAmount > 0 ? "bg-amber-500/10" : ""}`}>
-                          <td className="px-4 py-3 text-sm text-slate-200 font-mono">{item.employeeCode}</td>
-                          <td className="px-4 py-3 text-sm text-white">{item.fullName}</td>
-                          <td className="px-4 py-3 text-right text-sm text-rose-300">{formatCurrency(item.outstandingDebt)}</td>
-                          <td className="px-4 py-3 text-right text-sm text-amber-300">{formatCurrency(item.deductedAmount)}</td>
-                          <td className="px-4 py-3 text-right text-sm text-emerald-300 font-semibold">{formatCurrency(netSalary)}</td>
+                        <tr key={item.userId} className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${item.deductedAmount > 0 ? "bg-amber-50" : ""}`}>
+                          <td className="px-4 py-3 text-sm text-slate-900 font-mono">{item.employeeCode}</td>
+                          <td className="px-4 py-3 text-sm text-slate-900">{item.fullName}</td>
+                          <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(item.outstandingDebt)}</td>
+                          <td className="px-4 py-3 text-right text-sm text-amber-700">{formatCurrency(item.deductedAmount)}</td>
+                          <td className="px-4 py-3 text-right text-sm text-emerald-700 font-semibold">{formatCurrency(netSalary)}</td>
                         </tr>
                       );
                     })}
@@ -537,54 +537,54 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <SummaryStat label="Tổng khấu trừ tạm ứng" value={formatCurrency(nettingResult.totalAdvanceDeducted)} tone="text-amber-300" />
-                <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-300" />
+                <SummaryStat label="Tổng khấu trừ tạm ứng" value={formatCurrency(nettingResult.totalAdvanceDeducted)} tone="text-amber-700" />
+                <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-700" />
               </div>
             </>
           )}
 
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => setActiveStep(2)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lại</button>
+            <button type="button" onClick={() => setActiveStep(2)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">← Quay lại</button>
             <button type="button" onClick={() => setActiveStep(4)} disabled={!nettingResult && !isCompleted} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Xác nhận & Chạy lương →</button>
           </div>
         </div>
       )}
 
       {activeStep === 4 && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Bước 4: Chạy lương</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Bước 4: Chạy lương</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <SummaryStat label="Số nhân viên" value={`${totalEmployees} người`} />
-            <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-300" />
+            <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-700" />
           </div>
 
           {isCompleted ? (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 space-y-2">
-              <p className="text-emerald-300 font-semibold">✓ Payroll đã chạy thành công</p>
-              <p className="text-sm text-slate-200">Ky {period.periodCode} đã chuyển trạng thái COMPLETED.</p>
-              <p className="text-sm text-slate-300">{runResult ? `Đã tạo ${runResult.payslipsGenerated} phiếu lương • Tong chi ${formatCurrency(runResult.totalNetPayroll)}` : `Tổng chi: ${formatCurrency(period.totalNetPayroll)}`}</p>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+              <p className="text-emerald-700 font-semibold">✓ Payroll đã chạy thành công</p>
+              <p className="text-sm text-slate-900">Ky {period.periodCode} đã chuyển trạng thái COMPLETED.</p>
+              <p className="text-sm text-slate-600">{runResult ? `Đã tạo ${runResult.payslipsGenerated} phiếu lương • Tong chi ${formatCurrency(runResult.totalNetPayroll)}` : `Tổng chi: ${formatCurrency(period.totalNetPayroll)}`}</p>
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-200 text-sm">⚠ Thao tác này KHÔNG THỂ HOÀN TÁC. Hệ thống sẽ chi lương cho {totalEmployees} nhân viên.</div>
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-200 text-sm">⚠ Thao tác này KHÔNG THỂ HOÀN TÁC. Hệ thống sẽ chi lương cho {totalEmployees} nhân viên.</div>
               <button type="button" onClick={() => setShowRunConfirm(true)} className="px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">Chạy lương ngay</button>
             </>
           )}
 
           <div>
-            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">← Quay lại</button>
+            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">← Quay lại</button>
           </div>
         </div>
       )}
 
-      {error && <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">{error}</div>}
+      {error && <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">{error}</div>}
 
       {editingEntry && (
         <div className="fixed inset-0 z-50">
           <button type="button" className="absolute inset-0 bg-black/70" onClick={closeEdit} aria-label="Dong modal sua entry" />
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Sửa dòng lương - {editingEntry.employeeCode}</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Sửa dòng lương - {editingEntry.employeeCode}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <NumberInput label="Lương cơ bản" value={baseSalary} onChange={setBaseSalary} />
               <NumberInput label="Thưởng" value={bonus} onChange={setBonus} />
@@ -592,9 +592,9 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               <NumberInput label="Khấu trừ" value={deduction} onChange={setDeduction} />
               <NumberInput label="Khấu trừ tạm ứng" value={advanceDeduct} onChange={setAdvanceDeduct} />
             </div>
-            {entryError && <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">{entryError}</div>}
+            {entryError && <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">{entryError}</div>}
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button type="button" onClick={closeEdit} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">Hủy</button>
+              <button type="button" onClick={closeEdit} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
               <button type="button" onClick={() => void handleSaveEntry()} disabled={uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Đang lưu..." : "Lưu"}</button>
             </div>
           </div>
@@ -604,12 +604,12 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       {showRunConfirm && (
         <div className="fixed inset-0 z-50">
           <button type="button" className="absolute inset-0 bg-black/70" onClick={() => setShowRunConfirm(false)} aria-label="Đóng xác nhận chạy lương" />
-          <div className="absolute inset-x-0 top-20 mx-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Xác nhận chạy lương</h3>
-            <p className="text-sm text-slate-300">Hệ thống sẽ chi lương cho <span className="font-semibold text-white">{totalEmployees} nhân viên</span> với tổng số tiền <span className="font-semibold text-emerald-300">{formatCurrency(netTotal)}</span>.</p>
-            <p className="text-sm text-rose-300">Thao tác này không thể hoàn tác.</p>
+          <div className="absolute inset-x-0 top-20 mx-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Xác nhận chạy lương</h3>
+            <p className="text-sm text-slate-600">Hệ thống sẽ chi lương cho <span className="font-semibold text-slate-900">{totalEmployees} nhân viên</span> với tổng số tiền <span className="font-semibold text-emerald-700">{formatCurrency(netTotal)}</span>.</p>
+            <p className="text-sm text-rose-700">Thao tác này không thể hoàn tác.</p>
             <div className="flex items-center justify-end gap-3">
-              <button type="button" onClick={() => setShowRunConfirm(false)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">Hủy</button>
+              <button type="button" onClick={() => setShowRunConfirm(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
               <button type="button" onClick={() => void handleRun()} disabled={running} className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{running ? "Đang chạy..." : "Xác nhận chạy lương"}</button>
             </div>
           </div>
@@ -622,17 +622,17 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 function NumberInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <div>
-      <label className="block text-sm text-slate-300 mb-2">{label}</label>
-      <input type="number" min={0} value={value} onChange={(event) => onChange(event.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40" />
+      <label className="block text-sm text-slate-600 mb-2">{label}</label>
+      <input type="number" min={0} value={value} onChange={(event) => onChange(event.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40" />
     </div>
   );
 }
 
 function SummaryStat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2.5">
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm font-semibold mt-1 ${tone ?? "text-slate-200"}`}>{value}</p>
+      <p className={`text-sm font-semibold mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>
   );
 }

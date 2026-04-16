@@ -175,19 +175,19 @@ function normalizeList(payload: LedgerListApi, fallbackPage: number) {
 function getTypeClass(type: TransactionType): string {
   switch (type) {
     case TransactionType.REQUEST_PAYMENT:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case TransactionType.PAYSLIP_PAYMENT:
-      return "bg-blue-500/15 border-blue-500/30 text-blue-300";
+      return "bg-blue-50 border-blue-200 text-blue-700";
     case TransactionType.DEPOSIT:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case TransactionType.WITHDRAW:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     case TransactionType.DEPT_QUOTA_ALLOCATION:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case TransactionType.PROJECT_QUOTA_ALLOCATION:
-      return "bg-orange-500/15 border-orange-500/30 text-orange-300";
+      return "bg-orange-100 border-orange-200 text-orange-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -424,26 +424,26 @@ export default function AccountantLedgerPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">So cai</h1>
-          <p className="text-slate-400 mt-1">Tat ca giao dich he thong theo nguyen tac double-entry immutable.</p>
+          <h1 className="text-2xl font-bold text-slate-900">So cai</h1>
+          <p className="text-slate-500 mt-1">Tat ca giao dich he thong theo nguyen tac double-entry immutable.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-500/40 bg-slate-500/15 text-slate-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-500/40 bg-slate-100 text-slate-600 text-sm font-medium">
           Immutable - Chi doc
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <SummaryCard label="Tong nap vao" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-300" />
-        <SummaryCard label="Tong chi ra" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-300" />
-        <SummaryCard label="So du rong" value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-white" />
+        <SummaryCard label="Tong nap vao" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-700" />
+        <SummaryCard label="Tong chi ra" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-700" />
+        <SummaryCard label="So du rong" value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-slate-900" />
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
           <select
             value={type ?? ""}
             onChange={(event) => updateParam("type", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
           >
             <option value="">Tat ca loai</option>
             {typeOptions.map((value) => (
@@ -455,51 +455,51 @@ export default function AccountantLedgerPage() {
             type="date"
             value={from}
             onChange={(event) => updateParam("from", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
           />
 
           <input
             type="date"
             value={to}
             onChange={(event) => updateParam("to", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
           />
 
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tim giao dich..."
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
           />
 
           <button
             type="button"
             onClick={handleExportCsv}
-            className="px-3 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+            className="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
           >
             Xuat CSV
           </button>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1100px]">
             <thead>
-              <tr className="bg-slate-900/70 border-b border-white/10">
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Ma GD</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Loai</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Mo ta</th>
-                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">So tien</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Tham chieu</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Thoi gian</th>
+              <tr className="bg-white/70 border-b border-slate-200">
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Ma GD</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Loai</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Mo ta</th>
+                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">So tien</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Tham chieu</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Thoi gian</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">Dang tai du lieu so cai...</td>
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Dang tai du lieu so cai...</td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
@@ -509,23 +509,23 @@ export default function AccountantLedgerPage() {
                 items.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-white/5 hover:bg-slate-700/30 transition-colors cursor-pointer"
+                    className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/accountant/ledger/${item.id}`)}
                   >
-                    <td className="px-4 py-3 text-sm text-slate-200 font-mono">{item.transactionCode}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900 font-mono">{item.transactionCode}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeClass(item.type)}`}>
                         {item.type}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-200">{item.description ?? "-"}</td>
-                    <td className={`px-4 py-3 text-right text-sm font-semibold ${item.amount >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                    <td className="px-4 py-3 text-sm text-slate-900">{item.description ?? "-"}</td>
+                    <td className={`px-4 py-3 text-right text-sm font-semibold ${item.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                       {formatCurrency(item.amount)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-blue-300">
+                    <td className="px-4 py-3 text-sm text-blue-700">
                       {item.referenceCode ?? (item.referenceId ? `${item.referenceType}#${item.referenceId}` : "Giao dich truc tiep")}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{formatDateTime(item.createdAt)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(item.createdAt)}</td>
                   </tr>
                 ))
               )}
@@ -533,8 +533,8 @@ export default function AccountantLedgerPage() {
           </table>
         </div>
 
-        <div className="px-4 py-3 flex items-center justify-between border-t border-white/10 bg-slate-900/30">
-          <p className="text-sm text-slate-400">
+        <div className="px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-white/30">
+          <p className="text-sm text-slate-500">
             Trang {page}/{totalPages} - Tong {total} giao dich
           </p>
 
@@ -543,7 +543,7 @@ export default function AccountantLedgerPage() {
               type="button"
               onClick={() => goToPage(page - 1)}
               disabled={page <= 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm"
             >
               Truoc
             </button>
@@ -551,7 +551,7 @@ export default function AccountantLedgerPage() {
               type="button"
               onClick={() => goToPage(page + 1)}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm"
             >
               Sau
             </button>
@@ -560,7 +560,7 @@ export default function AccountantLedgerPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
@@ -578,7 +578,7 @@ function SummaryCard({
   tone: string;
 }) {
   return (
-    <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-2xl font-bold mt-1 ${tone}`}>{value}</p>
     </div>

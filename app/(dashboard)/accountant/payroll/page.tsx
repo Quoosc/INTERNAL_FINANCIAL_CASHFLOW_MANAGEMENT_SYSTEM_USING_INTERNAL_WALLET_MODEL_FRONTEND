@@ -123,13 +123,13 @@ function getStatusLabel(status: PayrollStatus): string {
 function getStatusClass(status: PayrollStatus): string {
   switch (status) {
     case PayrollStatus.DRAFT:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     case PayrollStatus.PROCESSING:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case PayrollStatus.COMPLETED:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -422,8 +422,8 @@ export default function AccountantPayrollPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Quản lý bảng lương</h1>
-          <p className="text-slate-400 mt-1">Danh sách kỳ lương và quy trình xử lý payroll cho toàn bộ nhân viên.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Quản lý bảng lương</h1>
+          <p className="text-slate-500 mt-1">Danh sách kỳ lương và quy trình xử lý payroll cho toàn bộ nhân viên.</p>
         </div>
 
         <button
@@ -438,7 +438,7 @@ export default function AccountantPayrollPage() {
         </button>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
             const active = status === tab.value || (!status && !tab.value);
@@ -449,8 +449,8 @@ export default function AccountantPayrollPage() {
                 onClick={() => updateParam("status", tab.value)}
                 className={`px-3 py-1.5 rounded-xl border text-sm transition-colors ${
                   active
-                    ? "bg-blue-500/20 border-blue-500/40 text-blue-300"
-                    : "bg-slate-900 border-white/10 text-slate-300 hover:bg-slate-700"
+                    ? "bg-blue-50 border-blue-500/40 text-blue-700"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 {tab.label} ({tab.count})
@@ -477,7 +477,7 @@ export default function AccountantPayrollPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm theo mã kỳ, tên kỳ lương..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
@@ -485,12 +485,12 @@ export default function AccountantPayrollPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, index) => (
-            <div key={`payroll-period-loading-${index}`} className="h-40 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`payroll-period-loading-${index}`} className="h-40 rounded-2xl bg-white animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center">
-          <p className="text-slate-300">Không có kỳ lương phù hợp bộ lọc hiện tại.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+          <p className="text-slate-600">Không có kỳ lương phù hợp bộ lọc hiện tại.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -499,14 +499,14 @@ export default function AccountantPayrollPage() {
               key={item.id}
               type="button"
               onClick={() => router.push(`/accountant/payroll/${item.id}`)}
-              className="w-full bg-slate-800 border border-white/10 hover:border-white/20 hover:bg-slate-700/40 rounded-2xl p-4 text-left transition-all"
+              className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
             >
               <div className="space-y-3">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div>
                     <p className="text-xs text-slate-500 font-mono">{item.periodCode}</p>
-                    <p className="text-lg font-semibold text-white mt-1">{item.name}</p>
-                    <p className="text-xs text-slate-400 mt-1">Tháng {item.month}/{item.year}</p>
+                    <p className="text-lg font-semibold text-slate-900 mt-1">{item.name}</p>
+                    <p className="text-xs text-slate-500 mt-1">Tháng {item.month}/{item.year}</p>
                   </div>
                   <span
                     className={`inline-flex w-fit px-2.5 py-1 rounded-full border text-xs ${getStatusClass(item.status)} ${
@@ -519,7 +519,7 @@ export default function AccountantPayrollPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <InfoCell label="Nhân viên" value={`${item.employeeCount} người`} />
-                  <InfoCell label="Tổng net" value={formatCurrency(item.totalNetPayroll)} tone="text-emerald-300" />
+                  <InfoCell label="Tổng net" value={formatCurrency(item.totalNetPayroll)} tone="text-emerald-700" />
                   <InfoCell label="Tạo lúc" value={formatDateTime(item.createdAt)} />
                   <InfoCell
                     label={item.status === PayrollStatus.COMPLETED ? "Hoàn tất" : "Cập nhật"}
@@ -528,7 +528,7 @@ export default function AccountantPayrollPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-sm text-slate-200">
+                  <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
                     Xem chi tiết →
                   </span>
                 </div>
@@ -539,7 +539,7 @@ export default function AccountantPayrollPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} kỳ lương
         </p>
 
@@ -548,7 +548,7 @@ export default function AccountantPayrollPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -556,7 +556,7 @@ export default function AccountantPayrollPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -564,7 +564,7 @@ export default function AccountantPayrollPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
@@ -578,28 +578,28 @@ export default function AccountantPayrollPage() {
             aria-label="Đóng modal tạo kỳ lương"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Tạo kỳ lương mới</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Tạo kỳ lương mới</h3>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Tên kỳ lương</label>
+              <label className="block text-sm text-slate-600 mb-2">Tên kỳ lương</label>
               <input
                 value={periodName}
                 onChange={(event) => {
                   setPeriodName(event.target.value);
                   setNameTouched(true);
                 }}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Tháng</label>
+                <label className="block text-sm text-slate-600 mb-2">Tháng</label>
                 <select
                   value={periodMonth}
                   onChange={(event) => setPeriodMonth(Number(event.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
                   {Array.from({ length: 12 }).map((_, index) => (
                     <option key={index + 1} value={index + 1}>
@@ -610,20 +610,20 @@ export default function AccountantPayrollPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Năm</label>
+                <label className="block text-sm text-slate-600 mb-2">Năm</label>
                 <input
                   type="number"
                   min={2020}
                   max={2100}
                   value={periodYear}
                   onChange={(event) => setPeriodYear(Number(event.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
             </div>
 
             {createError && (
-              <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+              <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">
                 {createError}
               </div>
             )}
@@ -632,7 +632,7 @@ export default function AccountantPayrollPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -662,9 +662,9 @@ function InfoCell({
   tone?: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2">
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm font-medium mt-1 ${tone ?? "text-slate-200"}`}>{value}</p>
+      <p className={`text-sm font-medium mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>
   );
 }

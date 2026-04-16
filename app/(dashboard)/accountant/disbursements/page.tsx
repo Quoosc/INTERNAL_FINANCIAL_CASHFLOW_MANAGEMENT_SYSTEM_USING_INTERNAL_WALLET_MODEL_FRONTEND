@@ -216,13 +216,13 @@ function getFundHealth(balance: number): "HEALTHY" | "LOW" | "CRITICAL" {
 function getFundHealthClass(health: "HEALTHY" | "LOW" | "CRITICAL"): string {
   switch (health) {
     case "HEALTHY":
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case "LOW":
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case "CRITICAL":
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -242,13 +242,13 @@ function getRequestTypeLabel(type: RequestType): string {
 function getRequestTypeClass(type: RequestType): string {
   switch (type) {
     case RequestType.ADVANCE:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RequestType.EXPENSE:
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case RequestType.REIMBURSE:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -434,24 +434,24 @@ export default function AccountantDisbursementsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Giải ngân</h1>
-          <p className="text-slate-400 mt-1">Danh sách yêu cầu đã được Team Leader duyệt và chờ Kế toán xử lý.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Giải ngân</h1>
+          <p className="text-slate-500 mt-1">Danh sách yêu cầu đã được Team Leader duyệt và chờ Kế toán xử lý.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-500/15 text-amber-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ xử lý
         </span>
       </div>
 
-      <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-600/10 to-slate-900 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-slate-200">
-          Quỹ hệ thống: <span className="font-semibold text-white">{formatCurrency(MOCK_SYSTEM_FUND_BALANCE)}</span>
+      <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-600/10 to-slate-900 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-sm text-slate-900">
+          Quỹ hệ thống: <span className="font-semibold text-slate-900">{formatCurrency(MOCK_SYSTEM_FUND_BALANCE)}</span>
         </p>
         <span className={`inline-flex w-fit px-2.5 py-1 rounded-full border text-xs font-medium ${getFundHealthClass(fundHealth)}`}>
           {fundHealth}
         </span>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {tabs.map((tab) => {
             const active = type === tab.value || (!type && !tab.value);
@@ -462,8 +462,8 @@ export default function AccountantDisbursementsPage() {
                 onClick={() => updateParam("type", tab.value)}
                 className={`px-3 py-1.5 rounded-xl border text-sm transition-colors ${
                   active
-                    ? "bg-blue-500/20 border-blue-500/40 text-blue-300"
-                    : "bg-slate-900 border-white/10 text-slate-300 hover:bg-slate-700"
+                    ? "bg-blue-50 border-blue-500/40 text-blue-700"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 {tab.label}
@@ -490,7 +490,7 @@ export default function AccountantDisbursementsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm theo mã yêu cầu, nhân viên, dự án..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
@@ -498,12 +498,12 @@ export default function AccountantDisbursementsPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, index) => (
-            <div key={`disbursement-skeleton-${index}`} className="h-48 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`disbursement-skeleton-${index}`} className="h-48 rounded-2xl bg-white animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-500">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -513,7 +513,7 @@ export default function AccountantDisbursementsPage() {
               />
             </svg>
           </div>
-          <p className="text-slate-300 mt-4">Không có yêu cầu chờ giải ngân theo bộ lọc hiện tại.</p>
+          <p className="text-slate-600 mt-4">Không có yêu cầu chờ giải ngân theo bộ lọc hiện tại.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -525,53 +525,53 @@ export default function AccountantDisbursementsPage() {
                 key={item.id}
                 type="button"
                 onClick={() => router.push(`/accountant/disbursements/${item.id}`)}
-                className="w-full bg-slate-800 border border-white/10 hover:border-white/20 hover:bg-slate-700/40 rounded-2xl p-4 text-left transition-all"
+                className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span className={`inline-flex px-2 py-1 rounded-full border ${getRequestTypeClass(item.type)}`}>
                       {getRequestTypeLabel(item.type)}
                     </span>
-                    <span className="font-mono text-slate-300">{item.requestCode}</span>
+                    <span className="font-mono text-slate-600">{item.requestCode}</span>
                     <span className="text-slate-500">Tạo lúc {formatDateTime(item.createdAt)}</span>
                   </div>
 
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-slate-900">
                       {item.requester.fullName} <span className="text-slate-500">({item.requester.employeeCode})</span>
                     </p>
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-slate-600">
                       {item.project.name} <span className="text-slate-500">({item.project.projectCode})</span>
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       Duyệt bởi: {item.approver?.fullName ?? "Team Leader"}
                       {item.approver?.approvedAt ? ` • ${formatDateTime(item.approver.approvedAt)}` : ""}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2">
+                    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
                       <p className="text-xs text-slate-500">Số tiền yêu cầu</p>
-                      <p className="text-sm font-semibold text-slate-200 mt-1">{formatCurrency(item.amount)}</p>
+                      <p className="text-sm font-semibold text-slate-900 mt-1">{formatCurrency(item.amount)}</p>
                     </div>
 
                     <div
                       className={`rounded-xl border px-3 py-2 ${
                         changedAmount
-                          ? "border-amber-500/30 bg-amber-500/10"
-                          : "border-white/10 bg-slate-900"
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-slate-200 bg-white"
                       }`}
                     >
-                      <p className={`text-xs ${changedAmount ? "text-amber-300" : "text-slate-500"}`}>
+                      <p className={`text-xs ${changedAmount ? "text-amber-700" : "text-slate-500"}`}>
                         Số tiền giải ngân
                       </p>
-                      <p className={`text-sm font-semibold mt-1 ${changedAmount ? "text-amber-200" : "text-white"}`}>
+                      <p className={`text-sm font-semibold mt-1 ${changedAmount ? "text-amber-200" : "text-slate-900"}`}>
                         {formatCurrency(item.approvedAmount)}
                       </p>
                     </div>
 
                     <div className="flex items-center md:justify-end">
-                      <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-sm text-slate-200">
+                      <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
                         Xử lý →
                       </span>
                     </div>
@@ -584,7 +584,7 @@ export default function AccountantDisbursementsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} yêu cầu
         </p>
 
@@ -593,7 +593,7 @@ export default function AccountantDisbursementsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -601,7 +601,7 @@ export default function AccountantDisbursementsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -609,7 +609,7 @@ export default function AccountantDisbursementsPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

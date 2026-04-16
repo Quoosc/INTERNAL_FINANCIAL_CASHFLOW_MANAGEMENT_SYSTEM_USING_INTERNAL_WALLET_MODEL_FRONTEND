@@ -276,34 +276,34 @@ export default function CfoApprovalsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-slate-900">
             Duyệt cấp quota ngân sách
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-500 mt-1">
             Flow 3: yêu cầu DEPARTMENT_TOPUP từ Manager chờ CFO duyệt.
           </p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-500/15 text-amber-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ duyệt
         </span>
       </div>
 
-      <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+      <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
         Phê duyệt sẽ tự động chuyển tiền từ Quỹ hệ thống sang Quỹ phòng ban,
         không qua Kế toán.
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <p className="text-xs text-slate-500">Quỹ hệ thống khả dụng</p>
-            <p className="text-2xl font-bold text-white mt-1">
+            <p className="text-2xl font-bold text-slate-900 mt-1">
               {formatCurrency(systemFundBalance)}
             </p>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
             <p className="text-xs text-slate-500">
               Tổng đề xuất trong trang hiện tại
             </p>
@@ -314,7 +314,7 @@ export default function CfoApprovalsPage() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
         <div className="relative">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
@@ -333,7 +333,7 @@ export default function CfoApprovalsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm theo mã yêu cầu, phòng ban, Manager..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
@@ -343,13 +343,13 @@ export default function CfoApprovalsPage() {
           {[...Array(5)].map((_, index) => (
             <div
               key={`cfo-approvals-skeleton-${index}`}
-              className="h-44 rounded-2xl bg-slate-800 animate-pulse"
+              className="h-44 rounded-2xl bg-white animate-pulse"
             />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-500">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
             <svg
               className="w-7 h-7"
               fill="none"
@@ -364,7 +364,7 @@ export default function CfoApprovalsPage() {
               />
             </svg>
           </div>
-          <p className="text-slate-300 mt-4">
+          <p className="text-slate-600 mt-4">
             Không có yêu cầu DEPARTMENT_TOPUP chờ duyệt.
           </p>
         </div>
@@ -379,14 +379,14 @@ export default function CfoApprovalsPage() {
                 key={item.id}
                 type="button"
                 onClick={() => router.push(`/cfo/approvals/${item.id}`)}
-                className="w-full bg-slate-800 border border-white/10 hover:border-white/20 hover:bg-slate-700/40 rounded-2xl p-4 text-left transition-all"
+                className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="inline-flex px-2 py-1 rounded-full border border-blue-500/30 bg-blue-500/15 text-blue-300">
+                    <span className="inline-flex px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700">
                       Cấp quota
                     </span>
-                    <span className="font-mono text-slate-300">
+                    <span className="font-mono text-slate-600">
                       {item.requestCode}
                     </span>
                     <span className="text-slate-500">
@@ -395,10 +395,10 @@ export default function CfoApprovalsPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-slate-900">
                       {item.department.name}
                     </p>
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-slate-600">
                       {item.requester.fullName}
                       <span className="text-slate-500">
                         {" "}
@@ -408,7 +408,7 @@ export default function CfoApprovalsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
                       <p className="text-xs text-slate-500">
                         Quỹ phòng ban hiện tại
                       </p>
@@ -416,28 +416,28 @@ export default function CfoApprovalsPage() {
                         {formatCurrency(deptCurrent)}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
                       <p className="text-xs text-slate-500">Số tiền đề xuất</p>
-                      <p className="text-sm font-semibold text-blue-300 mt-1">
+                      <p className="text-sm font-semibold text-blue-700 mt-1">
                         {formatCurrency(item.amount)}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
                       <p className="text-xs text-slate-500">Sau phê duyệt</p>
-                      <p className="text-sm font-semibold text-emerald-300 mt-1">
+                      <p className="text-sm font-semibold text-emerald-700 mt-1">
                         {formatCurrency(deptAfter)}
                       </p>
                     </div>
                   </div>
 
                   {item.description && (
-                    <p className="text-sm text-slate-400 line-clamp-2">
+                    <p className="text-sm text-slate-500 line-clamp-2">
                       {item.description}
                     </p>
                   )}
 
                   <div className="flex justify-end">
-                    <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-sm text-slate-200">
+                    <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
                       Xem chi tiết →
                     </span>
                   </div>
@@ -449,7 +449,7 @@ export default function CfoApprovalsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} yêu cầu
         </p>
 
@@ -458,7 +458,7 @@ export default function CfoApprovalsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -466,7 +466,7 @@ export default function CfoApprovalsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -474,7 +474,7 @@ export default function CfoApprovalsPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

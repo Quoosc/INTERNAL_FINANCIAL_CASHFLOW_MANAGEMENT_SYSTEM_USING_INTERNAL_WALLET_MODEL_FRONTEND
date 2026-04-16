@@ -84,15 +84,15 @@ function formatDateTime(iso: string): string {
 function statusClass(status: RequestStatus): string {
   switch (status) {
     case RequestStatus.PENDING:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case RequestStatus.APPROVED_BY_CFO:
-      return "bg-blue-500/15 border-blue-500/30 text-blue-300";
+      return "bg-blue-50 border-blue-200 text-blue-700";
     case RequestStatus.PAID:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case RequestStatus.REJECTED:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -331,9 +331,9 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 rounded bg-slate-800 animate-pulse" />
-        <div className="h-36 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-72 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-8 w-64 rounded bg-white animate-pulse" />
+        <div className="h-36 rounded-2xl bg-white animate-pulse" />
+        <div className="h-72 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
@@ -341,13 +341,13 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
   if (!request) {
     return (
       <div className="space-y-4">
-        <Link href={LIST_PATH} className="inline-flex items-center gap-2 text-slate-300 hover:text-white">
+        <Link href={LIST_PATH} className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
           Quay lại danh sách
         </Link>
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-8 text-center text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500">
           Không tìm thấy yêu cầu.
         </div>
       </div>
@@ -356,53 +356,53 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-slate-400">
-        <Link href={LIST_PATH} className="hover:text-slate-200 transition-colors">
+      <div className="flex items-center gap-2 text-sm text-slate-500">
+        <Link href={LIST_PATH} className="hover:text-slate-900 transition-colors">
           Duyệt cấp quota ngân sách
         </Link>
         <span>/</span>
-        <span className="text-slate-300 font-mono">{request.requestCode}</span>
+        <span className="text-slate-600 font-mono">{request.requestCode}</span>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500">Mã yêu cầu</p>
-            <h1 className="text-2xl font-bold text-white font-mono mt-1">
+            <h1 className="text-2xl font-bold text-slate-900 font-mono mt-1">
               {request.requestCode}
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Tạo lúc {formatDateTime(request.createdAt)}
             </p>
           </div>
 
           <div className="flex flex-col items-start lg:items-end gap-2">
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex px-3 py-1.5 rounded-full border text-sm bg-blue-500/15 border-blue-500/30 text-blue-300">
+              <span className="inline-flex px-3 py-1.5 rounded-full border text-sm bg-blue-50 border-blue-200 text-blue-700">
                 Cấp quota
               </span>
               <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusClass(request.status)}`}>
                 {statusLabel(request.status)}
               </span>
             </div>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-slate-900">
               {formatCurrency(request.amount)}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Tác động Flow 3</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Tác động Flow 3</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <InfoCard label="Quỹ hệ thống hiện tại" value={formatCurrency(systemFundBalance)} />
-          <InfoCard label="Sau phê duyệt" value={formatCurrency(systemFundAfter)} tone="text-amber-300" />
-          <InfoCard label="Quỹ phòng ban sau phê duyệt" value={formatCurrency(deptAfter)} tone="text-emerald-300" />
+          <InfoCard label="Sau phê duyệt" value={formatCurrency(systemFundAfter)} tone="text-amber-700" />
+          <InfoCard label="Quỹ phòng ban sau phê duyệt" value={formatCurrency(deptAfter)} tone="text-emerald-700" />
         </div>
 
         {overSystemFund && (
-          <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
             Cảnh báo: số tiền yêu cầu đang vượt Quỹ hệ thống khả dụng.
           </div>
         )}
@@ -410,8 +410,8 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Thông tin người gửi yêu cầu</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900">Thông tin người gửi yêu cầu</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Họ tên" value={request.requester.fullName} />
               <InfoCard label="Mã nhân viên" value={request.requester.employeeCode} />
@@ -420,8 +420,8 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Thông tin phòng ban</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900">Thông tin phòng ban</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Phòng ban" value={request.department.name} />
               <InfoCard label="Mã phòng" value={request.department.code} />
@@ -430,31 +430,31 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-2">
-            <h2 className="text-lg font-semibold text-white">Nội dung yêu cầu</h2>
-            <p className="text-sm text-slate-300 whitespace-pre-line">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+            <h2 className="text-lg font-semibold text-slate-900">Nội dung yêu cầu</h2>
+            <p className="text-sm text-slate-600 whitespace-pre-line">
               {request.description || "Không có mô tả."}
             </p>
           </div>
 
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-            <h2 className="text-lg font-semibold text-white">Tiến trình Flow 3</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">Tiến trình Flow 3</h2>
 
             {sortedTimeline.length > 0 ? (
               <div className="space-y-3">
                 {sortedTimeline.map((entry, index) => (
                   <div key={entry.id} className="relative pl-8">
                     {index < sortedTimeline.length - 1 && (
-                      <span className="absolute left-3 top-7 -bottom-2.5 w-px bg-slate-600" />
+                      <span className="absolute left-3 top-7 -bottom-2.5 w-px bg-slate-200" />
                     )}
-                    <span className="absolute left-0 top-1 w-6 h-6 rounded-full border border-white/20 bg-slate-900 text-slate-300 flex items-center justify-center">
+                    <span className="absolute left-0 top-1 w-6 h-6 rounded-full border border-slate-300 bg-white text-slate-600 flex items-center justify-center">
                       {timelineIcon(entry.action)}
                     </span>
-                    <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
-                      <p className="text-sm font-medium text-white">{timelineActionLabel(entry.action)}</p>
-                      <p className="text-xs text-slate-400 mt-1">{entry.actorName}</p>
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                      <p className="text-sm font-medium text-slate-900">{timelineActionLabel(entry.action)}</p>
+                      <p className="text-xs text-slate-500 mt-1">{entry.actorName}</p>
                       {entry.comment && (
-                        <p className="text-xs text-slate-300 mt-1">{entry.comment}</p>
+                        <p className="text-xs text-slate-600 mt-1">{entry.comment}</p>
                       )}
                       <p className="text-xs text-slate-500 mt-1">{formatDateTime(entry.createdAt)}</p>
                     </div>
@@ -463,13 +463,13 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
-                  <p className="text-sm font-medium text-white">Manager gửi yêu cầu</p>
-                  <p className="text-xs text-slate-400 mt-1">{request.requester.fullName}</p>
+                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-sm font-medium text-slate-900">Manager gửi yêu cầu</p>
+                  <p className="text-xs text-slate-500 mt-1">{request.requester.fullName}</p>
                   <p className="text-xs text-slate-500 mt-1">{formatDateTime(request.createdAt)}</p>
                 </div>
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
-                  <p className="text-sm font-medium text-amber-300">Đang chờ CFO phê duyệt</p>
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-sm font-medium text-amber-700">Đang chờ CFO phê duyệt</p>
                   <p className="text-xs text-amber-200/80 mt-1">
                     Sau khi duyệt, hệ thống sẽ tự động chuyển quỹ và cập nhật trạng thái.
                   </p>
@@ -479,8 +479,8 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           </div>
 
           {canTakeAction && (
-            <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-              <h2 className="text-lg font-semibold text-white">Thao tác phê duyệt</h2>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <h2 className="text-lg font-semibold text-slate-900">Thao tác phê duyệt</h2>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -501,17 +501,17 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Tóm tắt quyết định</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Tóm tắt quyết định</h2>
           <InfoCard label="Loại yêu cầu" value={RequestType.DEPARTMENT_TOPUP} />
           <InfoCard label="Số tiền yêu cầu" value={formatCurrency(request.amount)} />
-          <InfoCard label="Số tiền dự kiến duyệt" value={formatCurrency(previewApprovedAmount)} tone="text-blue-300" />
+          <InfoCard label="Số tiền dự kiến duyệt" value={formatCurrency(previewApprovedAmount)} tone="text-blue-700" />
           <InfoCard label="Trạng thái hiện tại" value={statusLabel(request.status)} />
         </div>
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
@@ -524,19 +524,19 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             onClick={() => setShowApproveModal(false)}
             aria-label="Đóng modal duyệt"
           />
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Xác nhận duyệt yêu cầu</h3>
-            <p className="text-sm text-slate-400">{request.requestCode}</p>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Xác nhận duyệt yêu cầu</h3>
+            <p className="text-sm text-slate-500">{request.requestCode}</p>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Số tiền duyệt</label>
+              <label className="block text-sm text-slate-600 mb-2">Số tiền duyệt</label>
               <input
                 type="number"
                 min={1}
                 max={request.amount}
                 value={approvedAmount}
                 onChange={(event) => setApprovedAmount(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
               />
               <p className="text-xs text-slate-500 mt-1">
                 Tối đa theo yêu cầu: {formatCurrency(request.amount)} • Quỹ hệ thống: {formatCurrency(systemFundBalance)}
@@ -544,18 +544,18 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Ghi chú</label>
+              <label className="block text-sm text-slate-600 mb-2">Ghi chú</label>
               <textarea
                 rows={4}
                 value={approveComment}
                 onChange={(event) => setApproveComment(event.target.value)}
                 placeholder="Nhận xét của CFO (tuỳ chọn)"
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
               />
             </div>
 
             {actionError && (
-              <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+              <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">
                 {actionError}
               </div>
             )}
@@ -564,7 +564,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowApproveModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -589,16 +589,16 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             onClick={() => setShowRejectModal(false)}
             aria-label="Đóng modal từ chối"
           />
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Từ chối yêu cầu — {request.requestCode}</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Từ chối yêu cầu — {request.requestCode}</h3>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Lý do từ chối</label>
+              <label className="block text-sm text-slate-600 mb-2">Lý do từ chối</label>
               <textarea
                 rows={4}
                 value={rejectReason}
                 onChange={(event) => setRejectReason(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white resize-none focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-rose-500/40"
               />
             </div>
 
@@ -612,7 +612,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                       prev.trim() ? `${prev.trim()}. ${chip}` : chip,
                     )
                   }
-                  className="px-3 py-1.5 rounded-full border border-white/15 bg-slate-800 text-xs text-slate-300 hover:bg-slate-700"
+                  className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-600 hover:bg-slate-100"
                 >
                   {chip}
                 </button>
@@ -620,7 +620,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             </div>
 
             {actionError && (
-              <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+              <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">
                 {actionError}
               </div>
             )}
@@ -629,7 +629,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -652,14 +652,14 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 function InfoCard({
   label,
   value,
-  tone = "text-white",
+  tone = "text-slate-900",
 }: {
   label: string;
   value: string;
   tone?: string;
 }) {
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-xl p-4">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm mt-1 ${tone}`}>{value}</p>
     </div>

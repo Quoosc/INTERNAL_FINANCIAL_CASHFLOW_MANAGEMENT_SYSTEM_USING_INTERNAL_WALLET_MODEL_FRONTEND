@@ -279,36 +279,36 @@ export default function AuditLogsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Nhat ky he thong</h1>
-          <p className="text-slate-400 mt-1">Audit trail bat bien cho moi thao tac quan trong trong he thong.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Nhat ky he thong</h1>
+          <p className="text-slate-500 mt-1">Audit trail bat bien cho moi thao tac quan trong trong he thong.</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-rose-500/40 bg-rose-500/15 text-rose-300 text-sm font-medium">
+          <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-rose-500/40 bg-rose-100 text-rose-700 text-sm font-medium">
             Read-only
           </span>
           <button
             type="button"
             onClick={handleExport}
-            className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm text-white"
+            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm text-slate-900"
           >
             Xuat CSV
           </button>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
         <input
           value={actorInput}
           onChange={(event) => setActorInput(event.target.value)}
           placeholder="Nguoi thuc hien (ID/ten)"
-          className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+          className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
         />
 
         <select
           value={actionFilter}
           onChange={(event) => updateParam("action", event.target.value || undefined)}
-          className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+          className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
         >
           <option value="">Tat ca hanh dong</option>
           {Object.values(AuditAction).map((action) => (
@@ -322,35 +322,35 @@ export default function AuditLogsPage() {
           type="date"
           value={startDate}
           onChange={(event) => updateParam("startDate", event.target.value || undefined)}
-          className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+          className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
         />
 
         <input
           type="date"
           value={endDate}
           onChange={(event) => updateParam("endDate", event.target.value || undefined)}
-          className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+          className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
         />
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px]">
             <thead>
-              <tr className="border-b border-white/10 bg-slate-900/60">
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Thoi gian</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Nguoi thuc hien</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Hanh dong</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Doi tuong</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Chi tiet</th>
+              <tr className="border-b border-slate-200 bg-slate-50/80">
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Thoi gian</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Nguoi thuc hien</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Hanh dong</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Doi tuong</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Chi tiet</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 [...Array(8)].map((_, index) => (
-                  <tr key={`audit-skeleton-${index}`} className="border-b border-white/5 last:border-b-0">
+                  <tr key={`audit-skeleton-${index}`} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
                     <td colSpan={5} className="px-4 py-4">
-                      <div className="h-8 rounded bg-slate-900 animate-pulse" />
+                      <div className="h-8 rounded bg-white animate-pulse" />
                     </td>
                   </tr>
                 ))
@@ -364,20 +364,20 @@ export default function AuditLogsPage() {
                 items.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-white/5 last:border-b-0 hover:bg-slate-700/20 cursor-pointer"
+                    className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors hover:bg-slate-100/20 cursor-pointer"
                     onClick={() => openDetail(item)}
                   >
-                    <td className="px-4 py-3 text-sm text-slate-300">{formatDateTime(item.createdAt)}</td>
-                    <td className="px-4 py-3 text-sm text-slate-200">{item.actorName ?? "System"}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(item.createdAt)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">{item.actorName ?? "System"}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="inline-flex px-2 py-1 rounded-full border border-blue-500/30 bg-blue-500/15 text-blue-300 text-xs">
+                      <span className="inline-flex px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-xs">
                         {item.action}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">
+                    <td className="px-4 py-3 text-sm text-slate-600">
                       {item.entityName}#{item.entityId}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-400">Xem chi tiet</td>
+                    <td className="px-4 py-3 text-sm text-slate-500">Xem chi tiet</td>
                   </tr>
                 ))
               )}
@@ -387,7 +387,7 @@ export default function AuditLogsPage() {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tong {total} ban ghi
         </p>
 
@@ -396,7 +396,7 @@ export default function AuditLogsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Truoc
           </button>
@@ -404,7 +404,7 @@ export default function AuditLogsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -412,13 +412,13 @@ export default function AuditLogsPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -432,16 +432,16 @@ export default function AuditLogsPage() {
             aria-label="Dong modal chi tiet audit"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-3xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-3xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-xl font-bold text-white">Chi tiet audit #{selectedLog.id}</h3>
-                <p className="text-sm text-slate-400 mt-1">{formatDateTime(selectedLog.createdAt)}</p>
+                <h3 className="text-xl font-bold text-slate-900">Chi tiet audit #{selectedLog.id}</h3>
+                <p className="text-sm text-slate-500 mt-1">{formatDateTime(selectedLog.createdAt)}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowDetailModal(false)}
-                className="text-slate-500 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 X
               </button>
@@ -466,7 +466,7 @@ export default function AuditLogsPage() {
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-800 border border-white/10 rounded-xl p-3">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="text-sm text-slate-100 mt-1">{value}</p>
     </div>
@@ -475,9 +475,9 @@ function InfoCard({ label, value }: { label: string; value: string }) {
 
 function JsonCard({ title, value }: { title: string; value: Record<string, unknown> | null }) {
   return (
-    <div className="bg-slate-800 border border-white/10 rounded-xl p-3 space-y-2">
-      <p className="text-sm font-medium text-white">{title}</p>
-      <pre className="text-xs text-slate-300 bg-slate-900 border border-white/10 rounded-lg p-3 overflow-auto max-h-64">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-3 space-y-2">
+      <p className="text-sm font-medium text-slate-900">{title}</p>
+      <pre className="text-xs text-slate-600 bg-white border border-slate-200 rounded-lg p-3 overflow-auto max-h-64">
         {value ? JSON.stringify(value, null, 2) : "null"}
       </pre>
     </div>

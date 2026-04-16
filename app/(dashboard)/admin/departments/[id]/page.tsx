@@ -109,9 +109,9 @@ function formatDateTime(iso: string): string {
 }
 
 function statusBadgeClass(status: string): string {
-  if (status === "ACTIVE") return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
-  if (status === "LOCKED") return "bg-rose-500/15 border-rose-500/30 text-rose-300";
-  return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+  if (status === "ACTIVE") return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  if (status === "LOCKED") return "bg-rose-100 border-rose-200 text-rose-700";
+  return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 export default function AdminDepartmentDetailPage({ params }: PageProps) {
@@ -263,15 +263,15 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-60 rounded bg-slate-800 animate-pulse" />
-        <div className="h-32 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-80 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-8 w-60 rounded bg-white animate-pulse" />
+        <div className="h-32 rounded-2xl bg-white animate-pulse" />
+        <div className="h-80 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
 
   if (!department) {
-    return <div className="text-slate-300">Không tìm thấy phòng ban.</div>;
+    return <div className="text-slate-600">Không tìm thấy phòng ban.</div>;
   }
 
   return (
@@ -279,7 +279,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
       <button
         type="button"
         onClick={() => router.push("/admin/departments")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -287,12 +287,12 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
         Quay lại
       </button>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500 font-mono">{department.code}</p>
-            <h1 className="text-2xl font-bold text-white mt-1">{department.name}</h1>
-            <p className="text-sm text-slate-400 mt-1">Trưởng phòng: {department.manager?.fullName ?? "Chưa gán"}</p>
+            <h1 className="text-2xl font-bold text-slate-900 mt-1">{department.name}</h1>
+            <p className="text-sm text-slate-500 mt-1">Trưởng phòng: {department.manager?.fullName ?? "Chưa gán"}</p>
           </div>
 
           <button
@@ -306,15 +306,15 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <InfoCard label="Tổng quota" value={formatCurrency(department.totalProjectQuota)} tone="text-white" />
-        <InfoCard label="Khả dụng" value={formatCurrency(department.totalAvailableBalance)} tone="text-emerald-300" />
-        <InfoCard label="Số thành viên" value={String(department.members.length)} tone="text-blue-300" />
+        <InfoCard label="Tổng quota" value={formatCurrency(department.totalProjectQuota)} tone="text-slate-900" />
+        <InfoCard label="Khả dụng" value={formatCurrency(department.totalAvailableBalance)} tone="text-emerald-700" />
+        <InfoCard label="Số thành viên" value={String(department.members.length)} tone="text-blue-700" />
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Danh sách thành viên</h2>
-          <p className="text-sm text-slate-400">Cập nhật: {formatDateTime(department.updatedAt)}</p>
+          <h2 className="text-lg font-semibold text-slate-900">Danh sách thành viên</h2>
+          <p className="text-sm text-slate-500">Cập nhật: {formatDateTime(department.updatedAt)}</p>
         </div>
 
         {department.members.length === 0 ? (
@@ -323,21 +323,21 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px]">
               <thead>
-                <tr className="border-b border-white/10 bg-slate-900/60">
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Mã NV</th>
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Họ tên</th>
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Email</th>
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Chức danh</th>
-                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Trạng thái</th>
+                <tr className="border-b border-slate-200 bg-slate-50/80">
+                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Mã NV</th>
+                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Họ tên</th>
+                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Email</th>
+                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Chức danh</th>
+                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
                 {department.members.map((member: DepartmentMemberItem) => (
-                  <tr key={member.id} className="border-b border-white/5 last:border-b-0">
-                    <td className="px-4 py-3 text-sm text-slate-300">{member.employeeCode}</td>
-                    <td className="px-4 py-3 text-sm text-white font-medium">{member.fullName}</td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{member.email}</td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{member.jobTitle ?? "—"}</td>
+                  <tr key={member.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-600">{member.employeeCode}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900 font-medium">{member.fullName}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{member.email}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{member.jobTitle ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusBadgeClass(member.status)}`}>
                         {member.status}
@@ -352,13 +352,13 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -372,25 +372,25 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
             aria-label="Đóng modal chỉnh sửa phòng ban"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Cập nhật phòng ban</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Cập nhật phòng ban</h3>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Tên phòng ban</label>
+              <label className="block text-sm text-slate-600 mb-2">Tên phòng ban</label>
               <input
                 value={editName}
                 onChange={(event) => setEditName(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Trưởng phòng</label>
+                <label className="block text-sm text-slate-600 mb-2">Trưởng phòng</label>
                 <select
                   value={editManagerId}
                   onChange={(event) => setEditManagerId(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
                 >
                   <option value="">Chưa gán trưởng phòng</option>
                   {managers.map((manager) => (
@@ -402,13 +402,13 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Tổng quota</label>
+                <label className="block text-sm text-slate-600 mb-2">Tổng quota</label>
                 <input
                   type="number"
                   min={0}
                   value={editQuota}
                   onChange={(event) => setEditQuota(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
                 />
               </div>
             </div>
@@ -417,7 +417,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -447,9 +447,9 @@ function InfoCard({
   tone?: string;
 }) {
   return (
-    <div className="bg-slate-800 border border-white/10 rounded-xl p-4">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-base font-semibold mt-1 ${tone ?? "text-white"}`}>{value}</p>
+      <p className={`text-base font-semibold mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>
   );
 }

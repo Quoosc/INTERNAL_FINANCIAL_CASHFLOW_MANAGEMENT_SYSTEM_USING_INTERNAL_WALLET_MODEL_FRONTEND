@@ -69,24 +69,24 @@ function getFundHealth(balance: number): {
   if (balance >= 500_000_000) {
     return {
       label: "HEALTHY",
-      tone: "text-emerald-300",
+      tone: "text-emerald-700",
       borderTone: "border-emerald-500/40",
-      bgTone: "bg-emerald-500/10",
+      bgTone: "bg-emerald-50",
     };
   }
   if (balance >= 100_000_000) {
     return {
       label: "LOW",
-      tone: "text-amber-300",
+      tone: "text-amber-700",
       borderTone: "border-amber-500/40",
-      bgTone: "bg-amber-500/10",
+      bgTone: "bg-amber-50",
     };
   }
   return {
     label: "CRITICAL",
-    tone: "text-rose-300",
+    tone: "text-rose-700",
     borderTone: "border-rose-500/40",
-    bgTone: "bg-rose-500/10",
+    bgTone: "bg-rose-50",
   };
 }
 
@@ -106,14 +106,14 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="bg-slate-800 border border-white/10 rounded-2xl p-4 hover:bg-slate-700/40 hover:border-white/20 transition-all"
+      className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 hover:bg-slate-50 hover:border-slate-300 transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-slate-400">{title}</p>
-          <p className={`text-xl font-bold mt-1 ${accent}`}>{value}</p>
+          <p className="text-xs text-slate-500">{title}</p>
+          <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
         </div>
-        <span className="w-9 h-9 rounded-xl bg-slate-900 border border-white/10 text-slate-300 flex items-center justify-center">
+        <span className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center">
           {icon}
         </span>
       </div>
@@ -125,7 +125,7 @@ function QuickLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
+      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14m-7-7l7 7-7 7" />
@@ -234,13 +234,13 @@ export function CfoDashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Quản lý tài chính</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">Quản lý tài chính</h1>
+          <p className="text-slate-500 mt-1">
             Xin chào, {user?.fullName ?? "CFO"} • {todayLabel}
           </p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-violet-500/40 bg-violet-500/15 text-violet-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-violet-500/40 bg-violet-100 text-violet-700 text-sm font-medium">
           CFO
         </span>
       </div>
@@ -249,7 +249,7 @@ export function CfoDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {loading ? (
           [...Array(4)].map((_, index) => (
-            <div key={`cfo-stat-skeleton-${index}`} className="h-24 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`cfo-stat-skeleton-${index}`} className="h-24 rounded-2xl bg-white animate-pulse" />
           ))
         ) : (
           <>
@@ -257,7 +257,7 @@ export function CfoDashboard() {
               title="Số dư quỹ hệ thống"
               value={formatCurrency(dashboard?.companyFundBalance ?? 0)}
               href="/cfo/system-fund"
-              accent="text-amber-300"
+              accent="text-amber-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -274,7 +274,7 @@ export function CfoDashboard() {
               title="Chờ duyệt cap quota"
               value={String(dashboard?.pendingApprovalsCount ?? 0)}
               href="/cfo/approvals"
-              accent="text-rose-300"
+              accent="text-rose-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -291,7 +291,7 @@ export function CfoDashboard() {
               title="Đã duyệt tháng này"
               value={formatCurrency(dashboard?.monthlyApprovedAmount ?? 0)}
               href="/cfo/approvals"
-              accent="text-emerald-300"
+              accent="text-emerald-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -308,7 +308,7 @@ export function CfoDashboard() {
               title="Từ chối tháng này"
               value={String(dashboard?.monthlyRejectedCount ?? 0)}
               href="/cfo/approvals"
-              accent="text-slate-300"
+              accent="text-slate-600"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -327,10 +327,10 @@ export function CfoDashboard() {
       {/* Main section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Pending approvals list */}
-        <div className="lg:col-span-2 bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Yêu cầu chờ duyệt</h2>
-            <Link href="/cfo/approvals" className="text-sm text-blue-300 hover:text-blue-200">
+            <h2 className="text-lg font-semibold text-slate-900">Yêu cầu chờ duyệt</h2>
+            <Link href="/cfo/approvals" className="text-sm text-blue-700 hover:text-blue-600">
               Xem tất cả →
             </Link>
           </div>
@@ -338,11 +338,11 @@ export function CfoDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`approval-skeleton-${index}`} className="h-20 rounded-xl bg-slate-900 animate-pulse" />
+                <div key={`approval-skeleton-${index}`} className="h-20 rounded-xl bg-white animate-pulse" />
               ))}
             </div>
           ) : (dashboard?.recentApprovals.length ?? 0) === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
               Không có yêu cầu nào đang chờ duyệt.
             </div>
           ) : (
@@ -351,14 +351,14 @@ export function CfoDashboard() {
                 <Link
                   key={item.id}
                   href={`/cfo/approvals/${item.id}`}
-                  className="block rounded-xl border border-white/10 bg-slate-900 p-3 hover:bg-slate-900/60 hover:border-white/20 transition-all"
+                  className="block rounded-xl border border-slate-200 bg-white p-3 hover:bg-slate-50/80 hover:border-slate-300 transition-all"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{item.requestCode}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{item.departmentName}</p>
+                      <p className="text-sm font-medium text-slate-900 truncate">{item.requestCode}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{item.departmentName}</p>
                     </div>
-                    <span className="shrink-0 text-sm font-semibold text-amber-300">
+                    <span className="shrink-0 text-sm font-semibold text-amber-700">
                       {formatCurrency(item.amount)}
                     </span>
                   </div>
@@ -370,11 +370,11 @@ export function CfoDashboard() {
         </div>
 
         {/* Company fund health */}
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Sức khỏe quỹ</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Sức khỏe quỹ</h2>
 
           {loading ? (
-            <div className="h-32 rounded-xl bg-slate-900 animate-pulse" />
+            <div className="h-32 rounded-xl bg-white animate-pulse" />
           ) : (
             <>
               <div
@@ -383,27 +383,27 @@ export function CfoDashboard() {
                 <p className={`text-xs font-semibold uppercase tracking-wide ${health.tone}`}>
                   {health.label}
                 </p>
-                <p className="text-lg font-bold text-white">
+                <p className="text-lg font-bold text-slate-900">
                   {formatCurrency(dashboard?.companyFundBalance ?? 0)}
                 </p>
-                <p className="text-xs text-slate-400">Số dư COMPANY_FUND</p>
+                <p className="text-xs text-slate-500">Số dư COMPANY_FUND</p>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-slate-900 p-3 text-xs text-slate-400 space-y-1">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-500 space-y-1">
                 <p>
-                  <span className="text-emerald-300 font-medium">HEALTHY</span> — ≥ 500 triệu
+                  <span className="text-emerald-700 font-medium">HEALTHY</span> — ≥ 500 triệu
                 </p>
                 <p>
-                  <span className="text-amber-300 font-medium">LOW</span> — 100 → 500 triệu
+                  <span className="text-amber-700 font-medium">LOW</span> — 100 → 500 triệu
                 </p>
                 <p>
-                  <span className="text-rose-300 font-medium">CRITICAL</span> — dưới 100 triệu
+                  <span className="text-rose-700 font-medium">CRITICAL</span> — dưới 100 triệu
                 </p>
               </div>
 
               <Link
                 href="/cfo/system-fund"
-                className="block text-center px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
+                className="block text-center px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
               >
                 Xem chi tiết quỹ →
               </Link>
@@ -413,8 +413,8 @@ export function CfoDashboard() {
       </div>
 
       {/* Quick links */}
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
-        <h2 className="text-lg font-semibold text-white">Truy cập nhanh</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-slate-900">Truy cập nhanh</h2>
         <div className="mt-3 flex flex-wrap gap-3">
           <QuickLink href="/cfo/approvals" label="Duyệt cap quota" />
           <QuickLink href="/cfo/system-fund" label="Quỹ hệ thống" />
@@ -424,7 +424,7 @@ export function CfoDashboard() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

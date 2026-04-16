@@ -374,8 +374,8 @@ export default function AdminDepartmentsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Quản lý phòng ban</h1>
-          <p className="text-slate-400 mt-1">Tạo phòng ban, phân bổ quota và theo dõi ngân sách.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Quản lý phòng ban</h1>
+          <p className="text-slate-500 mt-1">Tạo phòng ban, phân bổ quota và theo dõi ngân sách.</p>
         </div>
 
         <button
@@ -387,7 +387,7 @@ export default function AdminDepartmentsPage() {
         </button>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
         <div className="relative">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
@@ -406,7 +406,7 @@ export default function AdminDepartmentsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm theo mã, tên phòng ban, manager..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
@@ -414,11 +414,11 @@ export default function AdminDepartmentsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
-            <div key={`department-skeleton-${index}`} className="h-52 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`department-skeleton-${index}`} className="h-52 rounded-2xl bg-white animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center text-slate-500">
           Không có phòng ban phù hợp.
         </div>
       ) : (
@@ -426,17 +426,17 @@ export default function AdminDepartmentsPage() {
           {items.map((department) => (
             <div
               key={department.id}
-              className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4 hover:border-white/20"
+              className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4 hover:border-slate-300"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-xs text-slate-500 font-mono">{department.code}</p>
-                  <p className="text-base font-semibold text-white mt-1">{department.name}</p>
+                  <p className="text-base font-semibold text-slate-900 mt-1">{department.name}</p>
                 </div>
-                <span className="text-xs text-slate-400">{department.employeeCount} nhân sự</span>
+                <span className="text-xs text-slate-500">{department.employeeCount} nhân sự</span>
               </div>
 
-              <div className="space-y-1 text-sm text-slate-300">
+              <div className="space-y-1 text-sm text-slate-600">
                 <p>Trưởng phòng: {department.manager?.fullName ?? "Chưa gán"}</p>
                 <p>Quota: {formatCurrency(department.totalProjectQuota)}</p>
                 <p>Khả dụng: {formatCurrency(department.totalAvailableBalance)}</p>
@@ -446,7 +446,7 @@ export default function AdminDepartmentsPage() {
                 <button
                   type="button"
                   onClick={() => router.push(`/admin/departments/${department.id}`)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-white/10 hover:border-white/20 text-sm text-slate-200"
+                  className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-sm text-slate-900"
                 >
                   Xem chi tiết
                 </button>
@@ -464,7 +464,7 @@ export default function AdminDepartmentsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} phòng ban
         </p>
 
@@ -473,7 +473,7 @@ export default function AdminDepartmentsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -481,7 +481,7 @@ export default function AdminDepartmentsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -489,13 +489,13 @@ export default function AdminDepartmentsPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -509,39 +509,39 @@ export default function AdminDepartmentsPage() {
             aria-label="Đóng modal phòng ban"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">
               {isEditing ? "Cập nhật phòng ban" : "Tạo phòng ban mới"}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Tên phòng ban</label>
+                <label className="block text-sm text-slate-600 mb-2">Tên phòng ban</label>
                 <input
                   value={formName}
                   onChange={(event) => setFormName(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Mã phòng ban</label>
+                <label className="block text-sm text-slate-600 mb-2">Mã phòng ban</label>
                 <input
                   value={formCode}
                   onChange={(event) => setFormCode(event.target.value)}
                   placeholder="Có thể để trống"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Trưởng phòng</label>
+                <label className="block text-sm text-slate-600 mb-2">Trưởng phòng</label>
                 <select
                   value={formManagerId}
                   onChange={(event) => setFormManagerId(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
                 >
                   <option value="">Chưa gán trưởng phòng</option>
                   {managers.map((manager) => (
@@ -553,13 +553,13 @@ export default function AdminDepartmentsPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Tổng quota</label>
+                <label className="block text-sm text-slate-600 mb-2">Tổng quota</label>
                 <input
                   type="number"
                   min={0}
                   value={formQuota}
                   onChange={(event) => setFormQuota(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
                 />
               </div>
             </div>
@@ -568,7 +568,7 @@ export default function AdminDepartmentsPage() {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>

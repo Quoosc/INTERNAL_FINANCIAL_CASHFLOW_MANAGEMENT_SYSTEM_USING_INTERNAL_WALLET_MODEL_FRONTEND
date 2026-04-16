@@ -108,30 +108,30 @@ function formatDateTime(iso: string): string {
 function statusBadgeClass(status: string): string {
   switch (status) {
     case UserStatus.ACTIVE:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case UserStatus.LOCKED:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     case UserStatus.PENDING:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
 function roleBadgeClass(role: string): string {
   switch (role) {
     case RoleName.ADMIN:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     case RoleName.CFO:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RoleName.ACCOUNTANT:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case RoleName.MANAGER:
-      return "bg-blue-500/15 border-blue-500/30 text-blue-300";
+      return "bg-blue-50 border-blue-200 text-blue-700";
     case RoleName.TEAM_LEADER:
-      return "bg-indigo-500/15 border-indigo-500/30 text-indigo-300";
+      return "bg-indigo-100 border-indigo-200 text-indigo-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -348,15 +348,15 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-52 rounded bg-slate-800 animate-pulse" />
-        <div className="h-32 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-72 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-8 w-52 rounded bg-white animate-pulse" />
+        <div className="h-32 rounded-2xl bg-white animate-pulse" />
+        <div className="h-72 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
 
   if (!user) {
-    return <div className="text-slate-300">Không tìm thấy user.</div>;
+    return <div className="text-slate-600">Không tìm thấy user.</div>;
   }
 
   return (
@@ -364,7 +364,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       <button
         type="button"
         onClick={() => router.push("/admin/users")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -372,15 +372,15 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         Quay lại
       </button>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-slate-900 border border-white/10 text-slate-100 flex items-center justify-center font-semibold">
+            <div className="w-14 h-14 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center font-semibold">
               {initials}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">{user.fullName}</h1>
-              <p className="text-sm text-slate-400 mt-1">{user.email}</p>
+              <h1 className="text-2xl font-bold text-slate-900">{user.fullName}</h1>
+              <p className="text-sm text-slate-500 mt-1">{user.email}</p>
             </div>
           </div>
 
@@ -397,8 +397,8 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-            <h2 className="text-lg font-semibold text-white">Thông tin cơ bản</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">Thông tin cơ bản</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Mã nhân viên" value={user.employeeCode ?? "—"} />
               <InfoCard label="Phòng ban" value={user.departmentName ?? "—"} />
@@ -411,13 +411,13 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-            <h2 className="text-lg font-semibold text-white">Thông tin ví</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">Thông tin ví</h2>
             {user.wallet ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <InfoCard label="Tổng số dư" value={formatCurrency(user.wallet.balance)} tone="text-white" />
-                <InfoCard label="Số dư khóa" value={formatCurrency(user.wallet.lockedBalance)} tone="text-amber-300" />
-                <InfoCard label="Số dư khả dụng" value={formatCurrency(user.wallet.availableBalance)} tone="text-emerald-300" />
+                <InfoCard label="Tổng số dư" value={formatCurrency(user.wallet.balance)} tone="text-slate-900" />
+                <InfoCard label="Số dư khóa" value={formatCurrency(user.wallet.lockedBalance)} tone="text-amber-700" />
+                <InfoCard label="Số dư khả dụng" value={formatCurrency(user.wallet.availableBalance)} tone="text-emerald-700" />
               </div>
             ) : (
               <p className="text-sm text-slate-500">User chưa có ví.</p>
@@ -426,16 +426,16 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-            <h2 className="text-lg font-semibold text-white">Bảo mật</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">Bảo mật</h2>
             <InfoCard label="Đã có PIN" value={user.securitySettings.hasPIN ? "Có" : "Chưa"} />
             <InfoCard label="PIN khóa đến" value={user.securitySettings.pinLockedUntil ?? "—"} />
             <InfoCard label="Số lần nhập sai PIN" value={String(user.securitySettings.retryCount)} />
             <InfoCard label="Đăng nhập lần đầu" value={user.isFirstLogin ? "Có" : "Không"} />
           </div>
 
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-            <h2 className="text-lg font-semibold text-white">Thao tác</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">Thao tác</h2>
             <button
               type="button"
               onClick={openEditModal}
@@ -447,7 +447,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               type="button"
               onClick={handleToggleLock}
               disabled={processing}
-              className={`w-full px-4 py-2.5 rounded-xl text-white text-sm font-semibold disabled:opacity-60 ${
+              className={`w-full px-4 py-2.5 rounded-xl text-slate-900 text-sm font-semibold disabled:opacity-60 ${
                 user.status === UserStatus.LOCKED
                   ? "bg-emerald-600 hover:bg-emerald-500"
                   : "bg-rose-600 hover:bg-rose-500"
@@ -468,13 +468,13 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -488,25 +488,25 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             aria-label="Đóng modal chỉnh sửa user"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Sửa thông tin user</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Sửa thông tin user</h3>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Họ tên</label>
+              <label className="block text-sm text-slate-600 mb-2">Họ tên</label>
               <input
                 value={editFullName}
                 onChange={(event) => setEditFullName(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Vai trò</label>
+                <label className="block text-sm text-slate-600 mb-2">Vai trò</label>
                 <select
                   value={editRole}
                   onChange={(event) => setEditRole(event.target.value as RoleName)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
                   {ROLE_OPTIONS.map((role) => (
                     <option key={role.value} value={role.value}>
@@ -517,11 +517,11 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Phòng ban</label>
+                <label className="block text-sm text-slate-600 mb-2">Phòng ban</label>
                 <select
                   value={editDepartmentId}
                   onChange={(event) => setEditDepartmentId(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
                   <option value="">Không gán phòng ban</option>
                   {departments.map((department) => (
@@ -537,7 +537,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -567,9 +567,9 @@ function InfoCard({
   tone?: string;
 }) {
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-xl p-4">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm mt-1 ${tone ?? "text-white"}`}>{value}</p>
+      <p className={`text-sm mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>
   );
 }

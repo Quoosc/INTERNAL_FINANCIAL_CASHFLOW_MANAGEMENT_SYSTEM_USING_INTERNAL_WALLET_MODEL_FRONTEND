@@ -132,30 +132,30 @@ function roleLabel(role: string): string {
 function roleBadgeClass(role: string): string {
   switch (role) {
     case RoleName.ADMIN:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     case RoleName.CFO:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RoleName.ACCOUNTANT:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case RoleName.MANAGER:
-      return "bg-blue-500/15 border-blue-500/30 text-blue-300";
+      return "bg-blue-50 border-blue-200 text-blue-700";
     case RoleName.TEAM_LEADER:
-      return "bg-indigo-500/15 border-indigo-500/30 text-indigo-300";
+      return "bg-indigo-100 border-indigo-200 text-indigo-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
 function statusBadgeClass(status: string): string {
   switch (status) {
     case UserStatus.ACTIVE:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case UserStatus.LOCKED:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     case UserStatus.PENDING:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -477,8 +477,8 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Quản lý nhân sự</h1>
-          <p className="text-slate-400 mt-1">Danh sách nhân sự, tạo tài khoản và quản lý trạng thái truy cập.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Quản lý nhân sự</h1>
+          <p className="text-slate-500 mt-1">Danh sách nhân sự, tạo tài khoản và quản lý trạng thái truy cập.</p>
         </div>
 
         <button
@@ -493,12 +493,12 @@ export default function AdminUsersPage() {
         </button>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <select
             value={roleFilter}
             onChange={(event) => updateParam("role", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
           >
             <option value="">Tất cả vai trò</option>
             {ROLE_OPTIONS.map((role) => (
@@ -511,7 +511,7 @@ export default function AdminUsersPage() {
           <select
             value={statusFilter}
             onChange={(event) => updateParam("status", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
           >
             <option value="">Tất cả trạng thái</option>
             <option value={UserStatus.ACTIVE}>ACTIVE</option>
@@ -537,31 +537,31 @@ export default function AdminUsersPage() {
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Tìm theo tên, email, mã nhân viên..."
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px]">
             <thead>
-              <tr className="border-b border-white/10 bg-slate-900/60">
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Mã NV</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Họ tên</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Vai trò</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Phòng ban</th>
-                <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Trạng thái</th>
-                <th className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Thao tác</th>
+              <tr className="border-b border-slate-200 bg-slate-50/80">
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Mã NV</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Họ tên</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Vai trò</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Phòng ban</th>
+                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Trạng thái</th>
+                <th className="text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 [...Array(6)].map((_, index) => (
-                  <tr key={`user-skeleton-${index}`} className="border-b border-white/5 last:border-b-0">
+                  <tr key={`user-skeleton-${index}`} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
                     <td colSpan={6} className="px-4 py-4">
-                      <div className="h-8 rounded bg-slate-900 animate-pulse" />
+                      <div className="h-8 rounded bg-white animate-pulse" />
                     </td>
                   </tr>
                 ))
@@ -573,11 +573,11 @@ export default function AdminUsersPage() {
                 </tr>
               ) : (
                 items.map((user) => (
-                  <tr key={user.id} className="border-b border-white/5 last:border-b-0">
-                    <td className="px-4 py-3 text-sm text-slate-300">{user.employeeCode ?? "—"}</td>
+                  <tr key={user.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-600">{user.employeeCode ?? "—"}</td>
                     <td className="px-4 py-3">
                       <div>
-                        <p className="text-sm font-medium text-white">{user.fullName}</p>
+                        <p className="text-sm font-medium text-slate-900">{user.fullName}</p>
                         <p className="text-xs text-slate-500 mt-1">{user.email}</p>
                       </div>
                     </td>
@@ -586,7 +586,7 @@ export default function AdminUsersPage() {
                         {roleLabel(user.role)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{user.departmentName ?? "—"}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{user.departmentName ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusBadgeClass(user.status)}`}>
                         {user.status}
@@ -597,7 +597,7 @@ export default function AdminUsersPage() {
                         <button
                           type="button"
                           onClick={() => router.push(`/admin/users/${user.id}`)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs"
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs"
                         >
                           Chi tiết
                         </button>
@@ -605,7 +605,7 @@ export default function AdminUsersPage() {
                           type="button"
                           onClick={() => handleToggleLock(user)}
                           disabled={processingUserId === user.id}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs text-white disabled:opacity-60 ${
+                          className={`px-2.5 py-1.5 rounded-lg text-xs text-slate-900 disabled:opacity-60 ${
                             user.status === UserStatus.LOCKED
                               ? "bg-emerald-600 hover:bg-emerald-500"
                               : "bg-rose-600 hover:bg-rose-500"
@@ -632,7 +632,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} user
         </p>
 
@@ -641,7 +641,7 @@ export default function AdminUsersPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -649,7 +649,7 @@ export default function AdminUsersPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -657,13 +657,13 @@ export default function AdminUsersPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -677,40 +677,40 @@ export default function AdminUsersPage() {
             aria-label="Đóng modal tạo user"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Tạo người dùng mới</h3>
-            <p className="text-sm text-slate-400">
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Tạo người dùng mới</h3>
+            <p className="text-sm text-slate-500">
               Hệ thống sẽ tạo mật khẩu tạm và gửi email onboarding cho người dùng.
             </p>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Họ tên</label>
+              <label className="block text-sm text-slate-600 mb-2">Họ tên</label>
               <input
                 value={newFullName}
                 onChange={(event) => setNewFullName(event.target.value)}
                 placeholder="Nhập họ tên"
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Email công ty</label>
+              <label className="block text-sm text-slate-600 mb-2">Email công ty</label>
               <input
                 type="email"
                 value={newEmail}
                 onChange={(event) => setNewEmail(event.target.value)}
                 placeholder="name@ifms.vn"
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Vai trò</label>
+                <label className="block text-sm text-slate-600 mb-2">Vai trò</label>
                 <select
                   value={newRole}
                   onChange={(event) => setNewRole(event.target.value as RoleName)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
                   {ROLE_OPTIONS.map((role) => (
                     <option key={role.value} value={role.value}>
@@ -721,11 +721,11 @@ export default function AdminUsersPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Phòng ban</label>
+                <label className="block text-sm text-slate-600 mb-2">Phòng ban</label>
                 <select
                   value={newDepartmentId}
                   onChange={(event) => setNewDepartmentId(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
                   <option value="">Không gán phòng ban</option>
                   {departments.map((department) => (
@@ -741,7 +741,7 @@ export default function AdminUsersPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>

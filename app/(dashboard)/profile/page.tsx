@@ -312,8 +312,8 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-60 rounded bg-slate-800 animate-pulse" />
-        <div className="h-80 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-8 w-60 rounded bg-white animate-pulse" />
+        <div className="h-80 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
@@ -321,8 +321,8 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Hồ sơ cá nhân</h1>
-        <p className="text-slate-400 mt-1">Quản lý thông tin, ngân hàng và bảo mật tài khoản.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Hồ sơ cá nhân</h1>
+        <p className="text-slate-500 mt-1">Quản lý thông tin, ngân hàng và bảo mật tài khoản.</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -349,7 +349,7 @@ export default function ProfilePage() {
       </div>
 
       {activeTab === "INFO" && (
-        <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
           <Field label="Họ và tên">
             <input
               value={profileForm.fullName}
@@ -359,7 +359,7 @@ export default function ProfilePage() {
                   fullName: event.target.value,
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -367,7 +367,7 @@ export default function ProfilePage() {
             <input
               value={profile?.email ?? ""}
               disabled
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-slate-400"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-500"
             />
           </Field>
 
@@ -380,7 +380,7 @@ export default function ProfilePage() {
                   phoneNumber: event.target.value,
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -393,7 +393,7 @@ export default function ProfilePage() {
                   address: event.target.value,
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -408,7 +408,7 @@ export default function ProfilePage() {
                     dateOfBirth: event.target.value,
                   }))
                 }
-                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
               />
             </Field>
 
@@ -421,7 +421,7 @@ export default function ProfilePage() {
                     citizenId: event.target.value,
                   }))
                 }
-                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
               />
             </Field>
           </div>
@@ -435,9 +435,9 @@ export default function ProfilePage() {
       )}
 
       {activeTab === "AVATAR" && (
-        <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full overflow-hidden border border-white/10 bg-slate-900 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
               {avatarPreviewUrl || profile?.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -454,7 +454,7 @@ export default function ProfilePage() {
                 type="file"
                 accept="image/*"
                 onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
-                className="text-sm text-slate-300"
+                className="text-sm text-slate-600"
               />
               <p className="text-xs text-slate-500 mt-1">Chọn ảnh JPG/PNG để cập nhật.</p>
             </div>
@@ -469,7 +469,7 @@ export default function ProfilePage() {
       )}
 
       {activeTab === "BANK" && (
-        <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
           <Field label="Ngân hàng">
             <select
               value={bankForm.bankName}
@@ -479,7 +479,7 @@ export default function ProfilePage() {
                   bankName: event.target.value,
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             >
               <option value="">Chọn ngân hàng</option>
               {banks.map((bank) => (
@@ -499,7 +499,7 @@ export default function ProfilePage() {
                   accountNumber: event.target.value,
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -512,7 +512,7 @@ export default function ProfilePage() {
                   accountOwner: event.target.value,
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -525,7 +525,7 @@ export default function ProfilePage() {
       )}
 
       {activeTab === "SECURITY" && (
-        <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
           <Field label="PIN hiện tại (5 số)">
             <input
               type="password"
@@ -538,7 +538,7 @@ export default function ProfilePage() {
                   currentPin: event.target.value.replace(/\D/g, "").slice(0, 5),
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -554,7 +554,7 @@ export default function ProfilePage() {
                   newPin: event.target.value.replace(/\D/g, "").slice(0, 5),
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -570,7 +570,7 @@ export default function ProfilePage() {
                   confirmPin: event.target.value.replace(/\D/g, "").slice(0, 5),
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
           </Field>
 
@@ -583,13 +583,13 @@ export default function ProfilePage() {
       )}
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">
           {notice}
         </div>
       )}
@@ -612,8 +612,8 @@ function TabButton({
       onClick={onClick}
       className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
         active
-          ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-          : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700"
+          ? "bg-blue-100 border-blue-300 text-blue-700"
+          : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
       }`}
     >
       {label}
@@ -624,7 +624,7 @@ function TabButton({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-sm text-slate-300 mb-2">{label}</span>
+      <span className="block text-sm text-slate-600 mb-2">{label}</span>
       {children}
     </label>
   );
@@ -644,7 +644,7 @@ function ActionButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
     >
       {label}
     </button>

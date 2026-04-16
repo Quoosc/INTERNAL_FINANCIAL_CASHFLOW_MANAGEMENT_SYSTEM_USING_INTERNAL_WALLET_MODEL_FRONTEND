@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -425,7 +425,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
               >
                 {saving ? "Đang lưu..." : "Lưu cập nhật"}
               </button>

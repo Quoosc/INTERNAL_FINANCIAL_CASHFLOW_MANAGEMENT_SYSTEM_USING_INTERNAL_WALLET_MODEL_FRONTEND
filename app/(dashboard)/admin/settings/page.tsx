@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/api-client";
@@ -125,18 +125,18 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Cau hinh he thong</h1>
-        <p className="text-slate-400 mt-1">Quan tri thong so van hanh va bao mat he thong.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Cau hinh he thong</h1>
+        <p className="text-slate-500 mt-1">Quan tri thong so van hanh va bao mat he thong.</p>
       </div>
 
-      <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+      <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
         Thay doi cau hinh co hieu luc ngay lap tuc. Kiem tra ky truoc khi luu.
       </div>
 
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, index) => (
-            <div key={`settings-skeleton-${index}`} className="h-44 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`settings-skeleton-${index}`} className="h-44 rounded-2xl bg-white animate-pulse" />
           ))}
         </div>
       ) : (
@@ -175,7 +175,7 @@ export default function AdminSettingsPage() {
           type="button"
           onClick={() => void loadSettings()}
           disabled={loading}
-          className="px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+          className="px-5 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
         >
           Tai lai
         </button>
@@ -183,20 +183,20 @@ export default function AdminSettingsPage() {
           type="button"
           onClick={() => void handleEvictAllCache()}
           disabled={evictingCache || loading}
-          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
         >
           {evictingCache ? "Dang lam moi cache..." : "Lam moi cache"}
         </button>
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -220,10 +220,10 @@ function SettingsGroup({
   savingKey: string | null;
 }) {
   return (
-    <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+    <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        <p className="text-sm text-slate-400 mt-1">{description}</p>
+        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+        <p className="text-sm text-slate-500 mt-1">{description}</p>
       </div>
 
       {items.length === 0 ? (
@@ -231,22 +231,22 @@ function SettingsGroup({
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.key} className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-2">
+            <div key={item.key} className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-white">{item.key}</p>
+                  <p className="text-sm font-medium text-slate-900">{item.key}</p>
                   <p className="text-xs text-slate-500 mt-1">{item.description ?? "Khong co mo ta"}</p>
                 </div>
                 <input
                   value={item.value}
                   onChange={(event) => onChange(item.key, event.target.value)}
-                  className="w-full md:w-72 px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-slate-100 text-sm"
+                  className="w-full md:w-72 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-100 text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => void onSave(item.key)}
                   disabled={savingKey !== null}
-                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
                 >
                   {savingKey === item.key ? "Dang luu..." : "Luu"}
                 </button>

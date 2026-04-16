@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
@@ -398,9 +398,9 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             const active = activeStep === item.step;
             const enabled = canOpenStep(item.step);
             return (
-              <button key={item.step} type="button" disabled={!enabled} onClick={() => setActiveStep(item.step)} className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? "border-blue-500/50 bg-blue-50" : enabled ? "border-slate-200 bg-white hover:border-slate-300" : "border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed"}`}>
+              <button key={item.step} type="button" disabled={!enabled} onClick={() => setActiveStep(item.step)} className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? "border-blue-300 bg-blue-50" : enabled ? "border-slate-200 bg-white hover:border-slate-300" : "border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed"}`}>
                 <div className="flex items-center gap-2">
-                  <span className={`w-6 h-6 rounded-full border text-xs font-semibold flex items-center justify-center ${item.done ? "border-emerald-500/50 bg-emerald-50 text-emerald-700" : active ? "border-blue-500/50 bg-blue-50 text-blue-700" : "border-slate-500/40 bg-slate-100 text-slate-600"}`}>{item.done ? "✓" : item.step}</span>
+                  <span className={`w-6 h-6 rounded-full border text-xs font-semibold flex items-center justify-center ${item.done ? "border-emerald-300 bg-emerald-50 text-emerald-700" : active ? "border-blue-300 bg-blue-50 text-blue-700" : "border-slate-500/40 bg-slate-100 text-slate-600"}`}>{item.done ? "✓" : item.step}</span>
                   <span className="text-sm text-slate-900">{item.title}</span>
                 </div>
               </button>
@@ -423,7 +423,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           </label>
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => void handleImport()} disabled={!selectedFile || uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Đang tải lên..." : "Tải lên"}</button>
+            <button type="button" onClick={() => void handleImport()} disabled={!selectedFile || uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold">{uploading ? "Đang tải lên..." : "Tải lên"}</button>
           </div>
 
           {importResult && (
@@ -439,7 +439,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           )}
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => setActiveStep(2)} disabled={!hasEntries} className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Tiếp theo →</button>
+            <button type="button" onClick={() => setActiveStep(2)} disabled={!hasEntries} className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold">Tiếp theo →</button>
           </div>
         </div>
       )}
@@ -545,7 +545,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
           <div className="flex items-center justify-between">
             <button type="button" onClick={() => setActiveStep(2)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">← Quay lại</button>
-            <button type="button" onClick={() => setActiveStep(4)} disabled={!nettingResult && !isCompleted} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Xác nhận & Chạy lương →</button>
+            <button type="button" onClick={() => setActiveStep(4)} disabled={!nettingResult && !isCompleted} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold">Xác nhận & Chạy lương →</button>
           </div>
         </div>
       )}
@@ -595,7 +595,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             {entryError && <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">{entryError}</div>}
             <div className="flex items-center justify-end gap-3 pt-2">
               <button type="button" onClick={closeEdit} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
-              <button type="button" onClick={() => void handleSaveEntry()} disabled={uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Đang lưu..." : "Lưu"}</button>
+              <button type="button" onClick={() => void handleSaveEntry()} disabled={uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold">{uploading ? "Đang lưu..." : "Lưu"}</button>
             </div>
           </div>
         </div>
@@ -610,7 +610,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             <p className="text-sm text-rose-700">Thao tác này không thể hoàn tác.</p>
             <div className="flex items-center justify-end gap-3">
               <button type="button" onClick={() => setShowRunConfirm(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
-              <button type="button" onClick={() => void handleRun()} disabled={running} className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{running ? "Đang chạy..." : "Xác nhận chạy lương"}</button>
+              <button type="button" onClick={() => void handleRun()} disabled={running} className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold">{running ? "Đang chạy..." : "Xác nhận chạy lương"}</button>
             </div>
           </div>
         </div>

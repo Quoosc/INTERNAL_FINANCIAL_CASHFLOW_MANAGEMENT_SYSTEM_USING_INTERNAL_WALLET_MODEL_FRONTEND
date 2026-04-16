@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import React, { use, useEffect, useMemo, useState } from "react";
@@ -585,7 +585,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">Tổng quan ngân sách</h2>
-          <button onClick={() => setShowTopup(true)} className="px-4 py-2 rounded-xl border border-blue-500/40 text-blue-700 hover:bg-blue-50 text-sm">Xin cấp vốn</button>
+          <button onClick={() => setShowTopup(true)} className="px-4 py-2 rounded-xl border border-blue-300 text-blue-700 hover:bg-blue-50 text-sm">Xin cấp vốn</button>
         </div>
         <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden">
           <div className={`h-full ${burnColor(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
@@ -602,7 +602,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           ["budget", "Ngân sách"],
           ["members", "Thành viên"],
         ] as [TabKey, string][]).map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} className={`px-4 py-2 rounded-xl text-sm border ${tab === key ? "bg-blue-600/20 border-blue-500/40 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}>
+          <button key={key} onClick={() => setTab(key)} className={`px-4 py-2 rounded-xl text-sm border ${tab === key ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}>
             {label}
           </button>
         ))}
@@ -653,7 +653,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             {editingBudget ? (
               <div className="flex gap-2">
                 <button onClick={() => setEditingBudget(false)} className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
-                <button onClick={onSaveBudget} disabled={submitting} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm">Lưu</button>
+                <button onClick={onSaveBudget} disabled={submitting} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-slate-900 text-sm">Lưu</button>
               </div>
             ) : (
               <button onClick={startEditBudget} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm">Cập nhật ngân sách</button>
@@ -719,7 +719,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2">
                   <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${roleBadge(m.projectRole)}`}>{m.projectRole}</span>
                   <button onClick={() => openEditMember(m.userId, m.position)} className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">Sửa</button>
-                  <button onClick={() => onRemoveMember(m.userId)} disabled={submitting} className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs">Xóa</button>
+                  <button onClick={() => onRemoveMember(m.userId)} disabled={submitting} className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-slate-900 text-xs">Xóa</button>
                 </div>
               </div>
             ))}
@@ -780,7 +780,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                 <p className="px-4 py-3 text-sm text-slate-500">Không có thành viên phù hợp.</p>
               ) : (
                 filteredAvailable.map((m) => (
-                  <button key={m.id} type="button" onClick={() => setSelectedMemberId(m.id)} className={`w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${selectedMemberId === m.id ? "bg-blue-600/20 text-blue-700" : "text-slate-900 hover:bg-slate-100"}`}>
+                  <button key={m.id} type="button" onClick={() => setSelectedMemberId(m.id)} className={`w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${selectedMemberId === m.id ? "bg-blue-100 text-blue-700" : "text-slate-900 hover:bg-slate-100"}`}>
                     <p className="text-sm font-medium">{m.fullName}</p>
                     <p className="text-xs text-slate-500 mt-1">{m.employeeCode}</p>
                   </button>
@@ -842,7 +842,7 @@ function ModalActions({
       <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
         Hủy
       </button>
-      <button type="button" onClick={onConfirm} disabled={disabled} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm">
+      <button type="button" onClick={onConfirm} disabled={disabled} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-slate-900 text-sm">
         {confirmText}
       </button>
     </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -449,7 +449,7 @@ export default function AccountantPayrollPage() {
                 onClick={() => updateParam("status", tab.value)}
                 className={`px-3 py-1.5 rounded-xl border text-sm transition-colors ${
                   active
-                    ? "bg-blue-50 border-blue-500/40 text-blue-700"
+                    ? "bg-blue-50 border-blue-300 text-blue-700"
                     : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
@@ -640,7 +640,7 @@ export default function AccountantPayrollPage() {
                 type="button"
                 onClick={() => void handleCreatePeriod()}
                 disabled={creating}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
               >
                 {creating ? "Đang tạo..." : "Tạo kỳ lương"}
               </button>

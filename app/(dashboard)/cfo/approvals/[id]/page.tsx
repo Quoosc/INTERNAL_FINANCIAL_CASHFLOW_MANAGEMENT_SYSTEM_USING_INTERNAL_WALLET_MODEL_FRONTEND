@@ -572,7 +572,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleApprove}
                 disabled={submitting || maxApprovable <= 0}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận duyệt"}
               </button>
@@ -637,7 +637,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleReject}
                 disabled={rejectReason.trim().length < 10 || submitting}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận từ chối"}
               </button>

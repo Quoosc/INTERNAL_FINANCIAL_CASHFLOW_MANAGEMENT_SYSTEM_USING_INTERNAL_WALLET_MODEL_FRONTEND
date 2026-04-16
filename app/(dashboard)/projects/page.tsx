@@ -33,15 +33,15 @@ function getStatusLabel(status: ProjectStatus): string {
 function getStatusClass(status: ProjectStatus): string {
   switch (status) {
     case ProjectStatus.ACTIVE:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-50 border-emerald-200 text-emerald-700";
     case ProjectStatus.PLANNING:
-      return "bg-blue-500/15 border-blue-500/30 text-blue-300";
+      return "bg-blue-50 border-blue-200 text-blue-700";
     case ProjectStatus.PAUSED:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-50 border-amber-200 text-amber-700";
     case ProjectStatus.CLOSED:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-500/15 border-slate-500/30 text-slate-600";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-500/15 border-slate-500/30 text-slate-600";
   }
 }
 
@@ -182,8 +182,8 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Dự án</h1>
-        <p className="text-slate-400 mt-1">Xem danh sách và tiến độ các dự án.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Dự án</h1>
+        <p className="text-slate-500 mt-1">Xem danh sách và tiến độ các dự án.</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -194,8 +194,8 @@ export default function ProjectsPage() {
             onClick={() => handleStatusChange(tab.value)}
             className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
               statusFilter === tab.value
-                ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-                : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700"
+                ? "bg-blue-100 border-blue-300 text-blue-700"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
             }`}
           >
             {tab.label}
@@ -209,7 +209,7 @@ export default function ProjectsPage() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Tìm theo mã hoặc tên dự án..."
-          className="flex-1 px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+          className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         <button
           type="submit"
@@ -227,7 +227,7 @@ export default function ProjectsPage() {
           </svg>
         </div>
       ) : projects.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-10 text-center text-slate-500 text-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500 text-sm">
           Không có dự án phù hợp bộ lọc.
         </div>
       ) : (
@@ -241,12 +241,12 @@ export default function ProjectsPage() {
                 key={project.id}
                 type="button"
                 onClick={() => router.push(`/projects/${project.id}`)}
-                className="bg-slate-800 border border-white/10 hover:border-white/20 rounded-2xl p-5 text-left transition-all hover:bg-slate-700/50 space-y-4"
+                className="bg-white border border-slate-200 hover:border-slate-200 rounded-2xl p-5 text-left transition-all hover:bg-blue-100/50 space-y-4"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-xs text-slate-500">{project.projectCode}</p>
-                    <p className="text-base font-semibold text-white mt-0.5 truncate">{project.name}</p>
+                    <p className="text-base font-semibold text-slate-900 mt-0.5 truncate">{project.name}</p>
                   </div>
                   <span
                     className={`shrink-0 inline-flex px-2.5 py-1 rounded-full border text-xs font-medium ${getStatusClass(project.status)}`}
@@ -256,17 +256,17 @@ export default function ProjectsPage() {
                 </div>
 
                 {project.currentPhaseName && (
-                  <p className="text-xs text-slate-400">
-                    Phase hiện tại: <span className="text-slate-200">{project.currentPhaseName}</span>
+                  <p className="text-xs text-slate-500">
+                    Phase hiện tại: <span className="text-slate-700">{project.currentPhaseName}</span>
                   </p>
                 )}
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Tiến độ ngân sách</span>
-                    <span className="text-slate-300 font-medium">{spentPercent}%</span>
+                    <span className="text-slate-500">Tiến độ ngân sách</span>
+                    <span className="text-slate-600 font-medium">{spentPercent}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-900 border border-white/10 overflow-hidden">
+                  <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
                     <div
                       className={`h-full transition-all ${getProgressBarClass(spentPercent)}`}
                       style={{ width: `${spentPercent}%` }}
@@ -275,13 +275,13 @@ export default function ProjectsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-900 border border-white/10 rounded-xl px-3 py-2">
+                  <div className="bg-white border border-slate-200 rounded-xl px-3 py-2">
                     <p className="text-[11px] text-slate-500">Ngân sách</p>
-                    <p className="text-xs font-semibold text-white mt-0.5">{formatCurrency(project.totalBudget)}</p>
+                    <p className="text-xs font-semibold text-slate-900 mt-0.5">{formatCurrency(project.totalBudget)}</p>
                   </div>
-                  <div className="bg-slate-900 border border-white/10 rounded-xl px-3 py-2">
+                  <div className="bg-white border border-slate-200 rounded-xl px-3 py-2">
                     <p className="text-[11px] text-slate-500">Còn lại</p>
-                    <p className="text-xs font-semibold text-emerald-300 mt-0.5">{formatCurrency(remaining)}</p>
+                    <p className="text-xs font-semibold text-emerald-700 mt-0.5">{formatCurrency(remaining)}</p>
                   </div>
                 </div>
               </button>
@@ -291,7 +291,7 @@ export default function ProjectsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Tổng {total} dự án • Trang {page}/{totalPages}
         </p>
 
@@ -300,7 +300,7 @@ export default function ProjectsPage() {
             type="button"
             onClick={() => handlePageChange(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -308,14 +308,14 @@ export default function ProjectsPage() {
             type="button"
             onClick={() => handlePageChange(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
         </div>
       </div>
 
-      {error && <p className="text-amber-400 text-sm">{error}</p>}
+      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -271,7 +271,7 @@ export default function ManagerApprovalsPage() {
           <h1 className="text-2xl font-bold text-slate-900">Duyệt cấp vốn dự án</h1>
           <p className="text-slate-500 mt-1">Flow 2: chỉ xử lý PROJECT_TOPUP từ Team Leaders.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-100 text-amber-700 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-300 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ duyệt
         </span>
       </div>

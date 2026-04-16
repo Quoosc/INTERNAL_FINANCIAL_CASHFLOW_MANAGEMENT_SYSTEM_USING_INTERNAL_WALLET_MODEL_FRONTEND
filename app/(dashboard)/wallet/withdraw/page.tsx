@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -34,11 +34,11 @@ function formatDateTime(iso: string | null): string {
 
 function getWithdrawStatusClass(status: WithdrawStatus): string {
   if (status === WithdrawStatus.PENDING) {
-    return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+    return "bg-amber-50 border-amber-200 text-amber-700";
   }
 
   if (status === WithdrawStatus.COMPLETED || status === ("APPROVED" as WithdrawStatus)) {
-    return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+    return "bg-emerald-50 border-emerald-200 text-emerald-700";
   }
 
   if (
@@ -46,10 +46,10 @@ function getWithdrawStatusClass(status: WithdrawStatus): string {
     status === WithdrawStatus.CANCELLED ||
     status === WithdrawStatus.FAILED
   ) {
-    return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+    return "bg-rose-50 border-rose-200 text-rose-700";
   }
 
-  return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+  return "bg-slate-500/15 border-slate-500/30 text-slate-600";
 }
 
 function getWithdrawStatusLabel(status: WithdrawStatus): string {
@@ -195,7 +195,7 @@ export default function WithdrawPage() {
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -204,26 +204,26 @@ export default function WithdrawPage() {
       </button>
 
       <div>
-        <h1 className="text-2xl font-bold text-white">Rut tien</h1>
-        <p className="text-slate-400 mt-1">Tao yeu cau rut tien tu vi noi bo ve tai khoan ngan hang.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Rut tien</h1>
+        <p className="text-slate-500 mt-1">Tao yeu cau rut tien tu vi noi bo ve tai khoan ngan hang.</p>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-6">
-        <p className="text-sm text-slate-400">So du hien tai</p>
+      <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <p className="text-sm text-slate-500">So du hien tai</p>
         {walletLoading ? (
-          <div className="mt-2 h-9 w-48 rounded bg-slate-700 animate-pulse" />
+          <div className="mt-2 h-9 w-48 rounded bg-blue-100 animate-pulse" />
         ) : (
           <>
-            <p className="text-3xl font-bold text-white mt-2">{formatVnd(currentBalance)}</p>
-            <p className="text-sm text-slate-400 mt-1">Kha dung: {formatVnd(availableBalance)}</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{formatVnd(currentBalance)}</p>
+            <p className="text-sm text-slate-500 mt-1">Kha dung: {formatVnd(availableBalance)}</p>
           </>
         )}
       </div>
 
       {!result ? (
-        <form onSubmit={handleSubmitWithdraw} className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-4">
+        <form onSubmit={handleSubmitWithdraw} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-slate-300 mb-2">
+            <label htmlFor="amount" className="block text-sm font-medium text-slate-600 mb-2">
               So tien rut
             </label>
             <input
@@ -233,12 +233,12 @@ export default function WithdrawPage() {
               value={amountDisplay}
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="Nhap so tien"
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
           </div>
 
           <div>
-            <label htmlFor="note" className="block text-sm font-medium text-slate-300 mb-2">
+            <label htmlFor="note" className="block text-sm font-medium text-slate-600 mb-2">
               Ghi chu (khong bat buoc)
             </label>
             <textarea
@@ -247,12 +247,12 @@ export default function WithdrawPage() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Vi du: Rut tien chi tieu ca nhan"
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
           </div>
 
           {error && (
-            <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+            <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
               {error}
             </div>
           )}
@@ -260,22 +260,22 @@ export default function WithdrawPage() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-semibold transition-colors"
           >
             {loading ? "Dang gui yeu cau..." : "Gui yeu cau rut tien"}
           </button>
         </form>
       ) : (
-        <div className="bg-slate-800 border border-emerald-500/30 rounded-2xl p-6 space-y-4">
+        <div className="bg-white border border-emerald-200 rounded-2xl p-6 space-y-4">
           <div className="flex items-center gap-3">
-            <span className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <span className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </span>
             <div>
-              <h2 className="text-lg font-semibold text-white">Da tao yeu cau rut tien</h2>
-              <p className="text-sm text-slate-400">Yeu cau dang cho xu ly boi ke toan.</p>
+              <h2 className="text-lg font-semibold text-slate-900">Da tao yeu cau rut tien</h2>
+              <p className="text-sm text-slate-500">Yeu cau dang cho xu ly boi ke toan.</p>
             </div>
           </div>
 
@@ -303,7 +303,7 @@ export default function WithdrawPage() {
                 setNote("");
                 setError(null);
               }}
-              className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
+              className="px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-medium transition-colors"
             >
               Tao yeu cau moi
             </button>
@@ -311,53 +311,53 @@ export default function WithdrawPage() {
         </div>
       )}
 
-      <section className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-4">
+      <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">Lich su yeu cau rut tien</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Lich su yeu cau rut tien</h2>
           <button
             type="button"
             onClick={() => void loadWithdrawHistory()}
             disabled={historyLoading}
-            className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-medium"
+            className="px-3 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-xs font-medium"
           >
             Tai lai
           </button>
         </div>
 
         {historyLoading ? (
-          <div className="py-8 text-center text-slate-400 text-sm">Dang tai lich su...</div>
+          <div className="py-8 text-center text-slate-500 text-sm">Dang tai lich su...</div>
         ) : history.length === 0 ? (
           <div className="py-8 text-center text-slate-500 text-sm">Chua co yeu cau rut tien nao.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-180">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">So tien</th>
-                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">Trang thai</th>
-                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">Ghi chu</th>
-                  <th className="px-3 py-2 text-left text-xs text-slate-400 uppercase tracking-wider">Thoi gian tao</th>
-                  <th className="px-3 py-2 text-right text-xs text-slate-400 uppercase tracking-wider">Thao tac</th>
+                <tr className="border-b border-slate-200">
+                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">So tien</th>
+                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">Trang thai</th>
+                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">Ghi chu</th>
+                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">Thoi gian tao</th>
+                  <th className="px-3 py-2 text-right text-xs text-slate-500 uppercase tracking-wider">Thao tac</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((request) => (
-                  <tr key={request.id} className="border-b border-white/5">
-                    <td className="px-3 py-3 text-sm text-white font-medium">{formatVnd(request.amount)}</td>
+                  <tr key={request.id} className="border-b border-slate-200">
+                    <td className="px-3 py-3 text-sm text-slate-900 font-medium">{formatVnd(request.amount)}</td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getWithdrawStatusClass(request.status)}`}>
                         {getWithdrawStatusLabel(request.status)}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-sm text-slate-300 max-w-70 truncate">{request.userNote || "-"}</td>
-                    <td className="px-3 py-3 text-sm text-slate-400">{formatDateTime(request.createdAt)}</td>
+                    <td className="px-3 py-3 text-sm text-slate-600 max-w-70 truncate">{request.userNote || "-"}</td>
+                    <td className="px-3 py-3 text-sm text-slate-500">{formatDateTime(request.createdAt)}</td>
                     <td className="px-3 py-3 text-right">
                       {request.status === WithdrawStatus.PENDING ? (
                         <button
                           type="button"
                           onClick={() => void handleCancelRequest(request.id)}
                           disabled={cancellingId === request.id}
-                          className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
+                          className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
                         >
                           {cancellingId === request.id ? "Dang huy..." : "Huy"}
                         </button>
@@ -373,7 +373,7 @@ export default function WithdrawPage() {
         )}
 
         {historyError && (
-          <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
             {historyError}
           </div>
         )}
@@ -384,9 +384,9 @@ export default function WithdrawPage() {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-xl px-4 py-3">
+    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-white font-medium mt-1">{value}</p>
+      <p className="text-sm text-slate-900 font-medium mt-1">{value}</p>
     </div>
   );
 }

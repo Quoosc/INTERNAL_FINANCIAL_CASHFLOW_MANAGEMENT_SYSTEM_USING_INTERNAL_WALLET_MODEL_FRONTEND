@@ -88,13 +88,13 @@ function getTransactionStatusLabel(status: TransactionStatus): string {
 function getTransactionStatusClass(status: TransactionStatus): string {
   switch (status) {
     case TransactionStatus.SUCCESS:
-      return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      return "text-emerald-700 bg-emerald-50 border-emerald-200";
     case TransactionStatus.PENDING:
-      return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+      return "text-amber-700 bg-amber-50 border-amber-200";
     case TransactionStatus.FAILED:
-      return "text-rose-400 bg-rose-500/10 border-rose-500/20";
+      return "text-rose-700 bg-rose-50 border-rose-200";
     default:
-      return "text-slate-400 bg-slate-500/10 border-slate-500/20";
+      return "text-slate-500 bg-slate-500/10 border-slate-500/20";
   }
 }
 
@@ -136,8 +136,8 @@ export default function WalletPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Ví của tôi</h1>
-          <p className="text-slate-400 mt-1">Theo dõi số dư và giao dịch cá nhân</p>
+          <h1 className="text-2xl font-bold text-slate-900">Ví của tôi</h1>
+          <p className="text-slate-500 mt-1">Theo dõi số dư và giao dịch cá nhân</p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -151,7 +151,7 @@ export default function WalletPage() {
           </Link>
           <Link
             href="/wallet/withdraw"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold border border-white/10 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-semibold border border-slate-200 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -166,36 +166,36 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-6">
-        <p className="text-slate-400 text-sm">Số dư khả dụng</p>
+      <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <p className="text-slate-500 text-sm">Số dư khả dụng</p>
         {walletLoading ? (
-          <div className="mt-2 h-10 w-56 rounded bg-slate-700 animate-pulse" />
+          <div className="mt-2 h-10 w-56 rounded bg-blue-100 animate-pulse" />
         ) : (
-          <p className="text-3xl font-bold text-white mt-2">{formatCurrency(wallet?.availableBalance ?? 0)}</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">{formatCurrency(wallet?.availableBalance ?? 0)}</p>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
-          <div className="bg-slate-900/50 rounded-xl border border-white/10 p-4">
+          <div className="bg-blue-50 rounded-xl border border-slate-200 p-4">
             <p className="text-xs text-slate-500">Tổng số dư</p>
-            <p className="text-lg font-semibold text-white mt-1">
+            <p className="text-lg font-semibold text-slate-900 mt-1">
               {wallet ? formatCurrency(wallet.balance) : "---"}
             </p>
           </div>
-          <div className="bg-slate-900/50 rounded-xl border border-white/10 p-4">
+          <div className="bg-blue-50 rounded-xl border border-slate-200 p-4">
             <p className="text-xs text-slate-500">Tiền đang khóa</p>
-            <p className="text-lg font-semibold text-amber-400 mt-1">
+            <p className="text-lg font-semibold text-amber-700 mt-1">
               {wallet ? formatCurrency(wallet.lockedBalance) : "---"}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Giao dịch gần đây</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Giao dịch gần đây</h2>
           <Link
             href="/wallet/transactions"
-            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-sm text-blue-700 hover:text-blue-700 transition-colors"
           >
             Xem tất cả →
           </Link>
@@ -219,19 +219,19 @@ export default function WalletPage() {
                   key={transaction.id}
                   type="button"
                   onClick={() => router.push(`/wallet/transactions/${transaction.id}`)}
-                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border border-white/5 hover:border-white/20 hover:bg-slate-700/40 transition-all text-left"
+                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 hover:border-slate-200 hover:bg-blue-100/40 transition-all text-left"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-slate-900 truncate">
                       {getTransactionTypeLabel(transaction.type)}
                     </p>
-                    <p className="text-xs text-slate-400 truncate mt-0.5">
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
                       {transaction.description ?? "Không có mô tả"}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">{formatDateTime(transaction.createdAt)}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={`text-sm font-semibold ${positive ? "text-emerald-400" : "text-rose-400"}`}>
+                    <p className={`text-sm font-semibold ${positive ? "text-emerald-700" : "text-rose-700"}`}>
                       {positive ? "+" : ""}
                       {formatCurrency(transaction.amount)}
                     </p>
@@ -248,7 +248,7 @@ export default function WalletPage() {
         )}
 
         {transactionsError && (
-          <p className="text-amber-400 text-xs mt-3">{transactionsError}</p>
+          <p className="text-amber-700 text-xs mt-3">{transactionsError}</p>
         )}
       </div>
     </div>

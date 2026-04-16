@@ -623,7 +623,7 @@ export function EmployeeDashboard() {
                   onClick={() => setChartRange(n)}
                   className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                     chartRange === n
-                      ? "bg-blue-600 text-white"
+                      ? "bg-blue-600 text-slate-900"
                       : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
@@ -836,7 +836,7 @@ export function EmployeeDashboard() {
               label="Nạp tiền"
               iconBg="bg-blue-50"
               iconColor="text-blue-600"
-              hoverBorder="hover:border-blue-500/40"
+              hoverBorder="hover:border-blue-300"
               icon={
                 <svg
                   className="w-6 h-6"
@@ -858,7 +858,7 @@ export function EmployeeDashboard() {
               label="Rút tiền"
               iconBg="bg-emerald-50"
               iconColor="text-emerald-700"
-              hoverBorder="hover:border-emerald-500/40"
+              hoverBorder="hover:border-emerald-300"
               icon={
                 <svg
                   className="w-6 h-6"
@@ -902,7 +902,7 @@ export function EmployeeDashboard() {
               label="Lịch sử GD"
               iconBg="bg-amber-50"
               iconColor="text-amber-700"
-              hoverBorder="hover:border-amber-500/40"
+              hoverBorder="hover:border-amber-300"
               icon={
                 <svg
                   className="w-6 h-6"
@@ -946,7 +946,7 @@ export function EmployeeDashboard() {
               label="Thông báo"
               iconBg="bg-rose-50"
               iconColor="text-rose-700"
-              hoverBorder="hover:border-rose-500/40"
+              hoverBorder="hover:border-rose-300"
               icon={
                 <svg
                   className="w-6 h-6"

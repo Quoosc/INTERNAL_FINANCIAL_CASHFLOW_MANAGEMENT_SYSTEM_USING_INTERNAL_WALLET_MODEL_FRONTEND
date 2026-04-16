@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -90,14 +90,14 @@ function getTypeBadgeClass(type: TransactionType): string {
     case TransactionType.DEPOSIT:
     case TransactionType.PAYSLIP_PAYMENT:
     case TransactionType.SYSTEM_TOPUP:
-      return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
     case TransactionType.WITHDRAW:
-      return "bg-rose-500/15 text-rose-300 border-rose-500/30";
+      return "bg-rose-50 text-rose-700 border-rose-200";
     case TransactionType.REQUEST_PAYMENT:
     case TransactionType.ADVANCE_RETURN:
-      return "bg-amber-500/15 text-amber-300 border-amber-500/30";
+      return "bg-amber-50 text-amber-700 border-amber-200";
     default:
-      return "bg-slate-500/15 text-slate-300 border-slate-500/30";
+      return "bg-slate-500/15 text-slate-600 border-slate-500/30";
   }
 }
 
@@ -119,15 +119,15 @@ function getStatusLabel(status: TransactionStatus): string {
 function getStatusClass(status: TransactionStatus): string {
   switch (status) {
     case TransactionStatus.SUCCESS:
-      return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
     case TransactionStatus.PENDING:
-      return "bg-amber-500/15 text-amber-300 border-amber-500/30";
+      return "bg-amber-50 text-amber-700 border-amber-200";
     case TransactionStatus.FAILED:
-      return "bg-rose-500/15 text-rose-300 border-rose-500/30";
+      return "bg-rose-50 text-rose-700 border-rose-200";
     case TransactionStatus.CANCELLED:
-      return "bg-slate-500/15 text-slate-300 border-slate-500/30";
+      return "bg-slate-500/15 text-slate-600 border-slate-500/30";
     default:
-      return "bg-slate-500/15 text-slate-300 border-slate-500/30";
+      return "bg-slate-500/15 text-slate-600 border-slate-500/30";
   }
 }
 
@@ -318,16 +318,16 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Lịch sử giao dịch</h1>
-        <p className="text-slate-400 mt-1">Theo dõi toàn bộ biến động ví của bạn.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Lịch sử giao dịch</h1>
+        <p className="text-slate-500 mt-1">Theo dõi toàn bộ biến động ví của bạn.</p>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 md:p-5 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <select
             value={filters.type ?? "ALL"}
             onChange={(e) => handleTypeChange(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="ALL">Tất cả loại</option>
             {Object.values(TransactionType).map((type) => (
@@ -341,20 +341,20 @@ export default function TransactionsPage() {
             type="date"
             value={filters.from ?? ""}
             onChange={(e) => handleDateChange("from", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
 
           <input
             type="date"
             value={filters.to ?? ""}
             onChange={(e) => handleDateChange("to", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
 
           <button
             type="button"
             onClick={handleResetFilters}
-            className="px-3 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
+            className="px-3 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-medium transition-colors"
           >
             Xóa bộ lọc
           </button>
@@ -366,7 +366,7 @@ export default function TransactionsPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm theo mã giao dịch hoặc mô tả..."
-            className="flex-1 px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="flex-1 px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
           <button
             type="submit"
@@ -377,24 +377,24 @@ export default function TransactionsPage() {
         </form>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px]">
+          <table className="w-full min-w-215">
             <thead>
-              <tr className="border-b border-white/10 bg-slate-900/40">
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Ngày</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Loại</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Mô tả</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Số tiền</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Trạng thái</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Chi tiết</th>
+              <tr className="border-b border-slate-200 bg-white/40">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Ngày</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Loại</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Mô tả</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Số tiền</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Trạng thái</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Chi tiết</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">
                     Đang tải giao dịch...
                   </td>
                 </tr>
@@ -406,18 +406,18 @@ export default function TransactionsPage() {
                 </tr>
               ) : (
                 transactions.map((tx) => (
-                  <tr key={tx.id} className="border-b border-white/5 hover:bg-slate-700/30 transition-colors">
-                    <td className="px-4 py-3 text-sm text-slate-300">{formatDateTime(tx.createdAt)}</td>
+                  <tr key={tx.id} className="border-b border-slate-200 hover:bg-blue-50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(tx.createdAt)}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeBadgeClass(tx.type)}`}>
                         {getTypeLabel(tx.type)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm text-white truncate max-w-[320px]">{tx.description}</p>
+                      <p className="text-sm text-slate-900 truncate max-w-[320px]">{tx.description}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{tx.transactionCode}</p>
                     </td>
-                    <td className={`px-4 py-3 text-right text-sm font-semibold ${tx.amount >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                    <td className={`px-4 py-3 text-right text-sm font-semibold ${tx.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                       {tx.amount >= 0 ? "+" : ""}
                       {formatCurrency(tx.amount)}
                     </td>
@@ -429,7 +429,7 @@ export default function TransactionsPage() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/wallet/transactions/${tx.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-600/30 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium hover:bg-blue-100 transition-colors"
                       >
                         Xem chi tiết
                       </Link>
@@ -441,8 +441,8 @@ export default function TransactionsPage() {
           </table>
         </div>
 
-        <div className="px-4 py-3 flex items-center justify-between border-t border-white/10 bg-slate-900/30">
-          <p className="text-sm text-slate-400">
+        <div className="px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-blue-50">
+          <p className="text-sm text-slate-500">
             Tổng {total} giao dịch • Trang {page + 1}/{totalPages}
           </p>
 
@@ -451,7 +451,7 @@ export default function TransactionsPage() {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 0}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Trước
             </button>
@@ -459,7 +459,7 @@ export default function TransactionsPage() {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Sau
             </button>
@@ -467,7 +467,7 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-400 text-sm">{error}</p>}
+      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

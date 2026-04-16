@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -26,9 +26,9 @@ function formatDate(date: Date): string {
 
 function getStatusClass(status: PayslipStatus): string {
   if (status === PayslipStatus.PAID) {
-    return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+    return "bg-emerald-50 border-emerald-200 text-emerald-700";
   }
-  return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+  return "bg-amber-50 border-amber-200 text-amber-700";
 }
 
 function getStatusLabel(status: PayslipStatus): string {
@@ -209,28 +209,28 @@ export default function PayrollPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Phiếu lương</h1>
-        <p className="text-slate-400 mt-1">Danh sách phiếu lương cá nhân theo từng kỳ.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Phiếu lương</h1>
+        <p className="text-slate-500 mt-1">Danh sách phiếu lương cá nhân theo từng kỳ.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-          <p className="text-sm text-slate-400">Tổng đã nhận (PAID)</p>
-          <p className="text-3xl font-bold text-emerald-300 mt-2">{formatVnd(totalEarned)}</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <p className="text-sm text-slate-500">Tổng đã nhận (PAID)</p>
+          <p className="text-3xl font-bold text-emerald-700 mt-2">{formatVnd(totalEarned)}</p>
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-          <p className="text-sm text-slate-400">Số tiền tháng hiện tại</p>
-          <p className="text-3xl font-bold text-white mt-2">{formatVnd(currentMonthAmount)}</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <p className="text-sm text-slate-500">Số tiền tháng hiện tại</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">{formatVnd(currentMonthAmount)}</p>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <select
             value={filters.year ?? ""}
             onChange={(e) => handleFilterChange("year", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="">Tất cả năm</option>
             {yearOptions.map((year) => (
@@ -243,7 +243,7 @@ export default function PayrollPage() {
           <select
             value={filters.status ?? ""}
             onChange={(e) => handleFilterChange("status", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="">Tất cả trạng thái</option>
             <option value={PayslipStatus.DRAFT}>DRAFT</option>
@@ -252,23 +252,23 @@ export default function PayrollPage() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px]">
+          <table className="w-full min-w-230">
             <thead>
-              <tr className="border-b border-white/10 bg-slate-900/30">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Kỳ lương</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Gross Salary</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Salary</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng thái</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ngày chi</th>
+              <tr className="border-b border-slate-200 bg-blue-50">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kỳ lương</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Gross Salary</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Salary</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày chi</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">
+                  <td colSpan={5} className="px-4 py-12 text-center text-slate-500 text-sm">
                     <span className="inline-flex items-center gap-2">
                       <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -288,17 +288,17 @@ export default function PayrollPage() {
                 payslips.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-white/5 hover:bg-slate-700/30 transition-colors cursor-pointer"
+                    className="border-b border-slate-200 hover:bg-blue-50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/payroll/${item.id}`)}
                   >
                     <td className="px-4 py-3">
-                      <p className="text-sm text-white font-medium">{item.periodName}</p>
+                      <p className="text-sm text-slate-900 font-medium">{item.periodName}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{item.payslipCode}</p>
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-slate-200 font-medium">
+                    <td className="px-4 py-3 text-right text-sm text-slate-700 font-medium">
                       {formatVnd(getGrossSalary(item))}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-white font-semibold">
+                    <td className="px-4 py-3 text-right text-sm text-slate-900 font-semibold">
                       {formatVnd(item.finalNetSalary)}
                     </td>
                     <td className="px-4 py-3">
@@ -306,7 +306,7 @@ export default function PayrollPage() {
                         {getStatusLabel(item.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{getPayDate(item)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{getPayDate(item)}</td>
                   </tr>
                 ))
               )}
@@ -314,8 +314,8 @@ export default function PayrollPage() {
           </table>
         </div>
 
-        <div className="px-4 py-3 flex items-center justify-between border-t border-white/10 bg-slate-900/30">
-          <p className="text-sm text-slate-400">
+        <div className="px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-blue-50">
+          <p className="text-sm text-slate-500">
             Tổng {total} phiếu lương • Trang {page}/{totalPages}
           </p>
 
@@ -324,7 +324,7 @@ export default function PayrollPage() {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Trước
             </button>
@@ -332,7 +332,7 @@ export default function PayrollPage() {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Sau
             </button>
@@ -340,7 +340,7 @@ export default function PayrollPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-400 text-sm">{error}</p>}
+      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

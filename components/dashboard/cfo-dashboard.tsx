@@ -70,7 +70,7 @@ function getFundHealth(balance: number): {
     return {
       label: "HEALTHY",
       tone: "text-emerald-700",
-      borderTone: "border-emerald-500/40",
+      borderTone: "border-emerald-300",
       bgTone: "bg-emerald-50",
     };
   }
@@ -78,14 +78,14 @@ function getFundHealth(balance: number): {
     return {
       label: "LOW",
       tone: "text-amber-700",
-      borderTone: "border-amber-500/40",
+      borderTone: "border-amber-300",
       bgTone: "bg-amber-50",
     };
   }
   return {
     label: "CRITICAL",
     tone: "text-rose-700",
-    borderTone: "border-rose-500/40",
+    borderTone: "border-rose-300",
     bgTone: "bg-rose-50",
   };
 }
@@ -240,7 +240,7 @@ export function CfoDashboard() {
           </p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-violet-500/40 bg-violet-100 text-violet-700 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-violet-300 bg-violet-100 text-violet-700 text-sm font-medium">
           CFO
         </span>
       </div>

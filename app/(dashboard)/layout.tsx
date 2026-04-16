@@ -551,9 +551,9 @@ function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-slate-900 border-r border-white/5 flex flex-col z-50">
+    <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 shadow-sm flex flex-col z-50">
       {/* Logo */}
-      <div className="p-5 border-b border-white/5">
+      <div className="p-5 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
             <svg
@@ -571,7 +571,7 @@ function Sidebar() {
             </svg>
           </div>
           <div className="min-w-0">
-            <h2 className="text-white font-bold text-sm truncate">
+            <h2 className="text-slate-900 font-bold text-sm truncate">
               IFMS Finance
             </h2>
             <p className="text-slate-500 text-xs truncate">Internal Wallet</p>
@@ -593,8 +593,8 @@ function Sidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                     isActive(item.href)
-                      ? "bg-blue-500/15 text-blue-400"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      ? "bg-blue-100 text-blue-700 border border-blue-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-blue-50"
                   }`}
                 >
                   {item.icon}
@@ -614,7 +614,7 @@ function Sidebar() {
       </nav>
 
       {/* User Info */}
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-slate-200">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
             <span className="text-white font-semibold text-sm">
@@ -622,7 +622,7 @@ function Sidebar() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
+            <p className="text-sm font-medium text-slate-900 truncate">
               {user?.fullName ?? "User"}
             </p>
             <p className="text-xs text-slate-500 truncate">
@@ -633,7 +633,7 @@ function Sidebar() {
           </div>
           <button
             onClick={logout}
-            className="text-slate-500 hover:text-rose-400 transition-colors p-1 shrink-0"
+            className="text-slate-500 hover:text-rose-700 transition-colors p-1 shrink-0"
             title="Đăng xuất"
           >
             <svg
@@ -663,7 +663,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <svg
             className="animate-spin h-8 w-8 text-blue-500"
@@ -684,19 +684,19 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             />
           </svg>
-          <p className="text-slate-400 text-sm">Đang tải...</p>
+          <p className="text-slate-500 text-sm">Đang tải...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-blue-50">
       <Sidebar />
       <main className="ml-64 p-6 min-h-screen">
         <React.Suspense
           fallback={
-            <div className="text-slate-400 text-sm">
+            <div className="text-slate-500 text-sm">
               Dang tai du lieu trang...
             </div>
           }

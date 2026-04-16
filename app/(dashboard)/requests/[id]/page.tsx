@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -664,7 +664,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   type="button"
                   onClick={openEdit}
                   disabled={actionLoading}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold transition-colors"
                 >
                   Chỉnh sửa
                 </button>
@@ -673,7 +673,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   type="button"
                   onClick={handleCancelRequest}
                   disabled={actionLoading}
-                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold transition-colors"
                 >
                   Hủy yêu cầu
                 </button>
@@ -777,7 +777,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold transition-colors"
                 >
                   {actionLoading ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>

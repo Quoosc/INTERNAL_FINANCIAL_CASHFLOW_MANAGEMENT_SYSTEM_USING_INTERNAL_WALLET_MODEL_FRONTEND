@@ -38,18 +38,18 @@ function formatDateTime(iso: string): string {
 
 function getStatusClass(status: WithdrawStatus): string {
   if (status === WithdrawStatus.PENDING || status === WithdrawStatus.PROCESSING) {
-    return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+    return "bg-amber-50 border-amber-200 text-amber-700";
   }
 
   if (status === WithdrawStatus.COMPLETED) {
-    return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+    return "bg-emerald-50 border-emerald-200 text-emerald-700";
   }
 
   if (status === WithdrawStatus.REJECTED || status === WithdrawStatus.CANCELLED || status === WithdrawStatus.FAILED) {
-    return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+    return "bg-rose-50 border-rose-200 text-rose-700";
   }
 
-  return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+  return "bg-slate-500/15 border-slate-500/30 text-slate-600";
 }
 
 function getStatusLabel(status: WithdrawStatus): string {
@@ -171,7 +171,7 @@ export default function AccountantWithdrawalsPage() {
 
   if (!hasRole(RoleName.ACCOUNTANT)) {
     return (
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-6 text-slate-300">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 text-slate-600">
         Ban khong co quyen truy cap trang nay.
       </div>
     );
@@ -180,8 +180,8 @@ export default function AccountantWithdrawalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Yeu cau rut tien</h1>
-        <p className="text-slate-400 mt-1">Quan ly va xu ly yeu cau rut tien cua nhan vien.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Yeu cau rut tien</h1>
+        <p className="text-slate-500 mt-1">Quan ly va xu ly yeu cau rut tien cua nhan vien.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -192,8 +192,8 @@ export default function AccountantWithdrawalsPage() {
             onClick={() => setFilterTab(tab)}
             className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
               filterTab === tab
-                ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-                : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700"
+                ? "bg-blue-100 border-blue-300 text-blue-700"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
             }`}
           >
             {tab}
@@ -204,31 +204,31 @@ export default function AccountantWithdrawalsPage() {
           type="button"
           onClick={() => void loadRequests()}
           disabled={loading}
-          className="ml-auto px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+          className="ml-auto px-4 py-2 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
         >
           Tai lai
         </button>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-245">
             <thead>
-              <tr className="bg-slate-900/40 border-b border-white/10">
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Nguoi yeu cau</th>
-                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">So tien</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Tai khoan ngan hang</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Ngan hang</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Ghi chu</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Thoi gian tao</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Trang thai</th>
-                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Thao tac</th>
+              <tr className="bg-white/40 border-b border-slate-200">
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Nguoi yeu cau</th>
+                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">So tien</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Tai khoan ngan hang</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Ngan hang</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Ghi chu</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Thoi gian tao</th>
+                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Trang thai</th>
+                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Thao tac</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-slate-400 text-sm">
+                  <td colSpan={8} className="px-4 py-12 text-center text-slate-500 text-sm">
                     Dang tai du lieu...
                   </td>
                 </tr>
@@ -240,21 +240,21 @@ export default function AccountantWithdrawalsPage() {
                 </tr>
               ) : (
                 items.map((item) => (
-                  <tr key={item.id} className="border-b border-white/5">
-                    <td className="px-4 py-3 text-sm text-white">
+                  <tr key={item.id} className="border-b border-slate-200">
+                    <td className="px-4 py-3 text-sm text-slate-900">
                       {item.requester?.fullName ?? `User #${item.userId}`}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right font-semibold text-white">
+                    <td className="px-4 py-3 text-sm text-right font-semibold text-slate-900">
                       {formatCurrency(item.amount)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">
+                    <td className="px-4 py-3 text-sm text-slate-600">
                       {item.creditAccountName} - {item.creditAccount}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{item.creditBankName}</td>
-                    <td className="px-4 py-3 text-sm text-slate-300 max-w-55 truncate">
+                    <td className="px-4 py-3 text-sm text-slate-600">{item.creditBankName}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600 max-w-55 truncate">
                       {item.userNote || "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-400">{formatDateTime(item.createdAt)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-500">{formatDateTime(item.createdAt)}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(item.status)}`}>
                         {getStatusLabel(item.status)}
@@ -267,7 +267,7 @@ export default function AccountantWithdrawalsPage() {
                             type="button"
                             onClick={() => void handleExecute(item.id)}
                             disabled={executingId === item.id || rejectingId === item.id}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-medium"
+                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-xs font-medium"
                           >
                             {executingId === item.id ? "Dang xu ly..." : "Thuc hien"}
                           </button>
@@ -275,7 +275,7 @@ export default function AccountantWithdrawalsPage() {
                             type="button"
                             onClick={() => openRejectModal(item.id)}
                             disabled={executingId === item.id || rejectingId === item.id}
-                            className="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
+                            className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
                           >
                             Tu choi
                           </button>
@@ -293,7 +293,7 @@ export default function AccountantWithdrawalsPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
           {error}
         </div>
       )}
@@ -307,26 +307,26 @@ export default function AccountantWithdrawalsPage() {
           />
 
           <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-4">
-              <h2 className="text-lg font-semibold text-white">Tu choi yeu cau rut tien</h2>
+            <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+              <h2 className="text-lg font-semibold text-slate-900">Tu choi yeu cau rut tien</h2>
 
               <textarea
                 rows={4}
                 value={rejectReason}
                 onChange={(event) => setRejectReason(event.target.value)}
                 placeholder="Nhap ly do tu choi"
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none"
               />
 
               {rejectError && (
-                <p className="text-sm text-rose-300">{rejectError}</p>
+                <p className="text-sm text-rose-700">{rejectError}</p>
               )}
 
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowRejectModal(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                  className="px-4 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm"
                 >
                   Huy
                 </button>
@@ -334,7 +334,7 @@ export default function AccountantWithdrawalsPage() {
                   type="button"
                   onClick={() => void handleReject()}
                   disabled={rejectingId !== null}
-                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
                 >
                   {rejectingId !== null ? "Dang gui..." : "Xac nhan tu choi"}
                 </button>

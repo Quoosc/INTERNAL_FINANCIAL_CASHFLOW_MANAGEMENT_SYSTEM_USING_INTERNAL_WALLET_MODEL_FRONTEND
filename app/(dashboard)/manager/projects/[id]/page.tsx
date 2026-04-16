@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -615,7 +615,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleSaveChanges}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
               >
                 {saving ? "Đang lưu..." : "Lưu thay đổi"}
               </button>

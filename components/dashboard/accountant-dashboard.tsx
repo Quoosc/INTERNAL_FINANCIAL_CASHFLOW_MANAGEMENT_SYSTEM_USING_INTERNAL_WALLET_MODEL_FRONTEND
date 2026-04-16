@@ -365,7 +365,7 @@ export function AccountantDashboard() {
         </span>
       </div>
 
-      <div className="bg-gradient-to-br from-cyan-600/20 via-blue-600/10 to-slate-900 border border-cyan-200 rounded-2xl p-5 space-y-4">
+      <div className="bg-linear-to-br from-cyan-100 via-blue-100 to-blue-50 border border-cyan-200 rounded-2xl p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.16em] text-cyan-200/80">System Fund</p>

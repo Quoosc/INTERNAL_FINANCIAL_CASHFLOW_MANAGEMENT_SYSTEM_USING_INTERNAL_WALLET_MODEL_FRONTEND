@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
@@ -218,7 +218,7 @@ export function AdminDashboard() {
           </p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-50 text-blue-700 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
           Admin
         </span>
       </div>

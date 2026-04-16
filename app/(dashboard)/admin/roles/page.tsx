@@ -227,18 +227,18 @@ export default function AdminRolesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Vai trò hệ thống</h1>
-        <p className="text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-slate-900">Vai trò hệ thống</h1>
+        <p className="text-slate-500 mt-1">
           Vai trò được định nghĩa cố định theo nghiệp vụ hệ thống. Không hỗ trợ thêm, sửa hoặc xóa vai trò.
         </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {ROLE_ORDER.map((role) => (
-          <div key={role} className="bg-slate-800 border border-white/10 rounded-2xl p-5">
+          <div key={role} className="bg-white border border-slate-200 rounded-2xl p-5">
             <p className="text-xs text-slate-500 font-mono">{role}</p>
-            <h2 className="text-lg font-semibold text-white mt-1">{ROLE_LABEL[role]}</h2>
-            <p className="text-sm text-slate-300 mt-2">{ROLE_DESCRIPTION[role]}</p>
+            <h2 className="text-lg font-semibold text-slate-900 mt-1">{ROLE_LABEL[role]}</h2>
+            <p className="text-sm text-slate-600 mt-2">{ROLE_DESCRIPTION[role]}</p>
             <p className="text-xs text-slate-500 mt-3">
               Tổng quyền đang gán: {ROLE_PERMISSION_SET[role].size}
             </p>
@@ -246,23 +246,23 @@ export default function AdminRolesPage() {
         ))}
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Ma trận quyền theo nhóm chức năng</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Ma trận quyền theo nhóm chức năng</h2>
 
         <div className="space-y-4">
           {PERMISSION_GROUPS.map((group) => (
-            <div key={group.groupName} className="rounded-xl border border-white/10 overflow-hidden">
-              <div className="px-4 py-3 border-b border-white/10 bg-slate-900/60">
-                <h3 className="text-sm font-semibold text-white">{group.groupName}</h3>
+            <div key={group.groupName} className="rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-200 bg-white/60">
+                <h3 className="text-sm font-semibold text-slate-900">{group.groupName}</h3>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px]">
+                <table className="w-full min-w-245">
                   <thead>
-                    <tr className="border-b border-white/10 bg-slate-900/30">
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Permission</th>
+                    <tr className="border-b border-slate-200 bg-blue-50">
+                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Permission</th>
                       {ROLE_ORDER.map((role) => (
-                        <th key={role} className="px-3 py-3 text-center text-xs uppercase tracking-wider text-slate-400">
+                        <th key={role} className="px-3 py-3 text-center text-xs uppercase tracking-wider text-slate-500">
                           {role}
                         </th>
                       ))}
@@ -270,8 +270,8 @@ export default function AdminRolesPage() {
                   </thead>
                   <tbody>
                     {group.permissions.map((permission) => (
-                      <tr key={permission} className="border-b border-white/5 last:border-b-0">
-                        <td className="px-4 py-3 text-xs text-slate-300 font-mono">{permission}</td>
+                      <tr key={permission} className="border-b border-slate-200 last:border-b-0">
+                        <td className="px-4 py-3 text-xs text-slate-600 font-mono">{permission}</td>
                         {ROLE_ORDER.map((role) => {
                           const allowed = ROLE_PERMISSION_SET[role].has(permission);
                           return (
@@ -279,8 +279,8 @@ export default function AdminRolesPage() {
                               <span
                                 className={`inline-flex w-6 h-6 rounded-full items-center justify-center border text-xs ${
                                   allowed
-                                    ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                                    : "bg-slate-700/40 border-white/10 text-slate-500"
+                                    ? "bg-emerald-100 border-emerald-300 text-emerald-700"
+                                    : "bg-blue-100/40 border-slate-200 text-slate-500"
                                 }`}
                               >
                                 {allowed ? "✓" : "-"}

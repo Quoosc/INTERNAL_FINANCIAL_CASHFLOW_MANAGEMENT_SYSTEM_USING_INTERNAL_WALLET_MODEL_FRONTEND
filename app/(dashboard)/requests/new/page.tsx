@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -415,7 +415,7 @@ export default function NewRequestPage() {
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -425,17 +425,17 @@ export default function NewRequestPage() {
 
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Tạo yêu cầu mới</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">Tạo yêu cầu mới</h1>
+          <p className="text-slate-500 mt-1">
             Tạo yêu cầu chi tiêu cá nhân: Tạm ứng, Chi phí, Hoàn ứng.
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Loại yêu cầu</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Loại yêu cầu</label>
             <select
               value={form.type ?? RequestType.ADVANCE}
               onChange={(e) =>
@@ -444,7 +444,7 @@ export default function NewRequestPage() {
                   type: e.target.value as RequestType,
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value={RequestType.ADVANCE}>ADVANCE</option>
               <option value={RequestType.EXPENSE}>EXPENSE</option>
@@ -453,14 +453,14 @@ export default function NewRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Số tiền (VND)</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền (VND)</label>
             <input
               type="text"
               inputMode="numeric"
               value={formatInputAmount(form.amount)}
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="Nhập số tiền"
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
             <p className="text-xs text-slate-500 mt-1">
               {form.amount ? `Giá trị: ${formatCurrency(form.amount)}` : ""}
@@ -468,18 +468,18 @@ export default function NewRequestPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Tiêu đề</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Tiêu đề</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ví dụ: Tạm ứng công tác tháng 4"
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả chi tiết</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Mô tả chi tiết</label>
             <textarea
               rows={4}
               value={form.description ?? ""}
@@ -490,12 +490,12 @@ export default function NewRequestPage() {
                 }))
               }
               placeholder="Mô tả nội dung chi tiêu..."
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Dự án</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Dự án</label>
             <select
               value={form.projectId?.toString() ?? ""}
               onChange={(e) => {
@@ -506,7 +506,7 @@ export default function NewRequestPage() {
                 }));
               }}
               disabled={!isProjectBasedType || loading}
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="">Chọn dự án</option>
               {projects.map((project) => (
@@ -518,7 +518,7 @@ export default function NewRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Phase</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Phase</label>
             <select
               value={form.phaseId?.toString() ?? ""}
               onChange={(e) => {
@@ -530,7 +530,7 @@ export default function NewRequestPage() {
                 }));
               }}
               disabled={!isProjectBasedType || !form.projectId || loading}
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="">{form.projectId ? "Chọn phase" : "Chọn dự án trước"}</option>
               {(phases?.phases ?? []).map((phase) => (
@@ -542,7 +542,7 @@ export default function NewRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Hang muc chi phi</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Hang muc chi phi</label>
             <select
               value={form.categoryId?.toString() ?? ""}
               onChange={(e) => {
@@ -553,7 +553,7 @@ export default function NewRequestPage() {
                 }));
               }}
               disabled={!isProjectBasedType || !form.phaseId}
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="">{form.phaseId ? "Chọn hạng mục" : "Chọn phase trước"}</option>
               {categoryOptions.map((category) => (
@@ -565,26 +565,26 @@ export default function NewRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Ngày chi tiêu</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Ngày chi tiêu</label>
             <input
               type="date"
               value={expenseDate}
               onChange={(e) => setExpenseDate(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-          <label className="block text-sm font-medium text-slate-300 mb-2">Đính kèm chứng từ (image/pdf)</label>
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <label className="block text-sm font-medium text-slate-600 mb-2">Đính kèm chứng từ (image/pdf)</label>
 
-          <div className="border-2 border-dashed border-white/10 rounded-xl p-5 text-center bg-slate-900/50">
+          <div className="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-blue-50">
             <input
               type="file"
               multiple
               accept="image/*,.pdf,application/pdf"
               onChange={handleFilesChange}
-              className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 file:cursor-pointer cursor-pointer"
+              className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 file:cursor-pointer cursor-pointer"
             />
             <p className="text-xs text-slate-500 mt-2">
               Hỗ trợ nhiều file. Định dạng: JPG, PNG, PDF.
@@ -596,7 +596,7 @@ export default function NewRequestPage() {
               {files.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between gap-3 bg-slate-900 border border-white/10 rounded-xl p-3"
+                  className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {item.previewUrl ? (
@@ -606,10 +606,10 @@ export default function NewRequestPage() {
                         width={48}
                         height={48}
                         unoptimized
-                        className="w-12 h-12 rounded-lg object-cover border border-white/10"
+                        className="w-12 h-12 rounded-lg object-cover border border-slate-200"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg border border-white/10 bg-slate-800 flex items-center justify-center text-slate-400">
+                      <div className="w-12 h-12 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
@@ -617,7 +617,7 @@ export default function NewRequestPage() {
                     )}
 
                     <div className="min-w-0">
-                      <p className="text-sm text-white truncate">{item.file.name}</p>
+                      <p className="text-sm text-slate-900 truncate">{item.file.name}</p>
                       <p className="text-xs text-slate-500">
                         {(item.file.size / 1024).toFixed(1)} KB
                       </p>
@@ -627,7 +627,7 @@ export default function NewRequestPage() {
                   <button
                     type="button"
                     onClick={() => removeFile(item.id)}
-                    className="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-medium transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-medium transition-colors"
                   >
                     Xóa
                   </button>
@@ -638,7 +638,7 @@ export default function NewRequestPage() {
         </div>
 
         {error && (
-          <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
             {error}
           </div>
         )}
@@ -647,7 +647,7 @@ export default function NewRequestPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
+            className="px-5 py-3 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-medium transition-colors"
           >
             Hủy
           </button>
@@ -655,7 +655,7 @@ export default function NewRequestPage() {
           <button
             type="submit"
             disabled={submitting || loading}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-semibold transition-colors"
           >
             {submitting ? (
               <>

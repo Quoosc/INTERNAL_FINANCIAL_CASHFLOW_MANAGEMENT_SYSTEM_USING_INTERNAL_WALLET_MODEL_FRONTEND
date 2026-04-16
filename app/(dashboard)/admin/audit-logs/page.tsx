@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -284,7 +284,7 @@ export default function AuditLogsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-rose-500/40 bg-rose-100 text-rose-700 text-sm font-medium">
+          <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-rose-300 bg-rose-100 text-rose-700 text-sm font-medium">
             Read-only
           </span>
           <button

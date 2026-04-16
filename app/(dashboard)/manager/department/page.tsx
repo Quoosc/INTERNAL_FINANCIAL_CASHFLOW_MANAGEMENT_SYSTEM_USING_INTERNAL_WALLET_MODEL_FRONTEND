@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -424,7 +424,7 @@ export default function ManagerDepartmentPage() {
           <p className="text-slate-500 mt-1">Theo dõi thành viên, dư nợ và các hoạt động gần đây trong phòng ban.</p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-50 text-blue-700 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
           {total} thành viên
         </span>
       </div>
@@ -454,7 +454,7 @@ export default function ManagerDepartmentPage() {
                 onClick={() => updateParam("role", tab.value)}
                 className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
                   active
-                    ? "bg-blue-600/20 border-blue-500/40 text-blue-700"
+                    ? "bg-blue-100 border-blue-300 text-blue-700"
                     : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >

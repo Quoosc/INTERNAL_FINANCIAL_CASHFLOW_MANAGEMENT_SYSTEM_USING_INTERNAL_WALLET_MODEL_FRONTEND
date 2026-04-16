@@ -147,7 +147,7 @@ export default function DepositPage() {
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -156,15 +156,15 @@ export default function DepositPage() {
       </button>
 
       <div>
-        <h1 className="text-2xl font-bold text-white">Nạp tiền qua VNPay</h1>
-        <p className="text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-slate-900">Nạp tiền qua VNPay</h1>
+        <p className="text-slate-500 mt-1">
           Nhập số tiền để tạo liên kết thanh toán. Hệ thống sẽ chuyển hướng đến VNPay để hoàn tất giao dịch.
         </p>
       </div>
 
-      <form onSubmit={handleGeneratePayment} className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-4">
+      <form onSubmit={handleGeneratePayment} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
         <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-slate-300 mb-2">
+          <label htmlFor="amount" className="block text-sm font-medium text-slate-600 mb-2">
             Số tiền nạp
           </label>
           <input
@@ -174,13 +174,13 @@ export default function DepositPage() {
             placeholder="Nhập số tiền"
             value={amountDisplay}
             onChange={(e) => handleAmountChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           />
           <p className="text-xs text-slate-500 mt-2">Tối thiểu: {formatVnd(MIN_AMOUNT)}</p>
         </div>
 
         {error && (
-          <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
             {error}
           </div>
         )}
@@ -188,7 +188,7 @@ export default function DepositPage() {
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-semibold transition-colors"
         >
           {loading ? (
             <>
@@ -205,14 +205,14 @@ export default function DepositPage() {
       </form>
 
       {paymentData && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-6 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Thông tin thanh toán</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Thông tin thanh toán</h2>
             <span
               className={`text-sm font-semibold px-3 py-1 rounded-full border ${
                 isExpired
-                  ? "text-rose-300 bg-rose-500/10 border-rose-500/30"
-                  : "text-amber-300 bg-amber-500/10 border-amber-500/30"
+                  ? "text-rose-700 bg-rose-50 border-rose-200"
+                  : "text-amber-700 bg-amber-50 border-amber-200"
               }`}
             >
               {isExpired ? "Liên kết đã hết hạn" : `Hết hạn sau ${formatSecondsToClock(secondsLeft)}`}
@@ -227,7 +227,7 @@ export default function DepositPage() {
           </div>
 
           {paymentData.qrDataUrl && (
-            <div className="bg-slate-900 border border-white/10 rounded-xl p-4 flex items-center justify-center">
+            <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center">
               <Image
                 src={paymentData.qrDataUrl}
                 alt="Mã QR thanh toán"
@@ -244,7 +244,7 @@ export default function DepositPage() {
               type="button"
               onClick={handleOpenVnpay}
               disabled={isExpired}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold transition-colors"
             >
               Thanh toán qua VNPay
             </button>
@@ -252,7 +252,7 @@ export default function DepositPage() {
             <button
               type="button"
               onClick={handleCopyReference}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-medium transition-colors"
             >
               {copied ? "Đã sao chép mã" : "Sao chép mã tham chiếu"}
             </button>
@@ -261,14 +261,14 @@ export default function DepositPage() {
               type="button"
               onClick={() => void handleCheckStatus()}
               disabled={checkingStatus}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-medium transition-colors"
             >
               {checkingStatus ? "Đang kiểm tra..." : "Kiểm tra trạng thái"}
             </button>
           </div>
 
           {paymentStatusMessage && (
-            <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-200 text-sm">
+            <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
               {paymentStatusMessage}
             </div>
           )}
@@ -288,9 +288,9 @@ function InfoRow({
   mono?: boolean;
 }) {
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-xl px-4 py-3">
+    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm text-white mt-1 ${mono ? "font-mono" : ""}`}>{value}</p>
+      <p className={`text-sm text-slate-900 mt-1 ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>
   );
 }

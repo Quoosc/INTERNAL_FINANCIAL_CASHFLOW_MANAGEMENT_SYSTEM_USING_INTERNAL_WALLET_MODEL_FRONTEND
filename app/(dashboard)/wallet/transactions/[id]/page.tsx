@@ -111,7 +111,7 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
     <div className="max-w-3xl space-y-6">
       <Link
         href="/wallet/transactions"
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -120,14 +120,14 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-white">Chi tiet giao dich</h1>
-        <p className="text-slate-400 mt-1">Ma giao dich: {transaction?.transactionCode ?? id}</p>
+        <h1 className="text-2xl font-bold text-slate-900">Chi tiet giao dich</h1>
+        <p className="text-slate-500 mt-1">Ma giao dich: {transaction?.transactionCode ?? id}</p>
       </div>
 
       {loading ? (
-        <div className="h-64 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-64 rounded-2xl bg-white animate-pulse" />
       ) : transaction ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
           <DetailRow label="Ma giao dich" value={transaction.transactionCode} />
           <DetailRow label="Loai" value={getTypeLabel(transaction.type)} />
           <DetailRow label="Trang thai" value={getStatusLabel(transaction.status)} />
@@ -137,13 +137,13 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
           <DetailRow label="Reference ID" value={String(transaction.referenceId)} />
         </div>
       ) : (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-6 text-slate-300">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-slate-600">
           Khong tim thay giao dich.
         </div>
       )}
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
           {error}
         </div>
       )}
@@ -153,9 +153,9 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3">
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-white font-medium mt-1 break-all">{value}</p>
+      <p className="text-sm text-slate-900 font-medium mt-1 break-all">{value}</p>
     </div>
   );
 }

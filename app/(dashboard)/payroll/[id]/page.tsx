@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,8 +24,8 @@ function statusLabel(status: PayslipStatus): string {
 
 function statusClass(status: PayslipStatus): string {
   return status === PayslipStatus.PAID
-    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
-    : "bg-amber-500/15 border-amber-500/30 text-amber-300";
+    ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+    : "bg-amber-50 border-amber-200 text-amber-700";
 }
 
 function getPayDate(payslip: PayslipDetailResponse): string {
@@ -120,9 +120,9 @@ export default function PayslipDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-9 w-36 rounded bg-slate-800 animate-pulse" />
-        <div className="h-28 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-64 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-9 w-36 rounded bg-white animate-pulse" />
+        <div className="h-28 rounded-2xl bg-white animate-pulse" />
+        <div className="h-64 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
@@ -133,7 +133,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
         <button
           type="button"
           onClick={() => router.push("/payroll")}
-          className="inline-flex items-center gap-2 text-slate-300 hover:text-white"
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -141,12 +141,12 @@ export default function PayslipDetailPage({ params }: PageProps) {
           Quay lại danh sách
         </button>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-6 text-center text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-slate-500">
           Không tìm thấy phiếu lương.
         </div>
 
         {error && (
-          <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+          <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
             {error}
           </div>
         )}
@@ -161,7 +161,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
           <button
             type="button"
             onClick={() => router.push("/payroll")}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -170,11 +170,11 @@ export default function PayslipDetailPage({ params }: PageProps) {
           </button>
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 print:bg-white print:border-gray-300">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 print:bg-white print:border-gray-300">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-white print:text-gray-900">{payslip.employee.fullName}</h1>
-              <p className="text-slate-400 print:text-gray-700 mt-1">
+              <h1 className="text-2xl font-bold text-slate-900 print:text-gray-900">{payslip.employee.fullName}</h1>
+              <p className="text-slate-500 print:text-gray-700 mt-1">
                 {payslip.periodName} • {payslip.employee.employeeCode}
               </p>
               <p className="text-xs text-slate-500 print:text-gray-600 mt-1">
@@ -186,7 +186,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
               <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusClass(payslip.status)}`}>
                 {statusLabel(payslip.status)}
               </span>
-              <span className="inline-flex px-3 py-1.5 rounded-full border border-white/20 bg-slate-900 text-slate-300 text-sm print:border-gray-300 print:bg-white print:text-gray-700">
+              <span className="inline-flex px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600 text-sm print:border-gray-300 print:bg-white print:text-gray-700">
                 Ngày chi: {getPayDate(payslip)}
               </span>
               <button
@@ -209,8 +209,8 @@ export default function PayslipDetailPage({ params }: PageProps) {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3 print:bg-white print:border-gray-300">
-            <h2 className="text-lg font-semibold text-white print:text-gray-900">Earnings</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 print:bg-white print:border-gray-300">
+            <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Earnings</h2>
 
             <LineRow label="Lương cơ bản" value={payslip.baseSalary} positive />
 
@@ -220,13 +220,13 @@ export default function PayslipDetailPage({ params }: PageProps) {
 
             <LineRow label="Thưởng" value={payslip.bonus} positive />
 
-            <div className="pt-2 border-t border-white/10 print:border-gray-300">
+            <div className="pt-2 border-t border-slate-200 print:border-gray-300">
               <LineRow label="Tổng thu nhập (Gross)" value={payslip.totalEarnings} positive strong />
             </div>
           </div>
 
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3 print:bg-white print:border-gray-300">
-            <h2 className="text-lg font-semibold text-white print:text-gray-900">Deductions</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 print:bg-white print:border-gray-300">
+            <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Deductions</h2>
 
             {deductionItems.length > 0 ? (
               deductionItems.map((item) => (
@@ -238,14 +238,14 @@ export default function PayslipDetailPage({ params }: PageProps) {
 
             <LineRow label="Khấu trừ tạm ứng (Netting)" value={payslip.advanceDeduct} negative />
 
-            <div className="pt-2 border-t border-white/10 print:border-gray-300">
+            <div className="pt-2 border-t border-slate-200 print:border-gray-300">
               <LineRow label="Tổng khấu trừ" value={payslip.totalDeduction} negative strong />
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4 print:bg-white print:border-gray-300">
-          <h2 className="text-lg font-semibold text-white print:text-gray-900">Tổng hợp thanh toán</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 print:bg-white print:border-gray-300">
+          <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Tổng hợp thanh toán</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <MetricCard title="Gross Salary" value={payslip.totalEarnings} tone="normal" />
@@ -255,8 +255,8 @@ export default function PayslipDetailPage({ params }: PageProps) {
         </div>
 
         {payslip.advanceDeduct > 0 && (
-          <div className="bg-slate-800 border border-blue-500/20 rounded-2xl p-5 print:bg-white print:border-gray-300">
-            <h2 className="text-lg font-semibold text-white print:text-gray-900">Netting</h2>
+          <div className="bg-white border border-blue-200 rounded-2xl p-5 print:bg-white print:border-gray-300">
+            <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Netting</h2>
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
               <MetricCard title="Debt Offset Applied" value={payslip.advanceDeduct} tone="negative" />
               <MetricCard title="Final Paid" value={payslip.finalNetSalary} tone="highlight" />
@@ -265,7 +265,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
         )}
 
         {error && (
-          <div className="print:hidden px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+          <div className="print:hidden px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
             {error}
           </div>
         )}
@@ -288,14 +288,14 @@ function LineRow({
   strong?: boolean;
 }) {
   const toneClass = positive
-    ? "text-emerald-300 print:text-emerald-700"
+    ? "text-emerald-700 print:text-emerald-700"
     : negative
-      ? "text-rose-300 print:text-rose-700"
-      : "text-slate-200 print:text-gray-900";
+      ? "text-rose-700 print:text-rose-700"
+      : "text-slate-700 print:text-gray-900";
 
   return (
     <div className="flex items-center justify-between gap-4">
-      <p className={`text-sm ${strong ? "font-semibold text-white print:text-gray-900" : "text-slate-300 print:text-gray-700"}`}>
+      <p className={`text-sm ${strong ? "font-semibold text-slate-900 print:text-gray-900" : "text-slate-600 print:text-gray-700"}`}>
         {label}
       </p>
       <p className={`${toneClass} ${strong ? "font-bold" : "font-medium"}`}>{formatVnd(value)}</p>
@@ -314,13 +314,13 @@ function MetricCard({
 }) {
   const toneClass =
     tone === "highlight"
-      ? "text-blue-300 print:text-blue-700"
+      ? "text-blue-700 print:text-blue-700"
       : tone === "negative"
-        ? "text-rose-300 print:text-rose-700"
+        ? "text-rose-700 print:text-rose-700"
         : "text-slate-100 print:text-gray-900";
 
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-xl p-4 print:bg-white print:border-gray-300">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 print:bg-white print:border-gray-300">
       <p className="text-xs text-slate-500 print:text-gray-600">{title}</p>
       <p className={`text-xl font-bold mt-1 ${toneClass}`}>{formatVnd(value)}</p>
     </div>

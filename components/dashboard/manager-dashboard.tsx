@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
@@ -356,7 +356,7 @@ export function ManagerDashboard() {
           <h1 className="text-2xl font-bold text-slate-900">Xin chào, {user?.fullName ?? "Quản lý"}</h1>
           <p className="text-slate-500 mt-1">Hôm nay là {todayLabel}</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-50 text-blue-700 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
           Quản lý
         </span>
       </div>
@@ -638,7 +638,7 @@ export function ManagerDashboard() {
                 type="button"
                 onClick={handleCreateQuotaTopup}
                 disabled={quotaSubmitting}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
               >
                 {quotaSubmitting ? "Đang gửi..." : "Gửi yêu cầu"}
               </button>

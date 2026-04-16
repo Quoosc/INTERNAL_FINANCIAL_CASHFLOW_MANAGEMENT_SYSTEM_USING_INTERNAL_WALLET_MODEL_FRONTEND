@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -77,17 +77,17 @@ function getTypeIconClass(type: string): string {
     case NotificationType.REQUEST_PAID:
     case NotificationType.PROJECT_TOPUP_APPROVED:
     case NotificationType.DEPT_TOPUP_APPROVED:
-      return "bg-emerald-500/20 text-emerald-300";
+      return "bg-emerald-100 text-emerald-700";
     case NotificationType.REQUEST_REJECTED:
     case NotificationType.PROJECT_TOPUP_REJECTED:
     case NotificationType.DEPT_TOPUP_REJECTED:
-      return "bg-rose-500/20 text-rose-300";
+      return "bg-rose-100 text-rose-700";
     case NotificationType.SALARY_PAID:
-      return "bg-blue-500/20 text-blue-300";
+      return "bg-blue-100 text-blue-700";
     case NotificationType.SECURITY_ALERT:
-      return "bg-amber-500/20 text-amber-300";
+      return "bg-amber-100 text-amber-700";
     default:
-      return "bg-slate-600/40 text-slate-200";
+      return "bg-blue-100 text-slate-700";
   }
 }
 
@@ -215,14 +215,14 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Thong bao</h1>
-          <p className="text-slate-400 mt-1">Cap nhat yeu cau, luong va canh bao he thong.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Thong bao</h1>
+          <p className="text-slate-500 mt-1">Cap nhat yeu cau, luong va canh bao he thong.</p>
         </div>
 
         <button
           type="button"
           onClick={() => void handleMarkAllRead()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors border border-white/10"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-medium transition-colors border border-slate-200"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M5 13l4 4L19 7" />
@@ -237,8 +237,8 @@ export default function NotificationsPage() {
           onClick={() => handleTabChange("ALL")}
           className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
             filter === "ALL"
-              ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-              : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700"
+              ? "bg-blue-100 border-blue-300 text-blue-700"
+              : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
           }`}
         >
           Tat ca
@@ -248,17 +248,17 @@ export default function NotificationsPage() {
           onClick={() => handleTabChange("UNREAD")}
           className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
             filter === "UNREAD"
-              ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-              : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700"
+              ? "bg-blue-100 border-blue-300 text-blue-700"
+              : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
           }`}
         >
           Chua doc ({filter === "UNREAD" ? total : unreadCount})
         </button>
       </div>
 
-      <div className="bg-slate-900 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         {loading ? (
-          <div className="py-14 text-center text-slate-400 text-sm">Dang tai thong bao...</div>
+          <div className="py-14 text-center text-slate-500 text-sm">Dang tai thong bao...</div>
         ) : notifications.length === 0 ? (
           <div className="py-14 text-center text-slate-500 text-sm">Khong co thong bao phu hop.</div>
         ) : (
@@ -268,8 +268,8 @@ export default function NotificationsPage() {
                 <button
                   type="button"
                   onClick={() => void handleOpenNotification(item)}
-                  className={`w-full text-left px-4 py-4 md:px-5 hover:bg-slate-700/30 transition-colors ${
-                    item.isRead ? "bg-slate-900" : "bg-slate-800"
+                  className={`w-full text-left px-4 py-4 md:px-5 hover:bg-blue-50 transition-colors ${
+                    item.isRead ? "bg-white" : "bg-white"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -279,10 +279,10 @@ export default function NotificationsPage() {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm md:text-base font-semibold text-white truncate">{item.title}</p>
-                        <span className="text-xs text-slate-400 shrink-0">{formatTimeAgo(item.createdAt)}</span>
+                        <p className="text-sm md:text-base font-semibold text-slate-900 truncate">{item.title}</p>
+                        <span className="text-xs text-slate-500 shrink-0">{formatTimeAgo(item.createdAt)}</span>
                       </div>
-                      <p className="text-sm text-slate-300 mt-1 line-clamp-2">{item.message}</p>
+                      <p className="text-sm text-slate-600 mt-1 line-clamp-2">{item.message}</p>
                     </div>
 
                     {!item.isRead && <span className="mt-1 inline-flex w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0" />}
@@ -293,8 +293,8 @@ export default function NotificationsPage() {
           </ul>
         )}
 
-        <div className="px-4 py-3 border-t border-white/10 bg-slate-900/70 flex items-center justify-between">
-          <p className="text-sm text-slate-400">
+        <div className="px-4 py-3 border-t border-slate-200 bg-blue-50 flex items-center justify-between">
+          <p className="text-sm text-slate-500">
             Tong {total} thong bao • Trang {page + 1}/{totalPages}
           </p>
           <div className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export default function NotificationsPage() {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 0}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Truoc
             </button>
@@ -310,7 +310,7 @@ export default function NotificationsPage() {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Sau
             </button>
@@ -318,7 +318,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-400 text-sm">{error}</p>}
+      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

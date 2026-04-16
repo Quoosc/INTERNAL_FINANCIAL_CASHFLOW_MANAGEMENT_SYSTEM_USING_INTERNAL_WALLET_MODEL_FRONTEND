@@ -144,8 +144,8 @@ export default function CfoSystemFundPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Quy he thong</h1>
-          <p className="text-slate-400 mt-1">CFO theo doi va dieu phoi nguon quy toan he thong.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Quy he thong</h1>
+          <p className="text-slate-500 mt-1">CFO theo doi va dieu phoi nguon quy toan he thong.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -167,7 +167,7 @@ export default function CfoSystemFundPage() {
             type="button"
             onClick={() => void loadData()}
             disabled={loading}
-            className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+            className="px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
           >
             Tai lai
           </button>
@@ -178,22 +178,22 @@ export default function CfoSystemFundPage() {
         <StatCard
           title="So du he thong"
           value={formatCurrency(companyFund?.currentWalletBalance ?? 0)}
-          tone="text-white"
+          tone="text-slate-900"
         />
         <StatCard
           title="So du ngan hang"
           value={formatCurrency(companyFund?.externalBankBalance ?? 0)}
-          tone="text-slate-200"
+          tone="text-slate-700"
         />
         <StatCard
           title="Chenh lech doi soat"
           value={formatCurrency(companyFund?.bankDiscrepancy ?? 0)}
-          tone={Math.abs(companyFund?.bankDiscrepancy ?? 0) > 0 ? "text-rose-300" : "text-emerald-300"}
+          tone={Math.abs(companyFund?.bankDiscrepancy ?? 0) > 0 ? "text-rose-700" : "text-emerald-700"}
         />
       </div>
 
-      <section className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Bao cao doi soat</h2>
+      <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Bao cao doi soat</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <InfoRow
@@ -215,10 +215,10 @@ export default function CfoSystemFundPage() {
         </div>
 
         {reconEntries.length > 0 && (
-          <div className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-2">
-            <p className="text-sm text-white font-medium">Chi tiet doi soat</p>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+            <p className="text-sm text-slate-900 font-medium">Chi tiet doi soat</p>
             {reconEntries.map((entry, index) => (
-              <div key={`${entry.label ?? "entry"}-${index}`} className="text-sm text-slate-300 flex items-center justify-between gap-2">
+              <div key={`${entry.label ?? "entry"}-${index}`} className="text-sm text-slate-600 flex items-center justify-between gap-2">
                 <span>{entry.label ?? entry.description ?? `Entry ${index + 1}`}</span>
                 <span>{typeof entry.amount === "number" ? formatCurrency(entry.amount) : "-"}</span>
               </div>
@@ -227,18 +227,18 @@ export default function CfoSystemFundPage() {
         )}
       </section>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-        <h2 className="text-lg font-semibold text-white">Truy cap nhanh</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl p-5">
+        <h2 className="text-lg font-semibold text-slate-900">Truy cap nhanh</h2>
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
             href="/cfo/approvals"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-semibold transition-colors"
           >
             Duyet cap quy
           </Link>
           <Link
             href="/cfo/audit-logs"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-semibold transition-colors"
           >
             Nhat ky hoat dong
           </Link>
@@ -246,13 +246,13 @@ export default function CfoSystemFundPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">
           {notice}
         </div>
       )}
@@ -282,7 +282,7 @@ export default function CfoSystemFundPage() {
               <button
                 type="button"
                 onClick={() => setShowTopupModal(false)}
-                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm"
               >
                 Huy
               </button>
@@ -290,7 +290,7 @@ export default function CfoSystemFundPage() {
                 type="button"
                 onClick={() => void handleTopup()}
                 disabled={topupSubmitting}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
               >
                 {topupSubmitting ? "Dang xu ly..." : "Xac nhan nap"}
               </button>
@@ -312,7 +312,7 @@ export default function CfoSystemFundPage() {
               <button
                 type="button"
                 onClick={() => setShowStatementModal(false)}
-                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm"
               >
                 Huy
               </button>
@@ -320,7 +320,7 @@ export default function CfoSystemFundPage() {
                 type="button"
                 onClick={() => void handleUpdateStatement()}
                 disabled={statementSubmitting}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
               >
                 {statementSubmitting ? "Dang cap nhat..." : "Luu so du"}
               </button>
@@ -334,7 +334,7 @@ export default function CfoSystemFundPage() {
 
 function StatCard({ title, value, tone }: { title: string; value: string; tone: string }) {
   return (
-    <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
+    <div className="bg-white border border-slate-200 rounded-2xl p-4">
       <p className="text-xs text-slate-500">{title}</p>
       <p className={`text-xl font-bold mt-1 ${tone}`}>{value}</p>
     </div>
@@ -343,9 +343,9 @@ function StatCard({ title, value, tone }: { title: string; value: string; tone: 
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900 p-3">
+    <div className="rounded-xl border border-slate-200 bg-white p-3">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-slate-200 mt-1 break-all">{value}</p>
+      <p className="text-sm text-slate-700 mt-1 break-all">{value}</p>
     </div>
   );
 }
@@ -363,12 +363,12 @@ function InputField({
 }) {
   return (
     <label className="block">
-      <span className="block text-sm text-slate-300 mb-2">{label}</span>
+      <span className="block text-sm text-slate-600 mb-2">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white"
+        className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900"
       />
     </label>
   );
@@ -379,8 +379,8 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
     <div className="fixed inset-0 z-50">
       <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl p-5">
-          <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>
           {children}
         </div>
       </div>

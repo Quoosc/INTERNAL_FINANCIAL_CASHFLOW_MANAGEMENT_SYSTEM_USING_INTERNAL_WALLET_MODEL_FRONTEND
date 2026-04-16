@@ -284,7 +284,7 @@ export default function CfoApprovalsPage() {
           </p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-100 text-amber-700 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-300 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ duyệt
         </span>
       </div>

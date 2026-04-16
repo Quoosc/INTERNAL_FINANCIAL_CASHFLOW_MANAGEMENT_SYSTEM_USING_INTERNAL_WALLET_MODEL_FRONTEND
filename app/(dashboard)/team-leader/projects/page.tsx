@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -277,7 +277,7 @@ export default function TLProjectsPage() {
           <h1 className="text-2xl font-bold text-slate-900">Dự án của tôi</h1>
           <p className="text-slate-500 mt-1">Danh sách dự án bạn đang phụ trách và mức tiêu hao ngân sách.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-50 text-blue-700 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
           {total} dự án
         </span>
       </div>
@@ -293,7 +293,7 @@ export default function TLProjectsPage() {
                 onClick={() => updateParam("status", tab.value)}
                 className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
                   active
-                    ? "bg-blue-600/20 border-blue-500/40 text-blue-700"
+                    ? "bg-blue-100 border-blue-300 text-blue-700"
                     : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >

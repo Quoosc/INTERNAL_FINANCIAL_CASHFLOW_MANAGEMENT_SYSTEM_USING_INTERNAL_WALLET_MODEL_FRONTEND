@@ -114,7 +114,7 @@ export default function ChangePasswordPage() {
       </div>
 
       {/* Info Banner */}
-      <div className="mb-5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
+      <div className="mb-5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 text-sm">
         Vui lòng đặt mật khẩu mới (tối thiểu 8 ký tự) và mã PIN giao dịch (5 chữ số) để tiếp tục.
       </div>
 

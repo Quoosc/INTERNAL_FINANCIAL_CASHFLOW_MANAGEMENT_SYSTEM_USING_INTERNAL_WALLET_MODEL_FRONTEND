@@ -35,7 +35,7 @@ export default function DashboardPage() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             />
           </svg>
-          <p className="text-slate-400 text-sm">Đang tải dữ liệu...</p>
+          <p className="text-slate-500 text-sm">Đang tải dữ liệu...</p>
         </div>
       </div>
     );

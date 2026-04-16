@@ -188,7 +188,7 @@ export default function DepositPage() {
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-semibold transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
         >
           {loading ? (
             <>
@@ -244,7 +244,7 @@ export default function DepositPage() {
               type="button"
               onClick={handleOpenVnpay}
               disabled={isExpired}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
               Thanh toán qua VNPay
             </button>
@@ -261,7 +261,7 @@ export default function DepositPage() {
               type="button"
               onClick={() => void handleCheckStatus()}
               disabled={checkingStatus}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
             >
               {checkingStatus ? "Đang kiểm tra..." : "Kiểm tra trạng thái"}
             </button>

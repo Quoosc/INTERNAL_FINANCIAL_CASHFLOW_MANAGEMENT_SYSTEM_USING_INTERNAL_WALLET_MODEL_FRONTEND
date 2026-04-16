@@ -183,7 +183,7 @@ export default function AdminSettingsPage() {
           type="button"
           onClick={() => void handleEvictAllCache()}
           disabled={evictingCache || loading}
-          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
+          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
         >
           {evictingCache ? "Dang lam moi cache..." : "Lam moi cache"}
         </button>
@@ -246,7 +246,7 @@ function SettingsGroup({
                   type="button"
                   onClick={() => void onSave(item.key)}
                   disabled={savingKey !== null}
-                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
+                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
                 >
                   {savingKey === item.key ? "Dang luu..." : "Luu"}
                 </button>

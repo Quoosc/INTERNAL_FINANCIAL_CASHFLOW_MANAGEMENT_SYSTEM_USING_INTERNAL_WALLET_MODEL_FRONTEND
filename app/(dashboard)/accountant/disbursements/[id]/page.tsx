@@ -513,7 +513,7 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
               type="button"
               onClick={handleDisburse}
               disabled={pin.length < 5 || submitting || !allChecked}
-              className="w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
               {submitting ? "Đang giải ngân..." : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
             </button>
@@ -600,7 +600,7 @@ export default function AccountantDisbursementDetailPage({ params }: PageProps) 
                 type="button"
                 onClick={() => void handleReject()}
                 disabled={rejectReason.trim().length < 10 || rejectSubmitting}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
               >
                 {rejectSubmitting ? "Đang xử lý..." : "Xác nhận từ chối"}
               </button>

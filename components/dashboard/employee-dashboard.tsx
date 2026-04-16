@@ -623,7 +623,7 @@ export function EmployeeDashboard() {
                   onClick={() => setChartRange(n)}
                   className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                     chartRange === n
-                      ? "bg-blue-600 text-slate-900"
+                      ? "bg-blue-600 text-white"
                       : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >

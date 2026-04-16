@@ -284,7 +284,7 @@ export default function AdminSystemFundPage() {
                 type="button"
                 onClick={() => void handleTopup()}
                 disabled={topupSubmitting}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
+                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
               >
                 {topupSubmitting ? "Dang xu ly..." : "Xac nhan nap"}
               </button>
@@ -314,7 +314,7 @@ export default function AdminSystemFundPage() {
                 type="button"
                 onClick={() => void handleUpdateStatement()}
                 disabled={statementSubmitting}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
               >
                 {statementSubmitting ? "Dang cap nhat..." : "Luu so du"}
               </button>

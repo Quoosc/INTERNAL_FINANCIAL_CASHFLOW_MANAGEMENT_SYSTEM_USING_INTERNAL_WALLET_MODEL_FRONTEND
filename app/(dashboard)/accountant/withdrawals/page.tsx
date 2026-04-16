@@ -267,7 +267,7 @@ export default function AccountantWithdrawalsPage() {
                             type="button"
                             onClick={() => void handleExecute(item.id)}
                             disabled={executingId === item.id || rejectingId === item.id}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-xs font-medium"
+                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-medium"
                           >
                             {executingId === item.id ? "Dang xu ly..." : "Thuc hien"}
                           </button>
@@ -334,7 +334,7 @@ export default function AccountantWithdrawalsPage() {
                   type="button"
                   onClick={() => void handleReject()}
                   disabled={rejectingId !== null}
-                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
+                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
                 >
                   {rejectingId !== null ? "Dang gui..." : "Xac nhan tu choi"}
                 </button>

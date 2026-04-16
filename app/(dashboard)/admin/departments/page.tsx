@@ -453,7 +453,7 @@ export default function AdminDepartmentsPage() {
                 <button
                   type="button"
                   onClick={() => openEditModal(department)}
-                  className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm text-slate-900"
+                  className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm text-white"
                 >
                   Sửa
                 </button>
@@ -576,7 +576,7 @@ export default function AdminDepartmentsPage() {
                 type="button"
                 onClick={handleSaveDepartment}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
               >
                 {saving ? "Đang lưu..." : isEditing ? "Lưu cập nhật" : "Tạo phòng ban"}
               </button>

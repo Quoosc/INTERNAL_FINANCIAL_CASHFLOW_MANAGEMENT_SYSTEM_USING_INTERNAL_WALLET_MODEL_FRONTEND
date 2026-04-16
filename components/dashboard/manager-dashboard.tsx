@@ -638,7 +638,7 @@ export function ManagerDashboard() {
                 type="button"
                 onClick={handleCreateQuotaTopup}
                 disabled={quotaSubmitting}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
               >
                 {quotaSubmitting ? "Đang gửi..." : "Gửi yêu cầu"}
               </button>

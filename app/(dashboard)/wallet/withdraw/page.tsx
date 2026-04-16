@@ -260,7 +260,7 @@ export default function WithdrawPage() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
           >
             {loading ? "Dang gui yeu cau..." : "Gui yeu cau rut tien"}
           </button>

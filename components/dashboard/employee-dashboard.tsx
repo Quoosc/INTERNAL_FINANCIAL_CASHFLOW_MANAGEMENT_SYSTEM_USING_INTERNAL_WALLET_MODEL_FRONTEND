@@ -193,23 +193,23 @@ const REQUEST_TYPE_CONFIG: Record<
 > = {
   [RequestType.ADVANCE]: {
     label: "Tạm ứng",
-    badgeCls: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
+    badgeCls: "bg-purple-100 text-purple-700 border border-purple-200",
   },
   [RequestType.EXPENSE]: {
     label: "Chi phí",
-    badgeCls: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
+    badgeCls: "bg-blue-50 text-blue-700 border border-blue-200",
   },
   [RequestType.REIMBURSE]: {
     label: "Hoàn ứng",
-    badgeCls: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
+    badgeCls: "bg-teal-500/20 text-teal-700 border border-teal-200",
   },
   [RequestType.PROJECT_TOPUP]: {
     label: "Nạp DA",
-    badgeCls: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+    badgeCls: "bg-amber-50 text-amber-700 border border-amber-200",
   },
   [RequestType.DEPARTMENT_TOPUP]: {
     label: "Nạp Quota",
-    badgeCls: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
+    badgeCls: "bg-rose-50 text-rose-700 border border-rose-200",
   },
 };
 
@@ -219,18 +219,18 @@ const REQUEST_STATUS_CONFIG: Record<
 > = {
   [RequestStatus.PENDING]: {
     label: "Chờ duyệt",
-    cls: "text-amber-400",
+    cls: "text-amber-700",
   },
   [RequestStatus.PENDING_ACCOUNTANT_EXECUTION]: {
     label: "Chờ giải ngân",
-    cls: "text-blue-400",
+    cls: "text-blue-600",
   },
-  [RequestStatus.APPROVED_BY_TEAM_LEADER]: { label: "Đã duyệt", cls: "text-emerald-400" },
-  [RequestStatus.APPROVED_BY_MANAGER]: { label: "Manager đã duyệt", cls: "text-emerald-400" },
-  [RequestStatus.APPROVED_BY_CFO]: { label: "CFO đã duyệt", cls: "text-emerald-400" },
-  [RequestStatus.PAID]: { label: "Đã chi", cls: "text-emerald-400" },
-  [RequestStatus.REJECTED]: { label: "Từ chối", cls: "text-rose-400" },
-  [RequestStatus.CANCELLED]: { label: "Đã hủy", cls: "text-slate-400" },
+  [RequestStatus.APPROVED_BY_TEAM_LEADER]: { label: "Đã duyệt", cls: "text-emerald-700" },
+  [RequestStatus.APPROVED_BY_MANAGER]: { label: "Manager đã duyệt", cls: "text-emerald-700" },
+  [RequestStatus.APPROVED_BY_CFO]: { label: "CFO đã duyệt", cls: "text-emerald-700" },
+  [RequestStatus.PAID]: { label: "Đã chi", cls: "text-emerald-700" },
+  [RequestStatus.REJECTED]: { label: "Từ chối", cls: "text-rose-700" },
+  [RequestStatus.CANCELLED]: { label: "Đã hủy", cls: "text-slate-500" },
 };
 
 const TX_TYPE_LABELS: Record<string, { label: string; icon: React.ReactNode }> =
@@ -333,7 +333,7 @@ function StatCard({
   const [showTip, setShowTip] = useState(false);
   return (
     <div
-      className={`bg-slate-800/60 border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all ${gradient}`}
+      className={`bg-white border border-slate-200 rounded-2xl shadow-sm p-5 hover:border-slate-300 transition-all ${gradient}`}
     >
       <div className="flex items-start justify-between mb-4">
         <div
@@ -347,20 +347,20 @@ function StatCard({
               type="button"
               onMouseEnter={() => setShowTip(true)}
               onMouseLeave={() => setShowTip(false)}
-              className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs text-slate-400 hover:bg-white/20 transition-colors"
+              className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center text-xs text-slate-500 hover:bg-white/20 transition-colors"
             >
               i
             </button>
             {showTip && (
-              <div className="absolute right-0 top-7 w-56 bg-slate-900 border border-white/10 text-white text-xs rounded-lg p-3 z-20 shadow-xl">
+              <div className="absolute right-0 top-7 w-56 bg-white border border-slate-200 text-slate-900 text-xs rounded-lg p-3 z-20 shadow-xl">
                 {tooltip}
               </div>
             )}
           </div>
         )}
       </div>
-      <p className="text-sm text-slate-400 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-white">{value}</p>
+      <p className="text-sm text-slate-500 mb-1">{title}</p>
+      <p className="text-3xl font-bold text-slate-900">{value}</p>
       {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
     </div>
   );
@@ -378,12 +378,12 @@ function SectionCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-slate-800/60 border border-white/10 rounded-2xl p-6">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h3 className="text-base font-semibold text-white">{title}</h3>
+          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
           {subtitle && (
-            <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p>
+            <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>
           )}
         </div>
         {action}
@@ -470,7 +470,7 @@ export function EmployeeDashboard() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             />
           </svg>
-          <p className="text-slate-400 text-sm">Đang tải dữ liệu...</p>
+          <p className="text-slate-500 text-sm">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -481,10 +481,10 @@ export function EmployeeDashboard() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-slate-900">
             Xin chào, {user?.fullName || "Bạn"} 👋
           </h1>
-          <p className="text-slate-400 text-sm mt-1 capitalize">{today}</p>
+          <p className="text-slate-500 text-sm mt-1 capitalize">{today}</p>
         </div>
         <Link
           href="/requests/new"
@@ -514,8 +514,8 @@ export function EmployeeDashboard() {
           value={formatCurrency(availableBalance)}
           sub="Số dư hiện tại trừ tiền treo"
           gradient="hover:shadow-blue-500/10 hover:shadow-lg"
-          iconBg="bg-blue-500/20"
-          iconColor="text-blue-400"
+          iconBg="bg-blue-50"
+          iconColor="text-blue-600"
           icon={
             <svg
               className="w-5 h-5"
@@ -537,8 +537,8 @@ export function EmployeeDashboard() {
           value={formatCurrency(lockedBalance)}
           sub="Dang cho xu ly"
           gradient="hover:shadow-amber-500/10 hover:shadow-lg"
-          iconBg="bg-amber-500/20"
-          iconColor="text-amber-400"
+          iconBg="bg-amber-50"
+          iconColor="text-amber-700"
           icon={
             <svg
               className="w-5 h-5"
@@ -560,8 +560,8 @@ export function EmployeeDashboard() {
           value={formatCurrency(debtBalance)}
           sub="Sẽ trừ vào lương tháng sau"
           gradient="hover:shadow-rose-500/10 hover:shadow-lg"
-          iconBg="bg-rose-500/20"
-          iconColor="text-rose-400"
+          iconBg="bg-rose-50"
+          iconColor="text-rose-700"
           tooltip="Khoản tạm ứng chưa hoàn trả sẽ được khấu trừ tự động vào lương kỳ tiếp theo."
           icon={
             <svg
@@ -588,8 +588,8 @@ export function EmployeeDashboard() {
               : "Chưa có phiếu lương"
           }
           gradient="hover:shadow-purple-500/10 hover:shadow-lg"
-          iconBg="bg-purple-500/20"
-          iconColor="text-purple-400"
+          iconBg="bg-purple-100"
+          iconColor="text-purple-700"
           icon={
             <svg
               className="w-5 h-5"
@@ -615,7 +615,7 @@ export function EmployeeDashboard() {
           title="Chi tiêu theo tháng"
           subtitle="So sánh chi phí & tạm ứng"
           action={
-            <div className="flex rounded-lg overflow-hidden border border-white/10">
+            <div className="flex rounded-lg overflow-hidden border border-slate-200">
               {([3, 6] as const).map((n) => (
                 <button
                   key={n}
@@ -624,7 +624,7 @@ export function EmployeeDashboard() {
                   className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                     chartRange === n
                       ? "bg-blue-600 text-white"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
                   {n} tháng
@@ -637,7 +637,7 @@ export function EmployeeDashboard() {
             <BarChart data={chartData} barGap={4}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="#334155"
+                stroke="#f1f5f9"
                 vertical={false}
               />
               <XAxis
@@ -656,11 +656,12 @@ export function EmployeeDashboard() {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1e293b",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e2e8f0",
                   borderRadius: "8px",
-                  color: "#f1f5f9",
+                  color: "#1e293b",
                   fontSize: "12px",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 }}
                 formatter={(value, name) => {
                   const numericValue = typeof value === "number" ? value : 0;
@@ -693,7 +694,7 @@ export function EmployeeDashboard() {
           action={
             <Link
               href="/wallet/transactions"
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
+              className="text-xs text-blue-600 hover:text-blue-700 transition-colors font-medium"
             >
               Xem tất cả →
             </Link>
@@ -709,20 +710,20 @@ export function EmployeeDashboard() {
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                         isPositive
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-rose-500/20 text-rose-400"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-rose-50 text-rose-700"
                       }`}
                     >
                       {txInfo.icon}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className="text-sm font-medium text-slate-900 truncate">
                         {txInfo.label}
                       </p>
                       <p className="text-xs text-slate-500">
@@ -732,7 +733,7 @@ export function EmployeeDashboard() {
                   </div>
                   <span
                     className={`text-sm font-bold shrink-0 ${
-                      isPositive ? "text-emerald-400" : "text-rose-400"
+                      isPositive ? "text-emerald-700" : "text-rose-700"
                     }`}
                   >
                     {isPositive ? "+" : ""}
@@ -755,7 +756,7 @@ export function EmployeeDashboard() {
             action={
               <Link
                 href="/requests"
-                className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                className="text-xs text-blue-600 hover:text-blue-700 transition-colors font-medium"
               >
                 Xem tất cả →
               </Link>
@@ -789,7 +790,7 @@ export function EmployeeDashboard() {
                     <Link
                       key={req.id}
                       href={`/requests/${req.id}`}
-                      className="flex items-center justify-between gap-4 p-4 rounded-xl border border-white/5 hover:border-white/15 hover:bg-white/5 transition-all group"
+                      className="flex items-center justify-between gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-200 hover:bg-slate-50 transition-all group"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <span
@@ -798,7 +799,7 @@ export function EmployeeDashboard() {
                           {typeConf.label}
                         </span>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-white truncate group-hover:text-blue-300 transition-colors">
+                          <p className="text-sm font-medium text-slate-900 truncate group-hover:text-blue-700 transition-colors">
                             {req.description ?? req.requestCode}
                           </p>
                           <p className="text-xs text-slate-500 mt-0.5">
@@ -807,7 +808,7 @@ export function EmployeeDashboard() {
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-white">
+                        <p className="text-sm font-bold text-slate-900">
                           {formatCurrency(req.amount)}
                         </p>
                         <p
@@ -833,8 +834,8 @@ export function EmployeeDashboard() {
             <QuickAction
               href="/wallet/deposit"
               label="Nạp tiền"
-              iconBg="bg-blue-500/20"
-              iconColor="text-blue-400"
+              iconBg="bg-blue-50"
+              iconColor="text-blue-600"
               hoverBorder="hover:border-blue-500/40"
               icon={
                 <svg
@@ -855,8 +856,8 @@ export function EmployeeDashboard() {
             <QuickAction
               href="/wallet/withdraw"
               label="Rút tiền"
-              iconBg="bg-emerald-500/20"
-              iconColor="text-emerald-400"
+              iconBg="bg-emerald-50"
+              iconColor="text-emerald-700"
               hoverBorder="hover:border-emerald-500/40"
               icon={
                 <svg
@@ -877,8 +878,8 @@ export function EmployeeDashboard() {
             <QuickAction
               href="/requests/new"
               label="Tạo yêu cầu"
-              iconBg="bg-purple-500/20"
-              iconColor="text-purple-400"
+              iconBg="bg-purple-100"
+              iconColor="text-purple-700"
               hoverBorder="hover:border-purple-500/40"
               icon={
                 <svg
@@ -899,8 +900,8 @@ export function EmployeeDashboard() {
             <QuickAction
               href="/wallet/transactions"
               label="Lịch sử GD"
-              iconBg="bg-amber-500/20"
-              iconColor="text-amber-400"
+              iconBg="bg-amber-50"
+              iconColor="text-amber-700"
               hoverBorder="hover:border-amber-500/40"
               icon={
                 <svg
@@ -922,7 +923,7 @@ export function EmployeeDashboard() {
               href="/payroll"
               label="Bảng lương"
               iconBg="bg-teal-500/20"
-              iconColor="text-teal-400"
+              iconColor="text-teal-700"
               hoverBorder="hover:border-teal-500/40"
               icon={
                 <svg
@@ -943,8 +944,8 @@ export function EmployeeDashboard() {
             <QuickAction
               href="/notifications"
               label="Thông báo"
-              iconBg="bg-rose-500/20"
-              iconColor="text-rose-400"
+              iconBg="bg-rose-50"
+              iconColor="text-rose-700"
               hoverBorder="hover:border-rose-500/40"
               icon={
                 <svg
@@ -989,14 +990,14 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center gap-2.5 p-4 rounded-xl border border-white/5 ${hoverBorder} hover:bg-white/5 transition-all group`}
+      className={`flex flex-col items-center gap-2.5 p-4 rounded-xl border border-slate-200 ${hoverBorder} hover:bg-slate-50 transition-all group`}
     >
       <div
         className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center transition-all group-hover:scale-110`}
       >
         <span className={iconColor}>{icon}</span>
       </div>
-      <span className="text-xs font-medium text-slate-400 group-hover:text-white transition-colors">
+      <span className="text-xs font-medium text-slate-500 group-hover:text-slate-900 transition-colors">
         {label}
       </span>
     </Link>

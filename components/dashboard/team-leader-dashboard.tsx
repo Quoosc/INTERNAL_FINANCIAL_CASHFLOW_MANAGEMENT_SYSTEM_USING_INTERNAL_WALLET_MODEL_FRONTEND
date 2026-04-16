@@ -178,13 +178,13 @@ function formatRelativeTime(iso: string): string {
 function getApprovalTypeClass(type: RequestType): string {
   switch (type) {
     case RequestType.ADVANCE:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RequestType.EXPENSE:
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case RequestType.REIMBURSE:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -204,15 +204,15 @@ function getApprovalTypeLabel(type: RequestType): string {
 function getProjectStatusClass(status: string): string {
   switch (status) {
     case "ACTIVE":
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case "PLANNING":
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case "PAUSED":
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case "CLOSED":
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -262,14 +262,14 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="bg-slate-800 border border-white/10 rounded-2xl p-4 hover:bg-slate-700/40 hover:border-white/20 transition-all"
+      className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 hover:bg-slate-50 hover:border-slate-300 transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-slate-400">{title}</p>
-          <p className={`text-xl font-bold mt-1 ${accent}`}>{value}</p>
+          <p className="text-xs text-slate-500">{title}</p>
+          <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
         </div>
-        <span className="w-9 h-9 rounded-xl bg-slate-900 border border-white/10 text-slate-300 flex items-center justify-center">
+        <span className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center">
           {icon}
         </span>
       </div>
@@ -352,10 +352,10 @@ export function TeamLeaderDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Xin chào, {user?.fullName ?? "Team Leader"}</h1>
-          <p className="text-slate-400 mt-1">Hôm nay là {todayLabel}</p>
+          <h1 className="text-2xl font-bold text-slate-900">Xin chào, {user?.fullName ?? "Team Leader"}</h1>
+          <p className="text-slate-500 mt-1">Hôm nay là {todayLabel}</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-indigo-500/40 bg-indigo-500/15 text-indigo-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-indigo-500/40 bg-indigo-100 text-indigo-700 text-sm font-medium">
           Trưởng nhóm
         </span>
       </div>
@@ -363,7 +363,7 @@ export function TeamLeaderDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {loading ? (
           [...Array(4)].map((_, index) => (
-            <div key={`stat-skeleton-${index}`} className="h-24 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`stat-skeleton-${index}`} className="h-24 rounded-2xl bg-white animate-pulse" />
           ))
         ) : (
           <>
@@ -371,7 +371,7 @@ export function TeamLeaderDashboard() {
               title="Số dư ví"
               value={formatCurrency(wallet?.balance ?? 0)}
               href="/wallet"
-              accent="text-emerald-300"
+              accent="text-emerald-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -387,7 +387,7 @@ export function TeamLeaderDashboard() {
               title="Chờ duyệt"
               value={String(approvals.length)}
               href="/team-leader/approvals"
-              accent="text-amber-300"
+              accent="text-amber-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -403,7 +403,7 @@ export function TeamLeaderDashboard() {
               title="Dự án"
               value={String(projects.length)}
               href="/team-leader/projects"
-              accent="text-sky-300"
+              accent="text-sky-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -419,7 +419,7 @@ export function TeamLeaderDashboard() {
               title="Thành viên"
               value={String(totalMembers)}
               href="/team-leader/team"
-              accent="text-indigo-300"
+              accent="text-indigo-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -436,10 +436,10 @@ export function TeamLeaderDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Yêu cầu đang chờ duyệt</h2>
-            <Link href="/team-leader/approvals" className="text-sm text-blue-300 hover:text-blue-200">
+            <h2 className="text-lg font-semibold text-slate-900">Yêu cầu đang chờ duyệt</h2>
+            <Link href="/team-leader/approvals" className="text-sm text-blue-700 hover:text-blue-600">
               Xem tất cả →
             </Link>
           </div>
@@ -447,11 +447,11 @@ export function TeamLeaderDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`approval-skeleton-${index}`} className="h-20 rounded-xl bg-slate-900 animate-pulse" />
+                <div key={`approval-skeleton-${index}`} className="h-20 rounded-xl bg-white animate-pulse" />
               ))}
             </div>
           ) : approvals.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
               Không có yêu cầu nào đang chờ duyệt.
             </div>
           ) : (
@@ -460,7 +460,7 @@ export function TeamLeaderDashboard() {
                 <Link
                   key={item.id}
                   href={`/team-leader/approvals/${item.id}`}
-                  className="block rounded-xl border border-white/10 bg-slate-900 p-3 hover:border-white/20 hover:bg-slate-900/70 transition-all"
+                  className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-2 min-w-0">
@@ -468,16 +468,16 @@ export function TeamLeaderDashboard() {
                         <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getApprovalTypeClass(item.type)}`}>
                           {getApprovalTypeLabel(item.type)}
                         </span>
-                        <span className="text-xs text-slate-400 font-mono">{item.requestCode}</span>
+                        <span className="text-xs text-slate-500 font-mono">{item.requestCode}</span>
                         <span className="text-xs text-slate-500">{formatRelativeTime(item.createdAt)}</span>
                       </div>
 
-                      <p className="text-sm text-slate-200 truncate">
-                        <span className="font-medium text-white">{item.requester.fullName}</span> • {item.project.name}
+                      <p className="text-sm text-slate-900 truncate">
+                        <span className="font-medium text-slate-900">{item.requester.fullName}</span> • {item.project.name}
                       </p>
                     </div>
 
-                    <p className="text-sm font-semibold text-white">{formatCurrency(item.amount)}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatCurrency(item.amount)}</p>
                   </div>
                 </Link>
               ))}
@@ -485,10 +485,10 @@ export function TeamLeaderDashboard() {
           )}
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Dự án của tôi</h2>
-            <Link href="/team-leader/projects" className="text-sm text-blue-300 hover:text-blue-200">
+            <h2 className="text-lg font-semibold text-slate-900">Dự án của tôi</h2>
+            <Link href="/team-leader/projects" className="text-sm text-blue-700 hover:text-blue-600">
               Xem tất cả →
             </Link>
           </div>
@@ -496,11 +496,11 @@ export function TeamLeaderDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`project-skeleton-${index}`} className="h-24 rounded-xl bg-slate-900 animate-pulse" />
+                <div key={`project-skeleton-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
               ))}
             </div>
           ) : projects.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
               Bạn chưa được phân công dự án.
             </div>
           ) : (
@@ -511,10 +511,10 @@ export function TeamLeaderDashboard() {
                   <Link
                     key={project.id}
                     href={`/team-leader/projects/${project.id}`}
-                    className="block rounded-xl border border-white/10 bg-slate-900 p-3 hover:border-white/20 hover:bg-slate-900/70 transition-all"
+                    className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold text-white truncate">{project.name}</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">{project.name}</p>
                       <span
                         className={`shrink-0 inline-flex px-2 py-1 rounded-full border text-[11px] ${getProjectStatusClass(project.status)}`}
                       >
@@ -523,11 +523,11 @@ export function TeamLeaderDashboard() {
                     </div>
 
                     <div className="mt-2 space-y-1.5">
-                      <div className="flex items-center justify-between text-xs text-slate-400">
+                      <div className="flex items-center justify-between text-xs text-slate-500">
                         <span>Budget burn</span>
                         <span>{burn}%</span>
                       </div>
-                      <div className="h-2 rounded-full bg-slate-800 border border-white/10 overflow-hidden">
+                      <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
                         <div className={`h-full ${getBurnBarClass(burn)}`} style={{ width: `${burn}%` }} />
                       </div>
                     </div>
@@ -539,8 +539,8 @@ export function TeamLeaderDashboard() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
-        <h2 className="text-lg font-semibold text-white">Thao tác nhanh</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-slate-900">Thao tác nhanh</h2>
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
             href="/wallet/deposit"
@@ -565,7 +565,7 @@ export function TeamLeaderDashboard() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

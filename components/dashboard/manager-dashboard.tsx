@@ -163,15 +163,15 @@ function projectStatusLabel(status: string): string {
 function projectStatusClass(status: string): string {
   switch (status) {
     case "ACTIVE":
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case "PLANNING":
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case "PAUSED":
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case "CLOSED":
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -204,15 +204,15 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="bg-slate-800 border border-white/10 rounded-2xl p-4 hover:bg-slate-700/40 hover:border-white/20 transition-all"
+      className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 hover:bg-slate-50 hover:border-slate-300 transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-slate-400">{title}</p>
-          <p className={`text-xl font-bold mt-1 ${accent}`}>{value}</p>
+          <p className="text-xs text-slate-500">{title}</p>
+          <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
           {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
         </div>
-        <span className="w-9 h-9 rounded-xl bg-slate-900 border border-white/10 text-slate-300 flex items-center justify-center">
+        <span className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center">
           {icon}
         </span>
       </div>
@@ -353,10 +353,10 @@ export function ManagerDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Xin chào, {user?.fullName ?? "Quản lý"}</h1>
-          <p className="text-slate-400 mt-1">Hôm nay là {todayLabel}</p>
+          <h1 className="text-2xl font-bold text-slate-900">Xin chào, {user?.fullName ?? "Quản lý"}</h1>
+          <p className="text-slate-500 mt-1">Hôm nay là {todayLabel}</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-500/15 text-blue-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-50 text-blue-700 text-sm font-medium">
           Quản lý
         </span>
       </div>
@@ -364,7 +364,7 @@ export function ManagerDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {loading ? (
           [...Array(4)].map((_, index) => (
-            <div key={`manager-stat-skeleton-${index}`} className="h-24 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`manager-stat-skeleton-${index}`} className="h-24 rounded-2xl bg-white animate-pulse" />
           ))
         ) : (
           <>
@@ -373,7 +373,7 @@ export function ManagerDashboard() {
               value={formatCurrency(deptBalance)}
               sub="Số dư khả dụng"
               href="/manager/department"
-              accent="text-blue-300"
+              accent="text-blue-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -391,7 +391,7 @@ export function ManagerDashboard() {
               value={String(pendingCount)}
               sub="PROJECT_TOPUP"
               href="/manager/approvals"
-              accent="text-amber-300"
+              accent="text-amber-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -409,7 +409,7 @@ export function ManagerDashboard() {
               value={String(activeProjects)}
               sub="Đang triển khai"
               href="/manager/projects"
-              accent="text-emerald-300"
+              accent="text-emerald-700"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -427,7 +427,7 @@ export function ManagerDashboard() {
               value={formatCurrency(teamDebt)}
               sub={`${debtUsers} nhân viên`}
               href="/manager/department"
-              accent={teamDebt > 0 ? "text-rose-300" : "text-slate-300"}
+              accent={teamDebt > 0 ? "text-rose-700" : "text-slate-600"}
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -444,10 +444,10 @@ export function ManagerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">PROJECT_TOPUP chờ duyệt</h2>
-            <Link href="/manager/approvals" className="text-sm text-blue-300 hover:text-blue-200">
+            <h2 className="text-lg font-semibold text-slate-900">PROJECT_TOPUP chờ duyệt</h2>
+            <Link href="/manager/approvals" className="text-sm text-blue-700 hover:text-blue-600">
               Xem tất cả →
             </Link>
           </div>
@@ -455,11 +455,11 @@ export function ManagerDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`manager-approval-skeleton-${index}`} className="h-24 rounded-xl bg-slate-900 animate-pulse" />
+                <div key={`manager-approval-skeleton-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
               ))}
             </div>
           ) : approvals.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
               Không có yêu cầu PROJECT_TOPUP đang chờ duyệt.
             </div>
           ) : (
@@ -468,24 +468,24 @@ export function ManagerDashboard() {
                 <Link
                   key={item.id}
                   href={`/manager/approvals/${item.id}`}
-                  className="block rounded-xl border border-white/10 bg-slate-900 p-3 hover:border-white/20 hover:bg-slate-900/70 transition-all"
+                  className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-2 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="inline-flex px-2 py-1 rounded-full border border-blue-500/30 bg-blue-500/15 text-blue-300">
+                        <span className="inline-flex px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700">
                           Cấp vốn DA
                         </span>
-                        <span className="text-slate-400 font-mono">{item.requestCode}</span>
+                        <span className="text-slate-500 font-mono">{item.requestCode}</span>
                         <span className="text-slate-500">{formatRelativeTime(item.createdAt)}</span>
                       </div>
 
-                      <p className="text-sm text-slate-200 truncate">
-                        <span className="font-medium text-white">{item.project.name}</span> • {item.requester.fullName}
+                      <p className="text-sm text-slate-900 truncate">
+                        <span className="font-medium text-slate-900">{item.project.name}</span> • {item.requester.fullName}
                       </p>
                     </div>
 
-                    <p className="text-sm font-semibold text-white">{formatCurrency(item.amount)}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatCurrency(item.amount)}</p>
                   </div>
                 </Link>
               ))}
@@ -493,10 +493,10 @@ export function ManagerDashboard() {
           )}
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Dự án phòng ban</h2>
-            <Link href="/manager/projects" className="text-sm text-blue-300 hover:text-blue-200">
+            <h2 className="text-lg font-semibold text-slate-900">Dự án phòng ban</h2>
+            <Link href="/manager/projects" className="text-sm text-blue-700 hover:text-blue-600">
               Xem tất cả →
             </Link>
           </div>
@@ -504,11 +504,11 @@ export function ManagerDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`manager-project-skeleton-${index}`} className="h-24 rounded-xl bg-slate-900 animate-pulse" />
+                <div key={`manager-project-skeleton-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
               ))}
             </div>
           ) : projects.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
               Chưa có dự án trong phòng ban.
             </div>
           ) : (
@@ -519,10 +519,10 @@ export function ManagerDashboard() {
                   <Link
                     key={project.id}
                     href={`/manager/projects/${project.id}`}
-                    className="block rounded-xl border border-white/10 bg-slate-900 p-3 hover:border-white/20 hover:bg-slate-900/70 transition-all"
+                    className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold text-white truncate">{project.name}</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">{project.name}</p>
                       <span
                         className={`shrink-0 inline-flex px-2 py-1 rounded-full border text-[11px] ${projectStatusClass(project.status)}`}
                       >
@@ -531,11 +531,11 @@ export function ManagerDashboard() {
                     </div>
 
                     <div className="mt-2 space-y-1.5">
-                      <div className="flex items-center justify-between text-xs text-slate-400">
+                      <div className="flex items-center justify-between text-xs text-slate-500">
                         <span>Budget burn</span>
                         <span>{burn}%</span>
                       </div>
-                      <div className="h-2 rounded-full bg-slate-800 border border-white/10 overflow-hidden">
+                      <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
                         <div className={`h-full ${burnClass(burn)}`} style={{ width: `${burn}%` }} />
                       </div>
                     </div>
@@ -547,8 +547,8 @@ export function ManagerDashboard() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4">
-        <h2 className="text-lg font-semibold text-white">Thao tác nhanh</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-slate-900">Thao tác nhanh</h2>
         <div className="mt-3 flex flex-wrap gap-3">
           <button
             type="button"
@@ -563,7 +563,7 @@ export function ManagerDashboard() {
 
           <Link
             href="/wallet"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -579,13 +579,13 @@ export function ManagerDashboard() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -599,30 +599,30 @@ export function ManagerDashboard() {
             aria-label="Đóng modal xin cấp vốn phòng ban"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Xin cấp vốn phòng ban</h3>
-            <p className="text-sm text-slate-400">Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.</p>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Xin cấp vốn phòng ban</h3>
+            <p className="text-sm text-slate-500">Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.</p>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Số tiền cần cấp</label>
+              <label className="block text-sm text-slate-600 mb-2">Số tiền cần cấp</label>
               <input
                 type="number"
                 min={1}
                 value={quotaAmount}
                 onChange={(event) => setQuotaAmount(event.target.value)}
                 placeholder="Ví dụ: 100000000"
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Mô tả nhu cầu</label>
+              <label className="block text-sm text-slate-600 mb-2">Mô tả nhu cầu</label>
               <textarea
                 rows={4}
                 value={quotaDescription}
                 onChange={(event) => setQuotaDescription(event.target.value)}
                 placeholder="Mô tả lý do xin cấp vốn..."
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
@@ -630,7 +630,7 @@ export function ManagerDashboard() {
               <button
                 type="button"
                 onClick={() => setShowQuotaModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>

@@ -252,7 +252,7 @@ export default function DepositPage() {
             <button
               type="button"
               onClick={handleCopyReference}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
             >
               {copied ? "Đã sao chép mã" : "Sao chép mã tham chiếu"}
             </button>

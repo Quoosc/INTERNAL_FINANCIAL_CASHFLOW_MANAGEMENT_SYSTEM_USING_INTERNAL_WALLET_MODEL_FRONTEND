@@ -232,13 +232,13 @@ export default function CfoSystemFundPage() {
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
             href="/cfo/approvals"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
           >
             Duyet cap quy
           </Link>
           <Link
             href="/cfo/audit-logs"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
           >
             Nhat ky hoat dong
           </Link>
@@ -282,7 +282,7 @@ export default function CfoSystemFundPage() {
               <button
                 type="button"
                 onClick={() => setShowTopupModal(false)}
-                className="px-4 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm"
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Huy
               </button>
@@ -312,7 +312,7 @@ export default function CfoSystemFundPage() {
               <button
                 type="button"
                 onClick={() => setShowStatementModal(false)}
-                className="px-4 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm"
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Huy
               </button>

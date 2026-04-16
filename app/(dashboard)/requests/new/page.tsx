@@ -647,7 +647,7 @@ export default function NewRequestPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-5 py-3 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-medium transition-colors"
+            className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
           >
             Hủy
           </button>

@@ -232,7 +232,7 @@ export default function AdminSystemFundPage() {
         <div className="mt-3">
           <Link
             href="/accountant/ledger"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
           >
             Xem so cai
           </Link>
@@ -276,7 +276,7 @@ export default function AdminSystemFundPage() {
               <button
                 type="button"
                 onClick={() => setShowTopupModal(false)}
-                className="px-4 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm"
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Huy
               </button>
@@ -306,7 +306,7 @@ export default function AdminSystemFundPage() {
               <button
                 type="button"
                 onClick={() => setShowStatementModal(false)}
-                className="px-4 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-slate-900 text-sm"
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Huy
               </button>

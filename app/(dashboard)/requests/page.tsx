@@ -194,22 +194,22 @@ function formatDateTime(iso: string): string {
 function getStatusClass(status: RequestStatus): string {
   switch (status) {
     case RequestStatus.PENDING:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case RequestStatus.APPROVED_BY_TEAM_LEADER:
-      return "bg-green-500/15 border-green-500/30 text-green-300";
+      return "bg-green-100 border-green-200 text-green-700";
     case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
-      return "bg-blue-500/15 border-blue-500/30 text-blue-300";
+      return "bg-blue-50 border-blue-200 text-blue-700";
     case RequestStatus.APPROVED_BY_MANAGER:
     case RequestStatus.APPROVED_BY_CFO:
-      return "bg-green-500/15 border-green-500/30 text-green-300";
+      return "bg-green-100 border-green-200 text-green-700";
     case RequestStatus.PAID:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case RequestStatus.REJECTED:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     case RequestStatus.CANCELLED:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -239,13 +239,13 @@ function getStatusLabel(status: RequestStatus): string {
 function getTypeClass(type: RequestType): string {
   switch (type) {
     case RequestType.ADVANCE:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RequestType.EXPENSE:
-      return "bg-cyan-500/15 border-cyan-500/30 text-cyan-300";
+      return "bg-cyan-100 border-cyan-200 text-cyan-700";
     case RequestType.REIMBURSE:
-      return "bg-teal-500/15 border-teal-500/30 text-teal-300";
+      return "bg-teal-100 border-teal-200 text-teal-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -498,8 +498,8 @@ export default function RequestsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Yêu cầu của tôi</h1>
-          <p className="text-slate-400 mt-1">Theo dõi toàn bộ yêu cầu tạm ứng, chi phí, hoàn ứng.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Yêu cầu của tôi</h1>
+          <p className="text-slate-500 mt-1">Theo dõi toàn bộ yêu cầu tạm ứng, chi phí, hoàn ứng.</p>
         </div>
 
         <Link
@@ -514,18 +514,18 @@ export default function RequestsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <SummaryCard title="Tổng yêu cầu" value={totalCount} accent="text-white" />
-        <SummaryCard title="Đang chờ" value={pendingCount} accent="text-amber-300" />
-        <SummaryCard title="Đã duyệt" value={approvedCount} accent="text-emerald-300" />
-        <SummaryCard title="Từ chối" value={rejectedCount} accent="text-rose-300" />
+        <SummaryCard title="Tổng yêu cầu" value={totalCount} accent="text-slate-900" borderColor="border-slate-200" iconBg="bg-slate-100" iconColor="text-slate-600" />
+        <SummaryCard title="Đang chờ" value={pendingCount} accent="text-amber-700" borderColor="border-amber-200" iconBg="bg-amber-100" iconColor="text-amber-600" />
+        <SummaryCard title="Đã duyệt" value={approvedCount} accent="text-emerald-700" borderColor="border-emerald-200" iconBg="bg-emerald-100" iconColor="text-emerald-600" />
+        <SummaryCard title="Từ chối" value={rejectedCount} accent="text-rose-700" borderColor="border-rose-200" iconBg="bg-rose-100" iconColor="text-rose-600" />
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           <select
             value={filters.status ?? "ALL"}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="ALL">Tất cả trạng thái</option>
             {Object.values(RequestStatus).map((status) => (
@@ -538,7 +538,7 @@ export default function RequestsPage() {
           <select
             value={filters.type ?? "ALL"}
             onChange={(e) => handleTypeChange(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="ALL">Tất cả loại</option>
             <option value={RequestType.ADVANCE}>ADVANCE</option>
@@ -550,37 +550,37 @@ export default function RequestsPage() {
             type="date"
             value={fromDate}
             onChange={(e) => handleDateChange("from", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
 
           <input
             type="date"
             value={toDate}
             onChange={(e) => handleDateChange("to", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px]">
             <thead>
-              <tr className="border-b border-white/10 bg-slate-900/30">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Mã yêu cầu</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Loại</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Số tiền</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng thái</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Dự án</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ngày tạo</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Thao tác</th>
+              <tr className="border-b border-slate-200 bg-white/30">
+                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mã yêu cầu</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Loại</th>
+                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Số tiền</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dự án</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ngày tạo</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Thao tác</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-400 text-sm">
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500 text-sm">
                     <span className="inline-flex items-center gap-2">
                       <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -600,10 +600,10 @@ export default function RequestsPage() {
                 requests.map((request) => (
                   <tr
                     key={request.id}
-                    className="border-b border-white/5 hover:bg-slate-700/30 transition-colors cursor-pointer"
+                    className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/requests/${request.id}`)}
                   >
-                    <td className="px-4 py-3 text-sm text-white font-medium">{request.requestCode}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900 font-medium">{request.requestCode}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeClass(request.type)}`}>
                         {getTypeLabel(request.type)}
@@ -617,8 +617,8 @@ export default function RequestsPage() {
                         {getStatusLabel(request.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">{request.projectName ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-400">{formatDateTime(request.createdAt)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{request.projectName ?? "—"}</td>
+                    <td className="px-4 py-3 text-sm text-slate-500">{formatDateTime(request.createdAt)}</td>
                     <td className="px-4 py-3">
                       <button
                         type="button"
@@ -626,7 +626,7 @@ export default function RequestsPage() {
                           e.stopPropagation();
                           router.push(`/requests/${request.id}`);
                         }}
-                        className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium transition-colors"
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
                       >
                         Xem chi tiết
                       </button>
@@ -638,8 +638,8 @@ export default function RequestsPage() {
           </table>
         </div>
 
-        <div className="px-4 py-3 flex items-center justify-between border-t border-white/10 bg-slate-900/30">
-          <p className="text-sm text-slate-400">
+        <div className="px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-white/30">
+          <p className="text-sm text-slate-500">
             Tổng {total} yêu cầu • Trang {page}/{totalPages}
           </p>
 
@@ -648,7 +648,7 @@ export default function RequestsPage() {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Trước
             </button>
@@ -656,7 +656,7 @@ export default function RequestsPage() {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Sau
             </button>
@@ -664,7 +664,7 @@ export default function RequestsPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-400 text-sm">{error}</p>}
+      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }
@@ -673,15 +673,28 @@ function SummaryCard({
   title,
   value,
   accent,
+  borderColor,
+  iconBg,
+  iconColor,
 }: {
   title: string;
   value: number;
   accent: string;
+  borderColor: string;
+  iconBg: string;
+  iconColor: string;
 }) {
   return (
-    <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-      <p className="text-sm text-slate-400">{title}</p>
-      <p className={`text-3xl font-bold mt-2 ${accent}`}>{value}</p>
+    <div className={`bg-white border ${borderColor} rounded-xl shadow-sm p-5 flex items-center justify-between`}>
+      <div>
+        <p className="text-sm text-slate-500">{title}</p>
+        <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
+      </div>
+      <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
+        <svg className={`w-6 h-6 ${iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
     </div>
   );
 }

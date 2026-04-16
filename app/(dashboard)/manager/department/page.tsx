@@ -203,14 +203,14 @@ function filterMock(
 
 function roleBadgeClass(role: MemberRole): string {
   return role === "TEAM_LEADER"
-    ? "bg-indigo-500/15 border-indigo-500/30 text-indigo-300"
-    : "bg-slate-500/15 border-slate-500/30 text-slate-300";
+    ? "bg-indigo-100 border-indigo-200 text-indigo-700"
+    : "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 function statusBadgeClass(status: string): string {
-  if (status === "ACTIVE") return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
-  if (status === "LOCKED") return "bg-rose-500/15 border-rose-500/30 text-rose-300";
-  return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+  if (status === "ACTIVE") return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  if (status === "LOCKED") return "bg-rose-100 border-rose-200 text-rose-700";
+  return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 export default function ManagerDepartmentPage() {
@@ -420,30 +420,30 @@ export default function ManagerDepartmentPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Phòng ban của tôi</h1>
-          <p className="text-slate-400 mt-1">Theo dõi thành viên, dư nợ và các hoạt động gần đây trong phòng ban.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Phòng ban của tôi</h1>
+          <p className="text-slate-500 mt-1">Theo dõi thành viên, dư nợ và các hoạt động gần đây trong phòng ban.</p>
         </div>
 
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-500/15 text-blue-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-50 text-blue-700 text-sm font-medium">
           {total} thành viên
         </span>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <p className="text-sm text-slate-300">
-            Quỹ phòng ban khả dụng: <span className="font-semibold text-emerald-300">{formatCurrency(availableBudget)}</span>
+          <p className="text-sm text-slate-600">
+            Quỹ phòng ban khả dụng: <span className="font-semibold text-emerald-700">{formatCurrency(availableBudget)}</span>
             <span className="text-slate-500"> / {formatCurrency(totalQuota)}</span>
           </p>
-          <span className="text-sm text-slate-400">{availablePercent}% khả dụng</span>
+          <span className="text-sm text-slate-500">{availablePercent}% khả dụng</span>
         </div>
 
-        <div className="h-2 rounded-full bg-slate-900 border border-white/10 overflow-hidden">
+        <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
           <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, availablePercent)}%` }} />
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {roleTabs.map((tab) => {
             const active = roleFilter === tab.value || (!roleFilter && !tab.value);
@@ -454,8 +454,8 @@ export default function ManagerDepartmentPage() {
                 onClick={() => updateParam("role", tab.value)}
                 className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
                   active
-                    ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-                    : "bg-slate-900 border-white/10 text-slate-300 hover:bg-slate-700"
+                    ? "bg-blue-600/20 border-blue-500/40 text-blue-700"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 {tab.label}
@@ -482,7 +482,7 @@ export default function ManagerDepartmentPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm theo tên, mã nhân viên, email..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
@@ -490,11 +490,11 @@ export default function ManagerDepartmentPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
-            <div key={`manager-members-skeleton-${index}`} className="h-48 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`manager-members-skeleton-${index}`} className="h-48 rounded-2xl bg-white animate-pulse" />
           ))}
         </div>
       ) : members.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center text-slate-500">
           Không có thành viên phù hợp bộ lọc.
         </div>
       ) : (
@@ -504,11 +504,11 @@ export default function ManagerDepartmentPage() {
               key={member.id}
               type="button"
               onClick={() => loadMemberDetail(member.id)}
-              className="bg-slate-800 border border-white/10 hover:border-white/20 hover:bg-slate-700/40 rounded-2xl p-4 text-left transition-all space-y-3"
+              className="bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all space-y-3"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{member.fullName}</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">{member.fullName}</p>
                   <p className="text-xs text-slate-500 truncate">
                     {member.jobTitle ?? "—"} • {member.employeeCode}
                   </p>
@@ -525,13 +525,13 @@ export default function ManagerDepartmentPage() {
                 </span>
 
                 {member.debtBalance > 0 && (
-                  <span className="inline-flex px-2 py-1 rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-300 text-xs">
+                  <span className="inline-flex px-2 py-1 rounded-full border border-rose-200 bg-rose-100 text-rose-700 text-xs">
                     Dư nợ {formatCurrency(member.debtBalance)}
                   </span>
                 )}
               </div>
 
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 {member.projectsCount} dự án • {member.pendingRequestsCount} yêu cầu chờ xử lý
               </p>
             </button>
@@ -540,7 +540,7 @@ export default function ManagerDepartmentPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} thành viên
         </p>
 
@@ -549,7 +549,7 @@ export default function ManagerDepartmentPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -557,7 +557,7 @@ export default function ManagerDepartmentPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -565,7 +565,7 @@ export default function ManagerDepartmentPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
@@ -579,18 +579,18 @@ export default function ManagerDepartmentPage() {
             aria-label="Đóng panel chi tiết thành viên"
           />
 
-          <div className="absolute right-0 top-0 h-full w-full max-w-[400px] bg-slate-900 border-l border-white/10 p-5 overflow-y-auto">
+          <div className="absolute right-0 top-0 h-full w-full max-w-[400px] bg-white border-l border-slate-200 p-5 overflow-y-auto">
             {detailLoading || !selectedMember ? (
               <div className="space-y-3">
-                <div className="h-10 rounded bg-slate-800 animate-pulse" />
-                <div className="h-24 rounded bg-slate-800 animate-pulse" />
-                <div className="h-40 rounded bg-slate-800 animate-pulse" />
+                <div className="h-10 rounded bg-white animate-pulse" />
+                <div className="h-24 rounded bg-white animate-pulse" />
+                <div className="h-40 rounded bg-white animate-pulse" />
               </div>
             ) : (
               <div className="space-y-5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-white">{selectedMember.fullName}</p>
+                    <p className="text-sm font-semibold text-slate-900">{selectedMember.fullName}</p>
                     <p className="text-xs text-slate-500 mt-1">
                       {selectedMember.employeeCode} • {selectedMember.jobTitle ?? "—"}
                     </p>
@@ -598,31 +598,31 @@ export default function ManagerDepartmentPage() {
                   <button
                     type="button"
                     onClick={() => setShowDetail(false)}
-                    className="text-slate-500 hover:text-white"
+                    className="text-slate-500 hover:text-slate-900"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="text-sm text-slate-300 space-y-1">
+                <div className="text-sm text-slate-600 space-y-1">
                   <p>{selectedMember.email}</p>
                   <p>{selectedMember.phoneNumber ?? "Chưa cập nhật số điện thoại"}</p>
-                  <p className={selectedMember.debtBalance > 0 ? "text-rose-300 font-medium" : "text-emerald-300"}>
+                  <p className={selectedMember.debtBalance > 0 ? "text-rose-700 font-medium" : "text-emerald-700"}>
                     Dư nợ: {formatCurrency(selectedMember.debtBalance)}
                   </p>
                 </div>
 
                 <section className="space-y-2">
-                  <h4 className="text-sm font-semibold text-white">Dự án tham gia</h4>
+                  <h4 className="text-sm font-semibold text-slate-900">Dự án tham gia</h4>
                   {selectedMember.assignedProjects.length === 0 ? (
                     <p className="text-xs text-slate-500">Chưa có dữ liệu dự án.</p>
                   ) : (
                     selectedMember.assignedProjects.map((project) => (
                       <div
                         key={`${project.projectId}-${project.projectRole}`}
-                        className="rounded-lg border border-white/10 bg-slate-800 p-3"
+                        className="rounded-lg border border-slate-200 bg-white p-3"
                       >
-                        <p className="text-sm text-white">
+                        <p className="text-sm text-slate-900">
                           {project.projectCode} • {project.projectName}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
@@ -634,17 +634,17 @@ export default function ManagerDepartmentPage() {
                 </section>
 
                 <section className="space-y-2">
-                  <h4 className="text-sm font-semibold text-white">Yêu cầu gần đây</h4>
+                  <h4 className="text-sm font-semibold text-slate-900">Yêu cầu gần đây</h4>
                   {selectedMember.recentRequests.length === 0 ? (
                     <p className="text-xs text-slate-500">Không có yêu cầu gần đây.</p>
                   ) : (
                     selectedMember.recentRequests.map((request) => (
-                      <div key={request.id} className="rounded-lg border border-white/10 bg-slate-800 p-3 space-y-1">
+                      <div key={request.id} className="rounded-lg border border-slate-200 bg-white p-3 space-y-1">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-mono text-slate-300">{request.requestCode}</span>
-                          <span className="text-xs text-slate-400">{request.type}</span>
+                          <span className="text-xs font-mono text-slate-600">{request.requestCode}</span>
+                          <span className="text-xs text-slate-500">{request.type}</span>
                         </div>
-                        <p className="text-sm text-white">{formatCurrency(request.amount)}</p>
+                        <p className="text-sm text-slate-900">{formatCurrency(request.amount)}</p>
                         <p className="text-xs text-slate-500">
                           {request.status} • {formatDateTime(request.createdAt)}
                         </p>

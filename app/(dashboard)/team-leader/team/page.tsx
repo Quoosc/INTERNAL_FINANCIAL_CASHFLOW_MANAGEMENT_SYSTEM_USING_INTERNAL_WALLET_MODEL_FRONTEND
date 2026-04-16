@@ -105,15 +105,15 @@ function avatarColor(id: number): string {
 }
 
 function typeBadge(type: RequestType): string {
-  if (type === RequestType.ADVANCE) return "bg-violet-500/15 border-violet-500/30 text-violet-300";
-  if (type === RequestType.EXPENSE) return "bg-sky-500/15 border-sky-500/30 text-sky-300";
-  return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+  if (type === RequestType.ADVANCE) return "bg-violet-100 border-violet-200 text-violet-700";
+  if (type === RequestType.EXPENSE) return "bg-sky-100 border-sky-200 text-sky-700";
+  return "bg-amber-100 border-amber-200 text-amber-700";
 }
 
 function statusBadge(status: string): string {
-  if (status === "ACTIVE") return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
-  if (status === "LOCKED") return "bg-rose-500/15 border-rose-500/30 text-rose-300";
-  return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+  if (status === "ACTIVE") return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  if (status === "LOCKED") return "bg-rose-100 border-rose-200 text-rose-700";
+  return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 function filterMock(source: TLTeamMemberListItem[], search: string, projectId: string): TLTeamMemberListItem[] {
@@ -272,15 +272,15 @@ export default function TLTeamPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Thành viên nhóm</h1>
-          <p className="text-slate-400 mt-1">Theo dõi thông tin và tình trạng tài chính của thành viên trong nhóm.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Thành viên nhóm</h1>
+          <p className="text-slate-500 mt-1">Theo dõi thông tin và tình trạng tài chính của thành viên trong nhóm.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-indigo-500/40 bg-indigo-500/15 text-indigo-300 text-sm font-medium">{total} thành viên</span>
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-indigo-500/40 bg-indigo-100 text-indigo-700 text-sm font-medium">{total} thành viên</span>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Tìm theo tên, mã, email..." className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm" />
-        <select value={projectFilter} onChange={(e) => updateParam("projectId", e.target.value || undefined)} className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Tìm theo tên, mã, email..." className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm" />
+        <select value={projectFilter} onChange={(e) => updateParam("projectId", e.target.value || undefined)} className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm">
           <option value="">Tất cả dự án</option>
           {projectOptions.map((opt) => (
             <option key={opt.id} value={String(opt.id)}>{opt.label}</option>
@@ -290,33 +290,33 @@ export default function TLTeamPage() {
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, idx) => <div key={idx} className="h-44 rounded-2xl bg-slate-800 animate-pulse" />)}
+          {[...Array(6)].map((_, idx) => <div key={idx} className="h-44 rounded-2xl bg-white animate-pulse" />)}
         </div>
       ) : members.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center text-slate-400">Không có thành viên phù hợp bộ lọc.</div>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center text-slate-500">Không có thành viên phù hợp bộ lọc.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {members.map((m) => (
-            <button key={m.id} type="button" onClick={() => loadMemberDetail(m.id)} className="bg-slate-800 border border-white/10 hover:border-white/20 hover:bg-slate-700/40 rounded-2xl p-4 text-left transition-all space-y-3">
+            <button key={m.id} type="button" onClick={() => loadMemberDetail(m.id)} className="bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all space-y-3">
               <div className="flex items-center gap-3">
-                <div className={`w-11 h-11 rounded-full ${avatarColor(m.id)} text-white font-semibold text-sm flex items-center justify-center`}>{initials(m.fullName)}</div>
+                <div className={`w-11 h-11 rounded-full ${avatarColor(m.id)} text-slate-900 font-semibold text-sm flex items-center justify-center`}>{initials(m.fullName)}</div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{m.fullName}</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">{m.fullName}</p>
                   <p className="text-xs text-slate-500 truncate">{m.jobTitle ?? "—"} • {m.employeeCode}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusBadge(m.status)}`}>{m.status}</span>
-                {m.debtBalance > 0 && <span className="inline-flex px-2 py-1 rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-300 text-xs">Dư nợ {formatCurrency(m.debtBalance)}</span>}
-                {m.pendingRequestsCount > 0 && <span className="inline-flex px-2 py-1 rounded-full border border-amber-500/30 bg-amber-500/15 text-amber-300 text-xs">{m.pendingRequestsCount} chờ duyệt</span>}
+                {m.debtBalance > 0 && <span className="inline-flex px-2 py-1 rounded-full border border-rose-200 bg-rose-100 text-rose-700 text-xs">Dư nợ {formatCurrency(m.debtBalance)}</span>}
+                {m.pendingRequestsCount > 0 && <span className="inline-flex px-2 py-1 rounded-full border border-amber-200 bg-amber-100 text-amber-700 text-xs">{m.pendingRequestsCount} chờ duyệt</span>}
               </div>
 
               <div className="flex flex-wrap gap-1.5">
                 {m.projects.slice(0, 2).map((p) => (
-                  <span key={p.projectId} className="inline-flex px-2 py-1 rounded-full border border-white/10 bg-slate-900 text-slate-300 text-xs">{p.projectCode}</span>
+                  <span key={p.projectId} className="inline-flex px-2 py-1 rounded-full border border-slate-200 bg-white text-slate-600 text-xs">{p.projectCode}</span>
                 ))}
-                {m.projects.length > 2 && <span className="inline-flex px-2 py-1 rounded-full border border-white/10 bg-slate-900 text-slate-400 text-xs">... +{m.projects.length - 2}</span>}
+                {m.projects.length > 2 && <span className="inline-flex px-2 py-1 rounded-full border border-slate-200 bg-white text-slate-500 text-xs">... +{m.projects.length - 2}</span>}
               </div>
             </button>
           ))}
@@ -324,63 +324,63 @@ export default function TLTeamPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">Trang {page}/{totalPages} • Tổng {total} thành viên</p>
+        <p className="text-sm text-slate-500">Trang {page}/{totalPages} • Tổng {total} thành viên</p>
         <div className="flex items-center gap-2">
-          <button onClick={() => goToPage(page - 1)} disabled={page <= 1} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm">Trước</button>
-          <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm">Sau</button>
+          <button onClick={() => goToPage(page - 1)} disabled={page <= 1} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-900 text-sm">Trước</button>
+          <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-900 text-sm">Sau</button>
         </div>
       </div>
 
-      {error && <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">{error}</div>}
+      {error && <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">{error}</div>}
 
       {showDetail && (
         <div className="fixed inset-0 z-50">
           <button className="absolute inset-0 bg-black/60" onClick={() => setShowDetail(false)} aria-label="Đóng panel" />
-          <div className="absolute right-0 top-0 h-full w-full max-w-[400px] bg-slate-900 border-l border-white/10 p-5 overflow-y-auto">
+          <div className="absolute right-0 top-0 h-full w-full max-w-[400px] bg-white border-l border-slate-200 p-5 overflow-y-auto">
             {detailLoading || !selectedMember ? (
               <div className="space-y-3">
-                <div className="h-10 rounded bg-slate-800 animate-pulse" />
-                <div className="h-24 rounded bg-slate-800 animate-pulse" />
-                <div className="h-40 rounded bg-slate-800 animate-pulse" />
+                <div className="h-10 rounded bg-white animate-pulse" />
+                <div className="h-24 rounded bg-white animate-pulse" />
+                <div className="h-40 rounded bg-white animate-pulse" />
               </div>
             ) : (
               <div className="space-y-5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-full ${avatarColor(selectedMember.id)} text-white font-semibold text-sm flex items-center justify-center`}>{initials(selectedMember.fullName)}</div>
+                    <div className={`w-11 h-11 rounded-full ${avatarColor(selectedMember.id)} text-slate-900 font-semibold text-sm flex items-center justify-center`}>{initials(selectedMember.fullName)}</div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{selectedMember.fullName}</p>
+                      <p className="text-sm font-semibold text-slate-900">{selectedMember.fullName}</p>
                       <p className="text-xs text-slate-500">{selectedMember.employeeCode} • {selectedMember.jobTitle ?? "—"}</p>
                     </div>
                   </div>
-                  <button onClick={() => setShowDetail(false)} className="text-slate-500 hover:text-white">✕</button>
+                  <button onClick={() => setShowDetail(false)} className="text-slate-500 hover:text-slate-900">✕</button>
                 </div>
 
-                <div className="text-sm text-slate-300 space-y-1">
+                <div className="text-sm text-slate-600 space-y-1">
                   <p>{selectedMember.email}</p>
                   <p>{selectedMember.phoneNumber ?? "Chưa cập nhật số điện thoại"}</p>
-                  <p className={selectedMember.debtBalance > 0 ? "text-rose-300 font-medium" : "text-emerald-300"}>Dư nợ: {formatCurrency(selectedMember.debtBalance)}</p>
+                  <p className={selectedMember.debtBalance > 0 ? "text-rose-700 font-medium" : "text-emerald-700"}>Dư nợ: {formatCurrency(selectedMember.debtBalance)}</p>
                 </div>
 
                 <section className="space-y-2">
-                  <h4 className="text-sm font-semibold text-white">Dự án tham gia</h4>
+                  <h4 className="text-sm font-semibold text-slate-900">Dự án tham gia</h4>
                   {selectedMember.projects.map((p) => (
-                    <div key={`${p.projectId}-${p.position}`} className="rounded-lg border border-white/10 bg-slate-800 p-3">
-                      <p className="text-sm text-white">{p.projectCode} • {p.projectName}</p>
+                    <div key={`${p.projectId}-${p.position}`} className="rounded-lg border border-slate-200 bg-white p-3">
+                      <p className="text-sm text-slate-900">{p.projectCode} • {p.projectName}</p>
                       <p className="text-xs text-slate-500 mt-1">{p.position} • {formatDateTime(p.joinedAt)}</p>
                     </div>
                   ))}
                 </section>
 
                 <section className="space-y-2">
-                  <h4 className="text-sm font-semibold text-white">Yêu cầu gần đây</h4>
+                  <h4 className="text-sm font-semibold text-slate-900">Yêu cầu gần đây</h4>
                   {selectedMember.recentRequests.map((r) => (
-                    <div key={r.id} className="rounded-lg border border-white/10 bg-slate-800 p-3 space-y-1">
+                    <div key={r.id} className="rounded-lg border border-slate-200 bg-white p-3 space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-mono text-slate-300">{r.requestCode}</span>
+                        <span className="text-xs font-mono text-slate-600">{r.requestCode}</span>
                         <span className={`inline-flex px-2 py-1 rounded-full border text-[11px] ${typeBadge(r.type)}`}>{r.type}</span>
                       </div>
-                      <p className="text-sm text-white">{formatCurrency(r.amount)}</p>
+                      <p className="text-sm text-slate-900">{formatCurrency(r.amount)}</p>
                       <p className="text-xs text-slate-500">{r.status} • {formatDateTime(r.createdAt)}</p>
                     </div>
                   ))}

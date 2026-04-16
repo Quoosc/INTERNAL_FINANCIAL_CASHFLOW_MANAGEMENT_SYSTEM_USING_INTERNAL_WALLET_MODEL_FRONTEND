@@ -89,15 +89,15 @@ function parsePage(value: string | null): number {
 function getStatusClass(status: string): string {
   switch (status) {
     case ProjectStatus.ACTIVE:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case ProjectStatus.PLANNING:
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case ProjectStatus.PAUSED:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case ProjectStatus.CLOSED:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -274,15 +274,15 @@ export default function TLProjectsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dự án của tôi</h1>
-          <p className="text-slate-400 mt-1">Danh sách dự án bạn đang phụ trách và mức tiêu hao ngân sách.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Dự án của tôi</h1>
+          <p className="text-slate-500 mt-1">Danh sách dự án bạn đang phụ trách và mức tiêu hao ngân sách.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-500/15 text-blue-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-500/40 bg-blue-50 text-blue-700 text-sm font-medium">
           {total} dự án
         </span>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
             const active = statusFilter === tab.value || (!statusFilter && !tab.value);
@@ -293,8 +293,8 @@ export default function TLProjectsPage() {
                 onClick={() => updateParam("status", tab.value)}
                 className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
                   active
-                    ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-                    : "bg-slate-900 border-white/10 text-slate-300 hover:bg-slate-700"
+                    ? "bg-blue-600/20 border-blue-500/40 text-blue-700"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 {tab.label}
@@ -316,7 +316,7 @@ export default function TLProjectsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm mã hoặc tên dự án..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
@@ -324,17 +324,17 @@ export default function TLProjectsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
-            <div key={`skeleton-${index}`} className="h-52 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`skeleton-${index}`} className="h-52 rounded-2xl bg-white animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-500">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h6l2 2h10v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
             </svg>
           </div>
-          <p className="text-slate-300 mt-4">Bạn chưa được phân công dự án nào</p>
+          <p className="text-slate-600 mt-4">Bạn chưa được phân công dự án nào</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -346,41 +346,41 @@ export default function TLProjectsPage() {
                 key={project.id}
                 type="button"
                 onClick={() => router.push(`/team-leader/projects/${project.id}`)}
-                className="bg-slate-800 border border-white/10 hover:border-white/20 hover:bg-slate-700/40 rounded-2xl p-4 text-left transition-all space-y-4"
+                className="bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all space-y-4"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-xs text-slate-500 font-mono">{project.projectCode}</p>
-                    <p className="text-base font-semibold text-white mt-1 truncate">{project.name}</p>
+                    <p className="text-base font-semibold text-slate-900 mt-1 truncate">{project.name}</p>
                   </div>
                   <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(project.status)}`}>
                     {getStatusLabel(project.status)}
                   </span>
                 </div>
 
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-500">
                   {project.currentPhaseName ? project.currentPhaseName : "Chưa có phase"}
                 </p>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-400">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>Budget burn</span>
                     <span>{burn}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-900 border border-white/10 overflow-hidden">
+                  <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
                     <div className={`h-full ${getBurnClass(burn)}`} style={{ width: `${burn}%` }} />
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">
+                    <span className="text-slate-500">
                       {formatCurrency(project.totalSpent)} / {formatCurrency(project.totalBudget)}
                     </span>
-                    <span className="text-slate-300">{burn}%</span>
+                    <span className="text-slate-600">{burn}%</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-emerald-300 font-medium">{formatCurrency(project.availableBudget)}</span>
-                  <span className="inline-flex items-center gap-1 text-slate-400">
+                  <span className="text-emerald-700 font-medium">{formatCurrency(project.availableBudget)}</span>
+                  <span className="inline-flex items-center gap-1 text-slate-500">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20h10M12 7a3 3 0 110 6 3 3 0 010-6z" />
                     </svg>
@@ -394,7 +394,7 @@ export default function TLProjectsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} dự án
         </p>
 
@@ -403,7 +403,7 @@ export default function TLProjectsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -411,7 +411,7 @@ export default function TLProjectsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -419,7 +419,7 @@ export default function TLProjectsPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

@@ -110,17 +110,17 @@ function formatDate(isoDate: string): string {
 function getTypeClass(type: RequestType): string {
   switch (type) {
     case RequestType.ADVANCE:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RequestType.EXPENSE:
-      return "bg-cyan-500/15 border-cyan-500/30 text-cyan-300";
+      return "bg-cyan-100 border-cyan-200 text-cyan-700";
     case RequestType.REIMBURSE:
-      return "bg-teal-500/15 border-teal-500/30 text-teal-300";
+      return "bg-teal-100 border-teal-200 text-teal-700";
     case RequestType.PROJECT_TOPUP:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case RequestType.DEPARTMENT_TOPUP:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -144,22 +144,22 @@ function getTypeLabel(type: RequestType): string {
 function getStatusClass(status: RequestStatus): string {
   switch (status) {
     case RequestStatus.PENDING:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case RequestStatus.APPROVED_BY_TEAM_LEADER:
-      return "bg-green-500/15 border-green-500/30 text-green-300";
+      return "bg-green-100 border-green-200 text-green-700";
     case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
-      return "bg-blue-500/15 border-blue-500/30 text-blue-300";
+      return "bg-blue-50 border-blue-200 text-blue-700";
     case RequestStatus.APPROVED_BY_MANAGER:
     case RequestStatus.APPROVED_BY_CFO:
-      return "bg-green-500/15 border-green-500/30 text-green-300";
+      return "bg-green-100 border-green-200 text-green-700";
     case RequestStatus.PAID:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case RequestStatus.REJECTED:
-      return "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return "bg-rose-100 border-rose-200 text-rose-700";
     case RequestStatus.CANCELLED:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -350,17 +350,17 @@ function getTimelineToneClass(tone: TimelineRow["tone"]): string {
 function getTimelineCardClass(tone: TimelineRow["tone"]): string {
   switch (tone) {
     case "done":
-      return "border-emerald-500/20 bg-emerald-500/5";
+      return "border-emerald-200 bg-emerald-500/5";
     case "current":
-      return "border-blue-500/20 bg-blue-500/5";
+      return "border-blue-200 bg-blue-500/5";
     case "pending":
-      return "border-amber-500/20 bg-amber-500/5";
+      return "border-amber-200 bg-amber-500/5";
     case "rejected":
-      return "border-rose-500/20 bg-rose-500/5";
+      return "border-rose-200 bg-rose-500/5";
     case "cancelled":
       return "border-slate-500/20 bg-slate-500/5";
     default:
-      return "border-white/10 bg-slate-800";
+      return "border-slate-200 bg-white";
   }
 }
 
@@ -536,10 +536,10 @@ export default function RequestDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-9 w-40 rounded bg-slate-800 animate-pulse" />
-        <div className="h-32 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-64 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-64 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-9 w-40 rounded bg-white animate-pulse" />
+        <div className="h-32 rounded-2xl bg-white animate-pulse" />
+        <div className="h-64 rounded-2xl bg-white animate-pulse" />
+        <div className="h-64 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
@@ -550,14 +550,14 @@ export default function RequestDetailPage({ params }: PageProps) {
         <button
           type="button"
           onClick={() => router.push("/requests")}
-          className="inline-flex items-center gap-2 text-slate-300 hover:text-white"
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
           Quay lại danh sách
         </button>
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-6 text-center text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 text-center text-slate-500">
           Không tìm thấy yêu cầu.
         </div>
       </div>
@@ -569,7 +569,7 @@ export default function RequestDetailPage({ params }: PageProps) {
       <button
         type="button"
         onClick={() => router.push("/requests")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -577,10 +577,10 @@ export default function RequestDetailPage({ params }: PageProps) {
         Quay lại danh sách
       </button>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">{request.requestCode}</h1>
-          <p className="text-slate-400 text-sm mt-1">Tạo lúc: {formatDateTime(request.createdAt)}</p>
+          <h1 className="text-2xl font-bold text-slate-900">{request.requestCode}</h1>
+          <p className="text-slate-500 text-sm mt-1">Tạo lúc: {formatDateTime(request.createdAt)}</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -595,8 +595,8 @@ export default function RequestDetailPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-5">
-            <h2 className="text-lg font-semibold text-white">Chi tiết yêu cầu</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
+            <h2 className="text-lg font-semibold text-slate-900">Chi tiết yêu cầu</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DetailCell label="Số tiền" value={formatCurrency(request.amount)} />
@@ -607,16 +607,16 @@ export default function RequestDetailPage({ params }: PageProps) {
               <DetailCell label="Ngày chi tiêu" value={parsed.expenseDate ? formatDate(parsed.expenseDate) : "—"} />
             </div>
 
-            <div className="bg-slate-900 border border-white/10 rounded-xl p-4">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
               <p className="text-xs text-slate-500">Mô tả</p>
-              <p className="text-sm text-slate-200 mt-1 whitespace-pre-line">
+              <p className="text-sm text-slate-900 mt-1 whitespace-pre-line">
                 {parsed.body || request.description || "Không có mô tả"}
               </p>
             </div>
           </div>
 
-          <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-            <h2 className="text-lg font-semibold text-white mb-4">Tệp đính kèm</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Tệp đính kèm</h2>
 
             {request.attachments.length === 0 ? (
               <p className="text-sm text-slate-500">Không có tệp đính kèm.</p>
@@ -625,10 +625,10 @@ export default function RequestDetailPage({ params }: PageProps) {
                 {request.attachments.map((file) => (
                   <div
                     key={file.fileId}
-                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-3 rounded-xl border border-white/10 bg-slate-900"
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-white"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm text-white truncate">{file.fileName}</p>
+                      <p className="text-sm text-slate-900 truncate">{file.fileName}</p>
                       <p className="text-xs text-slate-500 mt-1">
                         {file.fileType} • {formatAttachmentSize(file.size)}
                       </p>
@@ -638,7 +638,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                         href={file.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium transition-colors"
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
                       >
                         Xem trước
                       </a>
@@ -657,8 +657,8 @@ export default function RequestDetailPage({ params }: PageProps) {
           </div>
 
           {canEditOrCancel && (
-            <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-              <h2 className="text-lg font-semibold text-white mb-4">Thao tác</h2>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Thao tác</h2>
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -682,21 +682,21 @@ export default function RequestDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-          <h2 className="text-lg font-semibold text-white mb-4">Timeline xử lý</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Timeline xử lý</h2>
 
           <div className="space-y-3">
             {timelineRows.map((row, index) => (
               <div key={`${row.title}-${index}`} className="relative pl-8">
                 {index < timelineRows.length - 1 && (
-                  <span className="absolute left-[11px] top-6 bottom-[-14px] w-px bg-slate-600" />
+                  <span className="absolute left-[11px] top-6 bottom-[-14px] w-px bg-slate-200" />
                 )}
                 <span
                   className={`absolute left-0 top-1 w-[22px] h-[22px] rounded-full border-2 ${getTimelineToneClass(row.tone)}`}
                 />
                 <div className={`rounded-xl border p-3 ${getTimelineCardClass(row.tone)}`}>
-                  <p className="text-sm font-semibold text-white">{row.title}</p>
-                  <p className="text-xs text-slate-300 mt-1">{row.subtitle}</p>
+                  <p className="text-sm font-semibold text-slate-900">{row.title}</p>
+                  <p className="text-xs text-slate-600 mt-1">{row.subtitle}</p>
                   <p className="text-xs text-slate-500 mt-1">{row.time}</p>
                 </div>
               </div>
@@ -706,7 +706,7 @@ export default function RequestDetailPage({ params }: PageProps) {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
@@ -720,48 +720,48 @@ export default function RequestDetailPage({ params }: PageProps) {
             aria-label="Đóng form chỉnh sửa"
           />
 
-          <div className="absolute inset-x-0 top-8 mx-auto w-[calc(100%-2rem)] max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Chỉnh sửa yêu cầu</h3>
+          <div className="absolute inset-x-0 top-8 mx-auto w-[calc(100%-2rem)] max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-sm shadow-2xl p-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Chỉnh sửa yêu cầu</h3>
 
             <form onSubmit={handleUpdate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Số tiền</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền</label>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={editAmount ? formatCurrency(Number(editAmount.replace(/\D/g, ""))) : ""}
                   onChange={(e) => setEditAmount(e.target.value.replace(/\D/g, ""))}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Tiêu đề</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">Tiêu đề</label>
                 <input
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Ngày chi tiêu</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">Ngày chi tiêu</label>
                 <input
                   type="date"
                   value={editExpenseDate}
                   onChange={(e) => setEditExpenseDate(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">Mô tả</label>
                 <textarea
                   rows={4}
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
@@ -769,7 +769,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                 <button
                   type="button"
                   onClick={() => setEditing(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
                 >
                   Hủy
                 </button>
@@ -792,9 +792,9 @@ export default function RequestDetailPage({ params }: PageProps) {
 
 function DetailCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-xl p-4">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-white font-medium mt-1">{value}</p>
+      <p className="text-sm text-slate-900 font-medium mt-1">{value}</p>
     </div>
   );
 }

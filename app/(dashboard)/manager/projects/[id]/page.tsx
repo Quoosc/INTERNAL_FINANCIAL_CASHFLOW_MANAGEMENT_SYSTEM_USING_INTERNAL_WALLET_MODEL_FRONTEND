@@ -115,15 +115,15 @@ function formatDate(value: string | null): string {
 function statusClass(status: string): string {
   switch (status) {
     case ProjectStatus.ACTIVE:
-      return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
+      return "bg-emerald-100 border-emerald-200 text-emerald-700";
     case ProjectStatus.PLANNING:
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case ProjectStatus.PAUSED:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     case ProjectStatus.CLOSED:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -360,15 +360,15 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 rounded bg-slate-800 animate-pulse" />
-        <div className="h-40 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-80 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-8 w-64 rounded bg-white animate-pulse" />
+        <div className="h-40 rounded-2xl bg-white animate-pulse" />
+        <div className="h-80 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
 
   if (!project) {
-    return <div className="text-slate-300">Không tìm thấy dự án.</div>;
+    return <div className="text-slate-600">Không tìm thấy dự án.</div>;
   }
 
   return (
@@ -376,7 +376,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       <button
         type="button"
         onClick={() => router.push("/manager/projects")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -384,12 +384,12 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         Quay lại
       </button>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500 font-mono">{project.projectCode}</p>
-            <h1 className="text-2xl font-bold text-white mt-1">{project.name}</h1>
-            <p className="text-slate-400 mt-1">{project.description ?? "Không có mô tả"}</p>
+            <h1 className="text-2xl font-bold text-slate-900 mt-1">{project.name}</h1>
+            <p className="text-slate-500 mt-1">{project.description ?? "Không có mô tả"}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -407,28 +407,28 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
-        <h2 className="text-lg font-semibold text-white">Tổng quan ngân sách</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+        <h2 className="text-lg font-semibold text-slate-900">Tổng quan ngân sách</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <InfoCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} tone="text-white" />
-          <InfoCard label="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-300" />
-          <InfoCard label="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-300" />
+          <InfoCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} tone="text-slate-900" />
+          <InfoCard label="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-700" />
+          <InfoCard label="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-700" />
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Budget burn</span>
             <span>{overallBurn}%</span>
           </div>
-          <div className="h-2 rounded-full bg-slate-900 border border-white/10 overflow-hidden">
+          <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
             <div className={`h-full ${burnClass(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-3">Thông tin dự án</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Thông tin dự án</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <InfoCard label="Trưởng nhóm" value={leader?.fullName ?? "Chưa gán"} />
           <InfoCard label="Phòng ban" value={`Phòng ban #${project.departmentId}`} />
@@ -437,8 +437,8 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Phases (read-only)</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Phases (read-only)</h2>
 
         {project.phases.length === 0 ? (
           <p className="text-sm text-slate-500">Dự án chưa có phase.</p>
@@ -447,28 +447,28 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             {project.phases.map((phase) => {
               const phaseBurn = burnPercent(phase.currentSpent, phase.budgetLimit);
               return (
-                <div key={phase.id} className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-2">
+                <div key={phase.id} className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-xs text-slate-500 font-mono">{phase.phaseCode}</p>
-                      <p className="text-sm font-semibold text-white mt-1">{phase.name}</p>
+                      <p className="text-sm font-semibold text-slate-900 mt-1">{phase.name}</p>
                     </div>
                     <span
                       className={`inline-flex px-2 py-1 rounded-full border text-xs ${
                         phase.status === "ACTIVE"
-                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
-                          : "bg-slate-500/15 border-slate-500/30 text-slate-300"
+                          ? "bg-emerald-100 border-emerald-200 text-emerald-700"
+                          : "bg-slate-100 border-slate-200 text-slate-600"
                       }`}
                     >
                       {phase.status}
                     </span>
                   </div>
 
-                  <div className="h-2 rounded-full bg-slate-800 border border-white/10 overflow-hidden">
+                  <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
                     <div className={`h-full ${burnClass(phaseBurn)}`} style={{ width: `${phaseBurn}%` }} />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-400 gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 gap-2">
                     <span>
                       {formatCurrency(phase.currentSpent)} / {formatCurrency(phase.budgetLimit)}
                     </span>
@@ -483,8 +483,8 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Members (read-only)</h2>
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Members (read-only)</h2>
 
         {project.members.length === 0 ? (
           <p className="text-sm text-slate-500">Dự án chưa có thành viên.</p>
@@ -493,10 +493,10 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             {project.members.map((member) => (
               <div
                 key={member.userId}
-                className="rounded-xl border border-white/10 bg-slate-900 p-3 flex items-center justify-between gap-3"
+                className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{member.fullName}</p>
+                  <p className="text-sm font-medium text-slate-900 truncate">{member.fullName}</p>
                   <p className="text-xs text-slate-500 truncate">
                     {member.employeeCode} • {member.position}
                   </p>
@@ -505,8 +505,8 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                 <span
                   className={`inline-flex px-2 py-1 rounded-full border text-xs ${
                     member.projectRole === ProjectRole.LEADER
-                      ? "bg-indigo-500/15 border-indigo-500/30 text-indigo-300"
-                      : "bg-slate-500/15 border-slate-500/30 text-slate-300"
+                      ? "bg-indigo-100 border-indigo-200 text-indigo-700"
+                      : "bg-slate-100 border-slate-200 text-slate-600"
                   }`}
                 >
                   {member.projectRole}
@@ -518,13 +518,13 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
           {notice}
         </div>
       )}
@@ -538,46 +538,46 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             aria-label="Đóng modal chỉnh sửa dự án"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-slate-900 border border-white/10 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white">Sửa thông tin dự án</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">Sửa thông tin dự án</h3>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Tên dự án</label>
+              <label className="block text-sm text-slate-600 mb-2">Tên dự án</label>
               <input
                 value={editName}
                 onChange={(event) => setEditName(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Mô tả</label>
+              <label className="block text-sm text-slate-600 mb-2">Mô tả</label>
               <textarea
                 rows={4}
                 value={editDescription}
                 onChange={(event) => setEditDescription(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Tổng ngân sách (VND)</label>
+                <label className="block text-sm text-slate-600 mb-2">Tổng ngân sách (VND)</label>
                 <input
                   type="number"
                   min={1}
                   value={editTotalBudget}
                   onChange={(event) => setEditTotalBudget(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Trạng thái</label>
+                <label className="block text-sm text-slate-600 mb-2">Trạng thái</label>
                 <select
                   value={editStatus}
                   onChange={(event) => setEditStatus(event.target.value as ProjectStatus)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
                   <option value={ProjectStatus.PLANNING}>PLANNING</option>
                   <option value={ProjectStatus.ACTIVE}>ACTIVE</option>
@@ -588,11 +588,11 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-2">Team Leader</label>
+              <label className="block text-sm text-slate-600 mb-2">Team Leader</label>
               <select
                 value={editTeamLeaderId}
                 onChange={(event) => setEditTeamLeaderId(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               >
                 <option value="">Chọn Team Leader</option>
                 {teamLeaders.map((option) => (
@@ -607,7 +607,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -637,9 +637,9 @@ function InfoCard({
   tone?: string;
 }) {
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-xl p-4">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm mt-1 ${tone ?? "text-white"}`}>{value}</p>
+      <p className={`text-sm mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>
   );
 }

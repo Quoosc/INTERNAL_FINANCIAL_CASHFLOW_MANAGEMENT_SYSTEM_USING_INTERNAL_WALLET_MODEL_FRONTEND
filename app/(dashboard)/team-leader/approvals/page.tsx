@@ -178,13 +178,13 @@ function getInitials(name: string): string {
 function getTypeClass(type: RequestType): string {
   switch (type) {
     case RequestType.ADVANCE:
-      return "bg-violet-500/15 border-violet-500/30 text-violet-300";
+      return "bg-violet-100 border-violet-200 text-violet-700";
     case RequestType.EXPENSE:
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case RequestType.REIMBURSE:
-      return "bg-amber-500/15 border-amber-500/30 text-amber-300";
+      return "bg-amber-100 border-amber-200 text-amber-700";
     default:
-      return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -361,15 +361,15 @@ export default function TLApprovalsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Duyệt yêu cầu</h1>
-          <p className="text-slate-400 mt-1">Danh sách yêu cầu Flow 1 đang chờ Trưởng nhóm phê duyệt.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Duyệt yêu cầu</h1>
+          <p className="text-slate-500 mt-1">Danh sách yêu cầu Flow 1 đang chờ Trưởng nhóm phê duyệt.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-500/15 text-amber-300 text-sm font-medium">
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ duyệt
         </span>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {typeTabs.map((tab) => {
             const active = typeFilter === tab.value || (!typeFilter && !tab.value);
@@ -380,8 +380,8 @@ export default function TLApprovalsPage() {
                 onClick={() => updateParam("type", tab.value)}
                 className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
                   active
-                    ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
-                    : "bg-slate-900 border-white/10 text-slate-300 hover:bg-slate-700"
+                    ? "bg-blue-600/20 border-blue-500/40 text-blue-700"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 {tab.label}
@@ -403,7 +403,7 @@ export default function TLApprovalsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm mã YC, tên nhân viên..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
       </div>
@@ -411,17 +411,17 @@ export default function TLApprovalsPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, index) => (
-            <div key={`skeleton-${index}`} className="h-36 rounded-2xl bg-slate-800 animate-pulse" />
+            <div key={`skeleton-${index}`} className="h-36 rounded-2xl bg-white animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-12 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-500">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-2 7H6l-2-7m16 0H4" />
             </svg>
           </div>
-          <p className="text-slate-300 mt-4">Không có yêu cầu nào đang chờ duyệt</p>
+          <p className="text-slate-600 mt-4">Không có yêu cầu nào đang chờ duyệt</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -434,37 +434,37 @@ export default function TLApprovalsPage() {
                 key={item.id}
                 type="button"
                 onClick={() => router.push(`/team-leader/approvals/${item.id}`)}
-                className="w-full bg-slate-800 border border-white/10 hover:border-white/20 hover:bg-slate-700/40 rounded-2xl p-4 text-left transition-all"
+                className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span className={`inline-flex px-2 py-1 rounded-full border ${getTypeClass(item.type)}`}>
                       {getTypeLabel(item.type)}
                     </span>
-                    <span className="font-mono text-slate-300">{item.requestCode}</span>
+                    <span className="font-mono text-slate-600">{item.requestCode}</span>
                     <span className="text-slate-500">{formatRelativeTime(item.createdAt)}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-slate-900 border border-white/10 text-slate-200 flex items-center justify-center text-xs font-semibold">
+                    <div className="w-9 h-9 rounded-full bg-white border border-slate-200 text-slate-900 flex items-center justify-center text-xs font-semibold">
                       {getInitials(item.requester.fullName)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{item.requester.fullName}</p>
+                      <p className="text-sm font-medium text-slate-900">{item.requester.fullName}</p>
                       <p className="text-xs text-slate-500">{item.requester.employeeCode}</p>
                     </div>
                   </div>
 
-                  <p className="text-sm text-slate-300">
+                  <p className="text-sm text-slate-600">
                     {item.project.name} <span className="text-slate-500">/</span> {item.phase.name} <span className="text-slate-500">/</span> {item.category.name}
                   </p>
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
                       {overBudget ? (
-                        <p className="text-sm text-rose-300 font-medium">⚠ Vượt ngân sách phase</p>
+                        <p className="text-sm text-rose-700 font-medium">⚠ Vượt ngân sách phase</p>
                       ) : (
-                        <p className="text-sm text-emerald-300">Ngân sách phase còn an toàn</p>
+                        <p className="text-sm text-emerald-700">Ngân sách phase còn an toàn</p>
                       )}
                       <p className="text-xs text-slate-500 mt-1">
                         {formatCurrency(item.phase.currentSpent)} + {formatCurrency(item.amount)} / {formatCurrency(item.phase.budgetLimit)}
@@ -472,8 +472,8 @@ export default function TLApprovalsPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <p className="text-lg font-semibold text-white">{formatCurrency(item.amount)}</p>
-                      <span className="px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-sm text-slate-200">
+                      <p className="text-lg font-semibold text-slate-900">{formatCurrency(item.amount)}</p>
+                      <span className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
                         Chi tiết →
                       </span>
                     </div>
@@ -486,7 +486,7 @@ export default function TLApprovalsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Trang {page}/{totalPages} • Tổng {total} yêu cầu
         </p>
 
@@ -495,7 +495,7 @@ export default function TLApprovalsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -503,7 +503,7 @@ export default function TLApprovalsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>
@@ -511,7 +511,7 @@ export default function TLApprovalsPage() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm">
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

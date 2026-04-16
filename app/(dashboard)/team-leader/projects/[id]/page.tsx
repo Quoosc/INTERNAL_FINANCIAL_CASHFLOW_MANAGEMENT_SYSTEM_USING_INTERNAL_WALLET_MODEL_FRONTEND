@@ -149,16 +149,16 @@ function initials(name: string): string {
 }
 
 function statusBadge(status: ProjectStatus): string {
-  if (status === ProjectStatus.ACTIVE) return "bg-emerald-500/15 border-emerald-500/30 text-emerald-300";
-  if (status === ProjectStatus.PLANNING) return "bg-sky-500/15 border-sky-500/30 text-sky-300";
-  if (status === ProjectStatus.PAUSED) return "bg-amber-500/15 border-amber-500/30 text-amber-300";
-  return "bg-slate-500/15 border-slate-500/30 text-slate-300";
+  if (status === ProjectStatus.ACTIVE) return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  if (status === ProjectStatus.PLANNING) return "bg-sky-100 border-sky-200 text-sky-700";
+  if (status === ProjectStatus.PAUSED) return "bg-amber-100 border-amber-200 text-amber-700";
+  return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 function roleBadge(role: ProjectRole): string {
   return role === ProjectRole.LEADER
-    ? "bg-amber-500/15 border-amber-500/30 text-amber-300"
-    : "bg-slate-500/15 border-slate-500/30 text-slate-300";
+    ? "bg-amber-100 border-amber-200 text-amber-700"
+    : "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 export default function TLProjectDetailPage({ params }: PageProps) {
@@ -545,91 +545,91 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-52 rounded bg-slate-800 animate-pulse" />
-        <div className="h-24 rounded-2xl bg-slate-800 animate-pulse" />
-        <div className="h-72 rounded-2xl bg-slate-800 animate-pulse" />
+        <div className="h-8 w-52 rounded bg-white animate-pulse" />
+        <div className="h-24 rounded-2xl bg-white animate-pulse" />
+        <div className="h-72 rounded-2xl bg-white animate-pulse" />
       </div>
     );
   }
 
   if (!project) {
-    return <div className="text-slate-300">Không tìm thấy dự án.</div>;
+    return <div className="text-slate-600">Không tìm thấy dự án.</div>;
   }
 
   return (
     <div className="space-y-6">
-      <button onClick={() => router.push("/team-leader/projects")} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800">
+      <button onClick={() => router.push("/team-leader/projects")} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" /></svg>
         Quay lại
       </button>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500 font-mono">{project.projectCode}</p>
-            <h1 className="text-2xl font-bold text-white mt-1">{project.name}</h1>
-            <p className="text-slate-400 mt-1">{project.description ?? "Không có mô tả"}</p>
+            <h1 className="text-2xl font-bold text-slate-900 mt-1">{project.name}</h1>
+            <p className="text-slate-500 mt-1">{project.description ?? "Không có mô tả"}</p>
           </div>
           <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusBadge(project.status)}`}>{project.status}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-        <Card title="Tổng ngân sách" value={formatCurrency(project.totalBudget)} tone="text-white" />
-        <Card title="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-300" />
-        <Card title="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-300" />
-        <Card title="Phase hiện tại" value={project.phases.find((p) => p.id === project.currentPhaseId)?.name ?? "Chưa có"} tone="text-slate-200" />
-        <Card title="Thành viên" value={String(project.members.length)} tone="text-indigo-300" />
+        <Card title="Tổng ngân sách" value={formatCurrency(project.totalBudget)} tone="text-slate-900" />
+        <Card title="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-700" />
+        <Card title="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-700" />
+        <Card title="Phase hiện tại" value={project.phases.find((p) => p.id === project.currentPhaseId)?.name ?? "Chưa có"} tone="text-slate-900" />
+        <Card title="Thành viên" value={String(project.members.length)} tone="text-indigo-700" />
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Tổng quan ngân sách</h2>
-          <button onClick={() => setShowTopup(true)} className="px-4 py-2 rounded-xl border border-blue-500/40 text-blue-300 hover:bg-blue-500/10 text-sm">Xin cấp vốn</button>
+          <h2 className="text-lg font-semibold text-slate-900">Tổng quan ngân sách</h2>
+          <button onClick={() => setShowTopup(true)} className="px-4 py-2 rounded-xl border border-blue-500/40 text-blue-700 hover:bg-blue-50 text-sm">Xin cấp vốn</button>
         </div>
-        <div className="h-3 rounded-full bg-slate-900 border border-white/10 overflow-hidden">
+        <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden">
           <div className={`h-full ${burnColor(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">{formatCurrency(project.totalSpent)} / {formatCurrency(project.totalBudget)}</span>
-          <span className="text-slate-200">{overallBurn}%</span>
+          <span className="text-slate-500">{formatCurrency(project.totalSpent)} / {formatCurrency(project.totalBudget)}</span>
+          <span className="text-slate-900">{overallBurn}%</span>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-white/10 rounded-2xl p-3 flex gap-2 flex-wrap">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-3 flex gap-2 flex-wrap">
         {([
           ["phases", "Phases"],
           ["budget", "Ngân sách"],
           ["members", "Thành viên"],
         ] as [TabKey, string][]).map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} className={`px-4 py-2 rounded-xl text-sm border ${tab === key ? "bg-blue-600/20 border-blue-500/40 text-blue-300" : "bg-slate-900 border-white/10 text-slate-300 hover:bg-slate-700"}`}>
+          <button key={key} onClick={() => setTab(key)} className={`px-4 py-2 rounded-xl text-sm border ${tab === key ? "bg-blue-600/20 border-blue-500/40 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}>
             {label}
           </button>
         ))}
       </div>
 
       {tab === "phases" && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Danh sách phase</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Danh sách phase</h3>
             <button onClick={() => setShowCreatePhase(true)} className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm">+ Tạo phase</button>
           </div>
           {project.phases.map((p) => {
             const pct = burn(p.currentSpent, p.budgetLimit);
             return (
-              <div key={p.id} className="rounded-xl border border-white/10 bg-slate-900 p-4 space-y-2">
+              <div key={p.id} className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs text-slate-500 font-mono">{p.phaseCode}</p>
-                    <p className="text-sm text-white font-semibold mt-1">{p.name}</p>
+                    <p className="text-sm text-slate-900 font-semibold mt-1">{p.name}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${p.status === PhaseStatus.ACTIVE ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "bg-slate-500/15 border-slate-500/30 text-slate-300"}`}>{p.status}</span>
-                    <button onClick={() => openEditPhase(p)} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs">Sửa</button>
+                    <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${p.status === PhaseStatus.ACTIVE ? "bg-emerald-100 border-emerald-200 text-emerald-700" : "bg-slate-100 border-slate-200 text-slate-600"}`}>{p.status}</span>
+                    <button onClick={() => openEditPhase(p)} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">Sửa</button>
                   </div>
                 </div>
-                <div className="h-2 rounded-full bg-slate-800 border border-white/10 overflow-hidden"><div className={`h-full ${burnColor(pct)}`} style={{ width: `${pct}%` }} /></div>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-400 gap-2">
+                <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden"><div className={`h-full ${burnColor(pct)}`} style={{ width: `${pct}%` }} /></div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 gap-2">
                   <span>{formatCurrency(p.currentSpent)} / {formatCurrency(p.budgetLimit)}</span>
                   <span>{p.startDate ?? "—"} - {p.endDate ?? "—"}</span>
                 </div>
@@ -640,11 +640,11 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       )}
 
       {tab === "budget" && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-white">Ngân sách theo danh mục</h3>
-              <select value={selectedPhaseId ?? ""} onChange={(e) => setSelectedPhaseId(Number(e.target.value))} className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-slate-200 text-sm">
+              <h3 className="text-lg font-semibold text-slate-900">Ngân sách theo danh mục</h3>
+              <select value={selectedPhaseId ?? ""} onChange={(e) => setSelectedPhaseId(Number(e.target.value))} className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm">
                 {project.phases.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -652,7 +652,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             </div>
             {editingBudget ? (
               <div className="flex gap-2">
-                <button onClick={() => setEditingBudget(false)} className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm">Hủy</button>
+                <button onClick={() => setEditingBudget(false)} className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
                 <button onClick={onSaveBudget} disabled={submitting} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm">Lưu</button>
               </div>
             ) : (
@@ -663,33 +663,33 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           {!phaseCategories ? (
             <p className="text-sm text-slate-500">Không có dữ liệu danh mục cho phase này.</p>
           ) : (
-            <div className="rounded-xl border border-white/10 overflow-x-auto">
+            <div className="rounded-xl border border-slate-200 overflow-x-auto">
               <table className="w-full min-w-[760px]">
                 <thead>
-                  <tr className="bg-slate-900/70 border-b border-white/10">
-                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-400">Danh mục</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Ngân sách</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Đã dùng</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Còn lại</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-400">Burn %</th>
+                  <tr className="bg-white/70 border-b border-slate-200">
+                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Danh mục</th>
+                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Ngân sách</th>
+                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Đã dùng</th>
+                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Còn lại</th>
+                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Burn %</th>
                   </tr>
                 </thead>
                 <tbody>
                   {phaseCategories.categories.map((c) => {
                     const pct = burn(c.currentSpent, c.budgetLimit);
                     return (
-                      <tr key={c.categoryId} className="border-b border-white/5 last:border-b-0">
-                        <td className="px-4 py-3 text-sm text-white">{c.categoryName}</td>
-                        <td className="px-4 py-3 text-right text-sm text-slate-200">
+                      <tr key={c.categoryId} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-3 text-sm text-slate-900">{c.categoryName}</td>
+                        <td className="px-4 py-3 text-right text-sm text-slate-900">
                           {editingBudget ? (
-                            <input type="number" min={0} value={budgetDraft[c.categoryId] ?? ""} onChange={(e) => setBudgetDraft((prev) => ({ ...prev, [c.categoryId]: e.target.value }))} className="w-32 px-2 py-1 rounded bg-slate-800 border border-white/10 text-right" />
+                            <input type="number" min={0} value={budgetDraft[c.categoryId] ?? ""} onChange={(e) => setBudgetDraft((prev) => ({ ...prev, [c.categoryId]: e.target.value }))} className="w-32 px-2 py-1 rounded bg-white border border-slate-200 text-right" />
                           ) : (
                             formatCurrency(c.budgetLimit)
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm text-rose-300">{formatCurrency(c.currentSpent)}</td>
-                        <td className={`px-4 py-3 text-right text-sm ${c.remaining < 0 ? "text-rose-400 font-semibold" : "text-emerald-300"}`}>{formatCurrency(c.remaining)}</td>
-                        <td className="px-4 py-3 text-right text-sm text-slate-300">{pct}%</td>
+                        <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(c.currentSpent)}</td>
+                        <td className={`px-4 py-3 text-right text-sm ${c.remaining < 0 ? "text-rose-700 font-semibold" : "text-emerald-700"}`}>{formatCurrency(c.remaining)}</td>
+                        <td className="px-4 py-3 text-right text-sm text-slate-600">{pct}%</td>
                       </tr>
                     );
                   })}
@@ -701,24 +701,24 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       )}
 
       {tab === "members" && (
-        <div className="bg-slate-800 border border-white/10 rounded-2xl p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Thành viên dự án</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Thành viên dự án</h3>
             <button onClick={() => setShowAddMember(true)} className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm">Thêm thành viên</button>
           </div>
           <div className="space-y-2">
             {project.members.map((m) => (
-              <div key={m.userId} className="rounded-xl border border-white/10 bg-slate-900 p-3 flex items-center justify-between gap-3">
+              <div key={m.userId} className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-100 flex items-center justify-center text-xs font-semibold">{initials(m.fullName)}</div>
+                  <div className="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center text-xs font-semibold">{initials(m.fullName)}</div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{m.fullName}</p>
+                    <p className="text-sm font-medium text-slate-900 truncate">{m.fullName}</p>
                     <p className="text-xs text-slate-500 truncate">{m.employeeCode} • {m.position}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${roleBadge(m.projectRole)}`}>{m.projectRole}</span>
-                  <button onClick={() => openEditMember(m.userId, m.position)} className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs">Sửa</button>
+                  <button onClick={() => openEditMember(m.userId, m.position)} className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">Sửa</button>
                   <button onClick={() => onRemoveMember(m.userId)} disabled={submitting} className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs">Xóa</button>
                 </div>
               </div>
@@ -727,14 +727,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {error && <div className="px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm">{error}</div>}
-      {notice && <div className="px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-sm">{notice}</div>}
+      {error && <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
+      {notice && <div className="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">{notice}</div>}
 
       {showTopup && (
         <Modal title="Xin cấp vốn dự án" onClose={() => setShowTopup(false)}>
           <div className="space-y-3">
-            <input type="number" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} placeholder="Số tiền cần cấp" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
-            <textarea rows={4} value={topupNote} onChange={(e) => setTopupNote(e.target.value)} placeholder="Lý do (tuỳ chọn)" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white resize-none" />
+            <input type="number" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} placeholder="Số tiền cần cấp" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+            <textarea rows={4} value={topupNote} onChange={(e) => setTopupNote(e.target.value)} placeholder="Lý do (tuỳ chọn)" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none" />
             <ModalActions onClose={() => setShowTopup(false)} onConfirm={onTopup} confirmText={submitting ? "Đang gửi..." : "Gửi yêu cầu"} />
           </div>
         </Modal>
@@ -743,11 +743,11 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showCreatePhase && (
         <Modal title="Tạo phase mới" onClose={() => setShowCreatePhase(false)}>
           <div className="space-y-3">
-            <input value={phaseName} onChange={(e) => setPhaseName(e.target.value)} placeholder="Tên phase" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
-            <input type="number" value={phaseBudget} onChange={(e) => setPhaseBudget(e.target.value)} placeholder="Ngân sách" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
+            <input value={phaseName} onChange={(e) => setPhaseName(e.target.value)} placeholder="Tên phase" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+            <input type="number" value={phaseBudget} onChange={(e) => setPhaseBudget(e.target.value)} placeholder="Ngân sách" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="date" value={phaseStart} onChange={(e) => setPhaseStart(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
-              <input type="date" value={phaseEnd} onChange={(e) => setPhaseEnd(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
+              <input type="date" value={phaseStart} onChange={(e) => setPhaseStart(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+              <input type="date" value={phaseEnd} onChange={(e) => setPhaseEnd(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
             </div>
             <ModalActions onClose={() => setShowCreatePhase(false)} onConfirm={onCreatePhase} confirmText={submitting ? "Đang lưu..." : "Tạo phase"} />
           </div>
@@ -757,11 +757,11 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showEditPhase && (
         <Modal title="Cập nhật phase" onClose={() => setShowEditPhase(false)}>
           <div className="space-y-3">
-            <input value={editPhaseName} onChange={(e) => setEditPhaseName(e.target.value)} placeholder="Tên phase" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
-            <input type="number" value={editPhaseBudget} onChange={(e) => setEditPhaseBudget(e.target.value)} placeholder="Ngân sách" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
+            <input value={editPhaseName} onChange={(e) => setEditPhaseName(e.target.value)} placeholder="Tên phase" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+            <input type="number" value={editPhaseBudget} onChange={(e) => setEditPhaseBudget(e.target.value)} placeholder="Ngân sách" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="date" value={editPhaseEnd} onChange={(e) => setEditPhaseEnd(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
-              <select value={editPhaseStatus} onChange={(e) => setEditPhaseStatus(e.target.value as PhaseStatus)} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white">
+              <input type="date" value={editPhaseEnd} onChange={(e) => setEditPhaseEnd(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+              <select value={editPhaseStatus} onChange={(e) => setEditPhaseStatus(e.target.value as PhaseStatus)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900">
                 <option value={PhaseStatus.ACTIVE}>ACTIVE</option>
                 <option value={PhaseStatus.CLOSED}>CLOSED</option>
               </select>
@@ -774,20 +774,20 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showAddMember && (
         <Modal title="Thêm thành viên" onClose={() => setShowAddMember(false)}>
           <div className="space-y-3">
-            <input value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} placeholder="Tìm theo tên hoặc mã..." className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
-            <div className="max-h-44 overflow-y-auto rounded-xl border border-white/10 bg-slate-800">
+            <input value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} placeholder="Tìm theo tên hoặc mã..." className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+            <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white">
               {filteredAvailable.length === 0 ? (
                 <p className="px-4 py-3 text-sm text-slate-500">Không có thành viên phù hợp.</p>
               ) : (
                 filteredAvailable.map((m) => (
-                  <button key={m.id} type="button" onClick={() => setSelectedMemberId(m.id)} className={`w-full px-4 py-3 text-left border-b border-white/5 last:border-b-0 ${selectedMemberId === m.id ? "bg-blue-600/20 text-blue-300" : "text-slate-200 hover:bg-slate-700"}`}>
+                  <button key={m.id} type="button" onClick={() => setSelectedMemberId(m.id)} className={`w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${selectedMemberId === m.id ? "bg-blue-600/20 text-blue-700" : "text-slate-900 hover:bg-slate-100"}`}>
                     <p className="text-sm font-medium">{m.fullName}</p>
                     <p className="text-xs text-slate-500 mt-1">{m.employeeCode}</p>
                   </button>
                 ))
               )}
             </div>
-            <input value={memberPosition} onChange={(e) => setMemberPosition(e.target.value)} placeholder="Vị trí trong dự án" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
+            <input value={memberPosition} onChange={(e) => setMemberPosition(e.target.value)} placeholder="Vị trí trong dự án" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
             <ModalActions onClose={() => setShowAddMember(false)} onConfirm={onAddMember} confirmText={submitting ? "Đang thêm..." : "Thêm"} disabled={!selectedMemberId} />
           </div>
         </Modal>
@@ -796,7 +796,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showEditMember && (
         <Modal title="Cập nhật vị trí" onClose={() => setShowEditMember(false)}>
           <div className="space-y-3">
-            <input value={editingPosition} onChange={(e) => setEditingPosition(e.target.value)} placeholder="Vị trí" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-white" />
+            <input value={editingPosition} onChange={(e) => setEditingPosition(e.target.value)} placeholder="Vị trí" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
             <ModalActions onClose={() => setShowEditMember(false)} onConfirm={onUpdateMember} confirmText={submitting ? "Đang lưu..." : "Lưu"} />
           </div>
         </Modal>
@@ -807,7 +807,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
 function Card({ title, value, tone }: { title: string; value: string; tone: string }) {
   return (
-    <div className="bg-slate-800 border border-white/10 rounded-xl p-4">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{title}</p>
       <p className={`text-base font-semibold mt-1 ${tone}`}>{value}</p>
     </div>
@@ -818,8 +818,8 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   return (
     <div className="fixed inset-0 z-50">
       <button type="button" className="absolute inset-0 bg-black/70" onClick={onClose} aria-label="Đóng modal" />
-      <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl bg-slate-900 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
+      <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <h3 className="text-xl font-bold text-slate-900 mb-4">{title}</h3>
         {children}
       </div>
     </div>
@@ -839,7 +839,7 @@ function ModalActions({
 }) {
   return (
     <div className="flex items-center justify-end gap-3 pt-2">
-      <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm">
+      <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
         Hủy
       </button>
       <button type="button" onClick={onConfirm} disabled={disabled} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm">

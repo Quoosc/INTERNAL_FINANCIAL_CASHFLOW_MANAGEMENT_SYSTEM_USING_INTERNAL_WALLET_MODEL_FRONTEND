@@ -667,11 +667,11 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               <table className="w-full min-w-[760px]">
                 <thead>
                   <tr className="bg-white/70 border-b border-slate-200">
-                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Danh mục</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Ngân sách</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Đã dùng</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Còn lại</th>
-                    <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Burn %</th>
+                    <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Danh mục</th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Ngân sách</th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Đã dùng</th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Còn lại</th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Burn %</th>
                   </tr>
                 </thead>
                 <tbody>

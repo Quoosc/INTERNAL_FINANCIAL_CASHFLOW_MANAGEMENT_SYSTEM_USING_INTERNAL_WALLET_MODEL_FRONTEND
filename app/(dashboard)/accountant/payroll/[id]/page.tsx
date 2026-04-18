@@ -452,13 +452,13 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             <table className="w-full min-w-[980px]">
               <thead>
                 <tr className="bg-white/70 border-b border-slate-200">
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Mã NV</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Họ tên</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Lương gross</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Phụ cấp</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Khấu trừ</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Lương net</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Hành động</th>
+                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
+                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Họ tên</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương gross</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Phụ cấp</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Khấu trừ</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương net</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -512,11 +512,11 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                 <table className="w-full min-w-[920px]">
                   <thead>
                     <tr className="bg-white/70 border-b border-slate-200">
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Mã NV</th>
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Họ tên</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Dư nợ</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Khấu trừ</th>
-                      <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Lương thực lĩnh</th>
+                      <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
+                      <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Họ tên</th>
+                      <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Dư nợ</th>
+                      <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Khấu trừ</th>
+                      <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương thực lĩnh</th>
                     </tr>
                   </thead>
                   <tbody>

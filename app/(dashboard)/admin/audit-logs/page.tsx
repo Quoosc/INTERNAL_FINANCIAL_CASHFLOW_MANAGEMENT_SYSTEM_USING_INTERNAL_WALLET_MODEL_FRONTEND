@@ -338,11 +338,11 @@ export default function AuditLogsPage() {
           <table className="w-full min-w-[980px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Thoi gian</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Nguoi thuc hien</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Hanh dong</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Doi tuong</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Chi tiet</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Thoi gian</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Nguoi thuc hien</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Hanh dong</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Doi tuong</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Chi tiet</th>
               </tr>
             </thead>
             <tbody>

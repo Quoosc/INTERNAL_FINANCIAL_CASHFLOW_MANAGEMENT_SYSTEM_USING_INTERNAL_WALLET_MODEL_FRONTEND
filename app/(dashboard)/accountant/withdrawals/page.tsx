@@ -215,14 +215,14 @@ export default function AccountantWithdrawalsPage() {
           <table className="w-full min-w-245">
             <thead>
               <tr className="bg-white/40 border-b border-slate-200">
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Nguoi yeu cau</th>
-                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">So tien</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Tai khoan ngan hang</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Ngan hang</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Ghi chu</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Thoi gian tao</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Trang thai</th>
-                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">Thao tac</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Nguoi yeu cau</th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">So tien</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Tai khoan ngan hang</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ngan hang</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ghi chu</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Thoi gian tao</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Trang thai</th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Thao tac</th>
               </tr>
             </thead>
             <tbody>

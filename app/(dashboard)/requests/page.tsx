@@ -567,13 +567,13 @@ export default function RequestsPage() {
           <table className="w-full min-w-[980px]">
             <thead>
               <tr className="border-b border-slate-200 bg-white/30">
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mã yêu cầu</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Loại</th>
-                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Số tiền</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dự án</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ngày tạo</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Thao tác</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mã yêu cầu</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loại</th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Số tiền</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dự án</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày tạo</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
               </tr>
             </thead>
 
@@ -609,7 +609,7 @@ export default function RequestsPage() {
                         {getTypeLabel(request.type)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-sm font-semibold text-slate-100">
+                    <td className="px-4 py-3 text-right text-sm font-semibold text-slate-900">
                       {formatCurrency(request.amount)}
                     </td>
                     <td className="px-4 py-3">

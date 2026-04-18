@@ -324,11 +324,11 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
             <table className="w-full min-w-[760px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/80">
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Mã NV</th>
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Họ tên</th>
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Email</th>
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Chức danh</th>
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Trạng thái</th>
+                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Mã NV</th>
+                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Họ tên</th>
+                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Email</th>
+                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Chức danh</th>
+                  <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Trạng thái</th>
                 </tr>
               </thead>
               <tbody>

@@ -258,22 +258,22 @@ export default function ProjectDetailPage({ params }: PageProps) {
             <table className="w-full min-w-215">
               <thead>
                 <tr className="bg-blue-50 border-b border-slate-200">
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Phase
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Thời gian
                   </th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Ngân sách
                   </th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Đã chi
                   </th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Còn lại
                   </th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Trạng thái
                   </th>
                 </tr>

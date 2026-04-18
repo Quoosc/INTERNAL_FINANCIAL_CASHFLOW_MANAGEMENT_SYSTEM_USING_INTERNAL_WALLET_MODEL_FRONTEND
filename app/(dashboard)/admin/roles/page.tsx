@@ -276,7 +276,7 @@ export default function AdminRolesPage() {
                 <table className="w-full min-w-245">
                   <thead>
                     <tr className="border-b border-slate-200 bg-blue-50">
-                      <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">
+                      <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         Permission
                       </th>
                       {ROLE_ORDER.map((role) => (

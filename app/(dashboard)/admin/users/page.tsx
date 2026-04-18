@@ -548,12 +548,12 @@ export default function AdminUsersPage() {
           <table className="w-full min-w-[980px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Mã NV</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Họ tên</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Vai trò</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Phòng ban</th>
-                <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Trạng thái</th>
-                <th className="text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider px-4 py-3">Thao tác</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Mã NV</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Họ tên</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Vai trò</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Phòng ban</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Trạng thái</th>
+                <th className="text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Thao tác</th>
               </tr>
             </thead>
             <tbody>

@@ -487,12 +487,12 @@ export default function AccountantLedgerPage() {
           <table className="w-full min-w-[1100px]">
             <thead>
               <tr className="bg-white/70 border-b border-slate-200">
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Ma GD</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Loai</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Mo ta</th>
-                <th className="px-4 py-3 text-right text-xs uppercase tracking-wider text-slate-500">So tien</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Tham chieu</th>
-                <th className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Thoi gian</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ma GD</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Loai</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mo ta</th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">So tien</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Tham chieu</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Thoi gian</th>
               </tr>
             </thead>
 

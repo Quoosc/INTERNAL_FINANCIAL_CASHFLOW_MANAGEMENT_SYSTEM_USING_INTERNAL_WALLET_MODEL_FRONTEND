@@ -106,7 +106,8 @@ export default function NotificationsPage() {
 
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<NotificationFilterTab>("ALL");
   const [loading, setLoading] = useState(false);
@@ -120,12 +121,17 @@ export default function NotificationsPage() {
       setError(null);
 
       try {
-        const res = await getNotifications(filter === "UNREAD", page, PAGE_SIZE);
+        const res = await getNotifications(
+          filter === "UNREAD" ? false : undefined,
+          page,
+          PAGE_SIZE
+        );
 
         if (cancelled) return;
 
-        setNotifications(res.data.content);
-        setTotal(res.data.totalElements);
+        setNotifications(res.data.items);
+        setTotal(res.data.total);
+        setUnreadCount(res.data.unreadCount);
         setTotalPages(Math.max(1, res.data.totalPages));
       } catch (err) {
         if (cancelled) return;
@@ -150,12 +156,10 @@ export default function NotificationsPage() {
     };
   }, [filter, page]);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-
   const handleTabChange = (nextFilter: NotificationFilterTab) => {
     if (nextFilter === filter) return;
     setFilter(nextFilter);
-    setPage(0);
+    setPage(1);
   };
 
   const handleMarkAllRead = async () => {
@@ -169,11 +173,13 @@ export default function NotificationsPage() {
     if (filter === "UNREAD") {
       setNotifications([]);
       setTotal(0);
+      setUnreadCount(0);
       setTotalPages(1);
-      setPage(0);
+      setPage(1);
       return;
     }
 
+    setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
@@ -186,13 +192,15 @@ export default function NotificationsPage() {
         // keep optimistic behavior
       }
 
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+
       if (filter === "UNREAD") {
         setNotifications((prev) => prev.filter((n) => n.id !== item.id));
         setTotal((prevTotal) => {
           const nextTotal = Math.max(0, prevTotal - 1);
           const nextPages = Math.max(1, Math.ceil(nextTotal / PAGE_SIZE));
           setTotalPages(nextPages);
-          setPage((prevPage) => Math.min(prevPage, nextPages - 1));
+          setPage((prevPage) => Math.min(prevPage, nextPages));
           return nextTotal;
         });
       } else {
@@ -207,7 +215,7 @@ export default function NotificationsPage() {
   };
 
   const handlePageChange = (nextPage: number) => {
-    if (nextPage < 0 || nextPage >= totalPages || nextPage === page) return;
+    if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
     setPage(nextPage);
   };
 
@@ -252,7 +260,7 @@ export default function NotificationsPage() {
               : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
           }`}
         >
-          Chua doc ({filter === "UNREAD" ? total : unreadCount})
+          Chua doc ({unreadCount})
         </button>
       </div>
 
@@ -295,13 +303,13 @@ export default function NotificationsPage() {
 
         <div className="px-4 py-3 border-t border-slate-200 bg-blue-50 flex items-center justify-between">
           <p className="text-sm text-slate-500">
-            Tong {total} thong bao • Trang {page + 1}/{totalPages}
+            Tong {total} thong bao • Trang {page}/{totalPages}
           </p>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => handlePageChange(page - 1)}
-              disabled={page <= 0}
+              disabled={page <= 1}
               className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Truoc
@@ -309,7 +317,7 @@ export default function NotificationsPage() {
             <button
               type="button"
               onClick={() => handlePageChange(page + 1)}
-              disabled={page >= totalPages - 1}
+              disabled={page >= totalPages}
               className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Sau

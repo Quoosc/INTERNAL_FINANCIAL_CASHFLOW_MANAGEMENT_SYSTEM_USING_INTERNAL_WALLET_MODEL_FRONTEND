@@ -4,28 +4,19 @@
 // =============================================================
 
 import { api } from "@/lib/api-client";
-import type { NotificationResponse } from "@/types";
-
-// Spring Data Page<T> response format
-interface SpringPage<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;   // 0-indexed page
-  size: number;
-}
+import type { NotificationListResponse } from "@/types";
 
 /** GET /api/v1/notifications — Danh sách notification */
 export async function getNotifications(
-  unreadOnly = false,
-  page = 0,
-  size = 20
+  isRead?: boolean,
+  page = 1,
+  limit = 20
 ) {
   const params = new URLSearchParams();
-  if (unreadOnly) params.set("unreadOnly", "true");
+  if (isRead !== undefined) params.set("isRead", String(isRead));
   params.set("page", String(page));
-  params.set("size", String(size));
-  return api.get<SpringPage<NotificationResponse>>(
+  params.set("limit", String(limit));
+  return api.get<NotificationListResponse>(
     `/api/v1/notifications?${params.toString()}`
   );
 }

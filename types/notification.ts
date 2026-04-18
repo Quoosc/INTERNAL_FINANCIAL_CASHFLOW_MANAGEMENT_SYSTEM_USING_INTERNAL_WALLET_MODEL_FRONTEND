@@ -43,8 +43,6 @@ export enum NotificationType {
 /**
  * GET /notifications — response item
  * khớp với notification.dto.response.NotificationDto
- *
- * Cập nhật: thêm referenceLink (link để navigate trên UI)
  */
 export interface NotificationResponse {
   id: number;
@@ -53,9 +51,22 @@ export interface NotificationResponse {
   message: string;
   refId: number | null;
   refType: string | null;           // "REQUEST", "PAYSLIP", etc.
-  referenceLink: string | null;     // Link để navigate — MỚI
+  referenceLink: string | null;
   isRead: boolean;
   createdAt: string;
+}
+
+/**
+ * GET /notifications — response wrapper
+ * khớp với notification.dto.response.NotificationListResponse
+ */
+export interface NotificationListResponse {
+  items: NotificationResponse[];
+  unreadCount: number;
+  total: number;
+  page: number;       // 1-indexed
+  limit: number;
+  totalPages: number;
 }
 
 /**
@@ -74,13 +85,13 @@ export type MarkAllReadResponse = void;
 
 /**
  * GET /notifications — query params
- * Backend: ?unreadOnly=true&page=0&size=20
- * Lưu ý: Backend dùng Spring Data Pageable (0-indexed page)
+ * Backend: ?isRead=false&type=TYPE&page=1&limit=20 (1-indexed)
  */
 export interface NotificationFilterParams {
-  unreadOnly?: boolean;
-  page?: number;       // 0-indexed (Spring Data)
-  size?: number;       // default: 20
+  isRead?: boolean;
+  type?: string;
+  page?: number;       // 1-indexed
+  limit?: number;      // default: 20
 }
 
 // --- WebSocket Payloads ---

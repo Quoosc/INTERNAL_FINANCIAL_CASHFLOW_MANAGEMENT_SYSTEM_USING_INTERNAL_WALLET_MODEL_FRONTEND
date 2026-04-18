@@ -474,6 +474,76 @@ export default function ProfilePage() {
 
       {activeTab === "BANK" && (
         <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          {/* Virtual bank card preview */}
+          <div
+            className="relative rounded-2xl overflow-hidden shadow-lg select-none"
+            style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e3a8a 100%)" }}
+          >
+            {/* Decorative circles */}
+            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white opacity-5" />
+            <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full bg-white opacity-5" />
+            <div className="absolute top-6 right-24 w-20 h-20 rounded-full bg-white opacity-[0.04]" />
+
+            <div className="relative p-6 space-y-5">
+              {/* Top row: bank name + card brand icon */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-md bg-white/20 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <span className="text-white/90 text-sm font-semibold tracking-wide">
+                    {bankForm.bankName || "Chưa chọn ngân hàng"}
+                  </span>
+                </div>
+                {/* Mastercard-style circles */}
+                <div className="flex items-center -space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-red-500 opacity-90" />
+                  <div className="w-8 h-8 rounded-full bg-yellow-400 opacity-80" />
+                </div>
+              </div>
+
+              {/* Chip */}
+              <div
+                className="w-12 h-9 rounded-lg"
+                style={{ background: "linear-gradient(135deg, #fef08a 0%, #fbbf24 50%, #f59e0b 100%)" }}
+              >
+                <div className="w-full h-full rounded-lg opacity-60 grid grid-cols-2 gap-px p-1">
+                  <div className="rounded-sm bg-yellow-600/40" />
+                  <div className="rounded-sm bg-yellow-600/40" />
+                  <div className="rounded-sm bg-yellow-600/40" />
+                  <div className="rounded-sm bg-yellow-600/40" />
+                </div>
+              </div>
+
+              {/* Account number */}
+              <div>
+                <p className="text-blue-300 text-[10px] mb-1 uppercase tracking-wider">Số tài khoản</p>
+                <p className="text-white font-mono text-lg tracking-[0.2em] font-semibold">
+                  {bankForm.accountNumber
+                    ? bankForm.accountNumber.replace(/(.{4})/g, "$1 ").trim()
+                    : "•••• •••• •••• ••••"}
+                </p>
+              </div>
+
+              {/* Account owner */}
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-blue-300 text-[10px] mb-1 uppercase tracking-wider">Chủ tài khoản</p>
+                  <p className="text-white text-sm font-semibold uppercase tracking-wide">
+                    {bankForm.accountOwner || "NGUYEN VAN A"}
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <Field label="Ngân hàng">
             <select
               value={bankForm.bankName}

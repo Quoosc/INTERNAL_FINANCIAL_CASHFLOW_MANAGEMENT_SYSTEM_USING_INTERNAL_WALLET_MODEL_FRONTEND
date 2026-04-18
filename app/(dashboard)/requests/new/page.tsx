@@ -102,6 +102,54 @@ const MOCK_PHASES: ProjectPhasesResponse = {
   ],
 };
 
+const REQUEST_TYPE_CONFIG = [
+  {
+    type: RequestType.ADVANCE,
+    label: "Tạm ứng",
+    sub: "Ứng tiền trước cho hoạt động chi tiêu",
+    cardSelected: "border-blue-500 bg-blue-50",
+    cardHover: "hover:border-blue-300",
+    iconSelected: "bg-blue-500 text-white",
+    iconDefault: "bg-blue-100 text-blue-600",
+    labelSelected: "text-blue-700",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    ),
+  },
+  {
+    type: RequestType.EXPENSE,
+    label: "Chi phí",
+    sub: "Thanh toán chi phí đã phát sinh",
+    cardSelected: "border-violet-500 bg-violet-50",
+    cardHover: "hover:border-violet-300",
+    iconSelected: "bg-violet-500 text-white",
+    iconDefault: "bg-violet-100 text-violet-600",
+    labelSelected: "text-violet-700",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+  },
+  {
+    type: RequestType.REIMBURSE,
+    label: "Hoàn ứng",
+    sub: "Hoàn lại tiền đã chi cá nhân",
+    cardSelected: "border-teal-500 bg-teal-50",
+    cardHover: "hover:border-teal-300",
+    iconSelected: "bg-teal-500 text-white",
+    iconDefault: "bg-teal-100 text-teal-600",
+    labelSelected: "text-teal-700",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+      </svg>
+    ),
+  },
+] as const;
+
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -434,22 +482,29 @@ export default function NewRequestPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="bg-white border border-slate-200 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Loại yêu cầu</label>
-            <select
-              value={form.type ?? RequestType.ADVANCE}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  type: e.target.value as RequestType,
-                }))
-              }
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-            >
-              <option value={RequestType.ADVANCE}>ADVANCE</option>
-              <option value={RequestType.EXPENSE}>EXPENSE</option>
-              <option value={RequestType.REIMBURSE}>REIMBURSE</option>
-            </select>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-slate-600 mb-3">Loại yêu cầu</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {REQUEST_TYPE_CONFIG.map(({ type, label, sub, cardSelected, cardHover, iconSelected, iconDefault, labelSelected, icon }) => {
+                const selected = form.type === type;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, type }))}
+                    className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${selected ? cardSelected : `border-slate-200 bg-white ${cardHover}`}`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${selected ? iconSelected : iconDefault}`}>
+                      {icon}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-sm font-semibold ${selected ? labelSelected : "text-slate-900"}`}>{label}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{sub}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div>

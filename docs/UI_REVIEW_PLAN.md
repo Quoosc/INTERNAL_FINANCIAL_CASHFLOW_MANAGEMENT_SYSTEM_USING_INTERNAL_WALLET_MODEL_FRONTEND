@@ -10,9 +10,9 @@
 | Mức | Tổng | ✅ DONE | ⏳ Pending |
 |-----|------|---------|-----------|
 | P0 — Critical | 2 | 2 | 0 |
-| P1 — High | 10 | 7 | 3 |
-| P2 — Medium | 18 | 13 | 5 |
-| **Tổng** | **30** | **22** | **8** |
+| P1 — High | 10 | 8 | 2 |
+| P2 — Medium | 18 | 15 | 3 |
+| **Tổng** | **30** | **25** | **5** |
 
 ---
 
@@ -157,9 +157,9 @@ Thiết kế dùng modal multi-step (form → QR → success / amount → PIN �
 
 ---
 
-### E2. Request Type Selection — Dropdown → Card UI [P2] ⏳ Pending
+### E2. Request Type Selection — Dropdown → Card UI [P2] ✅ DONE
 
-Thiết kế dùng visual card selection với màu riêng mỗi type (ADVANCE=blue, EXPENSE=purple, REIMBURSE=cyan). Hiện tại là `<select>` dropdown.
+`requests/new/page.tsx`: `<select>` → 3 visual card buttons `sm:grid-cols-3`. ADVANCE=blue · EXPENSE=violet · REIMBURSE=teal. Selected state: `border-2 border-*-500 bg-*-50` + colored icon. `REQUEST_TYPE_CONFIG` const ngoài component với static class strings.
 
 ---
 
@@ -189,9 +189,9 @@ Inline SVG icons trên 4 tabs: User (Thông tin) · Camera (Ảnh đại diện)
 
 ---
 
-### G3. Virtual Bank Card [P2] ⏳ Pending
+### G3. Virtual Bank Card [P2] ✅ DONE
 
-`VirtualBankCard` component với gradient background, chip, decorative circles chưa được tạo. File thiết kế: `d:\src\components\settings\virtual-bank-card.tsx`.
+`profile/page.tsx` BANK tab: thêm card preview trực tiếp phía trên form fields. Gradient `#2563eb → #1e3a8a`, decorative circles, chip vàng, account number formatted `XXXX XXXX XXXX`, mastercard-style circles, live preview từ `bankForm` state. Inline SVG thay thế lucide-react.
 
 ---
 
@@ -219,13 +219,9 @@ Inline SVG icons trên 4 tabs: User (Thông tin) · Camera (Ảnh đại diện)
 
 ---
 
-### H2. Badge Colors — Sai approach [P1] ⏳ Pending
+### H2. Badge Colors — Sai approach [P1] ✅ DONE
 
-| Thiết kế | Hiện tại |
-|----------|----------|
-| `bg-*-100 text-*-700 border-*-200` (opaque) | `bg-*-50 text-*-700` (nhạt hơn) |
-| Role ADMIN: `bg-violet-100 text-violet-700` | `bg-rose-50 text-rose-700` (sai màu) |
-| Status ACTIVE: `bg-emerald-100` + green dot | `bg-emerald-50` không có dot |
+`admin/users/page.tsx` + `admin/users/[id]/page.tsx`: MANAGER role badge `bg-blue-50` → `bg-blue-100`. Tất cả role/status badges đã dùng `bg-*-100 border-*-200 text-*-700`.
 
 ---
 
@@ -283,22 +279,22 @@ Thiết kế: focus ring đổi màu theo role (violet/admin, indigo/manager...)
 | P2-25 | Security PIN icon header | Profile |
 | P2-28 | Table header text-slate-400 | Global |
 | P2-30 | Logout confirm dialog | Layout |
+| P1-8 | Badge colors `bg-*-100 border-*-200` (MANAGER fix) | Admin pages |
+| P2-20 | Request type: dropdown → card UI | Requests |
+| P2-24 | Virtual bank card preview | Profile |
 
 ---
 
-### ⏳ CÒN PENDING (8/30)
+### ⏳ CÒN PENDING (5/30)
 
 | # | Item | Khu vực | Effort |
 |---|------|---------|--------|
 | P1-7 | Charts cho Admin/Manager/Accountant dashboard | Dashboard | Large |
-| P1-8 | Badge colors: `bg-*-50` → `bg-*-100 border-*-200` | All pages | Medium |
 | P1-12 | Missing dashboard sections (stats strip, charts, feeds) | Dashboard | Large |
-| P2-20 | Request type: dropdown → card UI | Requests | Medium |
-| P2-24 | Virtual bank card component | Profile | Medium |
 | P2-26 | Deposit/Withdraw modal vs page flow | Wallet | Large |
 | P2-27 | Focus ring color theo role | Global | Deferred |
 | P2-29 | Collapsible sidebar | Layout | Large (optional) |
 
 ---
 
-*Cập nhật: 2026-04-18. Còn lại toàn bộ là Medium/Large effort hoặc optional.*
+*Cập nhật: 2026-04-18. Còn lại toàn bộ là Large effort hoặc optional/deferred.*

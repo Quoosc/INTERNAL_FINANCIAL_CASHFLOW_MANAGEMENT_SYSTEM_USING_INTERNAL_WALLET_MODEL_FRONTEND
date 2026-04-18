@@ -127,7 +127,7 @@ function roleBadgeClass(role: string): string {
     case RoleName.ACCOUNTANT:
       return "bg-amber-100 border-amber-200 text-amber-700";
     case RoleName.MANAGER:
-      return "bg-blue-50 border-blue-200 text-blue-700";
+      return "bg-blue-100 border-blue-200 text-blue-700";
     case RoleName.TEAM_LEADER:
       return "bg-indigo-100 border-indigo-200 text-indigo-700";
     default:

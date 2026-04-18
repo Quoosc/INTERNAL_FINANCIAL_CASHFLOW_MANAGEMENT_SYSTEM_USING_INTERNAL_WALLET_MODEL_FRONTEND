@@ -44,6 +44,23 @@ function getGrossSalary(item: PayslipListItem): number {
   return Math.round(item.finalNetSalary * 1.15);
 }
 
+const MONTH_COLORS = [
+  "bg-blue-50 text-blue-700",
+  "bg-indigo-50 text-indigo-700",
+  "bg-violet-50 text-violet-700",
+  "bg-purple-50 text-purple-700",
+  "bg-rose-50 text-rose-700",
+  "bg-orange-50 text-orange-700",
+  "bg-amber-50 text-amber-700",
+  "bg-yellow-50 text-yellow-700",
+  "bg-lime-50 text-lime-700",
+  "bg-emerald-50 text-emerald-700",
+  "bg-teal-50 text-teal-700",
+  "bg-cyan-50 text-cyan-700",
+];
+
+const MONTH_SHORT = ["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"];
+
 function parseStatus(value: string | null): PayslipStatus | undefined {
   if (!value) return undefined;
   if (value === PayslipStatus.DRAFT || value === PayslipStatus.PAID) {
@@ -225,16 +242,26 @@ export default function PayrollPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            </span>
+          </div>
           <p className="text-sm text-slate-500">Tổng đã nhận (PAID)</p>
-          <p className="text-3xl font-bold text-emerald-700 mt-2">
+          <p className="text-3xl font-bold text-emerald-700 mt-1">
             {formatVnd(totalEarned)}
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-sm">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </span>
+          </div>
           <p className="text-sm text-slate-500">Số tiền tháng hiện tại</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
+          <p className="text-3xl font-bold text-slate-900 mt-1">
             {formatVnd(currentMonthAmount)}
           </p>
         </div>
@@ -272,19 +299,19 @@ export default function PayrollPage() {
           <table className="w-full min-w-230">
             <thead>
               <tr className="border-b border-slate-200 bg-blue-50">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Kỳ lương
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Gross Salary
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Net Salary
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Trạng thái
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Ngày chi
                 </th>
               </tr>
@@ -338,12 +365,19 @@ export default function PayrollPage() {
                     onClick={() => router.push(`/payroll/${item.id}`)}
                   >
                     <td className="px-4 py-3">
-                      <p className="text-sm text-slate-900 font-medium">
-                        {item.periodName}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {item.payslipCode}
-                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs ${MONTH_COLORS[(item.month - 1) % 12]}`}>
+                          {MONTH_SHORT[item.month - 1]}
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-900 font-medium">
+                            {item.periodName}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {item.payslipCode}
+                          </p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-slate-700 font-medium">
                       {formatVnd(getGrossSalary(item))}

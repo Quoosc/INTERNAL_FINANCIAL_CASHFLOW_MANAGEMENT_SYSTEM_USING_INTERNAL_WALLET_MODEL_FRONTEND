@@ -246,6 +246,17 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
 }
 
+const ACCENT_TO_GRADIENT: Record<string, string> = {
+  "text-blue-700":    "bg-linear-to-br from-blue-500 to-blue-600",
+  "text-emerald-700": "bg-linear-to-br from-emerald-500 to-emerald-600",
+  "text-amber-700":   "bg-linear-to-br from-amber-500 to-orange-500",
+  "text-violet-700":  "bg-linear-to-br from-violet-500 to-purple-600",
+  "text-indigo-700":  "bg-linear-to-br from-indigo-500 to-indigo-600",
+  "text-rose-700":    "bg-linear-to-br from-rose-500 to-rose-600",
+  "text-teal-700":    "bg-linear-to-br from-teal-500 to-teal-600",
+  "text-cyan-700":    "bg-linear-to-br from-cyan-500 to-cyan-600",
+};
+
 function StatCard({
   title,
   value,
@@ -259,17 +270,18 @@ function StatCard({
   accent: string;
   icon: React.ReactNode;
 }) {
+  const iconGradient = ACCENT_TO_GRADIENT[accent] ?? "bg-linear-to-br from-slate-400 to-slate-500";
   return (
     <Link
       href={href}
-      className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 hover:bg-slate-50 hover:border-slate-300 transition-all"
+      className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-slate-500">{title}</p>
           <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
         </div>
-        <span className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center">
+        <span className={`w-9 h-9 rounded-lg ${iconGradient} text-white flex items-center justify-center shadow-sm`}>
           {icon}
         </span>
       </div>
@@ -360,7 +372,7 @@ export function TeamLeaderDashboard() {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {loading ? (
           [...Array(4)].map((_, index) => (
             <div key={`stat-skeleton-${index}`} className="h-24 rounded-2xl bg-white animate-pulse" />

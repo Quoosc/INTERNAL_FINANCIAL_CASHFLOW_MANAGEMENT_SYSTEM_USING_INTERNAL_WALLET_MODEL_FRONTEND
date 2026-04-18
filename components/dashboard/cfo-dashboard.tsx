@@ -246,7 +246,7 @@ export function CfoDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {loading ? (
           [...Array(4)].map((_, index) => (
             <div key={`cfo-stat-skeleton-${index}`} className="h-24 rounded-2xl bg-white animate-pulse" />

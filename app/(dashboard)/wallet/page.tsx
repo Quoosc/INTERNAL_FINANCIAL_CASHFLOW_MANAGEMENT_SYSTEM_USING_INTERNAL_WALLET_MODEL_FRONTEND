@@ -134,58 +134,116 @@ export default function WalletPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Ví của tôi</h1>
-          <p className="text-slate-500 mt-1">Theo dõi số dư và giao dịch cá nhân</p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href="/wallet/deposit"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m6-6H6" />
-            </svg>
-            Nạp tiền
-          </Link>
-          <Link
-            href="/wallet/withdraw"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold border border-slate-200 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            Rút tiền
-          </Link>
-        </div>
+      {/* Page title */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Ví của tôi</h1>
+        <p className="text-slate-500 mt-1">Theo dõi số dư và giao dịch cá nhân</p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-6">
-        <p className="text-slate-500 text-sm">Số dư khả dụng</p>
-        {walletLoading ? (
-          <div className="mt-2 h-10 w-56 rounded bg-blue-100 animate-pulse" />
-        ) : (
-          <p className="text-3xl font-bold text-slate-900 mt-2">{formatCurrency(wallet?.availableBalance ?? 0)}</p>
-        )}
+      {/* Hero wallet card */}
+      <div
+        className="relative rounded-2xl overflow-hidden shadow-2xl"
+        style={{
+          background: "linear-gradient(135deg, rgba(30,58,138,0.95) 0%, rgba(30,64,175,0.85) 100%), linear-gradient(180deg, #1e3a8a 0%, #1d4ed8 100%)",
+        }}
+      >
+        {/* SVG decorative pattern overlay */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.04]"
+          viewBox="0 0 400 200"
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden="true"
+        >
+          <defs>
+            <pattern id="wallet-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#wallet-grid)" />
+          <circle cx="350" cy="-30" r="120" fill="white" opacity="0.06" />
+          <circle cx="380" cy="160" r="80" fill="white" opacity="0.04" />
+        </svg>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
-          <div className="bg-blue-50 rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500">Tổng số dư</p>
-            <p className="text-lg font-semibold text-slate-900 mt-1">
-              {wallet ? formatCurrency(wallet.balance) : "---"}
-            </p>
-          </div>
-          <div className="bg-blue-50 rounded-xl border border-slate-200 p-4">
-            <p className="text-xs text-slate-500">Tiền đang khóa</p>
-            <p className="text-lg font-semibold text-amber-700 mt-1">
-              {wallet ? formatCurrency(wallet.lockedBalance) : "---"}
-            </p>
+        <div className="relative p-8 md:p-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            {/* Left: balance + actions */}
+            <div className="flex-1 space-y-6">
+              <div>
+                <p className="text-blue-200 text-sm font-medium mb-2">Số dư khả dụng</p>
+                {walletLoading ? (
+                  <div className="h-12 w-64 rounded-lg bg-white/10 animate-pulse" />
+                ) : (
+                  <p className="text-white text-4xl md:text-5xl font-bold tabular-nums">
+                    {formatCurrency(wallet?.availableBalance ?? 0)}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-6">
+                <div>
+                  <p className="text-blue-300 text-xs mb-1">Tổng số dư</p>
+                  <p className="text-blue-100 font-semibold tabular-nums">
+                    {wallet ? formatCurrency(wallet.balance) : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-blue-300 text-xs mb-1">Đang khóa</p>
+                  <p className="text-amber-300 font-semibold tabular-nums">
+                    {wallet ? formatCurrency(wallet.lockedBalance) : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Link
+                  href="/wallet/withdraw"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-900 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Rút tiền
+                </Link>
+                <Link
+                  href="/wallet/deposit"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-all text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
+                  </svg>
+                  Nạp tiền
+                </Link>
+              </div>
+            </div>
+
+            {/* Right: wallet info panel */}
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 lg:min-w-[240px]">
+              <p className="text-blue-200 text-xs font-medium mb-4 uppercase tracking-wider">Thông tin ví</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-blue-300 text-xs mb-1">Loại ví</p>
+                  <p className="text-white font-semibold text-sm">
+                    {wallet?.ownerType === "USER" ? "Ví cá nhân" : wallet?.ownerType ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-blue-300 text-xs mb-1">Trạng thái</p>
+                  <span className="inline-flex items-center gap-1.5 text-emerald-300 text-sm font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                    Hoạt động
+                  </span>
+                </div>
+                <div>
+                  <p className="text-blue-300 text-xs mb-1">Tỷ lệ khả dụng</p>
+                  <p className="text-white font-semibold text-sm">
+                    {wallet && wallet.balance > 0
+                      ? Math.round((wallet.availableBalance / wallet.balance) * 100) + "%"
+                      : "100%"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -420,35 +420,52 @@ export function AccountantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           href="/accountant/disbursements"
-          className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 hover:bg-slate-50 hover:border-slate-300 transition-all"
+          className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all"
         >
-          <p className="text-xs text-slate-500">Chờ giải ngân</p>
-          <p className="text-3xl font-bold text-amber-700 mt-1">
-            {dashboard?.pendingDisbursementsCount ??
-              pendingDisbursements.length}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            PENDING_ACCOUNTANT_EXECUTION
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs text-slate-500">Chờ giải ngân</p>
+              <p className="text-3xl font-bold text-amber-700 mt-1">
+                {dashboard?.pendingDisbursementsCount ??
+                  pendingDisbursements.length}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">PENDING_ACCOUNTANT_EXECUTION</p>
+            </div>
+            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </span>
+          </div>
         </Link>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-          <p className="text-xs text-slate-500">Dòng tiền vào tháng này</p>
-          <p className="text-3xl font-bold text-emerald-700 mt-1">
-            {formatCurrency(dashboard?.monthlyInflow ?? 0)}
-          </p>
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs text-slate-500">Dòng tiền vào tháng này</p>
+              <p className="text-3xl font-bold text-emerald-700 mt-1">
+                {formatCurrency(dashboard?.monthlyInflow ?? 0)}
+              </p>
+            </div>
+            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>
+            </span>
+          </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-          <p className="text-xs text-slate-500">Dòng tiền ra tháng này</p>
-          <p className="text-3xl font-bold text-rose-700 mt-1">
-            {formatCurrency(dashboard?.monthlyOutflow ?? 0)}
-          </p>
-          <p
-            className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}
-          >
-            Dòng tiền ròng: {formatCurrency(monthlyNetFlow)}
-          </p>
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs text-slate-500">Dòng tiền ra tháng này</p>
+              <p className="text-3xl font-bold text-rose-700 mt-1">
+                {formatCurrency(dashboard?.monthlyOutflow ?? 0)}
+              </p>
+              <p className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                Dòng tiền ròng: {formatCurrency(monthlyNetFlow)}
+              </p>
+            </div>
+            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center shadow-sm shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 13l-5 5m0 0l-5-5m5 5V6" /></svg>
+            </span>
+          </div>
         </div>
       </div>
 

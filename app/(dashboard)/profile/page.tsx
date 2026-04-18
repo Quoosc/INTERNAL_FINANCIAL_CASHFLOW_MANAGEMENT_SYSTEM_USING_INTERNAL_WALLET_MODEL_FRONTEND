@@ -330,21 +330,25 @@ export default function ProfilePage() {
           active={activeTab === "INFO"}
           label="Thông tin"
           onClick={() => setActiveTab("INFO")}
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5.121 17.804A9 9 0 1118.88 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
         />
         <TabButton
           active={activeTab === "AVATAR"}
           label="Ảnh đại diện"
           onClick={() => setActiveTab("AVATAR")}
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
         />
         <TabButton
           active={activeTab === "BANK"}
           label="Ngân hàng"
           onClick={() => setActiveTab("BANK")}
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
         />
         <TabButton
           active={activeTab === "SECURITY"}
           label="Bảo mật"
           onClick={() => setActiveTab("SECURITY")}
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>}
         />
       </div>
 
@@ -437,7 +441,7 @@ export default function ProfilePage() {
       {activeTab === "AVATAR" && (
         <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-slate-200 hover:ring-blue-500 transition-all bg-white flex items-center justify-center cursor-pointer">
               {avatarPreviewUrl || profile?.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -526,6 +530,15 @@ export default function ProfilePage() {
 
       {activeTab === "SECURITY" && (
         <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+            <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Mã PIN giao dịch</p>
+              <p className="text-xs text-slate-400">Dùng để xác nhận khi giải ngân và rút tiền.</p>
+            </div>
+          </div>
           <Field label="PIN hiện tại (5 số)">
             <input
               type="password"
@@ -600,22 +613,25 @@ export default function ProfilePage() {
 function TabButton({
   active,
   label,
+  icon,
   onClick,
 }: {
   active: boolean;
   label: string;
+  icon?: React.ReactNode;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm border transition-colors ${
         active
           ? "bg-blue-100 border-blue-300 text-blue-700"
           : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
       }`}
     >
+      {icon}
       {label}
     </button>
   );

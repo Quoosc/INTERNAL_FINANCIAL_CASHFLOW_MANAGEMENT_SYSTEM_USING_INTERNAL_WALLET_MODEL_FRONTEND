@@ -318,7 +318,6 @@ function StatCard({
   icon,
   gradient,
   iconBg,
-  iconColor,
   tooltip,
 }: {
   title: string;
@@ -327,19 +326,18 @@ function StatCard({
   icon: React.ReactNode;
   gradient: string;
   iconBg: string;
-  iconColor: string;
   tooltip?: string;
 }) {
   const [showTip, setShowTip] = useState(false);
   return (
     <div
-      className={`bg-white border border-slate-200 rounded-2xl shadow-sm p-5 hover:border-slate-300 transition-all ${gradient}`}
+      className={`bg-white border border-slate-200 rounded-xl shadow-sm p-5 hover:border-slate-300 transition-all ${gradient}`}
     >
       <div className="flex items-start justify-between mb-4">
         <div
-          className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}
+          className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center shadow-sm`}
         >
-          <span className={iconColor}>{icon}</span>
+          <span className="text-white">{icon}</span>
         </div>
         {tooltip && (
           <div className="relative">
@@ -508,14 +506,13 @@ export function EmployeeDashboard() {
       </div>
 
       {/* ── Section A: Stats Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         <StatCard
           title="Số dư khả dụng"
           value={formatCurrency(availableBalance)}
           sub="Số dư hiện tại trừ tiền treo"
           gradient="hover:shadow-blue-500/10 hover:shadow-lg"
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
+          iconBg="bg-linear-to-br from-blue-500 to-blue-600"
           icon={
             <svg
               className="w-5 h-5"
@@ -537,8 +534,7 @@ export function EmployeeDashboard() {
           value={formatCurrency(lockedBalance)}
           sub="Dang cho xu ly"
           gradient="hover:shadow-amber-500/10 hover:shadow-lg"
-          iconBg="bg-amber-50"
-          iconColor="text-amber-700"
+          iconBg="bg-linear-to-br from-amber-500 to-orange-500"
           icon={
             <svg
               className="w-5 h-5"
@@ -560,8 +556,7 @@ export function EmployeeDashboard() {
           value={formatCurrency(debtBalance)}
           sub="Sẽ trừ vào lương tháng sau"
           gradient="hover:shadow-rose-500/10 hover:shadow-lg"
-          iconBg="bg-rose-50"
-          iconColor="text-rose-700"
+          iconBg="bg-linear-to-br from-rose-500 to-rose-600"
           tooltip="Khoản tạm ứng chưa hoàn trả sẽ được khấu trừ tự động vào lương kỳ tiếp theo."
           icon={
             <svg
@@ -588,8 +583,7 @@ export function EmployeeDashboard() {
               : "Chưa có phiếu lương"
           }
           gradient="hover:shadow-purple-500/10 hover:shadow-lg"
-          iconBg="bg-purple-100"
-          iconColor="text-purple-700"
+          iconBg="bg-linear-to-br from-violet-500 to-purple-600"
           icon={
             <svg
               className="w-5 h-5"
@@ -830,136 +824,39 @@ export function EmployeeDashboard() {
           title="Thao tác nhanh"
           subtitle="Các chức năng thường dùng"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-2.5">
             <QuickAction
-              href="/wallet/deposit"
-              label="Nạp tiền"
-              iconBg="bg-blue-50"
-              iconColor="text-blue-600"
-              hoverBorder="hover:border-blue-300"
+              href="/requests/new"
+              label="Tạo yêu cầu mới"
+              sub="Tạm ứng / Chi phí / Hoàn ứng"
+              iconBg="bg-linear-to-br from-violet-500 to-purple-600"
               icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 6v12m6-6H6"
-                  />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               }
             />
             <QuickAction
               href="/wallet/withdraw"
               label="Rút tiền"
-              iconBg="bg-emerald-50"
-              iconColor="text-emerald-700"
-              hoverBorder="hover:border-emerald-300"
+              sub="Chuyển về tài khoản ngân hàng"
+              iconBg="bg-linear-to-br from-blue-500 to-blue-600"
               icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               }
             />
             <QuickAction
-              href="/requests/new"
-              label="Tạo yêu cầu"
-              iconBg="bg-purple-100"
-              iconColor="text-purple-700"
-              hoverBorder="hover:border-purple-500/40"
+              href="/wallet/deposit"
+              label="Nạp tiền"
+              sub="Nạp tiền vào ví qua QR"
+              iconBg="bg-linear-to-br from-emerald-500 to-teal-600"
               icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              }
-            />
-            <QuickAction
-              href="/wallet/transactions"
-              label="Lịch sử GD"
-              iconBg="bg-amber-50"
-              iconColor="text-amber-700"
-              hoverBorder="hover:border-amber-300"
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              }
-            />
-            <QuickAction
-              href="/payroll"
-              label="Bảng lương"
-              iconBg="bg-teal-500/20"
-              iconColor="text-teal-700"
-              hoverBorder="hover:border-teal-500/40"
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              }
-            />
-            <QuickAction
-              href="/notifications"
-              label="Thông báo"
-              iconBg="bg-rose-50"
-              iconColor="text-rose-700"
-              hoverBorder="hover:border-rose-300"
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m6-6H6" />
                 </svg>
               }
             />
@@ -975,31 +872,35 @@ export function EmployeeDashboard() {
 function QuickAction({
   href,
   label,
+  sub,
   icon,
   iconBg,
-  iconColor,
-  hoverBorder,
 }: {
   href: string;
   label: string;
+  sub?: string;
   icon: React.ReactNode;
   iconBg: string;
-  iconColor: string;
-  hoverBorder: string;
 }) {
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center gap-2.5 p-4 rounded-xl border border-slate-200 ${hoverBorder} hover:bg-slate-50 transition-all group`}
+      className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all group"
     >
       <div
-        className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center transition-all group-hover:scale-110`}
+        className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center shrink-0 text-white shadow-sm group-hover:scale-105 transition-transform`}
       >
-        <span className={iconColor}>{icon}</span>
+        {icon}
       </div>
-      <span className="text-xs font-medium text-slate-500 group-hover:text-slate-900 transition-colors">
-        {label}
-      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-slate-900 group-hover:text-blue-700 transition-colors">
+          {label}
+        </p>
+        {sub && <p className="text-xs text-slate-500 mt-0.5 truncate">{sub}</p>}
+      </div>
+      <svg className="w-4 h-4 text-slate-400 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
     </Link>
   );
 }

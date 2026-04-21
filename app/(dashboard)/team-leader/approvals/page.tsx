@@ -9,6 +9,8 @@ import {
   RequestType,
   TLApprovalListItem,
 } from "@/types";
+import { formatCurrency } from "@/lib/format";
+import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 10;
 
@@ -151,13 +153,6 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
   },
 ];
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -409,11 +404,7 @@ export default function TLApprovalsPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, index) => (
-            <div key={`skeleton-${index}`} className="h-36 rounded-2xl bg-white animate-pulse" />
-          ))}
-        </div>
+        <CardListSkeleton rows={5} height="h-36" />
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
           <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">

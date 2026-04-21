@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency } from "@/lib/format";
 import { PaginatedResponse, PayslipListItem, PayslipStatus } from "@/types";
 
 interface PayrollFilters {
@@ -11,10 +12,6 @@ interface PayrollFilters {
 }
 
 const PAGE_LIMIT = 12;
-
-function formatVnd(amount: number): string {
-  return `${new Intl.NumberFormat("vi-VN").format(amount)} ₫`;
-}
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("vi-VN", {
@@ -250,7 +247,7 @@ export default function PayrollPage() {
           </div>
           <p className="text-sm text-slate-500">Tổng đã nhận (PAID)</p>
           <p className="text-3xl font-bold text-emerald-700 mt-1">
-            {formatVnd(totalEarned)}
+            {formatCurrency(totalEarned)}
           </p>
         </div>
 
@@ -262,7 +259,7 @@ export default function PayrollPage() {
           </div>
           <p className="text-sm text-slate-500">Số tiền tháng hiện tại</p>
           <p className="text-3xl font-bold text-slate-900 mt-1">
-            {formatVnd(currentMonthAmount)}
+            {formatCurrency(currentMonthAmount)}
           </p>
         </div>
       </div>
@@ -380,10 +377,10 @@ export default function PayrollPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-slate-700 font-medium">
-                      {formatVnd(getGrossSalary(item))}
+                      {formatCurrency(getGrossSalary(item))}
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-slate-900 font-semibold">
-                      {formatVnd(item.finalNetSalary)}
+                      {formatCurrency(item.finalNetSalary)}
                     </td>
                     <td className="px-4 py-3">
                       <span

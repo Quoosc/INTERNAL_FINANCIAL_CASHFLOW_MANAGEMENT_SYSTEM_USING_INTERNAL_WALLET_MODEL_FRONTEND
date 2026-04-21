@@ -10,14 +10,8 @@ import {
   updateBankStatement,
 } from "@/lib/api";
 import { CompanyFundResponse, ReconciliationReportResponse } from "@/types";
+import { formatCurrency } from "@/lib/format";
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 export default function CfoSystemFundPage() {
   const [companyFund, setCompanyFund] = useState<CompanyFundResponse | null>(null);

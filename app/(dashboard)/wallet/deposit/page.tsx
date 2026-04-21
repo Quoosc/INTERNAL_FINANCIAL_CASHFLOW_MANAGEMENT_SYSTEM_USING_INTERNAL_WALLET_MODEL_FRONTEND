@@ -4,22 +4,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency, formatInputAmount } from "@/lib/format";
 import { DepositQRRequest, DepositQRResponse, PaymentStatusResponse } from "@/types";
 
 const MIN_AMOUNT = 10_000;
-
-function formatVnd(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatInputAmount(raw: string): string {
-  if (!raw) return "";
-  return `${Number(raw).toLocaleString("vi-VN")} ₫`;
-}
 
 function formatSecondsToClock(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
@@ -176,7 +164,7 @@ export default function DepositPage() {
             onChange={(e) => handleAmountChange(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           />
-          <p className="text-xs text-slate-500 mt-2">Tối thiểu: {formatVnd(MIN_AMOUNT)}</p>
+          <p className="text-xs text-slate-500 mt-2">Tối thiểu: {formatCurrency(MIN_AMOUNT)}</p>
         </div>
 
         {error && (
@@ -221,7 +209,7 @@ export default function DepositPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <InfoRow label="Mã tham chiếu" value={paymentData.transactionRef} mono />
-            <InfoRow label="Số tiền" value={formatVnd(paymentData.amount)} />
+            <InfoRow label="Số tiền" value={formatCurrency(paymentData.amount)} />
             <InfoRow label="Trạng thái" value={paymentData.status ?? "PENDING"} />
             <InfoRow label="Thông báo" value={paymentData.message ?? "Đã tạo liên kết thanh toán"} />
           </div>

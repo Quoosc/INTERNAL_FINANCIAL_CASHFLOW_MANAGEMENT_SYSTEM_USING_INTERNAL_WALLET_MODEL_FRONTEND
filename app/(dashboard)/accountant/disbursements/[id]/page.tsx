@@ -13,6 +13,7 @@ import {
   RequestStatus,
   RequestType,
 } from "@/types";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -21,23 +22,7 @@ interface PageProps {
 // DisburseResponse v3.0: id, requestCode, status, transactionCode, amount, disbursedAt
 type DisburseSuccessView = DisburseResponse;
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

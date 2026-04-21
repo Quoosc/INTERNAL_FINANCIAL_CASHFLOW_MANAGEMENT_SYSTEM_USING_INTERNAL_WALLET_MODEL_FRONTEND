@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api-client";
-import { parseAmountInput } from "@/lib/format";
+import { formatCurrency, parseAmountInput } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { useToast } from "@/contexts/toast-context";
 import {
@@ -154,13 +154,6 @@ const REQUEST_TYPE_CONFIG = [
   },
 ] as const;
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function formatInputAmount(raw?: number): string {
   if (!raw || raw <= 0) return "";

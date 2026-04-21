@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
   AutoNettingResponse,
   PayrollDetailResponse,
@@ -41,13 +43,6 @@ const MOCK_IMPORTED_ENTRIES: PayrollEntry[] = [
   { id: 204, payslipCode: "PS-2026-03-004", userId: 14, fullName: "Nguyen Thi Minh", avatar: null, employeeCode: "EMP004", jobTitle: "Business Analyst", baseSalary: 12_600_000, bonus: 700_000, allowance: 1_200_000, deduction: 250_000, advanceDeduct: 0, finalNetSalary: 14_250_000, status: PayslipStatus.DRAFT },
 ];
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(amount);
-}
-
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
-}
 
 function getStatusLabel(status: PayrollStatus): string {
   if (status === PayrollStatus.DRAFT) return "Nháp";
@@ -122,6 +117,11 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   const [netting, setNetting] = useState(false);
   const [running, setRunning] = useState(false);
   const [showRunConfirm, setShowRunConfirm] = useState(false);
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, message: "", onConfirm: () => {} });
 
   const [editingEntry, setEditingEntry] = useState<PayrollEntry | null>(null);
   const [baseSalary, setBaseSalary] = useState("0");
@@ -185,13 +185,24 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     setEntryError(null);
   };
 
-  const handleImport = async () => {
+  const handleImport = () => {
     if (!period || !selectedFile) return;
     if (period.entries.length > 0) {
-      const ok = window.confirm("Ky luong da co du lieu. Ban co muon ghi de bang file moi?");
-      if (!ok) return;
+      setConfirmState({
+        open: true,
+        message: "Kỳ lương đã có dữ liệu. Bạn có muốn ghi đè bằng file mới?",
+        onConfirm: () => {
+          setConfirmState((prev) => ({ ...prev, open: false }));
+          runImport();
+        },
+      });
+      return;
     }
+    runImport();
+  };
 
+  const runImport = async () => {
+    if (!period || !selectedFile) return;
     setUploading(true);
     try {
       // TODO: Replace when Sprint 7 is complete
@@ -615,6 +626,12 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={confirmState.open}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }

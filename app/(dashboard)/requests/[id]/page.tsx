@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { RequestStatusBadge, RequestTypeBadge } from "@/components/ui/status-badge";
-import { useToast } from "@/contexts/toast-context";
+import { useToast } from "@/contexts/toast-context";import { ConfirmModal } from "@/components/ui/confirm-modal";
+
 import {
   RequestAction,
   RequestDetailResponse,
@@ -276,7 +277,10 @@ export default function RequestDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);  const [confirmState, setConfirmState] = useState<{ open: boolean; message: string; onConfirm: () => void }>(
+    { open: false, message: "", onConfirm: () => {} }
+  );
+
 
   const [editAmount, setEditAmount] = useState("");
   const [editTitle, setEditTitle] = useState("");
@@ -408,29 +412,30 @@ export default function RequestDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleCancelRequest = async () => {
+  const handleCancelRequest = () => {
     if (!request) return;
-
-    const confirmed = window.confirm("Bạn chắc chắn muốn hủy yêu cầu này?");
-    if (!confirmed) return;
-
-    setActionLoading(true);
-    setError(null);
-
-    try {
-      // await api.delete(`/api/v1/requests/${id}`)
-      await api.delete(`/api/v1/requests/${id}`);
-      toast.success("Đã hủy yêu cầu thành công.");
-      router.push("/requests");
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.apiMessage);
-      } else {
-        setError("Không thể hủy yêu cầu. Vui lòng thử lại.");
-      }
-    } finally {
-      setActionLoading(false);
-    }
+    setConfirmState({
+      open: true,
+      message: "Bạn chắc chắn muốn hủy yêu cầu này?",
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, open: false }));
+        setActionLoading(true);
+        setError(null);
+        try {
+          await api.delete(`/api/v1/requests/${id}`);
+          toast.success("Đã hủy yêu cầu thành công.");
+          router.push("/requests");
+        } catch (err) {
+          if (err instanceof ApiError) {
+            setError(err.apiMessage);
+          } else {
+            setError("Không thể hủy yêu cầu. Vui lòng thử lại.");
+          }
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -682,6 +687,12 @@ export default function RequestDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={confirmState.open}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }

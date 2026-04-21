@@ -15,6 +15,9 @@ import {
   UnlockUserResponse,
   UserStatus,
 } from "@/types";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { MOCK_DEPARTMENTS } from "@/lib/mocks/departments";
+import { TableRowSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 10;
 
@@ -84,30 +87,6 @@ const MOCK_USERS: AdminUserListItem[] = [
     debtBalance: 2_500_000,
     status: UserStatus.LOCKED,
     createdAt: "2026-01-08T08:00:00",
-  },
-];
-
-// TODO: Replace when Sprint 2 is complete
-const MOCK_DEPARTMENTS: DepartmentListItem[] = [
-  {
-    id: 1,
-    name: "Phòng CNTT",
-    code: "IT",
-    manager: { id: 2, fullName: "Nguyễn Văn Tùng" },
-    employeeCount: 20,
-    totalProjectQuota: 800_000_000,
-    totalAvailableBalance: 524_500_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 2,
-    name: "Phòng Kinh doanh",
-    code: "SALES",
-    manager: { id: 8, fullName: "Trần Thị Bích" },
-    employeeCount: 15,
-    totalProjectQuota: 500_000_000,
-    totalAvailableBalance: 230_000_000,
-    createdAt: "2026-01-01T08:00:00",
   },
 ];
 
@@ -208,6 +187,11 @@ export default function AdminUsersPage() {
   const [newDepartmentId, setNewDepartmentId] = useState("");
 
   const [processingUserId, setProcessingUserId] = useState<number | null>(null);
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, message: "", onConfirm: () => {} });
 
   useEffect(() => {
     setSearchInput(search);
@@ -426,51 +410,57 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleToggleLock = async (user: AdminUserListItem) => {
+  const handleToggleLock = (user: AdminUserListItem) => {
     const isLocked = user.status === UserStatus.LOCKED;
-    const confirmed = window.confirm(isLocked ? `Mở khóa user ${user.fullName}?` : `Khóa user ${user.fullName}?`);
-    if (!confirmed) return;
-
-    setProcessingUserId(user.id);
-
-    try {
-      if (isLocked) {
-        const res = await api.post<UnlockUserResponse>(`/api/v1/admin/users/${user.id}/unlock`);
-        setItems((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: res.data.status } : item)));
-        setNotice(`Đã mở khóa ${user.fullName}.`);
-      } else {
-        const res = await api.post<LockUserResponse>(`/api/v1/admin/users/${user.id}/lock`);
-        setItems((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: res.data.status } : item)));
-        setNotice(`Đã khóa ${user.fullName}.`);
-      }
-    } catch {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === user.id
-            ? { ...item, status: isLocked ? UserStatus.ACTIVE : UserStatus.LOCKED }
-            : item
-        )
-      );
-      setNotice("API chưa sẵn sàng, đã mô phỏng thao tác lock/unlock.");
-    } finally {
-      setProcessingUserId(null);
-    }
+    setConfirmState({
+      open: true,
+      message: isLocked ? `Mở khóa tài khoản ${user.fullName}?` : `Khóa tài khoản ${user.fullName}?`,
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, open: false }));
+        setProcessingUserId(user.id);
+        try {
+          if (isLocked) {
+            const res = await api.post<UnlockUserResponse>(`/api/v1/admin/users/${user.id}/unlock`);
+            setItems((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: res.data.status } : item)));
+            setNotice(`Đã mở khóa ${user.fullName}.`);
+          } else {
+            const res = await api.post<LockUserResponse>(`/api/v1/admin/users/${user.id}/lock`);
+            setItems((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: res.data.status } : item)));
+            setNotice(`Đã khóa ${user.fullName}.`);
+          }
+        } catch {
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === user.id
+                ? { ...item, status: isLocked ? UserStatus.ACTIVE : UserStatus.LOCKED }
+                : item
+            )
+          );
+          setNotice("API chưa sẵn sàng, đã mô phỏng thao tác lock/unlock.");
+        } finally {
+          setProcessingUserId(null);
+        }
+      },
+    });
   };
 
-  const handleResetPassword = async (user: AdminUserListItem) => {
-    const confirmed = window.confirm(`Reset mật khẩu tạm cho ${user.fullName}?`);
-    if (!confirmed) return;
-
-    setProcessingUserId(user.id);
-
-    try {
-      await api.post<{ message: string }>(`/api/v1/admin/users/${user.id}/reset-password`);
-      setNotice(`Đã reset mật khẩu và gửi email cho ${user.email}.`);
-    } catch {
-      setNotice("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
-    } finally {
-      setProcessingUserId(null);
-    }
+  const handleResetPassword = (user: AdminUserListItem) => {
+    setConfirmState({
+      open: true,
+      message: `Reset mật khẩu tạm cho ${user.fullName}?`,
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, open: false }));
+        setProcessingUserId(user.id);
+        try {
+          await api.post<{ message: string }>(`/api/v1/admin/users/${user.id}/reset-password`);
+          setNotice(`Đã reset mật khẩu và gửi email cho ${user.email}.`);
+        } catch {
+          setNotice("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
+        } finally {
+          setProcessingUserId(null);
+        }
+      },
+    });
   };
 
   return (
@@ -558,13 +548,7 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {loading ? (
-                [...Array(6)].map((_, index) => (
-                  <tr key={`user-skeleton-${index}`} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
-                    <td colSpan={6} className="px-4 py-4">
-                      <div className="h-8 rounded bg-white animate-pulse" />
-                    </td>
-                  </tr>
-                ))
+                <TableRowSkeleton colSpan={6} rows={6} />
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center text-slate-500 text-sm py-12">
@@ -757,6 +741,12 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={confirmState.open}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }

@@ -9,6 +9,8 @@ import {
   AuditLogResponse,
   PaginatedResponse,
 } from "@/types";
+import { formatDateTime } from "@/lib/format";
+import { TableRowSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 20;
 
@@ -69,15 +71,6 @@ function parsePage(value: string | null): number {
   return Number.isFinite(page) && page > 0 ? page : 1;
 }
 
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
 
 function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
@@ -347,13 +340,7 @@ export default function AuditLogsPage() {
             </thead>
             <tbody>
               {loading ? (
-                [...Array(8)].map((_, index) => (
-                  <tr key={`audit-skeleton-${index}`} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
-                    <td colSpan={5} className="px-4 py-4">
-                      <div className="h-8 rounded bg-white animate-pulse" />
-                    </td>
-                  </tr>
-                ))
+                <TableRowSkeleton colSpan={5} rows={8} />
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center text-slate-500 text-sm py-12">

@@ -9,6 +9,8 @@ import {
   PayrollPeriodListItem,
   PayrollStatus,
 } from "@/types";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 8;
 
@@ -72,23 +74,7 @@ const MOCK_PERIODS: PayrollPeriodListItem[] = [
   },
 ];
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
@@ -483,11 +469,7 @@ export default function AccountantPayrollPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(4)].map((_, index) => (
-            <div key={`payroll-period-loading-${index}`} className="h-40 rounded-2xl bg-white animate-pulse" />
-          ))}
-        </div>
+        <CardListSkeleton rows={4} height="h-40" />
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
           <p className="text-slate-600">Không có kỳ lương phù hợp bộ lọc hiện tại.</p>

@@ -11,6 +11,8 @@ import {
   TeamLeaderOptionResponse,
   UpdateProjectBody,
 } from "@/types";
+import { formatCurrency, formatDate } from "@/lib/format";
+import { MOCK_TL_OPTIONS } from "@/lib/mocks/projects";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -74,43 +76,6 @@ const MOCK_PROJECT: ProjectDetailResponse = {
   createdAt: "2026-01-10T08:00:00",
   updatedAt: "2026-04-01T08:00:00",
 };
-
-// TODO: Replace when Sprint 4 is complete
-const MOCK_TL_OPTIONS: TeamLeaderOptionResponse[] = [
-  {
-    id: 4,
-    fullName: "Hoàng Minh Tuấn",
-    employeeCode: "TL001",
-    avatar: null,
-    email: "tl.it@ifms.vn",
-    jobTitle: "Team Leader IT",
-  },
-  {
-    id: 6,
-    fullName: "Lê Thu Trang",
-    employeeCode: "TL002",
-    avatar: null,
-    email: "tl.infra@ifms.vn",
-    jobTitle: "Team Leader Infra",
-  },
-];
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 function statusClass(status: string): string {
   switch (status) {

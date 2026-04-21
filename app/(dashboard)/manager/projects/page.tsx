@@ -11,6 +11,8 @@ import {
   ProjectStatus,
   TeamLeaderOptionResponse,
 } from "@/types";
+import { formatCurrency } from "@/lib/format";
+import { MOCK_TL_OPTIONS } from "@/lib/mocks/projects";
 
 const PAGE_LIMIT = 9;
 
@@ -77,34 +79,6 @@ const MOCK_PROJECTS: ManagerProjectViewItem[] = [
     teamLeaderName: "Lê Thu Trang",
   },
 ];
-
-// TODO: Replace when Sprint 4 is complete
-const MOCK_TL_OPTIONS: TeamLeaderOptionResponse[] = [
-  {
-    id: 4,
-    fullName: "Hoàng Minh Tuấn",
-    employeeCode: "TL001",
-    avatar: null,
-    email: "tl.it@ifms.vn",
-    jobTitle: "Team Leader IT",
-  },
-  {
-    id: 6,
-    fullName: "Lê Thu Trang",
-    employeeCode: "TL002",
-    avatar: null,
-    email: "tl.infra@ifms.vn",
-    jobTitle: "Team Leader Infra",
-  },
-];
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");

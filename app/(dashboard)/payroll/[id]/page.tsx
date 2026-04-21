@@ -3,6 +3,7 @@
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency } from "@/lib/format";
 import { PayslipDetailResponse, PayslipStatus } from "@/types";
 
 interface PageProps {
@@ -12,10 +13,6 @@ interface PageProps {
 interface BreakdownItem {
   label: string;
   amount: number;
-}
-
-function formatVnd(amount: number): string {
-  return `${new Intl.NumberFormat("vi-VN").format(amount)} ₫`;
 }
 
 function statusLabel(status: PayslipStatus): string {
@@ -298,7 +295,7 @@ function LineRow({
       <p className={`text-sm ${strong ? "font-semibold text-slate-900 print:text-gray-900" : "text-slate-600 print:text-gray-700"}`}>
         {label}
       </p>
-      <p className={`${toneClass} ${strong ? "font-bold" : "font-medium"}`}>{formatVnd(value)}</p>
+      <p className={`${toneClass} ${strong ? "font-bold" : "font-medium"}`}>{formatCurrency(value)}</p>
     </div>
   );
 }
@@ -322,7 +319,7 @@ function MetricCard({
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 print:bg-white print:border-gray-300">
       <p className="text-xs text-slate-500 print:text-gray-600">{title}</p>
-      <p className={`text-xl font-bold mt-1 ${toneClass}`}>{formatVnd(value)}</p>
+      <p className={`text-xl font-bold mt-1 ${toneClass}`}>{formatCurrency(value)}</p>
     </div>
   );
 }

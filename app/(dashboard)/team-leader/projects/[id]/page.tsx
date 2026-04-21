@@ -4,6 +4,8 @@
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api-client";
+import { formatCurrency } from "@/lib/format";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
   AddMemberBody,
   AvailableMemberResponse,
@@ -125,9 +127,6 @@ const MOCK_EXPENSE_CATEGORIES: ExpenseCategoryResponse[] = [
   { id: 5, name: "Tools", description: null, isSystemDefault: true },
 ];
 
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(n);
-}
 
 function burn(spent: number, budget: number): number {
   if (budget <= 0) return 0;
@@ -204,6 +203,11 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const [showEditMember, setShowEditMember] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [editingPosition, setEditingPosition] = useState("");
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, message: "", onConfirm: () => {} });
 
   useEffect(() => {
     let cancelled = false;
@@ -505,17 +509,23 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setError("Không thể xóa LEADER.");
       return;
     }
-    if (!window.confirm("Bạn có chắc muốn xóa thành viên này?")) return;
-    setSubmitting(true);
-    try {
-      await api.delete(`/api/v1/team-leader/projects/${project.id}/members/${userId}`);
-    } catch {
-      // mock-first
-    } finally {
-      setProject((prev) => (prev ? { ...prev, members: prev.members.filter((m) => m.userId !== userId) } : prev));
-      setSubmitting(false);
-      setNotice("Đã xóa thành viên.");
-    }
+    setConfirmState({
+      open: true,
+      message: `Bạn có chắc muốn xóa thành viên ${target.fullName}?`,
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, open: false }));
+        setSubmitting(true);
+        try {
+          await api.delete(`/api/v1/team-leader/projects/${project.id}/members/${userId}`);
+        } catch {
+          // mock-first
+        } finally {
+          setProject((prev) => (prev ? { ...prev, members: prev.members.filter((m) => m.userId !== userId) } : prev));
+          setSubmitting(false);
+          setNotice("Đã xóa thành viên.");
+        }
+      },
+    });
   };
 
   const onTopup = async () => {
@@ -801,6 +811,12 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           </div>
         </Modal>
       )}
+      <ConfirmModal
+        open={confirmState.open}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }

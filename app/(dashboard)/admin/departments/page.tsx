@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import {
@@ -10,82 +10,11 @@ import {
   PaginatedResponse,
   UpdateDepartmentBody,
 } from "@/types";
+import { formatCurrency } from "@/lib/format";
+import { MOCK_DEPARTMENTS, MOCK_MANAGERS } from "@/lib/mocks/departments";
 
 const PAGE_LIMIT = 10;
 
-// TODO: Replace when Sprint 2 is complete
-const MOCK_DEPARTMENTS: DepartmentListItem[] = [
-  {
-    id: 1,
-    name: "Phòng CNTT",
-    code: "IT",
-    manager: { id: 5, fullName: "Trần Thị Bích" },
-    employeeCount: 20,
-    totalProjectQuota: 800_000_000,
-    totalAvailableBalance: 524_500_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 2,
-    name: "Phòng Kinh doanh",
-    code: "SALES",
-    manager: { id: 6, fullName: "Nguyễn Văn Tùng" },
-    employeeCount: 15,
-    totalProjectQuota: 500_000_000,
-    totalAvailableBalance: 230_000_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 3,
-    name: "Phòng Tài chính",
-    code: "FIN",
-    manager: { id: 7, fullName: "Phạm Hoài Nam" },
-    employeeCount: 10,
-    totalProjectQuota: 450_000_000,
-    totalAvailableBalance: 190_000_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-];
-
-// TODO: Replace when Sprint 2 is complete
-const MOCK_MANAGERS: AdminUserListItem[] = [
-  {
-    id: 5,
-    fullName: "Trần Thị Bích",
-    email: "manager.it@ifms.vn",
-    employeeCode: "MGR001",
-    role: "MANAGER",
-    departmentId: 1,
-    departmentName: "Phòng CNTT",
-    jobTitle: "Manager IT",
-    avatar: null,
-    debtBalance: 0,
-    status: "ACTIVE",
-    createdAt: "2026-01-02T08:00:00",
-  },
-  {
-    id: 6,
-    fullName: "Nguyễn Văn Tùng",
-    email: "manager.sales@ifms.vn",
-    employeeCode: "MGR002",
-    role: "MANAGER",
-    departmentId: 2,
-    departmentName: "Phòng Kinh doanh",
-    jobTitle: "Manager Sales",
-    avatar: null,
-    debtBalance: 0,
-    status: "ACTIVE",
-    createdAt: "2026-01-02T08:00:00",
-  },
-];
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");

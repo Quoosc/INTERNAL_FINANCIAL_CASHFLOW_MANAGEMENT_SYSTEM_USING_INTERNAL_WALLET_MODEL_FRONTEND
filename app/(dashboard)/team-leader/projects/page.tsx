@@ -8,6 +8,7 @@ import {
   ProjectStatus,
   TLProjectListItem,
 } from "@/types";
+import { formatCurrency } from "@/lib/format";
 
 const PAGE_LIMIT = 12;
 
@@ -67,13 +68,6 @@ const MOCK_PROJECTS: TLProjectListItem[] = [
   },
 ];
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function parseStatus(value: string | null): ProjectStatus | undefined {
   if (!value) return undefined;

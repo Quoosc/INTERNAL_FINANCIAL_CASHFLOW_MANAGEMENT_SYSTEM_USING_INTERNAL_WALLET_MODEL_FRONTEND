@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api-client";
 import { ReferenceType, TransactionResponse, TransactionStatus, TransactionType } from "@/types";
+import { formatCurrency } from "@/lib/format";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -30,13 +31,6 @@ const MOCK_TXN: LedgerTxnDetailView = {
   createdAt: "2026-04-03T11:00:00",
 };
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat("vi-VN", {

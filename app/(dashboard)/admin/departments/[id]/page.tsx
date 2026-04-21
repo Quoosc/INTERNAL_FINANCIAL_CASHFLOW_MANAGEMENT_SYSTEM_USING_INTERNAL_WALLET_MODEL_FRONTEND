@@ -9,6 +9,8 @@ import {
   DepartmentMemberItem,
   UpdateDepartmentBody,
 } from "@/types";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { MOCK_MANAGERS } from "@/lib/mocks/departments";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -59,55 +61,6 @@ const MOCK_DEPARTMENT_DETAIL: DepartmentDetailResponse = {
 };
 
 // TODO: Replace when Sprint 2 is complete
-const MOCK_MANAGERS: AdminUserListItem[] = [
-  {
-    id: 5,
-    fullName: "Trần Thị Bích",
-    email: "manager.it@ifms.vn",
-    employeeCode: "MGR001",
-    role: "MANAGER",
-    departmentId: 1,
-    departmentName: "Phòng CNTT",
-    jobTitle: "Manager IT",
-    avatar: null,
-    debtBalance: 0,
-    status: "ACTIVE",
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 6,
-    fullName: "Nguyễn Văn Tùng",
-    email: "manager.sales@ifms.vn",
-    employeeCode: "MGR002",
-    role: "MANAGER",
-    departmentId: 2,
-    departmentName: "Phòng Kinh doanh",
-    jobTitle: "Manager Sales",
-    avatar: null,
-    debtBalance: 0,
-    status: "ACTIVE",
-    createdAt: "2026-01-01T08:00:00",
-  },
-];
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
-
 function statusBadgeClass(status: string): string {
   if (status === "ACTIVE") return "bg-emerald-100 border-emerald-200 text-emerald-700";
   if (status === "LOCKED") return "bg-rose-100 border-rose-200 text-rose-700";

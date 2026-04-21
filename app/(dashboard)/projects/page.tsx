@@ -4,16 +4,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { PaginatedResponse, ProjectListItem, ProjectStatus } from "@/types";
+import { formatCurrency } from "@/lib/format";
 
 const PAGE_LIMIT = 9;
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function getStatusLabel(status: ProjectStatus): string {
   switch (status) {

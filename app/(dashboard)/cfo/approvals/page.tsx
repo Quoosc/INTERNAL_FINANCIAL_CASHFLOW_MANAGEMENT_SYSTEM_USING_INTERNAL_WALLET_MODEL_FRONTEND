@@ -11,6 +11,9 @@ import {
   RequestStatus,
   RequestType,
 } from "@/types";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { MOCK_SYSTEM_FUND_BALANCE } from "@/lib/mocks/system";
+import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 10;
 
@@ -64,27 +67,6 @@ const MOCK_APPROVALS: AdminApprovalListItem[] = [
     createdAt: "2026-04-01T11:00:00",
   },
 ];
-
-// TODO: Replace when Sprint 6 is complete
-const MOCK_SYSTEM_FUND_BALANCE = 1_248_500_000;
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
@@ -339,14 +321,7 @@ export default function CfoApprovalsPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, index) => (
-            <div
-              key={`cfo-approvals-skeleton-${index}`}
-              className="h-44 rounded-2xl bg-white animate-pulse"
-            />
-          ))}
-        </div>
+        <CardListSkeleton rows={5} height="h-44" />
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
           <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">

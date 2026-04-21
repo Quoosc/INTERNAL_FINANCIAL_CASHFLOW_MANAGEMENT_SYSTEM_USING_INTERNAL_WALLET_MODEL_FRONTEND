@@ -8,26 +8,10 @@ import {
   ProjectPhasesResponse,
   ProjectPhaseResponse,
 } from "@/types";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 interface PageProps {
   params: Promise<{ id: string }>;
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "-";
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(iso));
 }
 
 function getPhaseStatusClass(status: PhaseStatus): string {

@@ -13,6 +13,10 @@ import {
   UpdateUserBody,
   UserStatus,
 } from "@/types";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { MOCK_DEPARTMENTS } from "@/lib/mocks/departments";
+
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -63,47 +67,8 @@ const MOCK_DETAIL: AdminUserDetailResponse = {
   updatedAt: "2026-04-08T09:30:00",
 };
 
-// TODO: Replace when Sprint 2 is complete
-const MOCK_DEPARTMENTS: DepartmentListItem[] = [
-  {
-    id: 1,
-    name: "Phòng CNTT",
-    code: "IT",
-    manager: { id: 2, fullName: "Nguyễn Văn Tùng" },
-    employeeCount: 20,
-    totalProjectQuota: 800_000_000,
-    totalAvailableBalance: 524_500_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 2,
-    name: "Phòng Kinh doanh",
-    code: "SALES",
-    manager: { id: 8, fullName: "Trần Thị Bích" },
-    employeeCount: 15,
-    totalProjectQuota: 500_000_000,
-    totalAvailableBalance: 230_000_000,
-    createdAt: "2026-01-01T08:00:00",
-  },
-];
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
 
 function statusBadgeClass(status: string): string {
   switch (status) {
@@ -154,7 +119,10 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);  const [confirmState, setConfirmState] = useState<{ open: boolean; message: string; onConfirm: () => void }>(
+    { open: false, message: "", onConfirm: () => {} }
+  );
+
   const [processing, setProcessing] = useState(false);
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -293,12 +261,14 @@ export default function AdminUserDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleToggleLock = async () => {
+  const handleToggleLock = () => {
     if (!user) return;
-
     const isLocked = user.status === UserStatus.LOCKED;
-    const confirmed = window.confirm(isLocked ? "Mở khóa tài khoản này?" : "Khóa tài khoản này?");
-    if (!confirmed) return;
+    setConfirmState({
+      open: true,
+      message: isLocked ? "Mở khóa tài khoản này?" : "Khóa tài khoản này?",
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, open: false }));
 
     setProcessing(true);
 
@@ -322,16 +292,20 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           : prev
       );
       setNotice("API chưa sẵn sàng, đã mô phỏng lock/unlock.");
-    } finally {
-      setProcessing(false);
-    }
+      } finally {
+        setProcessing(false);
+      }
+    },
+    });
   };
 
-  const handleResetPassword = async () => {
+  const handleResetPassword = () => {
     if (!user) return;
-
-    const confirmed = window.confirm("Reset mật khẩu tạm và gửi email cho user này?");
-    if (!confirmed) return;
+    setConfirmState({
+      open: true,
+      message: "Reset mật khẩu tạm và gửi email cho user này?",
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, open: false }));
 
     setProcessing(true);
 
@@ -340,9 +314,11 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       setNotice("Đã reset mật khẩu và gửi email onboarding.");
     } catch {
       setNotice("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
-    } finally {
-      setProcessing(false);
-    }
+      } finally {
+        setProcessing(false);
+      }
+    },
+    });
   };
 
   if (loading) {
@@ -553,6 +529,12 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={confirmState.open}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }

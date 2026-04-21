@@ -39,7 +39,7 @@ export function ToastStack() {
           <div
             key={toast.id}
             role="alert"
-            className={`flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg pointer-events-auto ${s.wrap}`}
+            className={`flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg pointer-events-auto [animation:toast-slide-in_0.25s_ease-out] ${s.wrap}`}
           >
             <svg className={`w-5 h-5 shrink-0 mt-0.5 ${s.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={s.path} />

@@ -3,7 +3,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { z } from "zod";
 import { ApiError, api } from "@/lib/api-client";
+import { parseAmountInput } from "@/lib/format";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import {
   CreateRequestBody,
   ExpenseCategoryResponse,
@@ -207,6 +210,7 @@ export default function NewRequestPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
 
   const isProjectBasedType = useMemo(
     () => form.type === RequestType.ADVANCE || form.type === RequestType.EXPENSE,
@@ -341,7 +345,7 @@ export default function NewRequestPage() {
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Khong the tai danh sach hang muc chi phi.");
+          setError("Không thể tải danh sách hạng mục chi phí.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -364,10 +368,10 @@ export default function NewRequestPage() {
   }, [files]);
 
   const handleAmountChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    const digitsOnly = parseAmountInput(value);
     const amount = digitsOnly ? Number(digitsOnly) : undefined;
-
     setForm((prev) => ({ ...prev, amount }));
+    if (fieldErrors.amount) setFieldErrors((prev) => ({ ...prev, amount: undefined }));
   };
 
   const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -397,30 +401,62 @@ export default function NewRequestPage() {
     });
   };
 
-  const validateBeforeSubmit = (): string | null => {
-    if (!form.type) return "Vui lòng chọn loại yêu cầu.";
-    if (!form.amount || form.amount <= 0) return "Vui lòng nhập số tiền hợp lệ.";
-    if (!title.trim()) return "Vui lòng nhập tiêu đề yêu cầu.";
-    if (!form.description?.trim()) return "Vui lòng nhập mô tả yêu cầu.";
-    if (isProjectBasedType) {
-      if (!form.projectId) return "Vui lòng chọn dự án.";
-      if (!form.phaseId) return "Vui lòng chọn phase.";
-      if (!form.categoryId) return "Vui lòng chọn hạng mục chi phí.";
-    }
-    if (!expenseDate) return "Vui lòng chọn ngày chi tiêu.";
+  const validateBeforeSubmit = (): boolean => {
+    const schema = z.object({
+      type: z.enum(
+        [RequestType.ADVANCE, RequestType.EXPENSE, RequestType.REIMBURSE] as const,
+        { error: "Vui lòng chọn loại yêu cầu." }
+      ),
+      amount: z.number({ error: "Vui lòng nhập số tiền hợp lệ." }).min(1_000, "Số tiền tối thiểu là 1.000 ₫."),
+      title: z.string().min(3, "Tiêu đề cần ít nhất 3 ký tự.").max(200, "Tiêu đề quá dài."),
+      description: z.string().min(10, "Mô tả cần ít nhất 10 ký tự.").max(1000, "Mô tả không được vượt quá 1.000 ký tự."),
+      projectId: isProjectBasedType
+        ? z.number({ error: "Vui lòng chọn dự án." }).positive("Vui lòng chọn dự án.")
+        : z.number().optional(),
+      phaseId: isProjectBasedType
+        ? z.number({ error: "Vui lòng chọn phase." }).positive("Vui lòng chọn phase.")
+        : z.number().optional(),
+      categoryId: isProjectBasedType
+        ? z.number({ error: "Vui lòng chọn hạng mục chi phí." }).positive("Vui lòng chọn hạng mục chi phí.")
+        : z.number().optional(),
+      expenseDate: z.string().min(1, "Vui lòng chọn ngày chi tiêu."),
+    });
 
-    return null;
+    const result = schema.safeParse({
+      type: form.type,
+      amount: form.amount,
+      title: title.trim(),
+      description: form.description?.trim() ?? "",
+      projectId: form.projectId,
+      phaseId: form.phaseId,
+      categoryId: form.categoryId,
+      expenseDate,
+    });
+
+    if (!result.success) {
+      const flat = result.error.flatten().fieldErrors;
+      setFieldErrors({
+        type: flat.type?.[0],
+        amount: flat.amount?.[0],
+        title: flat.title?.[0],
+        description: flat.description?.[0],
+        projectId: flat.projectId?.[0],
+        phaseId: flat.phaseId?.[0],
+        categoryId: flat.categoryId?.[0],
+        expenseDate: flat.expenseDate?.[0],
+      });
+      return false;
+    }
+
+    setFieldErrors({});
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
-    const validationError = validateBeforeSubmit();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    if (!validateBeforeSubmit()) return;
 
     setSubmitting(true);
 
@@ -515,11 +551,12 @@ export default function NewRequestPage() {
               value={formatInputAmount(form.amount)}
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="Nhập số tiền"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.amount ? "border-rose-300" : "border-slate-200"}`}
             />
-            <p className="text-xs text-slate-500 mt-1">
-              {form.amount ? `Giá trị: ${formatCurrency(form.amount)}` : ""}
-            </p>
+            {fieldErrors.amount
+              ? <p className="text-xs text-rose-600 mt-1">{fieldErrors.amount}</p>
+              : <p className="text-xs text-slate-500 mt-1">{form.amount ? `Giá trị: ${formatCurrency(form.amount)}` : ""}</p>
+            }
           </div>
 
           <div className="md:col-span-2">
@@ -527,10 +564,11 @@ export default function NewRequestPage() {
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); if (fieldErrors.title) setFieldErrors((p) => ({ ...p, title: undefined })); }}
               placeholder="Ví dụ: Tạm ứng công tác tháng 4"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.title ? "border-rose-300" : "border-slate-200"}`}
             />
+            {fieldErrors.title && <p className="text-xs text-rose-600 mt-1">{fieldErrors.title}</p>}
           </div>
 
           <div className="md:col-span-2">
@@ -538,15 +576,14 @@ export default function NewRequestPage() {
             <textarea
               rows={4}
               value={form.description ?? ""}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, description: e.target.value }));
+                if (fieldErrors.description) setFieldErrors((p) => ({ ...p, description: undefined }));
+              }}
               placeholder="Mô tả nội dung chi tiêu..."
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.description ? "border-rose-300" : "border-slate-200"}`}
             />
+            {fieldErrors.description && <p className="text-xs text-rose-600 mt-1">{fieldErrors.description}</p>}
           </div>
 
           <div>
@@ -555,13 +592,11 @@ export default function NewRequestPage() {
               value={form.projectId?.toString() ?? ""}
               onChange={(e) => {
                 const value = Number(e.target.value);
-                setForm((prev) => ({
-                  ...prev,
-                  projectId: Number.isFinite(value) && value > 0 ? value : undefined,
-                }));
+                setForm((prev) => ({ ...prev, projectId: Number.isFinite(value) && value > 0 ? value : undefined }));
+                if (fieldErrors.projectId) setFieldErrors((p) => ({ ...p, projectId: undefined }));
               }}
               disabled={!isProjectBasedType || loading}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.projectId ? "border-rose-300" : "border-slate-200"}`}
             >
               <option value="">Chọn dự án</option>
               {projects.map((project) => (
@@ -570,6 +605,7 @@ export default function NewRequestPage() {
                 </option>
               ))}
             </select>
+            {fieldErrors.projectId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.projectId}</p>}
           </div>
 
           <div>
@@ -578,14 +614,11 @@ export default function NewRequestPage() {
               value={form.phaseId?.toString() ?? ""}
               onChange={(e) => {
                 const value = Number(e.target.value);
-                setForm((prev) => ({
-                  ...prev,
-                  phaseId: Number.isFinite(value) && value > 0 ? value : undefined,
-                  categoryId: undefined,
-                }));
+                setForm((prev) => ({ ...prev, phaseId: Number.isFinite(value) && value > 0 ? value : undefined, categoryId: undefined }));
+                if (fieldErrors.phaseId) setFieldErrors((p) => ({ ...p, phaseId: undefined }));
               }}
               disabled={!isProjectBasedType || !form.projectId || loading}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.phaseId ? "border-rose-300" : "border-slate-200"}`}
             >
               <option value="">{form.projectId ? "Chọn phase" : "Chọn dự án trước"}</option>
               {(phases?.phases ?? []).map((phase) => (
@@ -594,21 +627,20 @@ export default function NewRequestPage() {
                 </option>
               ))}
             </select>
+            {fieldErrors.phaseId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.phaseId}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Hang muc chi phi</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Hạng mục chi phí</label>
             <select
               value={form.categoryId?.toString() ?? ""}
               onChange={(e) => {
                 const value = Number(e.target.value);
-                setForm((prev) => ({
-                  ...prev,
-                  categoryId: Number.isFinite(value) && value > 0 ? value : undefined,
-                }));
+                setForm((prev) => ({ ...prev, categoryId: Number.isFinite(value) && value > 0 ? value : undefined }));
+                if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: undefined }));
               }}
               disabled={!isProjectBasedType || !form.phaseId}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.categoryId ? "border-rose-300" : "border-slate-200"}`}
             >
               <option value="">{form.phaseId ? "Chọn hạng mục" : "Chọn phase trước"}</option>
               {categoryOptions.map((category) => (
@@ -617,6 +649,7 @@ export default function NewRequestPage() {
                 </option>
               ))}
             </select>
+            {fieldErrors.categoryId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.categoryId}</p>}
           </div>
 
           <div>
@@ -624,9 +657,10 @@ export default function NewRequestPage() {
             <input
               type="date"
               value={expenseDate}
-              onChange={(e) => setExpenseDate(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              onChange={(e) => { setExpenseDate(e.target.value); if (fieldErrors.expenseDate) setFieldErrors((p) => ({ ...p, expenseDate: undefined })); }}
+              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.expenseDate ? "border-rose-300" : "border-slate-200"}`}
             />
+            {fieldErrors.expenseDate && <p className="text-xs text-rose-600 mt-1">{fieldErrors.expenseDate}</p>}
           </div>
         </div>
 
@@ -692,11 +726,7 @@ export default function NewRequestPage() {
           )}
         </div>
 
-        {error && (
-          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-            {error}
-          </div>
-        )}
+        {error && <ErrorAlert message={error} />}
 
         <div className="flex items-center gap-3">
           <button

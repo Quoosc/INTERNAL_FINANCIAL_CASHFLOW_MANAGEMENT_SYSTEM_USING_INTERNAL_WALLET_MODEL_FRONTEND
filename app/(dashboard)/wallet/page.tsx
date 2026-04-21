@@ -7,6 +7,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
 import { createWithdrawRequest } from "@/lib/api";
+import { withdrawSchema, depositSchema } from "@/lib/schemas";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import {
   DepositQRRequest,
   DepositQRResponse,
@@ -18,7 +20,6 @@ import {
   WithdrawRequestResponse,
 } from "@/types";
 
-const MIN_AMOUNT = 10_000;
 
 function formatSecondsToClock(total: number): string {
   const m = Math.floor(total / 60).toString().padStart(2, "0");
@@ -60,7 +61,11 @@ function DepositModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     setError(null);
     setStatusMsg(null);
-    if (amountNum < MIN_AMOUNT) { setError("Số tiền tối thiểu là 10.000 ₫."); return; }
+    const validation = depositSchema.safeParse({ amount: amountNum });
+    if (!validation.success) {
+      setError(validation.error.flatten().fieldErrors.amount?.[0] ?? "Số tiền không hợp lệ.");
+      return;
+    }
     setLoading(true);
     try {
       const payload: DepositQRRequest = { amount: amountNum };
@@ -111,7 +116,7 @@ function DepositModal({ onClose }: { onClose: () => void }) {
                 />
                 <p className="text-xs text-slate-500 mt-1">Tối thiểu: 10.000 ₫</p>
               </div>
-              {error && <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
+              {error && <ErrorAlert message={error} />}
               <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold transition-colors">
                 {loading ? "Đang tạo..." : "Tạo thanh toán"}
               </button>
@@ -175,8 +180,15 @@ function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (amountNum < MIN_AMOUNT) { setError("Số tiền rút tối thiểu là 10.000 ₫."); return; }
-    if (amountNum > available) { setError("Số tiền rút không được vượt quá số dư khả dụng."); return; }
+    const validation = withdrawSchema.safeParse({ amount: amountNum, note: note.trim() || undefined });
+    if (!validation.success) {
+      setError(validation.error.flatten().fieldErrors.amount?.[0] ?? "Số tiền không hợp lệ.");
+      return;
+    }
+    if (amountNum > available) {
+      setError("Số tiền rút không được vượt quá số dư khả dụng.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await createWithdrawRequest({ amount: amountNum, userNote: note.trim() || undefined });
@@ -224,7 +236,7 @@ function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBal
                 <textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ví dụ: Rút tiền chi tiêu cá nhân" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
               </div>
 
-              {error && <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
+              {error && <ErrorAlert message={error} />}
 
               <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-semibold transition-colors">
                 {loading ? "Đang gửi..." : "Gửi yêu cầu rút tiền"}

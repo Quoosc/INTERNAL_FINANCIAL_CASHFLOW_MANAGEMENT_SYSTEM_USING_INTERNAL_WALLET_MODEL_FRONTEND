@@ -6,31 +6,10 @@ import { useRouter } from "next/navigation";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError } from "@/lib/api-client";
 import { cancelWithdrawRequest, createWithdrawRequest, getMyWithdrawRequests } from "@/lib/api";
+import { formatCurrency, formatDateTime, formatInputAmount, parseAmountInput } from "@/lib/format";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { EmptyState } from "@/components/ui/loading-skeleton";
 import { WithdrawRequestResponse, WithdrawStatus } from "@/types";
-
-function formatVnd(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatInputAmount(raw: string): string {
-  if (!raw) return "";
-  return `${Number(raw).toLocaleString("vi-VN")} ?`;
-}
-
-function formatDateTime(iso: string | null): string {
-  if (!iso) return "-";
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
 
 function getWithdrawStatusClass(status: WithdrawStatus): string {
   if (status === WithdrawStatus.PENDING) {
@@ -55,17 +34,17 @@ function getWithdrawStatusClass(status: WithdrawStatus): string {
 function getWithdrawStatusLabel(status: WithdrawStatus): string {
   switch (status) {
     case WithdrawStatus.PENDING:
-      return "Dang cho";
+      return "Đang chờ";
     case WithdrawStatus.COMPLETED:
-      return "Hoan tat";
+      return "Hoàn tất";
     case WithdrawStatus.REJECTED:
-      return "Tu choi";
+      return "Từ chối";
     case WithdrawStatus.CANCELLED:
-      return "Da huy";
+      return "Đã hủy";
     case WithdrawStatus.FAILED:
-      return "That bai";
+      return "Thất bại";
     case WithdrawStatus.PROCESSING:
-      return "Dang xu ly";
+      return "Đang xử lý";
     default:
       return status;
   }
@@ -102,7 +81,7 @@ export default function WithdrawPage() {
       if (err instanceof ApiError) {
         setHistoryError(err.apiMessage);
       } else {
-        setHistoryError("Khong the tai lich su rut tien.");
+        setHistoryError("Không thể tải lịch sử rút tiền.");
       }
     } finally {
       setHistoryLoading(false);
@@ -116,22 +95,22 @@ export default function WithdrawPage() {
 
   const validateAmount = (): boolean => {
     if (!wallet) {
-      setError("Khong the tai thong tin vi. Vui long thu lai.");
+      setError("Không thể tải thông tin ví. Vui lòng thử lại.");
       return false;
     }
 
     if (amountNumber <= 0) {
-      setError("Vui long nhap so tien hop le.");
+      setError("Vui lòng nhập số tiền hợp lệ.");
       return false;
     }
 
     if (amountNumber < 10_000) {
-      setError("So tien rut toi thieu la 10,000 VND.");
+      setError("Số tiền rút tối thiểu là 10.000 ₫.");
       return false;
     }
 
     if (amountNumber > availableBalance) {
-      setError("So tien rut khong duoc vuot qua so du kha dung.");
+      setError("Số tiền rút không được vượt quá số dư khả dụng.");
       return false;
     }
 
@@ -139,8 +118,7 @@ export default function WithdrawPage() {
   };
 
   const handleAmountChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-    setAmount(digitsOnly);
+    setAmount(parseAmountInput(value));
   };
 
   const handleSubmitWithdraw = async (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -164,7 +142,7 @@ export default function WithdrawPage() {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
-        setError("Khong the ket noi API. Vui long thu lai.");
+        setError("Không thể kết nối API. Vui lòng thử lại.");
       }
     } finally {
       setLoading(false);
@@ -183,7 +161,7 @@ export default function WithdrawPage() {
       if (err instanceof ApiError) {
         setHistoryError(err.apiMessage);
       } else {
-        setHistoryError("Khong the huy yeu cau rut tien.");
+        setHistoryError("Không thể hủy yêu cầu rút tiền.");
       }
     } finally {
       setCancellingId(null);
@@ -200,22 +178,22 @@ export default function WithdrawPage() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
         </svg>
-        Quay lai
+        Quay lại
       </button>
 
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Rut tien</h1>
-        <p className="text-slate-500 mt-1">Tao yeu cau rut tien tu vi noi bo ve tai khoan ngan hang.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Rút tiền</h1>
+        <p className="text-slate-500 mt-1">Tạo yêu cầu rút tiền từ ví nội bộ về tài khoản ngân hàng.</p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6">
-        <p className="text-sm text-slate-500">So du hien tai</p>
+        <p className="text-sm text-slate-500">Số dư hiện tại</p>
         {walletLoading ? (
-          <div className="mt-2 h-9 w-48 rounded bg-blue-100 animate-pulse" />
+          <div className="mt-2 h-9 w-48 rounded bg-slate-100 animate-pulse" />
         ) : (
           <>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{formatVnd(currentBalance)}</p>
-            <p className="text-sm text-slate-500 mt-1">Kha dung: {formatVnd(availableBalance)}</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{formatCurrency(currentBalance)}</p>
+            <p className="text-sm text-slate-500 mt-1">Khả dụng: {formatCurrency(availableBalance)}</p>
           </>
         )}
       </div>
@@ -224,7 +202,7 @@ export default function WithdrawPage() {
         <form onSubmit={handleSubmitWithdraw} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-slate-600 mb-2">
-              So tien rut
+              Số tiền rút
             </label>
             <input
               id="amount"
@@ -232,37 +210,34 @@ export default function WithdrawPage() {
               inputMode="numeric"
               value={amountDisplay}
               onChange={(e) => handleAmountChange(e.target.value)}
-              placeholder="Nhap so tien"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              placeholder="Nhập số tiền"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
+            <p className="text-xs text-slate-500 mt-1">Tối thiểu: 10.000 ₫ — Khả dụng: {formatCurrency(availableBalance)}</p>
           </div>
 
           <div>
             <label htmlFor="note" className="block text-sm font-medium text-slate-600 mb-2">
-              Ghi chu (khong bat buoc)
+              Ghi chú (không bắt buộc)
             </label>
             <textarea
               id="note"
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Vi du: Rut tien chi tieu ca nhan"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              placeholder="Ví dụ: Rút tiền chi tiêu cá nhân"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
           </div>
 
-          {error && (
-            <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-              {error}
-            </div>
-          )}
+          {error && <ErrorAlert message={error} />}
 
           <button
             type="submit"
             disabled={loading}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
           >
-            {loading ? "Dang gui yeu cau..." : "Gui yeu cau rut tien"}
+            {loading ? "Đang gửi yêu cầu..." : "Gửi yêu cầu rút tiền"}
           </button>
         </form>
       ) : (
@@ -274,18 +249,18 @@ export default function WithdrawPage() {
               </svg>
             </span>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Da tao yeu cau rut tien</h2>
-              <p className="text-sm text-slate-500">Yeu cau dang cho xu ly boi ke toan.</p>
+              <h2 className="text-lg font-semibold text-slate-900">Đã tạo yêu cầu rút tiền</h2>
+              <p className="text-sm text-slate-500">Yêu cầu đang chờ xử lý bởi kế toán.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <InfoRow label="Ma yeu cau" value={result.withdrawCode} />
-            <InfoRow label="Trang thai" value={result.status} />
-            <InfoRow label="So tien" value={formatVnd(result.amount)} />
-            <InfoRow label="Thoi gian tao" value={formatDateTime(result.createdAt)} />
-            <InfoRow label="Ngan hang" value={result.creditBankName} />
-            <InfoRow label="Tai khoan" value={`${result.creditAccountName} - ${result.creditAccount}`} />
+            <InfoRow label="Mã yêu cầu" value={result.withdrawCode} />
+            <InfoRow label="Trạng thái" value={result.status} />
+            <InfoRow label="Số tiền" value={formatCurrency(result.amount)} />
+            <InfoRow label="Thời gian tạo" value={formatDateTime(result.createdAt)} />
+            <InfoRow label="Ngân hàng" value={result.creditBankName} />
+            <InfoRow label="Tài khoản" value={`${result.creditAccountName} - ${result.creditAccount}`} />
           </div>
 
           <div className="flex items-center gap-3">
@@ -293,7 +268,7 @@ export default function WithdrawPage() {
               href="/wallet"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
             >
-              Ve vi
+              Về ví
             </Link>
             <button
               type="button"
@@ -305,7 +280,7 @@ export default function WithdrawPage() {
               }}
               className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
             >
-              Tao yeu cau moi
+              Tạo yêu cầu mới
             </button>
           </div>
         </div>
@@ -313,45 +288,45 @@ export default function WithdrawPage() {
 
       <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-slate-900">Lich su yeu cau rut tien</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Lịch sử yêu cầu rút tiền</h2>
           <button
             type="button"
             onClick={() => void loadWithdrawHistory()}
             disabled={historyLoading}
             className="px-3 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-xs font-medium"
           >
-            Tai lai
+            Tải lại
           </button>
         </div>
 
         {historyLoading ? (
-          <div className="py-8 text-center text-slate-500 text-sm">Dang tai lich su...</div>
+          <div className="py-8 text-center text-slate-500 text-sm">Đang tải lịch sử...</div>
         ) : history.length === 0 ? (
-          <div className="py-8 text-center text-slate-500 text-sm">Chua co yeu cau rut tien nao.</div>
+          <EmptyState message="Chưa có yêu cầu rút tiền nào." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-180">
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">So tien</th>
-                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">Trang thai</th>
-                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">Ghi chu</th>
-                  <th className="px-3 py-2 text-left text-xs text-slate-500 uppercase tracking-wider">Thoi gian tao</th>
-                  <th className="px-3 py-2 text-right text-xs text-slate-500 uppercase tracking-wider">Thao tac</th>
+                <tr className="border-b border-slate-100 bg-slate-50/80">
+                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Số tiền</th>
+                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ghi chú</th>
+                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thời gian tạo</th>
+                  <th className="px-3 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((request) => (
-                  <tr key={request.id} className="border-b border-slate-200">
-                    <td className="px-3 py-3 text-sm text-slate-900 font-medium">{formatVnd(request.amount)}</td>
-                    <td className="px-3 py-3">
+                  <tr key={request.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-3 py-3.5 text-sm text-slate-900 font-medium">{formatCurrency(request.amount)}</td>
+                    <td className="px-3 py-3.5">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getWithdrawStatusClass(request.status)}`}>
                         {getWithdrawStatusLabel(request.status)}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-sm text-slate-600 max-w-70 truncate">{request.userNote || "-"}</td>
-                    <td className="px-3 py-3 text-sm text-slate-500">{formatDateTime(request.createdAt)}</td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-3 py-3.5 text-sm text-slate-600 max-w-70 truncate">{request.userNote || "—"}</td>
+                    <td className="px-3 py-3.5 text-sm text-slate-500">{formatDateTime(request.createdAt)}</td>
+                    <td className="px-3 py-3.5 text-right">
                       {request.status === WithdrawStatus.PENDING ? (
                         <button
                           type="button"
@@ -359,10 +334,10 @@ export default function WithdrawPage() {
                           disabled={cancellingId === request.id}
                           className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
                         >
-                          {cancellingId === request.id ? "Dang huy..." : "Huy"}
+                          {cancellingId === request.id ? "Đang hủy..." : "Hủy"}
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-500">-</span>
+                        <span className="text-xs text-slate-400">—</span>
                       )}
                     </td>
                   </tr>
@@ -372,11 +347,7 @@ export default function WithdrawPage() {
           </div>
         )}
 
-        {historyError && (
-          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-            {historyError}
-          </div>
-        )}
+        {historyError && <ErrorAlert message={historyError} />}
       </section>
     </div>
   );
@@ -390,4 +361,3 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-

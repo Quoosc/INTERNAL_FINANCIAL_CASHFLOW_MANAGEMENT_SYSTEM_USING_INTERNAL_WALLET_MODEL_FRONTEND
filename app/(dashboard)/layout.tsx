@@ -520,7 +520,7 @@ const ROLE_LABELS: Partial<Record<RoleName, string>> = {
   [RoleName.ADMIN]: "Quản trị viên",
 };
 
-function Sidebar() {
+function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [unreadCount, setUnreadCount] = React.useState(0);
@@ -568,41 +568,44 @@ function Sidebar() {
 
   return (
     <>
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 shadow-sm flex flex-col z-50">
-        {/* Logo */}
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-slate-900 font-bold text-sm truncate">
-                IFMS Finance
-              </h2>
+      <aside
+        className={`fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-sm flex flex-col z-50 transition-all duration-200 ${isCollapsed ? "w-[68px]" : "w-64"}`}
+      >
+        {/* Logo + toggle */}
+        <div className={`border-b border-slate-200 flex items-center ${isCollapsed ? "p-3 justify-center flex-col gap-2" : "p-4 gap-3"}`}>
+          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <h2 className="text-slate-900 font-bold text-sm truncate">IFMS Finance</h2>
               <p className="text-slate-400 text-xs truncate">Internal Wallet</p>
             </div>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={onToggle}
+            title={isCollapsed ? "Mở rộng sidebar" : "Thu nhỏ sidebar"}
+            className={`shrink-0 w-6 h-6 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors ${isCollapsed ? "" : "ml-auto"}`}
+          >
+            <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isCollapsed ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
           {navGroups.map((group) => (
             <div key={group.label}>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1.5 px-3">
-                {group.label}
-              </p>
+              {!isCollapsed && (
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1.5 px-3">
+                  {group.label}
+                </p>
+              )}
+              {isCollapsed && <div className="my-1 border-t border-slate-100" />}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const active = isActive(item.href);
@@ -610,7 +613,8 @@ function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      title={isCollapsed ? item.label : undefined}
+                      className={`relative flex items-center rounded-lg text-sm font-medium transition-all duration-150 ${isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3"} ${
                         active
                           ? `${accent.bg} ${accent.text}`
                           : `text-slate-600 hover:text-slate-900 ${accent.hover}`
@@ -620,14 +624,19 @@ function Sidebar() {
                         <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 ${accent.bar} rounded-r-full`} />
                       )}
                       {item.icon}
-                      <span className="flex items-center gap-2">
-                        <span>{item.label}</span>
-                        {item.href === "/notifications" && unreadCount > 0 && (
-                          <span className="inline-flex min-w-5 h-5 px-1.5 items-center justify-center rounded-full bg-rose-500 text-white text-[11px] font-semibold leading-none">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        )}
-                      </span>
+                      {!isCollapsed && (
+                        <span className="flex items-center gap-2">
+                          <span>{item.label}</span>
+                          {item.href === "/notifications" && unreadCount > 0 && (
+                            <span className="inline-flex min-w-5 h-5 px-1.5 items-center justify-center rounded-full bg-rose-500 text-white text-[11px] font-semibold leading-none">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                      {isCollapsed && item.href === "/notifications" && unreadCount > 0 && (
+                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500" />
+                      )}
                     </Link>
                   );
                 })}
@@ -637,42 +646,32 @@ function Sidebar() {
         </nav>
 
         {/* User Info */}
-        <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center gap-3">
+        <div className={`border-t border-slate-200 ${isCollapsed ? "p-2" : "p-4"}`}>
+          <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
             <div className="w-9 h-9 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
               <span className="text-white font-semibold text-sm">
                 {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
               </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">
-                {user?.fullName ?? "User"}
-              </p>
-              <p className="text-xs text-slate-400 truncate">
-                {user?.role
-                  ? (ROLE_LABELS[user.role as RoleName] ?? user.role)
-                  : "—"}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              className="text-slate-400 hover:text-rose-600 transition-colors p-1 shrink-0"
-              title="Đăng xuất"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-            </button>
+            {!isCollapsed && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{user?.fullName ?? "User"}</p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {user?.role ? (ROLE_LABELS[user.role as RoleName] ?? user.role) : "—"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowLogoutConfirm(true)}
+                  className="text-slate-400 hover:text-rose-600 transition-colors p-1 shrink-0"
+                  title="Đăng xuất"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </aside>
@@ -723,6 +722,7 @@ function Sidebar() {
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth();
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   if (isLoading) {
     return (
@@ -755,8 +755,8 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-blue-50">
-      <Sidebar />
-      <div className="ml-64 flex flex-col min-h-screen">
+      <Sidebar isCollapsed={isCollapsed} onToggle={() => setIsCollapsed((prev) => !prev)} />
+      <div className="flex flex-col min-h-screen transition-all duration-200" style={{ marginLeft: isCollapsed ? 68 : 256 }}>
         <Header />
         <main className="flex-1 p-6">
           <React.Suspense

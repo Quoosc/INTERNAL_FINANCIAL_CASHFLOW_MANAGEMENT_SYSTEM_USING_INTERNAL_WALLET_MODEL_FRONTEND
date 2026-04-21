@@ -554,6 +554,21 @@ export function ManagerDashboard() {
                   </Link>
                 );
               })}
+
+              <div className="pt-1 border-t border-slate-100 flex flex-wrap items-center gap-x-4 gap-y-1">
+                <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                  Thấp (&lt;65%)
+                </span>
+                <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                  Trung bình (65–85%)
+                </span>
+                <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+                  Cao (&gt;85%)
+                </span>
+              </div>
             </div>
           )}
         </div>

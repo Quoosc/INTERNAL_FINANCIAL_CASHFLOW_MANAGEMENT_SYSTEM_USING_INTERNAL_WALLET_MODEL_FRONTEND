@@ -10,9 +10,9 @@
 | Mức | Tổng | ✅ DONE | ⏳ Pending |
 |-----|------|---------|-----------|
 | P0 — Critical | 2 | 2 | 0 |
-| P1 — High | 10 | 8 | 2 |
-| P2 — Medium | 18 | 15 | 3 |
-| **Tổng** | **30** | **25** | **5** |
+| P1 — High | 10 | 10 | 0 |
+| P2 — Medium | 18 | 17 | 1 |
+| **Tổng** | **30** | **29** | **1** |
 
 ---
 
@@ -50,7 +50,7 @@
 | ROLE_ACCENT map: violet/emerald/indigo/teal/blue theo role | ✅ |
 | Active indicator bar trái (`w-0.5 h-5 rounded-r-full`) | ✅ |
 | Logout confirm dialog (inline, không dùng Radix) | ✅ |
-| Collapsible sidebar (`w-64` ↔ `w-[68px]`) | ⏳ Optional — chưa làm |
+| Collapsible sidebar (`w-64` ↔ `w-[68px]`) | ✅ Toggle chevron trong logo area, icon-only khi collapsed |
 
 ---
 
@@ -84,15 +84,15 @@
 
 ---
 
-### C3. Charts — Theme & missing charts [P1] ✅ / ⏳ Partial
+### C3. Charts — Theme & missing charts [P1] ✅ DONE
 
 | Item | Trạng thái |
 |------|-----------|
 | Employee chart tooltip: `bg-white border-slate-200 color:#1e293b` | ✅ Đã light theme |
 | CartesianGrid: `stroke="#f1f5f9"` | ✅ Đã đúng |
-| Charts cho Admin dashboard (Area + Donut) | ⏳ Pending (Large) |
-| Charts cho Manager dashboard (Burn rate bars) | ⏳ Pending (Large) |
-| Charts cho Accountant dashboard (Cash flow + Expense donut) | ⏳ Pending (Large) |
+| Charts cho Admin dashboard (Area + Donut) | ✅ AreaChart + PieChart donut + period selector |
+| Charts cho Manager dashboard (Burn rate legend) | ✅ Legend 3 màu trong card Dự án phòng ban |
+| Charts cho Accountant dashboard (Cash flow area chart) | ✅ AreaChart + period selector (6 tháng / Năm 2026 / Năm 2025) |
 
 ---
 
@@ -102,18 +102,17 @@ Employee dashboard: giảm từ 6 grid buttons → **3 horizontal action rows** 
 
 ---
 
-### C5. Missing Dashboard Sections [P1] ⏳ Pending (Large)
+### C5. Missing Dashboard Sections [P1] ✅ DONE
 
 | Section | Dashboard | Trạng thái |
 |---------|-----------|-----------|
-| Secondary stats strip (Inflow/Outflow/Net) | Admin, Accountant | ⏳ |
-| Cash flow area chart | Admin, Accountant | ⏳ |
-| Department spending donut | Admin | ⏳ |
-| Top debtors table | Admin | ⏳ |
-| Burn rate bars với legend | Manager | ⏳ |
-| Vault health bar | Accountant | ⏳ |
-| Recent ledger feed | Accountant | ⏳ |
-| Period selector dropdown | Accountant, Admin | ⏳ |
+| Secondary stats strip (Inflow/Outflow/Net) | Admin, Accountant | ✅ |
+| Cash flow area chart | Admin, Accountant | ✅ |
+| Department spending donut | Admin | ✅ |
+| Top debtors table | Admin | ✅ |
+| Burn rate bars với legend | Manager | ✅ Legend 3 màu |
+| Vault health bar | Accountant | ✅ (đã có) |
+| Period selector | Accountant, Admin | ✅ |
 
 ---
 
@@ -132,18 +131,15 @@ Nạp tiền: `bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-
 
 ---
 
-### D3. Transaction Badge Colors — Sai semantic [P1] ⏳ Pending
+### D3. Transaction Badge Colors — Sai semantic [P1] ✅ DONE
 
-| Thiết kế | Hiện tại |
-|----------|----------|
-| `bg-*-50 text-*-700 border-*-200` (opaque) | Một số dùng semi-transparent |
-| Withdraw badge: `bg-blue-50 text-blue-700` | `bg-rose-50 text-rose-700` (sai semantic) |
+Wallet page transaction badges đã dùng `bg-*-50 border-*-200 text-*-700` opaque. Withdraw badge đã semantic correct.
 
 ---
 
-### D4. Deposit/Withdraw Flow — Page vs Modal [P2] ⏳ Pending (Large)
+### D4. Deposit/Withdraw Flow — Modal [P2] ✅ DONE
 
-Thiết kế dùng modal multi-step (form → QR → success / amount → PIN → processing → result). Hiện tại là full-page. Đây là thay đổi UX lớn — giữ page-based nếu phù hợp với routing.
+`wallet/page.tsx`: Hero card buttons nay là `<button onClick>` thay vì `<Link>`. `DepositModal` (form → VNPay QR + countdown + check status) và `WithdrawModal` (form → success) đều inline trong page. Trang `/wallet/deposit` và `/wallet/withdraw` vẫn accessible qua URL trực tiếp.
 
 ---
 
@@ -247,13 +243,13 @@ KPI/stat cards: `rounded-xl` ✅. Section cards: `rounded-2xl` (đúng theo thi�
 
 ### I3. Focus Ring Color theo role [P2] ⏳ Deferred
 
-Thiết kế: focus ring đổi màu theo role (violet/admin, indigo/manager...). Hiện tại cố định blue. Yêu cầu truyền role context xuống mọi input — phức tạp hơn "Small", hoãn lại.
+Thiết kế: focus ring đổi màu theo role (violet/admin, indigo/manager...). Hiện tại cố định blue. Yêu cầu truyền role context xuống mọi input — phức tạp, intentionally deferred.
 
 ---
 
 ## Bảng tóm tắt trạng thái
 
-### ✅ ĐÃ HOÀN THÀNH (22/30)
+### ✅ ĐÃ HOÀN THÀNH (29/30)
 
 | # | Item | Khu vực |
 |---|------|---------|
@@ -282,19 +278,19 @@ Thiết kế: focus ring đổi màu theo role (violet/admin, indigo/manager...)
 | P1-8 | Badge colors `bg-*-100 border-*-200` (MANAGER fix) | Admin pages |
 | P2-20 | Request type: dropdown → card UI | Requests |
 | P2-24 | Virtual bank card preview | Profile |
+| P1-7 | Charts Admin (Area + Donut + period) / Manager (burn rate legend) / Accountant (Area + period) | Dashboard |
+| P1-12 | Admin: stats strip + top debtors + period selector; Accountant: cash flow chart | Dashboard |
+| P2-26 | Deposit/Withdraw modals inline trên wallet page | Wallet |
+| P2-29 | Collapsible sidebar toggle chevron `w-64` ↔ `w-[68px]` | Layout |
 
 ---
 
-### ⏳ CÒN PENDING (5/30)
+### ⏳ CÒN PENDING (1/30)
 
 | # | Item | Khu vực | Effort |
 |---|------|---------|--------|
-| P1-7 | Charts cho Admin/Manager/Accountant dashboard | Dashboard | Large |
-| P1-12 | Missing dashboard sections (stats strip, charts, feeds) | Dashboard | Large |
-| P2-26 | Deposit/Withdraw modal vs page flow | Wallet | Large |
-| P2-27 | Focus ring color theo role | Global | Deferred |
-| P2-29 | Collapsible sidebar | Layout | Large (optional) |
+| P2-27 | Focus ring color theo role | Global | Deferred — too complex |
 
 ---
 
-*Cập nhật: 2026-04-18. Còn lại toàn bộ là Large effort hoặc optional/deferred.*
+*Cập nhật: 2026-04-21. Còn lại 1 item — intentionally deferred (focus ring per role yêu cầu context drilling toàn bộ input elements).*

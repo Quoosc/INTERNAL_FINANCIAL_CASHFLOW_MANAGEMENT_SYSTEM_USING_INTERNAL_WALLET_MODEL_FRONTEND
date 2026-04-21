@@ -1,16 +1,264 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
+import { createWithdrawRequest } from "@/lib/api";
 import {
+  DepositQRRequest,
+  DepositQRResponse,
   PaginatedResponse,
+  PaymentStatusResponse,
   TransactionResponse,
   TransactionStatus,
   TransactionType,
+  WithdrawRequestResponse,
 } from "@/types";
+
+const MIN_AMOUNT = 10_000;
+
+function formatSecondsToClock(total: number): string {
+  const m = Math.floor(total / 60).toString().padStart(2, "0");
+  const s = (total % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function formatInputAmount(raw: string): string {
+  if (!raw) return "";
+  return `${Number(raw).toLocaleString("vi-VN")} ₫`;
+}
+
+function DepositModal({ onClose }: { onClose: () => void }) {
+  const [amount, setAmount] = useState("");
+  const [qrData, setQrData] = useState<DepositQRResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+
+  const amountNum = useMemo(() => Number(amount || 0), [amount]);
+  const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
+  const isExpired = qrData !== null && secondsLeft <= 0;
+
+  useEffect(() => {
+    if (!qrData) return;
+    const update = () => {
+      const remaining = Math.max(0, Math.floor((new Date(qrData.expiredAt).getTime() - Date.now()) / 1000));
+      setSecondsLeft(remaining);
+    };
+    update();
+    const id = window.setInterval(update, 1000);
+    return () => window.clearInterval(id);
+  }, [qrData]);
+
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setStatusMsg(null);
+    if (amountNum < MIN_AMOUNT) { setError("Số tiền tối thiểu là 10.000 ₫."); return; }
+    setLoading(true);
+    try {
+      const payload: DepositQRRequest = { amount: amountNum };
+      const res = await api.post<DepositQRResponse>("/api/v1/wallet/deposit", payload);
+      setQrData(res.data);
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.apiMessage);
+      else setError("Không thể tạo liên kết thanh toán VNPay.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckStatus = async () => {
+    if (!qrData) return;
+    setCheckingStatus(true);
+    try {
+      const res = await api.get<PaymentStatusResponse>(`/api/v1/payments/status?transactionRef=${encodeURIComponent(qrData.transactionRef)}`);
+      setStatusMsg(res.data.message ? `${res.data.status}: ${res.data.message}` : `Trạng thái: ${res.data.status}`);
+    } catch {
+      setStatusMsg("Không thể kiểm tra trạng thái.");
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} aria-label="Đóng" />
+      <div className="relative w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900">Nạp tiền qua VNPay</h2>
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {!qrData ? (
+            <form onSubmit={handleGenerate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền nạp</label>
+                <input
+                  type="text" inputMode="numeric" placeholder="Nhập số tiền"
+                  value={amountDisplay}
+                  onChange={(e) => setAmount(e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""))}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                />
+                <p className="text-xs text-slate-500 mt-1">Tối thiểu: 10.000 ₫</p>
+              </div>
+              {error && <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
+              <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold transition-colors">
+                {loading ? "Đang tạo..." : "Tạo thanh toán"}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full border ${isExpired ? "text-rose-700 bg-rose-50 border-rose-200" : "text-amber-700 bg-amber-50 border-amber-200"}`}>
+                  {isExpired ? "Hết hạn" : `Hết hạn sau ${formatSecondsToClock(secondsLeft)}`}
+                </span>
+                <button type="button" onClick={() => { setQrData(null); setAmount(""); setError(null); setStatusMsg(null); }} className="text-xs text-blue-700 hover:text-blue-600">
+                  Tạo mới
+                </button>
+              </div>
+
+              {qrData.qrDataUrl && (
+                <div className="flex justify-center bg-slate-50 rounded-xl p-4">
+                  <Image src={qrData.qrDataUrl} alt="QR thanh toán" width={200} height={200} unoptimized className="w-48 h-48 object-contain" />
+                </div>
+              )}
+
+              <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-1 text-sm">
+                <div className="flex justify-between"><span className="text-slate-500">Mã TK</span><span className="font-mono text-slate-900 text-xs">{qrData.transactionRef}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(qrData.amount)}</span></div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={isExpired} onClick={() => window.open(qrData.paymentUrl, "_blank", "noopener,noreferrer")} className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
+                  Thanh toán VNPay
+                </button>
+                <button type="button" disabled={checkingStatus} onClick={() => void handleCheckStatus()} className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm font-medium transition-colors">
+                  {checkingStatus ? "Đang kiểm tra..." : "Kiểm tra"}
+                </button>
+              </div>
+
+              <button type="button" onClick={async () => { await navigator.clipboard.writeText(qrData.transactionRef); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
+                {copied ? "Đã sao chép mã" : "Sao chép mã tham chiếu"}
+              </button>
+
+              {statusMsg && <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">{statusMsg}</div>}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBalance: number; balance: number } | null; onClose: () => void }) {
+  const { fetchWallet } = useWallet();
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<WithdrawRequestResponse | null>(null);
+
+  const amountNum = useMemo(() => Number(amount || 0), [amount]);
+  const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
+  const available = walletProp?.availableBalance ?? walletProp?.balance ?? 0;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (amountNum < MIN_AMOUNT) { setError("Số tiền rút tối thiểu là 10.000 ₫."); return; }
+    if (amountNum > available) { setError("Số tiền rút không được vượt quá số dư khả dụng."); return; }
+    setLoading(true);
+    try {
+      const res = await createWithdrawRequest({ amount: amountNum, userNote: note.trim() || undefined });
+      setResult(res.data);
+      void fetchWallet();
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.apiMessage);
+      else setError("Không thể kết nối API. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} aria-label="Đóng" />
+      <div className="relative w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900">Rút tiền</h2>
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {!result ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="bg-slate-50 rounded-xl px-4 py-3">
+                <p className="text-xs text-slate-500">Số dư khả dụng</p>
+                <p className="text-xl font-bold text-slate-900 mt-0.5">{formatCurrency(available)}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền rút</label>
+                <input
+                  type="text" inputMode="numeric" placeholder="Nhập số tiền"
+                  value={amountDisplay}
+                  onChange={(e) => setAmount(e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""))}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-2">Ghi chú (không bắt buộc)</label>
+                <textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ví dụ: Rút tiền chi tiêu cá nhân" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+              </div>
+
+              {error && <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
+
+              <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-semibold transition-colors">
+                {loading ? "Đang gửi..." : "Gửi yêu cầu rút tiền"}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </span>
+                <div>
+                  <p className="font-semibold text-slate-900">Đã tạo yêu cầu rút tiền</p>
+                  <p className="text-xs text-slate-500">Yêu cầu đang chờ xử lý bởi kế toán.</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-slate-500">Mã yêu cầu</span><span className="font-mono text-slate-900">{result.withdrawCode}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(result.amount)}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Trạng thái</span><span className="text-amber-700">{result.status}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Ngân hàng</span><span className="text-slate-900">{result.creditBankName}</span></div>
+              </div>
+
+              <button type="button" onClick={onClose} className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold transition-colors">
+                Đóng
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface SpringPage<T> {
   content: T[];
@@ -102,6 +350,8 @@ export default function WalletPage() {
   const router = useRouter();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
+  const [showDeposit, setShowDeposit] = useState(false);
+  const [showWithdraw, setShowWithdraw] = useState(false);
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -195,8 +445,9 @@ export default function WalletPage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <Link
-                  href="/wallet/withdraw"
+                <button
+                  type="button"
+                  onClick={() => setShowWithdraw(true)}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-900 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,16 +455,17 @@ export default function WalletPage() {
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   Rút tiền
-                </Link>
-                <Link
-                  href="/wallet/deposit"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeposit(true)}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-all text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
                   </svg>
                   Nạp tiền
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -309,6 +561,9 @@ export default function WalletPage() {
           <p className="text-amber-700 text-xs mt-3">{transactionsError}</p>
         )}
       </div>
+
+      {showDeposit && <DepositModal onClose={() => setShowDeposit(false)} />}
+      {showWithdraw && <WithdrawModal wallet={wallet} onClose={() => setShowWithdraw(false)} />}
     </div>
   );
 }

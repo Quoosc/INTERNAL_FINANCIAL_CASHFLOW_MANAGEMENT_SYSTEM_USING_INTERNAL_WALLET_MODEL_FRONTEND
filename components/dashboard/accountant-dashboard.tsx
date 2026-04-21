@@ -2,6 +2,15 @@
 
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
 import {
@@ -124,6 +133,72 @@ function getFundHealthClass(health: FundHealth): string {
 function getFundProgress(balance: number): number {
   const safe = Math.max(0, balance);
   return Math.min(100, Math.round((safe / 1_500_000_000) * 100));
+}
+
+type PeriodKey = "ytd" | "last6m" | "fy2025";
+
+interface CashFlowPoint {
+  label: string;
+  inflow: number;
+  outflow: number;
+}
+
+const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
+  { key: "ytd", label: "Năm 2026" },
+  { key: "last6m", label: "6 tháng" },
+  { key: "fy2025", label: "Năm 2025" },
+];
+
+// mock chart data — replace when analytics API is available
+const CASHFLOW: Record<PeriodKey, CashFlowPoint[]> = {
+  ytd: [
+    { label: "T1", inflow: 280, outflow: 145 },
+    { label: "T2", inflow: 310, outflow: 162 },
+    { label: "T3", inflow: 295, outflow: 178 },
+    { label: "T4", inflow: 320, outflow: 188 },
+  ],
+  last6m: [
+    { label: "T11/25", inflow: 240, outflow: 130 },
+    { label: "T12/25", inflow: 290, outflow: 155 },
+    { label: "T1/26",  inflow: 280, outflow: 145 },
+    { label: "T2/26",  inflow: 310, outflow: 162 },
+    { label: "T3/26",  inflow: 295, outflow: 178 },
+    { label: "T4/26",  inflow: 320, outflow: 188 },
+  ],
+  fy2025: [
+    { label: "T1",  inflow: 195, outflow: 112 },
+    { label: "T2",  inflow: 210, outflow: 118 },
+    { label: "T3",  inflow: 225, outflow: 130 },
+    { label: "T4",  inflow: 240, outflow: 138 },
+    { label: "T5",  inflow: 255, outflow: 147 },
+    { label: "T6",  inflow: 270, outflow: 155 },
+    { label: "T7",  inflow: 260, outflow: 150 },
+    { label: "T8",  inflow: 248, outflow: 143 },
+    { label: "T9",  inflow: 265, outflow: 152 },
+    { label: "T10", inflow: 275, outflow: 158 },
+    { label: "T11", inflow: 240, outflow: 130 },
+    { label: "T12", inflow: 290, outflow: 155 },
+  ],
+};
+
+function fmtM(v: number): string {
+  if (v >= 1000) return `${(v / 1000).toFixed(1)}B`;
+  return `${v}M`;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function CashFlowTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const inflow = (payload as any[])[0]?.value ?? 0;
+  const outflow = (payload as any[])[1]?.value ?? 0;
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-md text-xs">
+      <p className="font-semibold text-slate-700 mb-1">{label}</p>
+      <p className="text-emerald-600">Vào: {fmtM(inflow)}</p>
+      <p className="text-rose-600">Ra: {fmtM(outflow)}</p>
+    </div>
+  );
 }
 
 const MOCK_DASHBOARD: AccountantDashboardResponse = {
@@ -267,6 +342,7 @@ export function AccountantDashboard() {
     useState<PayrollPeriodListItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState<PeriodKey>("last6m");
 
   useEffect(() => {
     let cancelled = false;
@@ -466,6 +542,62 @@ export function AccountantDashboard() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 13l-5 5m0 0l-5-5m5 5V6" /></svg>
             </span>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-lg font-semibold text-slate-900">Xu hướng dòng tiền</h2>
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
+            {PERIOD_OPTIONS.map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setPeriod(opt.key)}
+                className={`px-3 py-1.5 transition-colors ${
+                  period === opt.key
+                    ? "bg-slate-800 text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 text-[10px] text-slate-400">
+          <span className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+            Dòng vào
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+            Dòng ra
+          </span>
+        </div>
+
+        <div className="h-52">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={CASHFLOW[period]} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="acctGradIn" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="acctGradOut" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={fmtM} tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={40} />
+              <RechartsTooltip content={<CashFlowTooltip />} />
+              <Area type="monotone" dataKey="inflow" stroke="#10b981" strokeWidth={2} fill="url(#acctGradIn)" dot={false} />
+              <Area type="monotone" dataKey="outflow" stroke="#f43f5e" strokeWidth={2} fill="url(#acctGradOut)" dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

@@ -271,10 +271,24 @@ export default function ProfilePage() {
       );
 
       if (!cloudinaryRes.ok) {
-        throw new Error("Cloudinary upload failed");
+        let detail = "";
+        try {
+          const errBody = (await cloudinaryRes.json()) as { error?: { message?: string } };
+          if (errBody.error?.message) detail = `: ${errBody.error.message}`;
+        } catch {
+          // ignore json parse failure on error response
+        }
+        throw new Error(
+          `Tải ảnh lên thất bại${detail} (HTTP ${cloudinaryRes.status}). Vui lòng thử lại.`
+        );
       }
 
-      const uploaded: CloudinaryUploadResponse = await cloudinaryRes.json();
+      let uploaded: CloudinaryUploadResponse;
+      try {
+        uploaded = (await cloudinaryRes.json()) as CloudinaryUploadResponse;
+      } catch {
+        throw new Error("Phản hồi từ máy chủ lưu trữ ảnh không hợp lệ. Vui lòng thử lại.");
+      }
 
       const avatarPayload: UpdateAvatarRequest = {
         cloudinaryPublicId: uploaded.public_id,
@@ -301,6 +315,8 @@ export default function ProfilePage() {
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError("Không thể cập nhật ảnh đại diện.");
       }

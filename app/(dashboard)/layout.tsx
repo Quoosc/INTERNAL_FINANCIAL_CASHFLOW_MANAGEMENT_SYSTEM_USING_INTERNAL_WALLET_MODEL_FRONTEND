@@ -11,6 +11,7 @@ import { WalletProvider } from "@/contexts/wallet-context";
 import { ToastProvider } from "@/contexts/toast-context";
 import { ToastStack } from "@/components/ui/toast";
 import { Header } from "@/components/layout/header";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 // =============================================================
 // Dashboard Layout — Sidebar role-aware + Header + Providers
@@ -762,15 +763,17 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col min-h-screen transition-all duration-200" style={{ marginLeft: isCollapsed ? 68 : 256 }}>
         <Header />
         <main className="flex-1 p-6">
-          <React.Suspense
-            fallback={
-              <div className="text-slate-500 text-sm">
-                Đang tải dữ liệu trang...
-              </div>
-            }
-          >
-            {children}
-          </React.Suspense>
+          <ErrorBoundary>
+            <React.Suspense
+              fallback={
+                <div className="text-slate-500 text-sm">
+                  Đang tải dữ liệu trang...
+                </div>
+              }
+            >
+              {children}
+            </React.Suspense>
+          </ErrorBoundary>
         </main>
       </div>
     </div>

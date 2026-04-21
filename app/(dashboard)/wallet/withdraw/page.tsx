@@ -9,6 +9,7 @@ import { cancelWithdrawRequest, createWithdrawRequest, getMyWithdrawRequests } f
 import { formatCurrency, formatDateTime, formatInputAmount, parseAmountInput } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { EmptyState } from "@/components/ui/loading-skeleton";
+import { useToast } from "@/contexts/toast-context";
 import { WithdrawRequestResponse, WithdrawStatus } from "@/types";
 
 function getWithdrawStatusClass(status: WithdrawStatus): string {
@@ -52,6 +53,7 @@ function getWithdrawStatusLabel(status: WithdrawStatus): string {
 
 export default function WithdrawPage() {
   const router = useRouter();
+  const toast = useToast();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
   const [amount, setAmount] = useState("");
@@ -136,6 +138,7 @@ export default function WithdrawPage() {
       });
 
       setResult(res.data);
+      toast.success("Yêu cầu rút tiền đã được tạo thành công!");
       await fetchWallet();
       await loadWithdrawHistory();
     } catch (err) {
@@ -155,6 +158,7 @@ export default function WithdrawPage() {
 
     try {
       await cancelWithdrawRequest(id);
+      toast.success("Đã hủy yêu cầu rút tiền.");
       await fetchWallet();
       await loadWithdrawHistory();
     } catch (err) {

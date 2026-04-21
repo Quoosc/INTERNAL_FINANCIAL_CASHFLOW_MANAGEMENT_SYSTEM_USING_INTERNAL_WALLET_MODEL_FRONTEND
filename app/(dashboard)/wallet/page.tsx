@@ -8,7 +8,9 @@ import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
 import { createWithdrawRequest } from "@/lib/api";
 import { withdrawSchema, depositSchema } from "@/lib/schemas";
+import { formatCurrency, formatDateTime, formatInputAmount } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
+import { useToast } from "@/contexts/toast-context";
 import {
   DepositQRRequest,
   DepositQRResponse,
@@ -27,12 +29,8 @@ function formatSecondsToClock(total: number): string {
   return `${m}:${s}`;
 }
 
-function formatInputAmount(raw: string): string {
-  if (!raw) return "";
-  return `${Number(raw).toLocaleString("vi-VN")} ₫`;
-}
-
 function DepositModal({ onClose }: { onClose: () => void }) {
+  const toast = useToast();
   const [amount, setAmount] = useState("");
   const [qrData, setQrData] = useState<DepositQRResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -71,6 +69,7 @@ function DepositModal({ onClose }: { onClose: () => void }) {
       const payload: DepositQRRequest = { amount: amountNum };
       const res = await api.post<DepositQRResponse>("/api/v1/wallet/deposit", payload);
       setQrData(res.data);
+      toast.success("Tạo liên kết thanh toán thành công!");
     } catch (err) {
       if (err instanceof ApiError) setError(err.apiMessage);
       else setError("Không thể tạo liên kết thanh toán VNPay.");
@@ -167,6 +166,7 @@ function DepositModal({ onClose }: { onClose: () => void }) {
 
 function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBalance: number; balance: number } | null; onClose: () => void }) {
   const { fetchWallet } = useWallet();
+  const toast = useToast();
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -194,6 +194,7 @@ function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBal
       const res = await createWithdrawRequest({ amount: amountNum, userNote: note.trim() || undefined });
       setResult(res.data);
       void fetchWallet();
+      toast.success("Yêu cầu rút tiền đã được tạo thành công!");
     } catch (err) {
       if (err instanceof ApiError) setError(err.apiMessage);
       else setError("Không thể kết nối API. Vui lòng thử lại.");
@@ -285,24 +286,6 @@ function normalizeTransactions(payload: WalletTransactionsResponse): Transaction
   if (Array.isArray(payload)) return payload;
   if ("content" in payload) return payload.content;
   return payload.items;
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
 }
 
 function getTransactionTypeLabel(type: TransactionType): string {

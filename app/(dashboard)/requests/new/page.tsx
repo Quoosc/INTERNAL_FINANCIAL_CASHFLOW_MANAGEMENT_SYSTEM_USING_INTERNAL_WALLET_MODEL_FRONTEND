@@ -7,6 +7,7 @@ import { z } from "zod";
 import { ApiError, api } from "@/lib/api-client";
 import { parseAmountInput } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
+import { useToast } from "@/contexts/toast-context";
 import {
   CreateRequestBody,
   ExpenseCategoryResponse,
@@ -188,6 +189,7 @@ async function uploadAttachments(files: UploadFileItem[]): Promise<number[]> {
 
 export default function NewRequestPage() {
   const router = useRouter();
+  const toast = useToast();
 
   const [form, setForm] = useState<Partial<CreateRequestBody>>({
     type: RequestType.ADVANCE,
@@ -481,12 +483,14 @@ export default function NewRequestPage() {
 
       // const res = await api.post<RequestDetailResponse>('/api/v1/requests', form)
       const res = await api.post<RequestDetailResponse>("/api/v1/requests", payload);
+      toast.success("Yêu cầu đã được tạo thành công!");
       router.push(`/requests/${res.data.id}`);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
         const mockId = 9000 + Math.floor(Math.random() * 999);
+        toast.success("Yêu cầu đã được tạo thành công!");
         router.push(`/requests/${mockId}`);
       }
     } finally {

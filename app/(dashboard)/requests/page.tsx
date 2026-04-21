@@ -4,6 +4,8 @@ import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { RequestStatusBadge, RequestTypeBadge } from "@/components/ui/status-badge";
 import {
   PaginatedResponse,
   RequestFilterParams,
@@ -172,99 +174,6 @@ const MOCK_REQUESTS: RequestListItem[] = [
     updatedAt: "2026-03-22T08:15:00",
   },
 ];
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
-
-function getStatusClass(status: RequestStatus): string {
-  switch (status) {
-    case RequestStatus.PENDING:
-      return "bg-amber-100 border-amber-200 text-amber-700";
-    case RequestStatus.APPROVED_BY_TEAM_LEADER:
-      return "bg-green-100 border-green-200 text-green-700";
-    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
-      return "bg-blue-50 border-blue-200 text-blue-700";
-    case RequestStatus.APPROVED_BY_MANAGER:
-    case RequestStatus.APPROVED_BY_CFO:
-      return "bg-green-100 border-green-200 text-green-700";
-    case RequestStatus.PAID:
-      return "bg-emerald-100 border-emerald-200 text-emerald-700";
-    case RequestStatus.REJECTED:
-      return "bg-rose-100 border-rose-200 text-rose-700";
-    case RequestStatus.CANCELLED:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-  }
-}
-
-function getStatusLabel(status: RequestStatus): string {
-  switch (status) {
-    case RequestStatus.PENDING:
-      return "Chờ duyệt";
-    case RequestStatus.APPROVED_BY_TEAM_LEADER:
-      return "TL đã duyệt";
-    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
-      return "Chờ kế toán";
-    case RequestStatus.APPROVED_BY_MANAGER:
-      return "Manager đã duyệt";
-    case RequestStatus.APPROVED_BY_CFO:
-      return "CFO đã duyệt";
-    case RequestStatus.PAID:
-      return "Đã chi";
-    case RequestStatus.REJECTED:
-      return "Từ chối";
-    case RequestStatus.CANCELLED:
-      return "Đã hủy";
-    default:
-      return status;
-  }
-}
-
-function getTypeClass(type: RequestType): string {
-  switch (type) {
-    case RequestType.ADVANCE:
-      return "bg-violet-100 border-violet-200 text-violet-700";
-    case RequestType.EXPENSE:
-      return "bg-cyan-100 border-cyan-200 text-cyan-700";
-    case RequestType.REIMBURSE:
-      return "bg-teal-100 border-teal-200 text-teal-700";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-  }
-}
-
-function getTypeLabel(type: RequestType): string {
-  switch (type) {
-    case RequestType.ADVANCE:
-      return "Tạm ứng";
-    case RequestType.EXPENSE:
-      return "Chi phí";
-    case RequestType.REIMBURSE:
-      return "Hoàn ứng";
-    case RequestType.PROJECT_TOPUP:
-      return "Nạp quỹ DA";
-    case RequestType.DEPARTMENT_TOPUP:
-      return "Nạp quota phòng ban";
-    default:
-      return type;
-  }
-}
 
 function parseStatus(value: string | null): RequestStatus | undefined {
   if (!value) return undefined;
@@ -605,17 +514,13 @@ export default function RequestsPage() {
                   >
                     <td className="px-4 py-3 text-sm text-slate-900 font-medium">{request.requestCode}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeClass(request.type)}`}>
-                        {getTypeLabel(request.type)}
-                      </span>
+                      <RequestTypeBadge type={request.type} />
                     </td>
                     <td className="px-4 py-3 text-right text-sm font-semibold text-slate-900">
                       {formatCurrency(request.amount)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(request.status)}`}>
-                        {getStatusLabel(request.status)}
-                      </span>
+                      <RequestStatusBadge status={request.status} />
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">{request.projectName ?? "—"}</td>
                     <td className="px-4 py-3 text-sm text-slate-500">{formatDateTime(request.createdAt)}</td>

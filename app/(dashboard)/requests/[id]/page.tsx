@@ -3,6 +3,9 @@
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
+import { RequestStatusBadge, RequestTypeBadge } from "@/components/ui/status-badge";
+import { useToast } from "@/contexts/toast-context";
 import {
   RequestAction,
   RequestDetailResponse,
@@ -79,112 +82,6 @@ const MOCK_REQUEST: RequestDetailResponse = {
     },
   ],
 };
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
-
-function formatDate(isoDate: string): string {
-  if (!isoDate) return "—";
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(`${isoDate}T00:00:00`));
-}
-
-function getTypeClass(type: RequestType): string {
-  switch (type) {
-    case RequestType.ADVANCE:
-      return "bg-violet-100 border-violet-200 text-violet-700";
-    case RequestType.EXPENSE:
-      return "bg-cyan-100 border-cyan-200 text-cyan-700";
-    case RequestType.REIMBURSE:
-      return "bg-teal-100 border-teal-200 text-teal-700";
-    case RequestType.PROJECT_TOPUP:
-      return "bg-amber-100 border-amber-200 text-amber-700";
-    case RequestType.DEPARTMENT_TOPUP:
-      return "bg-rose-100 border-rose-200 text-rose-700";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-  }
-}
-
-function getTypeLabel(type: RequestType): string {
-  switch (type) {
-    case RequestType.ADVANCE:
-      return "Tạm ứng";
-    case RequestType.EXPENSE:
-      return "Chi phí";
-    case RequestType.REIMBURSE:
-      return "Hoàn ứng";
-    case RequestType.PROJECT_TOPUP:
-      return "Nạp quỹ DA";
-    case RequestType.DEPARTMENT_TOPUP:
-      return "Nạp quota phòng ban";
-    default:
-      return type;
-  }
-}
-
-function getStatusClass(status: RequestStatus): string {
-  switch (status) {
-    case RequestStatus.PENDING:
-      return "bg-amber-100 border-amber-200 text-amber-700";
-    case RequestStatus.APPROVED_BY_TEAM_LEADER:
-      return "bg-green-100 border-green-200 text-green-700";
-    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
-      return "bg-blue-50 border-blue-200 text-blue-700";
-    case RequestStatus.APPROVED_BY_MANAGER:
-    case RequestStatus.APPROVED_BY_CFO:
-      return "bg-green-100 border-green-200 text-green-700";
-    case RequestStatus.PAID:
-      return "bg-emerald-100 border-emerald-200 text-emerald-700";
-    case RequestStatus.REJECTED:
-      return "bg-rose-100 border-rose-200 text-rose-700";
-    case RequestStatus.CANCELLED:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-  }
-}
-
-function getStatusLabel(status: RequestStatus): string {
-  switch (status) {
-    case RequestStatus.PENDING:
-      return "Chờ duyệt";
-    case RequestStatus.APPROVED_BY_TEAM_LEADER:
-      return "Team Leader đã duyệt";
-    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
-      return "Chờ Kế toán giải ngân";
-    case RequestStatus.APPROVED_BY_MANAGER:
-      return "Manager đã duyệt";
-    case RequestStatus.APPROVED_BY_CFO:
-      return "CFO đã duyệt";
-    case RequestStatus.PAID:
-      return "Đã chi";
-    case RequestStatus.REJECTED:
-      return "Từ chối";
-    case RequestStatus.CANCELLED:
-      return "Đã hủy";
-    default:
-      return status;
-  }
-}
 
 function parseDescription(description: string | null): ParsedDescription {
   if (!description) {
@@ -372,6 +269,7 @@ function formatAttachmentSize(bytes: number): string {
 
 export default function RequestDetailPage({ params }: PageProps) {
   const router = useRouter();
+  const toast = useToast();
   const { id } = use(params);
 
   const [request, setRequest] = useState<RequestDetailResponse | null>(null);
@@ -486,6 +384,7 @@ export default function RequestDetailPage({ params }: PageProps) {
       const res = await api.put<RequestDetailResponse>(`/api/v1/requests/${id}`, updateBody);
       setRequest(res.data);
       setEditing(false);
+      toast.success("Yêu cầu đã được cập nhật thành công!");
     } catch (err) {
       setRequest((prev) =>
         prev
@@ -521,6 +420,7 @@ export default function RequestDetailPage({ params }: PageProps) {
     try {
       // await api.delete(`/api/v1/requests/${id}`)
       await api.delete(`/api/v1/requests/${id}`);
+      toast.success("Đã hủy yêu cầu thành công.");
       router.push("/requests");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -584,12 +484,8 @@ export default function RequestDetailPage({ params }: PageProps) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getTypeClass(request.type)}`}>
-            {getTypeLabel(request.type)}
-          </span>
-          <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getStatusClass(request.status)}`}>
-            {getStatusLabel(request.status)}
-          </span>
+          <RequestTypeBadge type={request.type} />
+          <RequestStatusBadge status={request.status} />
         </div>
       </div>
 

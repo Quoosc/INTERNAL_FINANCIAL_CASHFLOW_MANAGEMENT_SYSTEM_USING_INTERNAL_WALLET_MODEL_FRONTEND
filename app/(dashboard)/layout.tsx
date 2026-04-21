@@ -8,6 +8,8 @@ import { getUnreadCount } from "@/lib/api";
 import { RoleName } from "@/types";
 import { AuthProvider } from "@/contexts/auth-context";
 import { WalletProvider } from "@/contexts/wallet-context";
+import { ToastProvider } from "@/contexts/toast-context";
+import { ToastStack } from "@/components/ui/toast";
 import { Header } from "@/components/layout/header";
 
 // =============================================================
@@ -756,6 +758,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-blue-50">
       <Sidebar isCollapsed={isCollapsed} onToggle={() => setIsCollapsed((prev) => !prev)} />
+      <ToastStack />
       <div className="flex flex-col min-h-screen transition-all duration-200" style={{ marginLeft: isCollapsed ? 68 : 256 }}>
         <Header />
         <main className="flex-1 p-6">
@@ -784,7 +787,9 @@ export default function DashboardLayout({
   return (
     <AuthProvider>
       <WalletProvider>
-        <DashboardLayoutInner>{children}</DashboardLayoutInner>
+        <ToastProvider>
+          <DashboardLayoutInner>{children}</DashboardLayoutInner>
+        </ToastProvider>
       </WalletProvider>
     </AuthProvider>
   );

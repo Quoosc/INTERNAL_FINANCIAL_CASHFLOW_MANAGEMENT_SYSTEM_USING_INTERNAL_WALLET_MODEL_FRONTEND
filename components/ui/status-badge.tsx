@@ -72,9 +72,34 @@ export function RoleBadge({ role, size }: { role: string; size?: "xs" | "sm" }) 
   return <StatusBadge variant={variant} label={label} size={size} />;
 }
 
+// ─── Request type badge helpers ───────────────────────────────
+
+import { RequestStatus, RequestType } from "@/types";
+
+const REQUEST_TYPE_VARIANT: Record<string, BadgeVariant> = {
+  [RequestType.ADVANCE]:          "violet",
+  [RequestType.EXPENSE]:          "cyan",
+  [RequestType.REIMBURSE]:        "teal",
+  [RequestType.PROJECT_TOPUP]:    "amber",
+  [RequestType.DEPARTMENT_TOPUP]: "rose",
+};
+
+const REQUEST_TYPE_LABEL: Partial<Record<RequestType, string>> = {
+  [RequestType.ADVANCE]:          "Tạm ứng",
+  [RequestType.EXPENSE]:          "Chi phí",
+  [RequestType.REIMBURSE]:        "Hoàn ứng",
+  [RequestType.PROJECT_TOPUP]:    "Nạp quỹ DA",
+  [RequestType.DEPARTMENT_TOPUP]: "Nạp quota PB",
+};
+
+export function RequestTypeBadge({ type, size }: { type: RequestType | string; size?: "xs" | "sm" }) {
+  const variant = REQUEST_TYPE_VARIANT[type] ?? "slate";
+  const label = REQUEST_TYPE_LABEL[type as RequestType] ?? type;
+  return <StatusBadge variant={variant} label={label} size={size} />;
+}
+
 // ─── Request status badge helpers ─────────────────────────────
 
-import { RequestStatus } from "@/types";
 
 const REQUEST_STATUS_VARIANT: Record<string, BadgeVariant> = {
   [RequestStatus.PENDING]:                         "amber",

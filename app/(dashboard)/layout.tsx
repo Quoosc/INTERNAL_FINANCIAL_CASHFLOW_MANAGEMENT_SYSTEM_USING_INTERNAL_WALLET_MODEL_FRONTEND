@@ -415,7 +415,7 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
             },
             { label: "Sổ cái", href: "/accountant/ledger", icon: icons.ledger },
             {
-              label: "Yeu cau rut tien",
+              label: "Yêu cầu rút tiền",
               href: "/accountant/withdrawals",
               icon: icons.wallet,
             },

@@ -59,7 +59,7 @@ export default function AdminSettingsPage() {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
-        setError("Khong the tai cau hinh he thong.");
+        setError("Không thể tải cấu hình hệ thống.");
       }
     } finally {
       setLoading(false);
@@ -92,12 +92,12 @@ export default function AdminSettingsPage() {
 
     try {
       await updateConfig(item.key, { value: item.value });
-      setNotice(`Da cap nhat cau hinh ${item.key}.`);
+      setNotice(`Đã cập nhật cấu hình ${item.key}.`);
     } catch (err) {
       if (err instanceof ApiError) {
-        setNotice(`API loi: ${err.apiMessage}`);
+        setNotice(`Lỗi API: ${err.apiMessage}`);
       } else {
-        setNotice("Khong the cap nhat cau hinh.");
+        setNotice("Không thể cập nhật cấu hình.");
       }
     } finally {
       setSavingKey(null);
@@ -110,12 +110,12 @@ export default function AdminSettingsPage() {
 
     try {
       await evictAllConfigCache();
-      setNotice("Da lam moi cache cau hinh.");
+      setNotice("Đã làm mới cache cấu hình.");
     } catch (err) {
       if (err instanceof ApiError) {
-        setNotice(`API loi: ${err.apiMessage}`);
+        setNotice(`Lỗi API: ${err.apiMessage}`);
       } else {
-        setNotice("Khong the lam moi cache cau hinh.");
+        setNotice("Không thể làm mới cache cấu hình.");
       }
     } finally {
       setEvictingCache(false);
@@ -125,12 +125,12 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Cau hinh he thong</h1>
-        <p className="text-slate-500 mt-1">Quan tri thong so van hanh va bao mat he thong.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Cấu hình hệ thống</h1>
+        <p className="text-slate-500 mt-1">Quản trị thông số vận hành và bảo mật hệ thống.</p>
       </div>
 
       <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-        Thay doi cau hinh co hieu luc ngay lap tuc. Kiem tra ky truoc khi luu.
+        Thay đổi cấu hình có hiệu lực ngay lập tức. Kiểm tra kỹ trước khi lưu.
       </div>
 
       {loading ? (
@@ -143,7 +143,7 @@ export default function AdminSettingsPage() {
         <>
           <SettingsGroup
             title="SECURITY"
-            description="PIN, OTP, gioi han giao dich va chinh sach bao mat"
+            description="PIN, OTP, giới hạn giao dịch và chính sách bảo mật"
             items={grouped.SECURITY}
             onChange={updateValue}
             onSave={handleSaveItem}
@@ -152,7 +152,7 @@ export default function AdminSettingsPage() {
 
           <SettingsGroup
             title="MAIL"
-            description="SMTP, gui thong bao email he thong"
+            description="SMTP, gửi thông báo email hệ thống"
             items={grouped.MAIL}
             onChange={updateValue}
             onSave={handleSaveItem}
@@ -161,7 +161,7 @@ export default function AdminSettingsPage() {
 
           <SettingsGroup
             title="SYSTEM"
-            description="Cac tham so van hanh chung"
+            description="Các thông số vận hành chung"
             items={grouped.SYSTEM}
             onChange={updateValue}
             onSave={handleSaveItem}
@@ -177,7 +177,7 @@ export default function AdminSettingsPage() {
           disabled={loading}
           className="px-5 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
         >
-          Tai lai
+          Tải lại
         </button>
         <button
           type="button"
@@ -185,7 +185,7 @@ export default function AdminSettingsPage() {
           disabled={evictingCache || loading}
           className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
         >
-          {evictingCache ? "Dang lam moi cache..." : "Lam moi cache"}
+          {evictingCache ? "Đang làm mới cache..." : "Làm mới cache"}
         </button>
       </div>
 
@@ -227,7 +227,7 @@ function SettingsGroup({
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-slate-500">Khong co cau hinh trong nhom nay.</p>
+        <p className="text-sm text-slate-500">Không có cấu hình trong nhóm này.</p>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
@@ -235,12 +235,12 @@ function SettingsGroup({
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <p className="text-sm font-medium text-slate-900">{item.key}</p>
-                  <p className="text-xs text-slate-500 mt-1">{item.description ?? "Khong co mo ta"}</p>
+                  <p className="text-xs text-slate-500 mt-1">{item.description ?? "Không có mô tả"}</p>
                 </div>
                 <input
                   value={item.value}
                   onChange={(event) => onChange(item.key, event.target.value)}
-                  className="w-full md:w-72 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-100 text-sm"
+                  className="w-full md:w-72 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm"
                 />
                 <button
                   type="button"
@@ -248,7 +248,7 @@ function SettingsGroup({
                   disabled={savingKey !== null}
                   className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
                 >
-                  {savingKey === item.key ? "Dang luu..." : "Luu"}
+                  {savingKey === item.key ? "Đang lưu..." : "Lưu"}
                 </button>
               </div>
             </div>

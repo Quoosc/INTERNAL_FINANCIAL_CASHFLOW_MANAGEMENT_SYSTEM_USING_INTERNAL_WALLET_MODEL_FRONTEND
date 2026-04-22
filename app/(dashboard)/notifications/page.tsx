@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { getNotifications, markAllAsRead, markAsRead } from "@/lib/api";
@@ -18,11 +18,11 @@ function formatTimeAgo(iso: string): string {
   const hour = 60 * minute;
   const day = 24 * hour;
 
-  if (diff < 5 * minute) return "Vua xong";
-  if (diff < hour) return `${Math.floor(diff / minute)} phut truoc`;
-  if (diff < day) return `${Math.floor(diff / hour)} gio truoc`;
-  if (diff < 2 * day) return "Hom qua";
-  if (diff < 7 * day) return `${Math.floor(diff / day)} ngay truoc`;
+  if (diff < 5 * minute) return "Vừa xong";
+  if (diff < hour) return `${Math.floor(diff / minute)} phút trước`;
+  if (diff < day) return `${Math.floor(diff / hour)} giờ trước`;
+  if (diff < 2 * day) return "Hôm qua";
+  if (diff < 7 * day) return `${Math.floor(diff / day)} ngày trước`;
 
   return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
@@ -142,7 +142,7 @@ export default function NotificationsPage() {
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Khong the tai thong bao tu API.");
+          setError("Không thể tải thông báo từ API.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -223,8 +223,8 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Thong bao</h1>
-          <p className="text-slate-500 mt-1">Cap nhat yeu cau, luong va canh bao he thong.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Thông báo</h1>
+          <p className="text-slate-500 mt-1">Cập nhật yêu cầu, lương và cảnh báo hệ thống.</p>
         </div>
 
         <button
@@ -235,7 +235,7 @@ export default function NotificationsPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M5 13l4 4L19 7" />
           </svg>
-          Danh dau tat ca da doc
+          Đánh dấu tất cả đã đọc
         </button>
       </div>
 
@@ -249,7 +249,7 @@ export default function NotificationsPage() {
               : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
           }`}
         >
-          Tat ca
+          Tất cả
         </button>
         <button
           type="button"
@@ -260,24 +260,26 @@ export default function NotificationsPage() {
               : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
           }`}
         >
-          Chua doc ({unreadCount})
+          Chưa đọc ({unreadCount})
         </button>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         {loading ? (
-          <div className="py-14 text-center text-slate-500 text-sm">Dang tai thong bao...</div>
+          <div className="py-14 text-center text-slate-500 text-sm">Đang tải thông báo...</div>
         ) : notifications.length === 0 ? (
-          <div className="py-14 text-center text-slate-500 text-sm">Khong co thong bao phu hop.</div>
+          <div className="py-14 text-center text-slate-500 text-sm">Không có thông báo phù hợp.</div>
         ) : (
-          <ul className="divide-y divide-white/5">
+          <ul className="divide-y divide-slate-200">
             {notifications.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
                   onClick={() => void handleOpenNotification(item)}
-                  className={`w-full text-left px-4 py-4 md:px-5 hover:bg-blue-50 transition-colors ${
-                    item.isRead ? "bg-white" : "bg-white"
+                  className={`w-full text-left px-4 py-4 md:px-5 transition-colors ${
+                    item.isRead
+                      ? "bg-white hover:bg-slate-50"
+                      : "bg-blue-50 hover:bg-blue-100/60"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -303,7 +305,7 @@ export default function NotificationsPage() {
 
         <div className="px-4 py-3 border-t border-slate-200 bg-blue-50 flex items-center justify-between">
           <p className="text-sm text-slate-500">
-            Tong {total} thong bao • Trang {page}/{totalPages}
+            Tổng {total} thông báo • Trang {page}/{totalPages}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -312,7 +314,7 @@ export default function NotificationsPage() {
               disabled={page <= 1}
               className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
-              Truoc
+              Trước
             </button>
             <button
               type="button"
@@ -330,4 +332,3 @@ export default function NotificationsPage() {
     </div>
   );
 }
-

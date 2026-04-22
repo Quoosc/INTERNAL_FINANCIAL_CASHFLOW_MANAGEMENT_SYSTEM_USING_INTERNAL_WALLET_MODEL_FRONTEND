@@ -39,6 +39,8 @@ const BREADCRUMB_MAP: Record<string, string[]> = {
   "/admin/approvals":              ["Quản trị", "Duyệt ngân sách"],
   "/cfo/approvals":                ["CFO", "Duyệt ngân sách"],
   "/cfo/system-fund":              ["CFO", "Quỹ hệ thống"],
+  "/cfo/settings":                 ["CFO", "Cấu hình"],
+  "/cfo/audit-logs":               ["CFO", "Nhật ký hệ thống"],
 };
 
 function getBreadcrumbs(pathname: string): string[] {

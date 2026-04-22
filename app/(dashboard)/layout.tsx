@@ -450,6 +450,11 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
               icon: icons.department,
             },
             {
+              label: "Phân quyền",
+              href: "/admin/roles",
+              icon: icons.approvals,
+            },
+            {
               label: "Quỹ hệ thống",
               href: "/admin/system-fund",
               icon: icons.systemFund,

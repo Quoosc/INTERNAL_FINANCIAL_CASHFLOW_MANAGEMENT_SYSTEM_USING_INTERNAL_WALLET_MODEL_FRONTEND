@@ -390,8 +390,12 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
     try {
       await api.post<TLApproveResponse>(`/api/v1/team-leader/approvals/${id}/approve`, body);
       router.push("/team-leader/approvals");
-    } catch {
-      router.push("/team-leader/approvals");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setActionError(err.apiMessage);
+      } else {
+        setActionError("Không thể duyệt yêu cầu. Vui lòng thử lại.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -413,8 +417,12 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
     try {
       await api.post<TLRejectResponse>(`/api/v1/team-leader/approvals/${id}/reject`, body);
       router.push("/team-leader/approvals");
-    } catch {
-      router.push("/team-leader/approvals");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setActionError(err.apiMessage);
+      } else {
+        setActionError("Không thể từ chối yêu cầu. Vui lòng thử lại.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -485,7 +493,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <h2 className="text-lg font-semibold text-slate-900">Người gửi yêu cầu</h2>
         <div className="mt-3 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center text-sm font-semibold">
+          <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-900 flex items-center justify-center text-sm font-semibold">
             {getInitials(request.requesterName)}
           </div>
           <div>

@@ -48,7 +48,7 @@ function getTypeClass(type: RequestType): string {
     case RequestType.ADVANCE:
       return "bg-violet-50 border-violet-200 text-violet-700";
     case RequestType.EXPENSE:
-      return "bg-sky-500/15 border-sky-500/30 text-sky-300";
+      return "bg-sky-100 border-sky-200 text-sky-700";
     case RequestType.REIMBURSE:
       return "bg-amber-50 border-amber-200 text-amber-700";
     default:
@@ -245,21 +245,11 @@ export default function AccountantDisbursementDetailPage({
 
     try {
       const body: DisburseBody = { pin };
-      // const res = await api.post<DisburseResponse>(
-      //   `/api/v1/accountant/disbursements/${id}/disburse`,
-      //   body
-      // );
-      // TODO: Replace when Sprint 6 is complete - simulate success
-      // setSuccessData(res.data);
-      void body;
-      setSuccessData({
-        id: detail.id,
-        requestCode: detail.requestCode,
-        status: "PAID",
-        transactionCode: `TXN-2026-${String(detail.id).padStart(4, "0")}A`,
-        amount: detail.approvedAmount,
-        disbursedAt: new Date().toISOString(),
-      });
+      const res = await api.post<DisburseResponse>(
+        `/api/v1/accountant/disbursements/${id}/disburse`,
+        body
+      );
+      setSuccessData(res.data);
       setShowSuccess(true);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -289,12 +279,7 @@ export default function AccountantDisbursementDetailPage({
       const body: DisbursementRejectBody = {
         reason: rejectReason.trim(),
       };
-      // await api.post<DisbursementRejectResponse>(
-      //   `/api/v1/accountant/disbursements/${id}/reject`,
-      //   body
-      // );
-      // TODO: Replace when Sprint 6 is complete - simulate reject
-      void (body as DisbursementRejectBody);
+      await api.post(`/api/v1/accountant/disbursements/${id}/reject`, body);
       router.push("/accountant/disbursements");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -433,7 +418,7 @@ export default function AccountantDisbursementDetailPage({
             </h2>
 
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center text-sm font-semibold">
+              <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-900 flex items-center justify-center text-sm font-semibold">
                 {getInitials(detail.requester.fullName)}
               </div>
               <div>

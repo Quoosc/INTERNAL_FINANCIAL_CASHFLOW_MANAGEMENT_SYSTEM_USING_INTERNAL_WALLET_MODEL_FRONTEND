@@ -19,12 +19,8 @@ interface WalletContextType extends WalletState {
   fetchWallet: () => Promise<void>;
   refreshBalance: () => Promise<void>;
   optimisticUpdate: (balanceChange: number) => void;
-  /** Cập nhật wallet state từ WebSocket message */
-  updateFromWS: (data: {
-    balance: number;
-    lockedBalance: number;
-    availableBalance: number;
-  }) => void;
+  /** Cập nhật wallet state từ SSE event `wallet.updated` — payload là full WalletResponse */
+  updateFromSse: (wallet: WalletResponse) => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -89,29 +85,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Cập nhật từ WebSocket /user/queue/wallet message
+   * Cập nhật từ SSE event `wallet.updated` (GET /api/v1/users/stream).
+   * Payload là full WalletResponse — replace state trực tiếp.
    */
-  const updateFromWS = useCallback(
-    (data: {
-      balance: number;
-      lockedBalance: number;
-      availableBalance: number;
-    }) => {
-      setState((prev) => {
-        if (!prev.wallet) return prev;
-        return {
-          ...prev,
-          wallet: {
-            ...prev.wallet,
-            balance: data.balance,
-            lockedBalance: data.lockedBalance,
-            availableBalance: data.availableBalance,
-          },
-        };
-      });
-    },
-    []
-  );
+  const updateFromSse = useCallback((wallet: WalletResponse) => {
+    setState((prev) => ({ ...prev, wallet, error: null }));
+  }, []);
 
   return (
     <WalletContext.Provider
@@ -120,7 +99,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         fetchWallet,
         refreshBalance,
         optimisticUpdate,
-        updateFromWS,
+        updateFromSse,
       }}
     >
       {children}

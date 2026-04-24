@@ -1,7 +1,9 @@
 # FLOW.md - Data Flow (Frontend <-> Backend)
 
-> Version: 3.2 (2026-04-09)
+> Version: 3.3 (2026-04-25)
 > Aligned with backend source: 6 roles, 4 financial flows, wallet-first model, SoD
+>
+> **Thay đổi so với 3.2:** Realtime transport STOMP/WebSocket → SSE (xem §11).
 
 ## 1. System Overview
 
@@ -9,7 +11,7 @@
 Browser (Next.js)
   -> /api/v1/* (proxy in next.config.ts)
   -> Spring Boot Backend (port 8080)
-  -> PostgreSQL + Redis + RabbitMQ + WebSocket
+  -> PostgreSQL + Redis + RabbitMQ + SSE (Server-Sent Events)
 ```
 
 ## 2. Auth Flow
@@ -192,18 +194,28 @@ try {
 }
 ```
 
-## 11. Real-time WebSocket Channels
+## 11. Real-time — Server-Sent Events (SSE)
 
-| Channel | Payload | FE Handler |
+Từ v3.3, backend chuyển từ STOMP/WebSocket sang **SSE** với **1 endpoint duy nhất**:
+
+- Endpoint: `GET /api/v1/users/stream` (`text/event-stream`)
+- Auth: `Authorization: Bearer <accessToken>` header
+- FE lib: `@microsoft/fetch-event-source` (native `EventSource` không hỗ trợ custom header)
+
+### 4 event backend đẩy về
+
+| Event name | Payload (raw, không wrap) | FE Handler |
 |---|---|---|
-| `/user/queue/wallet` | `WalletUpdateMessage` | `WalletContext.updateFromWS(data)` — chỉ áp dụng nếu `data.version > current.version` |
-| `/user/queue/requests` | `RequestStatusUpdateMessage` | Cập nhật trạng thái request trong local state |
-| `/user/queue/notifications` | `NotificationMessage` | Prepend vào notification list + tăng unread badge |
+| `connected` | `"SSE connected"` | No-op / log debug |
+| `wallet.updated` | `WalletResponse` | `WalletContext.updateFromSse(wallet)` — replace state |
+| `transaction.created` | `LedgerEntryResponse` | Prepend row vào `wallet/transactions` list |
+| `notification` | `NotificationResponse` | Prepend vào notification list + tăng unread badge |
 
-**WebSocket connection:**
-- Endpoint: `/ws` (SockJS + STOMP)
-- Auth: Bearer token trong STOMP CONNECT header
-- Reconnect khi mất kết nối → gọi `GET /wallet` + `GET /notifications` để sync state
+> Không còn `REQUEST_STATUS_CHANGED` — sau action approve/reject/disburse, UI gọi caller tự `refetch` list/detail. Gate lại bằng wallet + notification nếu cần.
+
+**Reconnect**: `fetchEventSource` tự reconnect. Khi reconnect thành công → gọi lại `GET /wallet` + `GET /notifications` (1 lần) để sync lại state.
+
+Chi tiết payload + ví dụ đầy đủ: xem [API_CONTRACT §15](./API_CONTRACT.md#15-realtime--server-sent-events-sse).
 
 ## 12. Server vs Client Component
 

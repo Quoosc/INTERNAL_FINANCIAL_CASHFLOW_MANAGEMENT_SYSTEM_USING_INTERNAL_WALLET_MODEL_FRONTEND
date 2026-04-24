@@ -4,7 +4,7 @@
 // =============================================================
 
 import { api } from "@/lib/api-client";
-import type { NotificationListResponse } from "@/types";
+import type { NotificationListResponse, NotificationResponse } from "@/types";
 
 /** GET /api/v1/notifications — Danh sách notification */
 export async function getNotifications(

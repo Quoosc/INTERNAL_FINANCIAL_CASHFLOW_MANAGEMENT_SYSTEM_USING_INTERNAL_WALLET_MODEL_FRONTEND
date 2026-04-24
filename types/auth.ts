@@ -38,13 +38,6 @@ export interface ForgotPasswordRequest {
   email: string;
 }
 
-/** POST /auth/reset-password — đặt lại MK bằng token từ email */
-export interface ResetPasswordRequest {
-  token: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
 // --- Response DTOs ---
 
 /**

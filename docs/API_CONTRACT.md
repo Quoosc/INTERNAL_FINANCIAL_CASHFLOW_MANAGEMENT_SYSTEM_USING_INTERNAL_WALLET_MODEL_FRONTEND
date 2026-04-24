@@ -1,8 +1,10 @@
 # API_CONTRACT.md - Frontend/Backend Contract
 
-> Version: 3.2 (2026-04-09)
+> Version: 3.3 (2026-04-25)
 > Source priority: backend runtime source code > backend docs > frontend docs
 > Roles: EMPLOYEE, TEAM_LEADER, MANAGER, ACCOUNTANT, CFO, ADMIN
+>
+> **Thay đổi so với 3.2:** Realtime transport STOMP/WebSocket → **SSE** (1 endpoint `GET /users/stream`, 4 event: `connected`, `wallet.updated`, `transaction.created`, `notification`). Xem §15.
 
 ## Base URL
 
@@ -48,11 +50,11 @@ Một số endpoint cũ hơn dùng `page`/`limit` (1-indexed). Xem từng endpoi
 Notes:
 - `LoginResponse` gồm `{ accessToken, refreshToken, requiresSetup, setupToken, user: AuthUser }`
 - First-login: `requiresSetup = true` → `setupToken` cấp, không có `accessToken/refreshToken`
-- `POST /auth/reset-password` không có trong `AuthController` runtime hiện tại
+- Forgot-password flow 2 bước: `/auth/forgot-password` (gửi OTP email) → `/auth/verify-password-reset` (nhập OTP + MK mới)
 
 ---
 
-## 2. Profile and Security (`/users/me`, `/banks`)
+## 2. Profile and Security (`/users/me`, `/banks`, `/users/stream`)
 
 | Method | Endpoint | Body | Response |
 |---|---|---|---|
@@ -63,11 +65,13 @@ Notes:
 | PUT | `/users/me/pin` | `UpdatePinRequest` | `{ message }` |
 | POST | `/users/me/pin/verify` | `VerifyPinRequest` | `{ valid: boolean }` |
 | GET | `/banks` | - | `BankOption[]` |
+| GET | `/users/stream` | - | SSE stream — xem §15 |
 
 Notes:
 - Avatar là Signed URL Cloudinary (hết hạn 15 phút)
 - PIN: 5 chữ số. Nhập sai > 5 lần → khoá 30 phút (`423 Locked`)
 - `PUT /users/me/pin` body: `{ currentPin, newPin }` — đổi PIN khi đã có PIN
+- `GET /users/stream` là endpoint realtime duy nhất (SSE). Mở 1 connection cho cả session để nhận mọi event của user hiện tại.
 
 ---
 
@@ -221,10 +225,27 @@ Notes:
 
 | Method | Endpoint | Params |
 |---|---|---|
-| GET | `/notifications` | `?unreadOnly=false&page=0&size=20` |
+| GET | `/notifications` | `?isRead={true\|false}&type={NotificationType}&page=1&limit=20` |
 | GET | `/notifications/unread-count` | - |
 | PATCH | `/notifications/{id}/read` | - |
 | PATCH | `/notifications/read-all` | - |
+
+> ⚠ `page` là **1-indexed** (khác `/wallet/transactions` dùng 0-indexed). `isRead`, `type` đều optional.
+
+**NotificationListResponse:**
+```json
+{
+  "items": [ /* NotificationResponse[] */ ],
+  "unreadCount": 3,
+  "total": 42,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 3
+}
+```
+> `unreadCount` trả kèm để FE cập nhật badge mà không cần gọi thêm `/unread-count`.
+
+**Realtime push:** server tự đẩy notification mới qua SSE event `notification` trên kênh `GET /users/stream` (xem §15). FE prepend vào list + tăng badge, không cần poll lại.
 
 **NotificationType enum** (Java source):
 ```
@@ -517,81 +538,94 @@ Known system config keys: `WITHDRAWAL_LIMIT`, `MINIMUM_WITHDRAWAL`, `MAX_FILE_SI
 
 ---
 
-## 15. WebSocket
+## 15. Realtime — Server-Sent Events (SSE)
 
-| Channel | Payload Type | Trigger |
+> **Transport:** Server-Sent Events (SSE) qua HTTP — **đã thay** STOMP/WebSocket (trước v3.3).
+> **Endpoint duy nhất:** `GET /api/v1/users/stream` (media type `text/event-stream`).
+> **Auth:** `Authorization: Bearer <accessToken>` header — giống mọi REST endpoint khác.
+> **Thư viện FE:** `@microsoft/fetch-event-source` (native `EventSource` **không** hỗ trợ custom header, nên không dùng được).
+
+### Kết nối
+
+- Mở **đúng 1 connection** cho cả session (không mở nhiều trên nhiều tab — để backend phân phối theo `userId`, dùng localStorage broadcast nếu cần chia sẻ giữa tab).
+- Khi đăng xuất / token hết hạn → đóng stream, refresh token, mở lại.
+
+### Event types
+
+Backend enum `SseEventType` (source of truth):
+
+| Event name | Payload data type | Khi nào backend push |
 |---|---|---|
-| `/user/queue/wallet` | `WalletUpdateMessage` | Disbursement, Payroll run, Withdraw confirm, Deposit confirm |
-| `/user/queue/requests` | `RequestStatusUpdateMessage` | Approve/Reject/Payout trên request của user |
-| `/user/queue/notifications` | `NotificationMessage` | Mọi notification mới tạo cho user |
+| `connected` | `string` — `"SSE connected"` | Ngay sau khi stream open thành công |
+| `wallet.updated` | `WalletResponse` (raw, không wrap) | Bất kỳ khi số dư user wallet thay đổi (disbursement, payroll run, withdraw, deposit) |
+| `transaction.created` | `LedgerEntryResponse` (raw, không wrap) | Sau khi ledger entry cho wallet của user được tạo |
+| `notification` | `NotificationResponse` (raw, không wrap) | Mọi notification mới tạo cho user |
 
-**WalletUpdateMessage payload:**
-```json
-{
-  "type": "WALLET_UPDATED",
-  "data": {
-    "walletId": 1,
-    "balance": 20000000,
-    "pendingBalance": 0,
-    "debtBalance": 0,
-    "version": 12,
-    "transaction": {
-      "id": 501,
-      "transactionCode": "TXN-8829145A",
-      "type": "PAYSLIP_PAYMENT",
-      "status": "SUCCESS",
-      "amount": 15000000,
-      "balanceAfter": 20000000,
-      "referenceType": "PAYSLIP",
-      "referenceId": 42,
-      "description": "Lương T02/2026",
-      "createdAt": "2026-02-25T10:00:00"
+> ⚠ **Không còn wrapper `{ type, data, timestamp }`** như thời STOMP. Mỗi SSE event name đã chính là "type", và `data:` là payload JSON trực tiếp của DTO tương ứng.
+
+### Ví dụ raw stream
+
+```
+event: connected
+data: "SSE connected"
+
+event: wallet.updated
+data: {"id":1,"ownerType":"USER","ownerId":1,"balance":20000000,"lockedBalance":0,"availableBalance":20000000}
+
+event: transaction.created
+data: {"id":501,"transactionCode":"TXN-8829145A","direction":"CREDIT","amount":15000000,"balanceAfter":20000000,"createdAt":"2026-02-25T10:00:00"}
+
+event: notification
+data: {"id":55,"type":"REQUEST_APPROVED_BY_TL","title":"Request Approved","message":"Your request REQ-IT-2602-001 has been approved","refId":101,"refType":"REQUEST","referenceLink":null,"isRead":false,"createdAt":"2026-02-25T10:30:00"}
+```
+
+### FE pattern khuyến nghị
+
+```ts
+import { fetchEventSource } from "@microsoft/fetch-event-source";
+import { WalletResponse, LedgerEntryResponse, NotificationResponse } from "@/types";
+
+const ctrl = new AbortController();
+
+await fetchEventSource("/api/v1/users/stream", {
+  method: "GET",
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+    Accept: "text/event-stream",
+  },
+  signal: ctrl.signal,
+  openWhenHidden: true,
+
+  onopen: async (res) => {
+    if (!res.ok) throw new Error(`SSE failed: ${res.status}`);
+  },
+
+  onmessage: (msg) => {
+    switch (msg.event) {
+      case "connected":
+        // optional: log
+        break;
+      case "wallet.updated":
+        updateWalletFromSse(JSON.parse(msg.data) as WalletResponse);
+        break;
+      case "transaction.created":
+        prependTransaction(JSON.parse(msg.data) as LedgerEntryResponse);
+        break;
+      case "notification":
+        prependNotification(JSON.parse(msg.data) as NotificationResponse);
+        break;
     }
   },
-  "timestamp": "2026-02-25T10:00:00"
-}
-```
-> `WalletContext.updateFromWS(data)` áp dụng nếu `data.version > current.version`
 
-**RequestStatusUpdateMessage payload:**
-```json
-{
-  "type": "REQUEST_STATUS_CHANGED",
-  "data": {
-    "id": 101,
-    "requestCode": "REQ-IT-2602-001",
-    "previousStatus": "PENDING",
-    "newStatus": "PENDING_ACCOUNTANT_EXECUTION",
-    "approvedAmount": 8500000,
-    "rejectReason": null,
-    "actor": { "id": 8, "fullName": "Le Van Minh", "role": "TEAM_LEADER" },
-    "comment": "Approved — looks good.",
-    "updatedAt": "2026-02-25T10:30:00"
+  onerror: (err) => {
+    // fetch-event-source tự reconnect — ném error để tùy biến backoff nếu cần
+    console.warn("[SSE] connection error", err);
   },
-  "timestamp": "2026-02-25T10:30:00"
-}
+});
 ```
 
-**NotificationMessage payload:**
-```json
-{
-  "type": "NEW_NOTIFICATION",
-  "data": {
-    "id": 55,
-    "type": "REQUEST_APPROVED_BY_TL",
-    "title": "Request Approved",
-    "message": "Your request REQ-IT-2602-001 has been approved",
-    "isRead": false,
-    "refId": 101,
-    "refType": "REQUEST",
-    "createdAt": "2026-02-25T10:30:00"
-  },
-  "timestamp": "2026-02-25T10:30:00"
-}
-```
+### Reconnect & sync
 
-**WebSocket config:**
-- Endpoint: `/ws` (SockJS fallback)
-- Auth: gửi `Authorization: Bearer <token>` trong STOMP CONNECT header
-- Reconnect: exponential backoff (1s → 2s → 4s → 8s → max 30s)
-- Khi reconnect → gọi `GET /wallet` + `GET /notifications` để sync lại state
+- `@microsoft/fetch-event-source` **tự reconnect** khi connection drop.
+- Khi reconnect thành công → gọi lại `GET /wallet` + `GET /notifications` (1 lần) để phòng lỡ event trong lúc mất kết nối.
+- Không còn channel dành riêng cho request status (`REQUEST_STATUS_CHANGED` đã bỏ) — sau mọi action approve/reject/disburse trên UI, caller tự `refetch` list/detail.

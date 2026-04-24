@@ -4,7 +4,6 @@ import {
   FirstLoginChangePasswordRequest,
   FirstLoginSetupRequest,
   ForgotPasswordRequest,
-  ResetPasswordRequest,
   AuthUser,
 } from "@/types";
 import { api, setTokens, setTokenCookie, clearTokens, clearTokenCookie } from "./api-client";
@@ -95,15 +94,6 @@ export async function forgotPassword(
   request: ForgotPasswordRequest
 ): Promise<void> {
   await api.post("/api/v1/auth/forgot-password", request, { skipAuth: true });
-}
-
-/**
- * Đặt lại mật khẩu bằng token - POST /api/v1/auth/reset-password
- */
-export async function resetPassword(
-  request: ResetPasswordRequest
-): Promise<void> {
-  await api.post("/api/v1/auth/reset-password", request, { skipAuth: true });
 }
 
 /**

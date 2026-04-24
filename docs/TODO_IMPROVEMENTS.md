@@ -201,3 +201,25 @@ const MOCK_DATA: SomeResponseType = { ... };
 6. **Admin settings**: `GET /admin/settings` trả `{ items: [] }`, `PUT /admin/settings` nhận `{ configs: [] }`
 
 7. **Không còn `MANAGER_APPROVAL_LIMIT`** — chỉ bị giới hạn bởi số dư quỹ phòng ban
+
+---
+
+## 🔔 Thay đổi v3.3 (2026-04-25) — Realtime transport: STOMP → SSE
+
+Backend đã **xóa WebSocket/STOMP** và thay bằng **Server-Sent Events** (1 endpoint duy nhất, 4 event).
+
+- **Dừng dùng:** `@stomp/stompjs`, `sockjs-client`. Nếu đã cài trong `package.json` → gỡ khi implement realtime thật.
+- **Cài mới:** `npm install @microsoft/fetch-event-source` — native `EventSource` không truyền được `Authorization` header.
+- **Endpoint:** `GET /api/v1/users/stream` (`text/event-stream`). Mở **1 connection** cho cả session.
+- **4 event:** `connected` · `wallet.updated` (→ `WalletResponse`) · `transaction.created` (→ `LedgerEntryResponse`) · `notification` (→ `NotificationResponse`). Payload là DTO trực tiếp, **không có wrapper** `{type,data,timestamp}`.
+- **Không còn `REQUEST_STATUS_CHANGED`.** Sau action approve/reject/disburse → caller phải `refetch` list/detail thủ công.
+- **Reconnect:** `fetchEventSource` tự xử lý. Sau mỗi lần reconnect → gọi lại `GET /wallet` + `GET /notifications` một lần để sync.
+- **Files đã đổi:** `types/wallet.ts` (bỏ `WalletUpdateMessage`, thêm `WalletUpdatedEvent`/`TransactionCreatedEvent`); `types/notification.ts` (bỏ `NotificationMessage`, thêm `NotificationEvent`); `types/request.ts` (xóa `RequestStatusUpdateMessage`); `contexts/wallet-context.tsx` (`updateFromWS` → `updateFromSse(wallet)`).
+
+### Việc cần làm khi implement realtime
+
+- [ ] Thêm `@microsoft/fetch-event-source` vào `package.json`
+- [ ] Tạo `lib/sse-client.ts` — quản lý connection single-instance, đóng khi logout, refetch state sau reconnect
+- [ ] Gắn SSE listener ở `(dashboard)/layout.tsx` (hoặc tạo `SseProvider` bên cạnh `AuthProvider`/`WalletProvider`)
+- [ ] Dispatch theo event name → gọi `updateFromSse` / prepend transaction / prepend notification + badge
+- [ ] Handle token refresh: khi 401 → đóng stream, refresh, mở lại với token mới

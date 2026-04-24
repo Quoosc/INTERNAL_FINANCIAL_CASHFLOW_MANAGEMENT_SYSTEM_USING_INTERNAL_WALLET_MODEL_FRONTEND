@@ -162,25 +162,7 @@ export interface RequestFilterParams {
   limit?: number;
 }
 
-// --- WebSocket Payloads ---
-
-/** /user/queue/requests — message payload */
-export interface RequestStatusUpdateMessage {
-  type: "REQUEST_STATUS_CHANGED";
-  data: {
-    id: number;
-    requestCode: string;
-    previousStatus: RequestStatus;
-    newStatus: RequestStatus;
-    approvedAmount: number | null;
-    rejectReason: string | null;
-    actor: {
-      id: number;
-      fullName: string;
-      role: string;
-    };
-    comment: string | null;
-    updatedAt: string;
-  };
-  timestamp: string;
-}
+// --- No realtime channel for request status ---
+// Backend SSE không emit event riêng cho REQUEST_STATUS_CHANGED.
+// Sau action approve / reject / disburse / cancel, caller phải tự refetch list/detail.
+// Xem docs/API_CONTRACT.md §15.

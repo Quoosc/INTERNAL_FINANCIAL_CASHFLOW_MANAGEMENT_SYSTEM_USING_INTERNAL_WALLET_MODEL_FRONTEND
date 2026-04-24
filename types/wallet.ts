@@ -245,17 +245,13 @@ export interface LedgerFilterParams {
   size?: number;
 }
 
-// --- WebSocket Payloads ---
+// --- SSE Event Payloads ---
+// Backend streams qua GET /api/v1/users/stream (text/event-stream).
+// Mỗi SSE event name đi kèm data JSON là DTO trực tiếp (không wrap).
+// Xem docs/API_CONTRACT.md §15.
 
-/** /user/queue/wallet — message payload */
-export interface WalletUpdateMessage {
-  type: "WALLET_UPDATED";
-  data: {
-    walletId: number;
-    balance: number;
-    lockedBalance: number;
-    availableBalance: number;
-    transaction: TransactionResponse;
-  };
-  timestamp: string;
-}
+/** SSE event `wallet.updated` — payload = full WalletResponse (replace state) */
+export type WalletUpdatedEvent = WalletResponse;
+
+/** SSE event `transaction.created` — payload = LedgerEntryResponse (prepend vào list) */
+export type TransactionCreatedEvent = LedgerEntryResponse;

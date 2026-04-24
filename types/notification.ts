@@ -94,11 +94,10 @@ export interface NotificationFilterParams {
   limit?: number;      // default: 20
 }
 
-// --- WebSocket Payloads ---
+// --- SSE Event Payloads ---
+// Backend streams qua GET /api/v1/users/stream (text/event-stream).
+// SSE event `notification` — data JSON là NotificationResponse trực tiếp.
+// Xem docs/API_CONTRACT.md §15.
 
-/** /user/queue/notifications — message payload */
-export interface NotificationMessage {
-  type: "NEW_NOTIFICATION";
-  data: NotificationResponse;
-  timestamp: string;
-}
+/** SSE event `notification` — payload = full NotificationResponse (prepend vào list) */
+export type NotificationEvent = NotificationResponse;

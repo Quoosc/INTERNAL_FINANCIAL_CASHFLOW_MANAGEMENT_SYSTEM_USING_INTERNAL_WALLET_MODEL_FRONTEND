@@ -1,6 +1,7 @@
 # PROJECT_STRUCTURE.md — Cấu trúc dự án Frontend
 
-> **Cập nhật:** Aligned với filesystem thực tế (types v3.2 — 16 modules, 6 roles)
+> **Cập nhật v3.3 (2026-04-25):** Aligned với filesystem thực tế (types — 16 modules, 6 roles).
+> Realtime transport STOMP/WebSocket → **SSE** (`GET /users/stream`). `wallet-context.tsx` dùng `updateFromSse()` thay cho `updateFromWS()`.
 
 ## Tổng quan
 
@@ -111,7 +112,7 @@ financial-wallet-frontend/
 │   ├── api.ts                       # ApiResponse<T>, PaginatedResponse<T>
 │   ├── auth.ts                      # AuthUser, LoginRequest, LoginResponse, RefreshTokenRequest, ...
 │   ├── user.ts                      # UserStatus, RoleName, Permission (40+), UserProfileResponse, BankInfo, ...
-│   ├── wallet.ts                    # WalletResponse, TransactionResponse, TransactionType, WalletUpdateMessage, ...
+│   ├── wallet.ts                    # WalletResponse, TransactionResponse, LedgerEntryResponse, TransactionType, WalletUpdatedEvent (SSE), ...
 │   ├── request.ts                   # RequestType, RequestStatus, RequestAction, RequestListItem, ...
 │   ├── project.ts                   # ProjectStatus, ProjectDetailResponse, ProjectPhaseResponse, CreatePhaseBody, ...
 │   ├── accounting.ts                # PayrollStatus, PayslipListItem, PayrollDetailResponse, CompanyFundResponse, LedgerSummaryResponse, ...
@@ -131,7 +132,7 @@ financial-wallet-frontend/
 │
 ├── contexts/                        # React Context providers
 │   ├── auth-context.tsx             # useAuth() → { user, hasRole(), hasAnyRole(), isFirstLogin, logout }
-│   └── wallet-context.tsx           # useWallet() → { wallet, fetchWallet(), refreshBalance(), optimisticUpdate(), updateFromWS() }
+│   └── wallet-context.tsx           # useWallet() → { wallet, fetchWallet(), refreshBalance(), optimisticUpdate(), updateFromSse() }
 │
 ├── docs/                            # Tài liệu kỹ thuật — source of truth cho specs
 │   ├── API_CONTRACT.md              # Tất cả endpoints, request/response types, Sprint status
@@ -194,7 +195,8 @@ financial-wallet-frontend/
 | `company-fund` | `/cfo/system-fund` (CFO) · `/admin/system-fund` (Admin view) | `/company-fund` | CFO quản lý + nạp quỹ; Admin chỉ xem |
 | `config` | `/admin/settings` · `/cfo/settings` (re-export) | `/admin/settings` | Cấu hình hệ thống |
 | `audit` | `/admin/audit-logs` · `/cfo/audit-logs` (re-export) | `/admin/audit` | Nhật ký kiểm toán |
-| `notification` | `/notifications` | `/notifications` | Thông báo real-time (mọi role) |
+| `notification` | `/notifications` | `/notifications` | Thông báo real-time qua SSE — xem §15 API_CONTRACT |
+| `user` (SSE) | — (sidebar global) | `/users/stream` | 1 kênh SSE duy nhất cho `wallet.updated` · `transaction.created` · `notification` |
 
 ---
 

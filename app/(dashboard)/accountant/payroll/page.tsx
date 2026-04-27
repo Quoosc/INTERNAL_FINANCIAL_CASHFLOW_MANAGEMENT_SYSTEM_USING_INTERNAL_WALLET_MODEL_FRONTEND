@@ -14,7 +14,6 @@ import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 8;
 
-// TODO: Replace when Sprint 7 is complete
 const MOCK_PERIODS: PayrollPeriodListItem[] = [
   {
     id: 6,

@@ -22,7 +22,6 @@ type ManagerMemberView = ManagerDeptMemberListItem & {
   projectsCount: number;
 };
 
-// TODO: Replace when Sprint 4-5 is complete
 const MOCK_DASHBOARD: ManagerDashboardResponse = {
   departmentBudget: {
     totalProjectQuota: 800_000_000,
@@ -34,7 +33,6 @@ const MOCK_DASHBOARD: ManagerDashboardResponse = {
   teamDebtSummary: { totalDebt: 5_200_000, employeesWithDebt: 3 },
 };
 
-// TODO: Replace when Sprint 4-5 is complete
 const MOCK_MEMBERS: ManagerMemberView[] = [
   {
     id: 4,
@@ -90,7 +88,6 @@ const MOCK_MEMBERS: ManagerMemberView[] = [
   },
 ];
 
-// TODO: Replace when Sprint 4-5 is complete
 const MOCK_MEMBER_DETAIL: ManagerDeptMemberDetailResponse = {
   id: 11,
   fullName: "Đỗ Quốc Bảo",

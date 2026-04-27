@@ -24,7 +24,6 @@ interface DisbursementListViewItem extends DisbursementListItem {
 
 const PAGE_LIMIT = 10;
 
-// TODO: Replace when Sprint 6 is complete
 const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
   {
     id: 1,
@@ -361,8 +360,8 @@ export default function AccountantDisbursementsPage() {
         query.set("status", "PENDING_ACCOUNTANT_EXECUTION");
         if (filters.type) query.set("type", filters.type);
         if (filters.search) query.set("search", filters.search);
-        query.set("page", String(filters.page ?? 1));
-        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
+        query.set("page", String(Math.max(0, (filters.page ?? 1) - 1)));
+        query.set("size", String(filters.limit ?? PAGE_LIMIT));
 
         const res = await api.get<
           PaginatedResponse<DisbursementListItem> | DisbursementListItem[]

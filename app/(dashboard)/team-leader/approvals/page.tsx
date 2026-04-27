@@ -14,7 +14,6 @@ import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 10;
 
-// TODO: Replace when Sprint 4-5 is complete
 const MOCK_APPROVALS: TLApprovalListItem[] = [
   {
     id: 1,
@@ -299,8 +298,8 @@ export default function TLApprovalsPage() {
         const query = new URLSearchParams();
         if (typeFilter) query.set("type", typeFilter);
         if (search.trim()) query.set("search", search.trim());
-        query.set("page", String(page));
-        query.set("limit", String(PAGE_LIMIT));
+        query.set("page", String(Math.max(0, page - 1)));
+        query.set("size", String(PAGE_LIMIT));
 
         const res = await api.get<PaginatedResponse<TLApprovalListItem>>(
           `/api/v1/team-leader/approvals?${query.toString()}`

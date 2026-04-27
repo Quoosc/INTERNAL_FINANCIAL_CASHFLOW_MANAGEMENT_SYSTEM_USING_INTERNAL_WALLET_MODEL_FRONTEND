@@ -20,7 +20,6 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// TODO: Replace when Sprint 4-5 is complete
 const MOCK_DETAIL: ManagerApprovalDetailResponse = {
   id: 10,
   requestCode: "REQ-2026-0050",

@@ -17,7 +17,6 @@ type LedgerTxnDetailView = TransactionResponse & {
   referenceCode?: string | null;
 };
 
-// TODO: Replace when Sprint 7 is complete
 const MOCK_TXN: LedgerTxnDetailView = {
   id: 1,
   transactionCode: "TXN-2026-0001A",
@@ -126,7 +125,6 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        // TODO: Replace when Sprint 7 is complete
         const res = await api.get<LedgerTxnDetailView>(`/api/v1/accountant/ledger/${id}`);
         if (cancelled) return;
         setTxn(res.data);

@@ -31,7 +31,6 @@ const ROLE_OPTIONS: { value: RoleName; label: string; roleId: number }[] = [
   { value: RoleName.ADMIN, label: "Admin", roleId: 6 },
 ];
 
-// TODO: Replace when Sprint 2 is complete
 const MOCK_DETAIL: AdminUserDetailResponse = {
   id: 4,
   fullName: "Đỗ Quốc Bảo",

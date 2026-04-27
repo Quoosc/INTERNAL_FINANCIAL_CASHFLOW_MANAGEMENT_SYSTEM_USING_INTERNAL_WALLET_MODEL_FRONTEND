@@ -20,7 +20,6 @@ type ManagerProjectViewItem = ManagerProjectListItem & {
   teamLeaderName?: string | null;
 };
 
-// TODO: Replace when Sprint 4 is complete
 const MOCK_PROJECTS: ManagerProjectViewItem[] = [
   {
     id: 1,

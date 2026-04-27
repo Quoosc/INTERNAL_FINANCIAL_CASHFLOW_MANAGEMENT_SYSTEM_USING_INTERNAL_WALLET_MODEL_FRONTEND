@@ -16,7 +16,6 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// TODO: Replace when Sprint 2 is complete
 const MOCK_DEPARTMENT_DETAIL: DepartmentDetailResponse = {
   id: 1,
   name: "Phòng CNTT",
@@ -60,7 +59,6 @@ const MOCK_DEPARTMENT_DETAIL: DepartmentDetailResponse = {
   updatedAt: "2026-04-08T09:00:00",
 };
 
-// TODO: Replace when Sprint 2 is complete
 function statusBadgeClass(status: string): string {
   if (status === "ACTIVE") return "bg-emerald-100 border-emerald-200 text-emerald-700";
   if (status === "LOCKED") return "bg-rose-100 border-rose-200 text-rose-700";

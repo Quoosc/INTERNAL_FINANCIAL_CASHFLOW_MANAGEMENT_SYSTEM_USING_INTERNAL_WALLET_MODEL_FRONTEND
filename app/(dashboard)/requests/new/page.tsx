@@ -31,7 +31,6 @@ interface CategoryOption {
   name: string;
 }
 
-// TODO: Replace with real API calls when Sprint 4/5 is complete
 const MOCK_PROJECTS: ProjectListItem[] = [
   {
     id: 1,
@@ -68,7 +67,6 @@ const MOCK_PROJECTS: ProjectListItem[] = [
   },
 ];
 
-// TODO: Replace with real API calls when Sprint 4/5 is complete
 const MOCK_PHASES: ProjectPhasesResponse = {
   projectId: 1,
   projectName: "Hệ thống quản lý nội bộ",
@@ -220,7 +218,6 @@ export default function NewRequestPage() {
       setError(null);
 
       try {
-        // const projectsRes = await api.get<PaginatedResponse<ProjectListItem>>('/api/v1/projects')
         const projectsRes = await api.get<PaginatedResponse<ProjectListItem>>(
           "/api/v1/projects?page=1&limit=100"
         );
@@ -270,7 +267,6 @@ export default function NewRequestPage() {
       setError(null);
 
       try {
-        // const phasesRes = await api.get<ProjectPhasesResponse>(`/api/v1/projects/${form.projectId}/phases`)
         const phasesRes = await api.get<ProjectPhasesResponse>(
           `/api/v1/projects/${projectId}/phases`
         );
@@ -474,7 +470,6 @@ export default function NewRequestPage() {
         attachmentFileIds: uploadedFileIds.length > 0 ? uploadedFileIds : undefined,
       };
 
-      // const res = await api.post<RequestDetailResponse>('/api/v1/requests', form)
       const res = await api.post<RequestDetailResponse>("/api/v1/requests", payload);
       toast.success("Yêu cầu đã được tạo thành công!");
       router.push(`/requests/${res.data.id}`);

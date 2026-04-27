@@ -14,7 +14,6 @@ import { TableRowSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 20;
 
-// TODO: Replace when Sprint 6 is complete
 const MOCK_AUDITS: AuditLogResponse[] = [
   {
     id: 1,

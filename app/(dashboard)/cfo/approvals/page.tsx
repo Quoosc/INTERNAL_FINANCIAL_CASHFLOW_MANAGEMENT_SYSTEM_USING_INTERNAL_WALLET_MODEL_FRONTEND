@@ -17,7 +17,6 @@ import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 10;
 
-// TODO: Replace when Sprint 6 is complete
 const MOCK_APPROVALS: AdminApprovalListItem[] = [
   {
     id: 20,
@@ -185,8 +184,8 @@ export default function CfoApprovalsPage() {
 
         const query = new URLSearchParams();
         if (filters.search) query.set("search", filters.search);
-        query.set("page", String(filters.page ?? 1));
-        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
+        query.set("page", String(Math.max(0, (filters.page ?? 1) - 1)));
+        query.set("size", String(filters.limit ?? PAGE_LIMIT));
 
         const [approvalsRes, companyFundRes] = await Promise.all([
           api.get<

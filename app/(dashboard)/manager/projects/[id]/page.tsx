@@ -18,7 +18,6 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// TODO: Replace when Sprint 4 is complete
 const MOCK_PROJECT: ProjectDetailResponse = {
   id: 1,
   projectCode: "PRJ-IT-001",

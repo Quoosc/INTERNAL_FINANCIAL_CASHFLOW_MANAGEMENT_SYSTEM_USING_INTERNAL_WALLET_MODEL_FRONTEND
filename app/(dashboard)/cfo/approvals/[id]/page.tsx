@@ -22,7 +22,6 @@ interface PageProps {
 
 const LIST_PATH = "/cfo/approvals";
 
-// TODO: Replace when Sprint 6 is complete
 const MOCK_DETAIL: AdminApprovalDetailResponse = {
   id: 20,
   requestCode: "REQ-2026-0060",

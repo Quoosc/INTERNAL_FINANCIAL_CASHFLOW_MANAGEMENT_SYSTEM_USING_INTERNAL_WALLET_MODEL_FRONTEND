@@ -12,7 +12,6 @@ import { formatCurrency } from "@/lib/format";
 
 const PAGE_LIMIT = 12;
 
-// TODO: Replace when Sprint 4 is complete
 const MOCK_PROJECTS: TLProjectListItem[] = [
   {
     id: 1,

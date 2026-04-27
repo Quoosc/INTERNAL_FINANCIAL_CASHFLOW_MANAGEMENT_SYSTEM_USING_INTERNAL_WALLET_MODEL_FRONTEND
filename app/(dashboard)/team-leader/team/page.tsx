@@ -14,7 +14,6 @@ import {
 
 const PAGE_LIMIT = 20;
 
-// TODO: Replace when Sprint 5 is complete
 const MOCK_MEMBERS: TLTeamMemberListItem[] = [
   {
     id: 11,
@@ -61,7 +60,6 @@ const MOCK_MEMBERS: TLTeamMemberListItem[] = [
   },
 ];
 
-// TODO: Replace when Sprint 5 is complete
 const MOCK_MEMBER_DETAIL: TLTeamMemberDetailResponse = {
   id: 11,
   fullName: "Đỗ Quốc Bảo",

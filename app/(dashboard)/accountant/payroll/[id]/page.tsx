@@ -205,7 +205,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     if (!period || !selectedFile) return;
     setUploading(true);
     try {
-      // TODO: Replace when Sprint 7 is complete
+      // TODO: Wire to POST /api/v1/accountant/payroll/:periodId/import (multipart/form-data)
       const result = mockImport(period);
       setImportResult(result);
       const entries = result.entries.map<PayrollEntry>((entry) => ({

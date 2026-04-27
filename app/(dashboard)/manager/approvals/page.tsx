@@ -15,7 +15,6 @@ import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 10;
 
-// TODO: Replace when Sprint 4-5 is complete
 const MOCK_APPROVALS: ManagerApprovalListItem[] = [
   {
     id: 10,

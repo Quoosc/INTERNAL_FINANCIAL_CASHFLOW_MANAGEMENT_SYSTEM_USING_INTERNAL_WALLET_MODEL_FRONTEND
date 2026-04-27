@@ -17,7 +17,6 @@ import {
 
 const PAGE_LIMIT = 8;
 
-// TODO: Replace with real API calls when Sprint 5 is complete
 const MOCK_SUMMARY: RequestSummaryResponse = {
   totalPendingApproval: 3,
   totalPendingAccountant: 1,
@@ -27,7 +26,6 @@ const MOCK_SUMMARY: RequestSummaryResponse = {
   totalCancelled: 1,
 };
 
-// TODO: Replace with real API calls when Sprint 5 is complete
 const MOCK_REQUESTS: RequestListItem[] = [
   {
     id: 101,
@@ -293,10 +291,6 @@ export default function RequestsPage() {
         query.set("page", String(page));
         query.set("limit", String(PAGE_LIMIT));
 
-        // const [reqRes, sumRes] = await Promise.all([
-        //   api.get<PaginatedResponse<RequestListItem>>('/api/v1/requests', { params: filters }),
-        //   api.get<RequestSummaryResponse>('/api/v1/requests/summary')
-        // ])
         const [reqRes, sumRes] = await Promise.all([
           api.get<PaginatedResponse<RequestListItem>>(`/api/v1/requests?${query.toString()}`),
           api.get<RequestSummaryResponse>("/api/v1/requests/summary"),

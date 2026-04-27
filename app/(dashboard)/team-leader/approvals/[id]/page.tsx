@@ -33,7 +33,6 @@ const PHASE_BUDGET_FALLBACK: Record<number, { budgetLimit: number; currentSpent:
   3: { budgetLimit: 30_000_000, currentSpent: 8_500_000 },
 };
 
-// TODO: Replace when Sprint 4-5 is complete
 const MOCK_DETAIL: TLApprovalDetailView = {
   id: 1,
   requestCode: "REQ-2026-0041",

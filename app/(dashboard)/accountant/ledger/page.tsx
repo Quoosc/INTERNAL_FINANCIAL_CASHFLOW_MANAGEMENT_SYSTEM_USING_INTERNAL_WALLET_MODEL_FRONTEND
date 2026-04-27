@@ -39,7 +39,6 @@ const MOCK_SUMMARY: LedgerSummaryResponse = {
   transactionCount: 6,
 };
 
-// TODO: Replace when Sprint 7 is complete
 const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
   {
     id: 1,

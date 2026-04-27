@@ -29,7 +29,6 @@ interface PageProps {
 
 type TabKey = "phases" | "budget" | "members";
 
-// TODO: Replace when Sprint 4 is complete
 const MOCK_PROJECT: TLProjectDetailResponse = {
   id: 1,
   projectCode: "PRJ-IT-001",
@@ -88,7 +87,6 @@ const MOCK_PROJECT: TLProjectDetailResponse = {
   updatedAt: "2026-04-01T08:00:00",
 };
 
-// TODO: Replace when Sprint 4 is complete
 const MOCK_PHASE_CATEGORIES: Record<number, PhaseCategoriesResponse> = {
   1: {
     projectId: 1,
@@ -112,13 +110,11 @@ const MOCK_PHASE_CATEGORIES: Record<number, PhaseCategoriesResponse> = {
   },
 };
 
-// TODO: Replace when Sprint 4 is complete
 const MOCK_AVAILABLE_MEMBERS: AvailableMemberResponse[] = [
   { id: 14, fullName: "Nguyễn Thị Minh", employeeCode: "EMP004", avatar: null, email: "emp.fin1@ifms.vn", jobTitle: "Business Analyst" },
   { id: 15, fullName: "Trần Văn Nam", employeeCode: "EMP005", avatar: null, email: "emp.it5@ifms.vn", jobTitle: "DevOps Engineer" },
 ];
 
-// TODO: Replace when Sprint 4 is complete
 const MOCK_EXPENSE_CATEGORIES: ExpenseCategoryResponse[] = [
   { id: 1, name: "Thiết bị", description: null, isSystemDefault: true },
   { id: 2, name: "Công tác", description: null, isSystemDefault: true },

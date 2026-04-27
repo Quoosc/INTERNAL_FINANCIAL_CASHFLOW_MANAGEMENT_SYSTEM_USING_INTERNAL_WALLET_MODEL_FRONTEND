@@ -32,7 +32,6 @@ interface TimelineRow {
   tone: "done" | "current" | "pending" | "rejected" | "cancelled";
 }
 
-// TODO: Replace with real API call when Sprint 5 is complete
 const MOCK_REQUEST: RequestDetailResponse = {
   id: 501,
   requestCode: "REQ-EMP-0426-001",
@@ -295,7 +294,6 @@ export default function RequestDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        // const res = await api.get<RequestDetailResponse>(`/api/v1/requests/${id}`)
         const res = await api.get<RequestDetailResponse>(`/api/v1/requests/${id}`);
 
         if (cancelled) return;
@@ -384,7 +382,6 @@ export default function RequestDetailPage({ params }: PageProps) {
     setActionLoading(true);
 
     try {
-      // const res = await api.put<RequestDetailResponse>(`/api/v1/requests/${id}`, updateBody)
       const res = await api.put<RequestDetailResponse>(`/api/v1/requests/${id}`, updateBody);
       setRequest(res.data);
       setEditing(false);

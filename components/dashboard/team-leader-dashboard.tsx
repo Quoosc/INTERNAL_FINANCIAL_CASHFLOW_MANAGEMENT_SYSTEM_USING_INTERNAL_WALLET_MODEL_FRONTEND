@@ -12,6 +12,7 @@ import {
   TLApprovalListItem,
   TLProjectListItem,
 } from "@/types";
+import { normalizeTLApprovalListItem } from "@/lib/adapters/team-leader";
 
 // TODO: Replace when Sprint 4-5 is complete
 const MOCK_PENDING: TLApprovalListItem[] = [
@@ -309,17 +310,21 @@ export function TeamLeaderDashboard() {
 
       try {
         const [approvalRes, projectRes] = await Promise.all([
-          api.get<PaginatedResponse<TLApprovalListItem> | TLApprovalListItem[]>(
-            "/api/v1/team-leader/approvals?limit=3&status=PENDING"
+          api.get<PaginatedResponse<unknown> | unknown[]>(
+            "/api/v1/team-leader/approvals?page=0&size=3&status=PENDING"
           ),
           api.get<PaginatedResponse<TLProjectListItem> | TLProjectListItem[]>(
-            "/api/v1/team-leader/projects?limit=3"
+            "/api/v1/team-leader/projects?page=0&size=3"
           ),
         ]);
 
         if (cancelled) return;
 
-        setApprovals(pickItems(approvalRes.data).slice(0, 3));
+        setApprovals(
+          pickItems(approvalRes.data)
+            .map((item) => normalizeTLApprovalListItem(item))
+            .slice(0, 3)
+        );
         setProjects(pickItems(projectRes.data).slice(0, 3));
       } catch (err) {
         if (cancelled) return;
@@ -485,7 +490,7 @@ export function TeamLeaderDashboard() {
                       </div>
 
                       <p className="text-sm text-slate-900 truncate">
-                        <span className="font-medium text-slate-900">{item.requester.fullName}</span> • {item.project.name}
+                        <span className="font-medium text-slate-900">{item.requester.fullName}</span> • {item.project.name ?? item.project.projectCode}
                       </p>
                     </div>
 

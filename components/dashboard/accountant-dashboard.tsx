@@ -22,6 +22,7 @@ import {
   RequestType,
   RoleName,
 } from "@/types";
+import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
 
 type FundHealth = "HEALTHY" | "LOW" | "CRITICAL";
 
@@ -218,7 +219,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 1,
     requestCode: "REQ-2026-0041",
     type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT_EXECUTION",
+    status: "APPROVED_BY_TEAM_LEADER",
     amount: 3_500_000,
     approvedAmount: 3_500_000,
     description: "Mua vật tư thiết bị cho phase 1.",
@@ -250,7 +251,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 2,
     requestCode: "REQ-2026-0042",
     type: RequestType.EXPENSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION",
+    status: "APPROVED_BY_TEAM_LEADER",
     amount: 850_000,
     approvedAmount: 850_000,
     description: "Chi phí mua license công cụ.",
@@ -282,7 +283,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 3,
     requestCode: "REQ-2026-0038",
     type: RequestType.REIMBURSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION",
+    status: "APPROVED_BY_TEAM_LEADER",
     amount: 1_200_000,
     approvedAmount: 1_200_000,
     description: "Hoàn ứng chi phí QA.",
@@ -357,11 +358,11 @@ export function AccountantDashboard() {
       const disbursementsReq = api.get<
         PaginatedResponse<DisbursementListItem> | DisbursementListItem[]
       >(
-        "/api/v1/accountant/disbursements?limit=3&status=PENDING_ACCOUNTANT_EXECUTION",
+        "/api/v1/accountant/disbursements?page=0&size=3&status=APPROVED_BY_TEAM_LEADER",
       );
       const payrollReq = api.get<
         PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]
-      >("/api/v1/accountant/payroll?limit=1");
+      >("/api/v1/accountant/payroll?page=0&size=1");
 
       const [dashboardResult, disbursementsResult, payrollResult] =
         await Promise.allSettled([dashboardReq, disbursementsReq, payrollReq]);
@@ -381,7 +382,7 @@ export function AccountantDashboard() {
 
       if (disbursementsResult.status === "fulfilled") {
         nextDisbursements = pickItems(disbursementsResult.value.data)
-          .filter((item) => item.status === "PENDING_ACCOUNTANT_EXECUTION")
+          .filter((item) => isAccountantQueueStatus(item.status))
           .slice(0, 3);
       } else if (!nextError && disbursementsResult.reason instanceof ApiError) {
         nextError = disbursementsResult.reason.apiMessage;
@@ -505,7 +506,7 @@ export function AccountantDashboard() {
                 {dashboard?.pendingDisbursementsCount ??
                   pendingDisbursements.length}
               </p>
-              <p className="text-xs text-slate-500 mt-1">PENDING_ACCOUNTANT_EXECUTION</p>
+              <p className="text-xs text-slate-500 mt-1">APPROVED_BY_TEAM_LEADER</p>
             </div>
             <span className="w-9 h-9 rounded-lg bg-linear-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

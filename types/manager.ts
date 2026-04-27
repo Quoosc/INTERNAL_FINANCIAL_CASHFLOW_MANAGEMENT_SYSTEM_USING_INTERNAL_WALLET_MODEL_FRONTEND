@@ -150,6 +150,7 @@ export interface ManagerDeptMemberDetailResponse {
 export interface ManagerApprovalFilterParams {
   search?: string;
   page?: number;
+  size?: number;
   limit?: number;
 }
 
@@ -158,6 +159,7 @@ export interface ManagerProjectFilterParams {
   status?: string;
   search?: string;
   page?: number;
+  size?: number;
   limit?: number;
 }
 
@@ -165,5 +167,6 @@ export interface ManagerProjectFilterParams {
 export interface ManagerDeptMemberFilterParams {
   search?: string;
   page?: number;
+  size?: number;
   limit?: number;
 }

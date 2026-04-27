@@ -58,8 +58,8 @@ import { api } from "@/lib/api-client";
 
 | Method | Endpoint                            | Sprint     |
 | ------ | ----------------------------------- | ---------- |
-| GET    | `/api/v1/manager/approvals?limit=3` | Sprint 4-5 |
-| GET    | `/api/v1/manager/projects?limit=4`  | Sprint 4   |
+| GET    | `/api/v1/manager/approvals?page=0&size=3` | Sprint 4-5 |
+| GET    | `/api/v1/manager/projects?page=0&size=4`  | Sprint 4   |
 
 ### 📊 Mock data
 

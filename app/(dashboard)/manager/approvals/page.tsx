@@ -12,6 +12,7 @@ import {
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
+import { toApiPage } from "@/lib/adapters/pagination";
 
 const PAGE_LIMIT = 10;
 
@@ -187,13 +188,13 @@ export default function ManagerApprovalsPage() {
         const filters: ManagerApprovalFilterParams = {
           search: search.trim() || undefined,
           page,
-          limit: PAGE_LIMIT,
+          size: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
         if (filters.search) query.set("search", filters.search);
-        query.set("page", String(filters.page ?? 1));
-        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
+        query.set("page", String(toApiPage(filters.page ?? 1)));
+        query.set("size", String(filters.size ?? PAGE_LIMIT));
 
         const res = await api.get<PaginatedResponse<ManagerApprovalListItem> | ManagerApprovalListItem[]>(
           `/api/v1/manager/approvals?${query.toString()}`

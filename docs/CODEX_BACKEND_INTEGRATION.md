@@ -1,6 +1,8 @@
 # CODEX — Backend Integration Tasks (APIs Ready)
 
 > ✅ **Hoàn thành: 2026-04-13.** Tất cả 9 tasks đã integrate xong.
+> 🔄 **Cập nhật: 2026-04-27.** Các nhóm contract mới (Request Flow 1, Team Leader approvals/categories, Manager pagination, Accountant disbursement queue) đã được đồng bộ theo backend commits mới nhất.
+> Chi tiết xem: `docs/FRONTEND_BACKEND_SYNC_GAP_AND_FIX_PLAN.md`.
 > Xem `CODEX_PROMPTS_TIER*.md` để biết các sprint tiếp theo.
 > Phần "API chưa sẵn sàng" cuối file là checklist cho đợt tích hợp kế tiếp — khi backend ship thêm nhóm nào, tạo prompt mới dựa theo template này.
 
@@ -10,7 +12,7 @@
 > Backend base: `http://localhost:8080` — proxied qua Next.js tại `/api/v1/*`.
 > File này liệt kê **chỉ những API backend đã sẵn sàng** cần wiring vào UI.
 >
-> ⚠️ KHÔNG động vào các màn hình đang dùng mock data cho API **chưa sẵn sàng** (Team Leader, Manager, Accountant, CFO, Admin approval flows).
+> ⚠️ Đây là tài liệu snapshot cho đợt tích hợp trước. Trạng thái contract hiện tại cần ưu tiên đối chiếu theo `docs/API_CONTRACT.md` và `docs/FRONTEND_BACKEND_SYNC_GAP_AND_FIX_PLAN.md`.
 
 ---
 
@@ -288,22 +290,17 @@ Trong `app/(dashboard)/accountant/disbursements/[id]/page.tsx` (màn hình giả
 
 ---
 
-## API chưa sẵn sàng — KHÔNG tích hợp
+## API ngoài scope bản sync 2026-04-27
 
-Các endpoint sau **chưa có trong backend**, tiếp tục dùng mock data:
+Các nhóm dưới đây chưa được xác nhận full contract trong lần sync mới nhất và cần theo dõi riêng theo sprint:
 
 | Nhóm | Endpoint | Lý do |
 |------|----------|-------|
-| `/requests` | CRUD requests | Backend chưa implement |
-| `/team-leader/*` | Approvals, Projects, Team | Backend chưa implement |
-| `/manager/*` | Approvals, Projects, Dept | Backend chưa implement |
-| `/accountant/disbursements` | Disburse Flow 1 | Backend chưa implement |
-| `/accountant/payroll` | Payroll management | Backend chưa implement |
-| `/accountant/ledger` | Ledger entries | Backend chưa implement |
-| `/cfo/approvals` | Flow 3 approvals | Backend chưa implement |
-| `/admin/users` | CRUD users (ngoài onboard) | Backend chưa implement |
-| `/admin/departments` | CRUD departments | Backend chưa implement |
-| `/admin/audit-logs` | Audit log list | Backend chưa implement |
+| `/accountant/payroll` | Payroll management | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/accountant/ledger` | Ledger entries | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/cfo/approvals` | Flow 3 approvals | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/admin/departments` | CRUD departments | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/admin/audit-logs` | Audit log list | Chưa xác nhận full contract trong scope sync hiện tại |
 
 ---
 

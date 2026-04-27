@@ -262,10 +262,10 @@ export function ManagerDashboard() {
         const [dashRes, approvalsRes, projectsRes] = await Promise.all([
           api.get<ManagerDashboardResponse>("/api/v1/dashboard/manager"),
           api.get<PaginatedResponse<ManagerApprovalListItem> | ManagerApprovalListItem[]>(
-            "/api/v1/manager/approvals?limit=3"
+            "/api/v1/manager/approvals?page=0&size=3"
           ),
           api.get<PaginatedResponse<ManagerProjectListItem> | ManagerProjectListItem[]>(
-            "/api/v1/manager/projects?limit=4"
+            "/api/v1/manager/projects?page=0&size=4"
           ),
         ]);
 

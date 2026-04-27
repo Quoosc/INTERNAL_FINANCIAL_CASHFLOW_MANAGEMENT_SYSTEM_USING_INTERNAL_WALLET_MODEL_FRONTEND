@@ -7,11 +7,14 @@ import {
   DisbursementFilterParams,
   DisbursementListItem,
   PaginatedResponse,
+  RequestStatus,
   RequestType,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { MOCK_SYSTEM_FUND_BALANCE } from "@/lib/mocks/system";
 import { CardListSkeleton } from "@/components/ui/skeleton";
+import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
+import { toApiPage } from "@/lib/adapters/pagination";
 
 interface DisbursementApprover {
   fullName: string;
@@ -29,7 +32,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 1,
     requestCode: "REQ-2026-0041",
     type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT_EXECUTION",
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 3_500_000,
     approvedAmount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm cho phase 1.",
@@ -65,7 +68,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 2,
     requestCode: "REQ-2026-0042",
     type: RequestType.EXPENSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION",
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 850_000,
     approvedAmount: 850_000,
     description: "Chi phí mua license công cụ.",
@@ -101,7 +104,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 3,
     requestCode: "REQ-2026-0038",
     type: RequestType.REIMBURSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION",
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 1_200_000,
     approvedAmount: 1_200_000,
     description: "Hoàn ứng chi phí kiểm thử QA.",
@@ -137,7 +140,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
     id: 4,
     requestCode: "REQ-2026-0035",
     type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT_EXECUTION",
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 5_000_000,
     approvedAmount: 4_500_000,
     description: "Tạm ứng chi phí triển khai thiết bị.",
@@ -245,7 +248,7 @@ function filterMockData(
   const q = search?.trim().toLowerCase() ?? "";
 
   return source.filter((item) => {
-    if (item.status !== "PENDING_ACCOUNTANT_EXECUTION") return false;
+    if (!isAccountantQueueStatus(item.status)) return false;
     if (type && item.type !== type) return false;
 
     if (!q) return true;
@@ -353,15 +356,15 @@ export default function AccountantDisbursementsPage() {
           type,
           search: search.trim() || undefined,
           page,
-          limit: PAGE_LIMIT,
+          size: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
-        query.set("status", "PENDING_ACCOUNTANT_EXECUTION");
+        query.set("status", "APPROVED_BY_TEAM_LEADER");
         if (filters.type) query.set("type", filters.type);
         if (filters.search) query.set("search", filters.search);
-        query.set("page", String(Math.max(0, (filters.page ?? 1) - 1)));
-        query.set("size", String(filters.limit ?? PAGE_LIMIT));
+        query.set("page", String(toApiPage(filters.page ?? 1)));
+        query.set("size", String(filters.size ?? PAGE_LIMIT));
 
         const res = await api.get<
           PaginatedResponse<DisbursementListItem> | DisbursementListItem[]
@@ -370,7 +373,7 @@ export default function AccountantDisbursementsPage() {
         if (cancelled) return;
 
         const apiItems = pickItems(res.data)
-          .filter((item) => item.status === "PENDING_ACCOUNTANT_EXECUTION")
+          .filter((item) => isAccountantQueueStatus(item.status))
           .map((item) => ({ ...item }));
 
         const apiTotal = Array.isArray(res.data)

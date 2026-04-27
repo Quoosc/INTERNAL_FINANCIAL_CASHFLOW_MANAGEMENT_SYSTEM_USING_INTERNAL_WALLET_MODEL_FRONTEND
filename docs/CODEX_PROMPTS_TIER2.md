@@ -67,8 +67,8 @@ import { api } from "@/lib/api-client";
 ### 🔌 API endpoints
 | Method | Endpoint | Sprint |
 |--------|----------|--------|
-| GET | `/api/v1/team-leader/approvals?limit=3&status=PENDING` | Sprint 4-5 |
-| GET | `/api/v1/team-leader/projects?limit=3` | Sprint 4 |
+| GET | `/api/v1/team-leader/approvals?page=0&size=3&status=PENDING` | Sprint 4-5 |
+| GET | `/api/v1/team-leader/projects?page=0&size=3` | Sprint 4 |
 
 ### 📊 Mock data
 ```typescript
@@ -290,7 +290,7 @@ Page `/team-leader/approvals/[id]`: hiển thị full chi tiết request, budget
 
 ### ⚠️ Business rules
 - Endpoint: `GET /team-leader/approvals/:id` trả `RequestDetailResponse` (không phải TLApprovalListItem)
-- Sau approve: status → `PENDING_ACCOUNTANT_EXECUTION` (chờ Accountant giải ngân)
+- Sau approve: status → `APPROVED_BY_TEAM_LEADER` (chờ Accountant giải ngân)
 - Sau reject: status → `REJECTED`
 - TL CÓ THỂ điều chỉnh `approvedAmount` ≤ `request.amount` khi duyệt
 - Nếu request không phải `PENDING` → hiển thị read-only, ẩn action buttons
@@ -534,7 +534,7 @@ import { use } from "react";
 | POST | `/api/v1/team-leader/projects/:id/members` | Sprint 4 |
 | PUT | `/api/v1/team-leader/projects/:id/members/:userId` | Sprint 4 |
 | DELETE | `/api/v1/team-leader/projects/:id/members/:userId` | Sprint 4 |
-| GET | `/api/v1/team-leader/expense-categories` | Sprint 4 |
+| GET | `/api/v1/team-leader/expense-categories?projectId=` | Sprint 4 |
 | POST | `/api/v1/requests` body={type:PROJECT_TOPUP, projectId, amount} | Sprint 5 |
 
 ### 📊 Mock data

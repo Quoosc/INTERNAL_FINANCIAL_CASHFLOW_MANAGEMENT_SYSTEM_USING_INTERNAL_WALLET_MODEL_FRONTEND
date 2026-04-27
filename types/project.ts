@@ -102,7 +102,7 @@ export interface ProjectDetailResponse {
 
 // --- Expense Category ---
 
-/** GET /team-leader/expense-categories — response item */
+/** GET /team-leader/expense-categories?projectId={id} — response item */
 export interface ExpenseCategoryResponse {
   id: number;
   name: string;
@@ -162,10 +162,8 @@ export interface UpdateMemberBody {
 /** PUT /team-leader/projects/:id/categories — body */
 export interface UpdateCategoryBudgetBody {
   phaseId: number;
-  categories: {
-    categoryId: number;
-    budgetLimit: number;
-  }[];
+  categoryId: number;
+  budgetLimit: number;
 }
 
 /** POST /manager/projects — body */

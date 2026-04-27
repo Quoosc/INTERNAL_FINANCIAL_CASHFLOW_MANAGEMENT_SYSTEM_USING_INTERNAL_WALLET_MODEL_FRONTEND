@@ -74,7 +74,7 @@ Tạo thư mục `types/` tại root project, với các file tổ chức theo m
 #### [NEW] [request.ts](file:///d:/HK6%20UIT/DA1/financial-wallet-frontend/types/request.ts)
 
 - `RequestType` enum (ADVANCE, EXPENSE, REIMBURSE, **PROJECT_TOPUP**, DEPARTMENT_TOPUP)
-- `RequestStatus` enum (**PENDING**, **PENDING_ACCOUNTANT_EXECUTION**, APPROVED, PAID, REJECTED, CANCELLED) — Absolute Delegation, không Escalation
+- `RequestStatus` enum (**PENDING**, **APPROVED_BY_TEAM_LEADER**, **APPROVED_BY_MANAGER**, **APPROVED_BY_CFO**, **PAID**, **REJECTED**, **CANCELLED**) — Absolute Delegation, không Escalation
 - `RequestAction` enum (APPROVE, REJECT — **không còn ESCALATE**)
 - `RequestHistoryStatus` enum
 - `Request`, `RequestHistory`, `RequestAttachment` interfaces

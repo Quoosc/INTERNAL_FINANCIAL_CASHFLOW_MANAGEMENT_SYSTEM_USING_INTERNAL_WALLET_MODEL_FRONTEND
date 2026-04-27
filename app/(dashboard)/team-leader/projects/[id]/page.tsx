@@ -243,7 +243,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       try {
         const [mRes, cRes] = await Promise.all([
           api.get<AvailableMemberResponse[]>(`/api/v1/team-leader/projects/${project.id}/available-members`),
-          api.get<ExpenseCategoryResponse[]>("/api/v1/team-leader/expense-categories"),
+          api.get<ExpenseCategoryResponse[]>(`/api/v1/team-leader/expense-categories?projectId=${project.id}`),
         ]);
         if (cancelled) return;
         setAvailableMembers(mRes.data);
@@ -414,27 +414,71 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const onSaveBudget = async () => {
     if (!project || !selectedPhaseId || !phaseCategories) return;
     setSubmitting(true);
-    const categories = phaseCategories.categories.map((c) => ({
+    setError(null);
+    setNotice(null);
+    const updates: UpdateCategoryBudgetBody[] = phaseCategories.categories.map((c) => ({
+      phaseId: selectedPhaseId,
       categoryId: c.categoryId,
       budgetLimit: Number(budgetDraft[c.categoryId]) > 0 ? Number(budgetDraft[c.categoryId]) : c.budgetLimit,
     }));
-    const body: UpdateCategoryBudgetBody = { phaseId: selectedPhaseId, categories };
     try {
-      const res = await api.put<PhaseCategoriesResponse>(`/api/v1/team-leader/projects/${project.id}/categories`, body);
-      setPhaseCategories(res.data);
-    } catch {
-      setPhaseCategories({
-        ...phaseCategories,
-        categories: phaseCategories.categories.map((c) => {
-          const match = categories.find((x) => x.categoryId === c.categoryId);
-          const budgetLimit = match ? match.budgetLimit : c.budgetLimit;
-          return { ...c, budgetLimit, remaining: budgetLimit - c.currentSpent };
-        }),
+      const results = await Promise.allSettled(
+        updates.map((body) => api.put(`/api/v1/team-leader/projects/${project.id}/categories`, body))
+      );
+
+      const total = updates.length;
+      const succeededIds = new Set<number>();
+      const failedIds: number[] = [];
+
+      results.forEach((result, idx) => {
+        const categoryId = updates[idx].categoryId;
+        if (result.status === "fulfilled") {
+          succeededIds.add(categoryId);
+        } else {
+          failedIds.push(categoryId);
+        }
       });
+
+      const successCount = succeededIds.size;
+      const failedCount = failedIds.length;
+
+      if (successCount > 0) {
+        try {
+          const refreshed = await api.get<PhaseCategoriesResponse>(
+            `/api/v1/team-leader/projects/${project.id}/categories?phaseId=${selectedPhaseId}`
+          );
+          setPhaseCategories(refreshed.data);
+        } catch {
+          setPhaseCategories({
+            ...phaseCategories,
+            categories: phaseCategories.categories.map((c) => {
+              if (!succeededIds.has(c.categoryId)) return c;
+              const match = updates.find((x) => x.categoryId === c.categoryId);
+              const budgetLimit = match ? match.budgetLimit : c.budgetLimit;
+              return { ...c, budgetLimit, remaining: budgetLimit - c.currentSpent };
+            }),
+          });
+        }
+      }
+
+      if (failedCount === 0) {
+        setEditingBudget(false);
+        setNotice("Đã cập nhật ngân sách.");
+        return;
+      }
+
+      if (successCount === 0) {
+        setError("Không thể cập nhật ngân sách. Vui lòng thử lại.");
+        return;
+      }
+
+      setEditingBudget(false);
+      setNotice(`Đã cập nhật ${successCount}/${total} danh mục ngân sách.`);
+      setError(`Có ${failedCount}/${total} danh mục cập nhật thất bại. Vui lòng kiểm tra và thử lại.`);
+    } catch {
+      setError("Không thể cập nhật ngân sách. Vui lòng thử lại.");
     } finally {
       setSubmitting(false);
-      setEditingBudget(false);
-      setNotice("Đã cập nhật ngân sách.");
     }
   };
 

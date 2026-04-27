@@ -11,6 +11,7 @@ import {
   PaginatedResponse,
   RequestStatus,
 } from "@/types";
+import { toApiPage } from "@/lib/adapters/pagination";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 const PAGE_LIMIT = 12;
@@ -301,14 +302,14 @@ export default function ManagerDepartmentPage() {
         const filters: ManagerDeptMemberFilterParams = {
           search: search.trim() || undefined,
           page,
-          limit: PAGE_LIMIT,
+          size: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
         if (filters.search) query.set("search", filters.search);
         if (roleFilter) query.set("role", roleFilter);
-        query.set("page", String(filters.page ?? 1));
-        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
+        query.set("page", String(toApiPage(filters.page ?? 1)));
+        query.set("size", String(filters.size ?? PAGE_LIMIT));
 
         const res = await api.get<PaginatedResponse<ManagerDeptMemberListItem> | ManagerDeptMemberListItem[]>(
           `/api/v1/manager/department/members?${query.toString()}`

@@ -6,25 +6,48 @@ import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import {
   RequestAction,
-  RequestDetailResponse,
   RequestStatus,
   RequestType,
   TLApproveBody,
+  TLApprovalDetailResponse,
   TLApproveResponse,
   TLRejectBody,
   TLRejectResponse,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { normalizeTLApprovalDetail } from "@/lib/adapters/team-leader";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-interface TLApprovalDetailView extends RequestDetailResponse {
-  phaseBudgetLimit?: number;
-  phaseCurrentSpent?: number;
+interface TLApprovalDetailView {
+  id: number;
+  requestCode: string;
+  type: RequestType;
+  status: RequestStatus;
+  amount: number;
+  approvedAmount: number | null;
+  description: string | null;
+  rejectReason: string | null;
+  projectId: number;
+  projectName: string | null;
+  projectCode: string;
+  phaseId: number;
+  phaseName: string | null;
+  phaseCode: string;
+  categoryId: number | null;
+  categoryName: string | null;
+  requesterId: number;
+  requesterName: string;
   requesterEmail?: string;
   requesterEmployeeCode?: string;
+  createdAt: string;
+  updatedAt: string;
+  phaseBudgetLimit?: number;
+  phaseCurrentSpent?: number;
+  attachments: TLApprovalDetailResponse["attachments"];
+  timeline: NonNullable<TLApprovalDetailResponse["timeline"]>;
 }
 
 const PHASE_BUDGET_FALLBACK: Record<number, { budgetLimit: number; currentSpent: number }> = {
@@ -88,6 +111,37 @@ const MOCK_DETAIL: TLApprovalDetailView = {
   ],
 };
 
+function toTLApprovalDetailView(detail: TLApprovalDetailResponse): TLApprovalDetailView {
+  return {
+    id: detail.id,
+    requestCode: detail.requestCode,
+    type: detail.type,
+    status: detail.status,
+    amount: detail.amount,
+    approvedAmount: detail.approvedAmount ?? null,
+    description: detail.description,
+    rejectReason: detail.rejectReason ?? null,
+    projectId: detail.project.id,
+    projectName: detail.project.name ?? null,
+    projectCode: detail.project.projectCode,
+    phaseId: detail.phase.id,
+    phaseName: detail.phase.name ?? null,
+    phaseCode: detail.phase.phaseCode,
+    categoryId: detail.categoryId,
+    categoryName: detail.categoryName,
+    requesterId: detail.requester.id,
+    requesterName: detail.requester.fullName,
+    requesterEmail: detail.requester.email,
+    requesterEmployeeCode: detail.requester.employeeCode,
+    createdAt: detail.createdAt,
+    updatedAt: detail.updatedAt,
+    phaseBudgetLimit: detail.phase.budgetLimit,
+    phaseCurrentSpent: detail.phase.currentSpent,
+    attachments: detail.attachments,
+    timeline: detail.timeline ?? [],
+  };
+}
+
 
 
 function formatFileSize(bytes: number): string {
@@ -131,7 +185,7 @@ function getStatusClass(status: RequestStatus): string {
   switch (status) {
     case RequestStatus.PENDING:
       return "bg-amber-100 border-amber-200 text-amber-700";
-    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
+    case RequestStatus.APPROVED_BY_TEAM_LEADER:
       return "bg-blue-50 border-blue-200 text-blue-700";
     case RequestStatus.PAID:
       return "bg-emerald-100 border-emerald-200 text-emerald-700";
@@ -148,7 +202,7 @@ function getStatusLabel(status: RequestStatus): string {
   switch (status) {
     case RequestStatus.PENDING:
       return "Chờ duyệt";
-    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
+    case RequestStatus.APPROVED_BY_TEAM_LEADER:
       return "Chờ kế toán";
     case RequestStatus.PAID:
       return "Đã chi";
@@ -274,19 +328,22 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        const res = await api.get<TLApprovalDetailView>(`/api/v1/team-leader/approvals/${id}`);
+        const res = await api.get<unknown>(`/api/v1/team-leader/approvals/${id}`);
 
         if (cancelled) return;
 
+        const normalized = normalizeTLApprovalDetail(res.data);
+        const mapped = toTLApprovalDetailView(normalized);
+
         const fallbackBudget =
-          res.data.phaseId && PHASE_BUDGET_FALLBACK[res.data.phaseId]
-            ? PHASE_BUDGET_FALLBACK[res.data.phaseId]
+          mapped.phaseId && PHASE_BUDGET_FALLBACK[mapped.phaseId]
+            ? PHASE_BUDGET_FALLBACK[mapped.phaseId]
             : undefined;
 
         setRequest({
-          ...res.data,
-          phaseBudgetLimit: res.data.phaseBudgetLimit ?? fallbackBudget?.budgetLimit,
-          phaseCurrentSpent: res.data.phaseCurrentSpent ?? fallbackBudget?.currentSpent,
+          ...mapped,
+          phaseBudgetLimit: mapped.phaseBudgetLimit ?? fallbackBudget?.budgetLimit,
+          phaseCurrentSpent: mapped.phaseCurrentSpent ?? fallbackBudget?.currentSpent,
         });
       } catch (err) {
         if (cancelled) return;

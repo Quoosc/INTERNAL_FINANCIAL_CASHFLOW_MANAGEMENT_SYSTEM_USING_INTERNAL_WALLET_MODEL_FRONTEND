@@ -19,7 +19,6 @@ const PAGE_LIMIT = 8;
 
 const MOCK_SUMMARY: RequestSummaryResponse = {
   totalPendingApproval: 3,
-  totalPendingAccountant: 1,
   totalApproved: 4,
   totalRejected: 2,
   totalPaid: 5,
@@ -49,7 +48,7 @@ const MOCK_REQUESTS: RequestListItem[] = [
     id: 102,
     requestCode: "REQ-EMP-0326-002",
     type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 700_000,
     approvedAmount: 700_000,
     description: "Chi phí mua vật tư văn phòng",
@@ -386,12 +385,11 @@ export default function RequestsPage() {
     syncUrl(filters, nextPage, fromDate, toDate);
   };
 
-  const pendingCount = (summary?.totalPendingApproval ?? 0) + (summary?.totalPendingAccountant ?? 0);
+  const pendingCount = summary?.totalPendingApproval ?? 0;
   const approvedCount = summary?.totalApproved ?? 0;
   const rejectedCount = summary?.totalRejected ?? 0;
   const totalCount =
     (summary?.totalPendingApproval ?? 0) +
-    (summary?.totalPendingAccountant ?? 0) +
     (summary?.totalApproved ?? 0) +
     (summary?.totalPaid ?? 0) +
     (summary?.totalRejected ?? 0) +

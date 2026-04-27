@@ -30,7 +30,7 @@ Replace stub `components/dashboard/accountant-dashboard.tsx` với dashboard t�
 `d:\src\components\pages\accountant-finance-dashboard-page.tsx` — SystemFundWidget (fund balance + health), pending disbursements list, monthly chart, payroll status card
 
 ### ⚠️ Business rules
-- Accountant giải ngân Flow 1 (PENDING_ACCOUNTANT_EXECUTION → PAID), không duyệt YC
+- Accountant giải ngân Flow 1 (APPROVED_BY_TEAM_LEADER → PAID), không duyệt YC
 - Accountant quản lý payroll và sổ cái
 - Accountant và Admin đều có access `/admin/system-fund`
 
@@ -47,8 +47,8 @@ import { api } from "@/lib/api-client";
 ### 🔌 API endpoints
 | Method | Endpoint | Sprint |
 |--------|----------|--------|
-| GET | `/api/v1/accountant/disbursements?limit=3&status=PENDING_ACCOUNTANT_EXECUTION` | Sprint 6 |
-| GET | `/api/v1/accountant/payroll?limit=1` | Sprint 7 |
+| GET | `/api/v1/accountant/disbursements?page=0&size=3&status=APPROVED_BY_TEAM_LEADER` | Sprint 6 |
+| GET | `/api/v1/accountant/payroll?page=0&size=1` | Sprint 7 |
 
 ### 📊 Mock data
 ```typescript
@@ -74,7 +74,7 @@ type DisbursementListViewItem = DisbursementListItem & {
 const MOCK_PENDING_DISBURSEMENTS: DisbursementListViewItem[] = [
   {
     id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT_EXECUTION", amount: 3_500_000, approvedAmount: 3_500_000,
+    status: "APPROVED_BY_TEAM_LEADER", amount: 3_500_000, approvedAmount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm cho phase 1.",
     requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", departmentName: "Phòng IT", bankName: "Vietcombank", bankAccountNum: "001100220011", bankAccountOwner: "DO QUOC BAO" },
     approver: { fullName: "Hoàng Minh Tuấn", approvedAt: "2026-04-03T10:00:00" },
@@ -84,7 +84,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListViewItem[] = [
   },
   {
     id: 2, requestCode: "REQ-2026-0042", type: RequestType.EXPENSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION", amount: 850_000, approvedAmount: 850_000,
+    status: "APPROVED_BY_TEAM_LEADER", amount: 850_000, approvedAmount: 850_000,
     description: "Chi phí mua license công cụ.",
     requester: { id: 12, fullName: "Vũ Thị Lan", avatar: null, employeeCode: "EMP002", jobTitle: "Backend Developer", departmentName: "Phòng IT", bankName: "BIDV", bankAccountNum: "102030405060", bankAccountOwner: "VU THI LAN" },
     approver: { fullName: "Hoàng Minh Tuấn", approvedAt: "2026-04-03T09:30:00" },
@@ -94,7 +94,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListViewItem[] = [
   },
   {
     id: 3, requestCode: "REQ-2026-0038", type: RequestType.REIMBURSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION", amount: 1_200_000, approvedAmount: 1_200_000,
+    status: "APPROVED_BY_TEAM_LEADER", amount: 1_200_000, approvedAmount: 1_200_000,
     description: "Hoàn ứng chi phí ăn uống team.",
     requester: { id: 13, fullName: "Phạm Văn Đức", avatar: null, employeeCode: "EMP003", jobTitle: "QA Engineer", departmentName: "Phòng IT", bankName: "Techcombank", bankAccountNum: "190001234567", bankAccountOwner: "PHAM VAN DUC" },
     approver: { fullName: "Hoàng Minh Tuấn", approvedAt: "2026-04-02T16:00:00" },
@@ -125,7 +125,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListViewItem[] = [
 ## Prompt 1 — Accountant Disbursements List
 
 ### 🎯 Mục tiêu
-Page `/accountant/disbursements`: danh sách requests đã được TL duyệt, đang chờ Accountant giải ngân (`PENDING_ACCOUNTANT_EXECUTION`). Filter type + search. Click row → detail page (nhập PIN để giải ngân).
+Page `/accountant/disbursements`: danh sách requests đã được TL duyệt, đang chờ Accountant giải ngân (`APPROVED_BY_TEAM_LEADER`). Filter type + search. Click row → detail page (nhập PIN để giải ngân).
 
 ### 📁 Target file
 `app/(dashboard)/accountant/disbursements/page.tsx`
@@ -134,7 +134,7 @@ Page `/accountant/disbursements`: danh sách requests đã được TL duyệt, 
 `d:\src\components\pages\disbursements-page.tsx` — list với SystemFundWidget ở sidebar, filter, table rows với compliance indicator
 
 ### ⚠️ Business rules
-- Chỉ hiển thị `status = PENDING_ACCOUNTANT_EXECUTION` (đã được TL approve, chờ Accountant)
+- Chỉ hiển thị `status = APPROVED_BY_TEAM_LEADER` (đã được TL approve, chờ Accountant)
 - `approvedAmount` (do TL xác nhận) có thể ≠ `amount` gốc
 - Accountant có thể từ chối giải ngân (reject) nếu chứng từ không hợp lệ
 
@@ -166,7 +166,7 @@ type DisbursementListViewItem = DisbursementListItem & {
 const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
   {
     id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT_EXECUTION", amount: 3_500_000, approvedAmount: 3_500_000,
+    status: "APPROVED_BY_TEAM_LEADER", amount: 3_500_000, approvedAmount: 3_500_000,
     description: "Mua vật tư thiết bị thí nghiệm cho phase 1.",
     requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", departmentName: "Phòng IT", bankName: "Vietcombank", bankAccountNum: "001100220011", bankAccountOwner: "DO QUOC BAO" },
     approver: { fullName: "Hoàng Minh Tuấn", approvedAt: "2026-04-03T10:00:00" },
@@ -176,7 +176,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
   },
   {
     id: 2, requestCode: "REQ-2026-0042", type: RequestType.EXPENSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION", amount: 850_000, approvedAmount: 850_000,
+    status: "APPROVED_BY_TEAM_LEADER", amount: 850_000, approvedAmount: 850_000,
     description: "Chi phí mua license công cụ.",
     requester: { id: 12, fullName: "Vũ Thị Lan", avatar: null, employeeCode: "EMP002", jobTitle: "Backend Developer", departmentName: "Phòng IT", bankName: "BIDV", bankAccountNum: "102030405060", bankAccountOwner: "VU THI LAN" },
     approver: { fullName: "Hoàng Minh Tuấn", approvedAt: "2026-04-03T09:30:00" },
@@ -186,7 +186,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
   },
   {
     id: 3, requestCode: "REQ-2026-0038", type: RequestType.REIMBURSE,
-    status: "PENDING_ACCOUNTANT_EXECUTION", amount: 1_200_000, approvedAmount: 1_200_000,
+    status: "APPROVED_BY_TEAM_LEADER", amount: 1_200_000, approvedAmount: 1_200_000,
     description: "Hoàn ứng chi phí ăn uống team.",
     requester: { id: 13, fullName: "Phạm Văn Đức", avatar: null, employeeCode: "EMP003", jobTitle: "QA Engineer", departmentName: "Phòng IT", bankName: "Techcombank", bankAccountNum: "190001234567", bankAccountOwner: "PHAM VAN DUC" },
     approver: { fullName: "Hoàng Minh Tuấn", approvedAt: "2026-04-02T16:00:00" },
@@ -196,7 +196,7 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
   },
   {
     id: 4, requestCode: "REQ-2026-0035", type: RequestType.ADVANCE,
-    status: "PENDING_ACCOUNTANT_EXECUTION", amount: 5_000_000, approvedAmount: 4_500_000,
+    status: "APPROVED_BY_TEAM_LEADER", amount: 5_000_000, approvedAmount: 4_500_000,
     description: "Ứng trước chi phí đào tạo nội bộ.",
     requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", departmentName: "Phòng IT", bankName: "Vietcombank", bankAccountNum: "001100220011", bankAccountOwner: "DO QUOC BAO" },
     approver: { fullName: "Hoàng Minh Tuấn", approvedAt: "2026-04-01T14:00:00" },
@@ -268,7 +268,7 @@ import { use } from "react";
 //   KHÔNG có flat projectCode/projectName/phaseCode/phaseName/categoryName
 const MOCK_DETAIL: DisbursementDetailResponse = {
   id: 1, requestCode: "REQ-2026-0041", type: RequestType.ADVANCE,
-  status: "PENDING_ACCOUNTANT_EXECUTION", amount: 3_500_000, approvedAmount: 3_500_000,
+  status: "APPROVED_BY_TEAM_LEADER", amount: 3_500_000, approvedAmount: 3_500_000,
   description: "Mua vật tư thiết bị thí nghiệm phục vụ dự án. Bao gồm màn hình đo kiểm, cáp kết nối và bộ nguồn dự phòng UPS.",
   rejectReason: null,
   requester: { id: 11, fullName: "Đỗ Quốc Bảo", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", departmentName: "Phòng IT", bankName: "Vietcombank", bankAccountNum: "001100220011", bankAccountOwner: "DO QUOC BAO" },
@@ -281,8 +281,8 @@ const MOCK_DETAIL: DisbursementDetailResponse = {
   timeline: [
     // timeline[0] = Employee tạo YC (action APPROVE = bước submit, statusAfterAction = PENDING)
     { id: 1, action: RequestAction.APPROVE, statusAfterAction: RequestStatus.PENDING, actorId: 11, actorName: "Đỗ Quốc Bảo", comment: null, createdAt: "2026-04-03T09:15:00" },
-    // timeline[1] = TL duyệt → PENDING_ACCOUNTANT_EXECUTION
-    { id: 2, action: RequestAction.APPROVE, statusAfterAction: RequestStatus.PENDING_ACCOUNTANT_EXECUTION, actorId: 4, actorName: "Hoàng Minh Tuấn", comment: "Đồng ý — đây là thiết bị cần thiết", createdAt: "2026-04-03T10:00:00" },
+    // timeline[1] = TL duyệt → APPROVED_BY_TEAM_LEADER
+    { id: 2, action: RequestAction.APPROVE, statusAfterAction: RequestStatus.APPROVED_BY_TEAM_LEADER, actorId: 4, actorName: "Hoàng Minh Tuấn", comment: "Đồng ý — đây là thiết bị cần thiết", createdAt: "2026-04-03T10:00:00" },
   ],
   createdAt: "2026-04-03T09:15:00",
   updatedAt: "2026-04-03T10:00:00",
@@ -345,7 +345,7 @@ const [rejectReason, setRejectReason] = useState("");
    - Hoặc 1 input type="password" maxLength=5
    - Error: pinError (ví dụ "Mã PIN không đúng")
    - Nút "Giải ngân {approvedAmount VND}" (green, disabled nếu pin.length < 5 || submitting || !allChecked)
-3. **Nút "Từ chối"** (red outline, luôn hiển thị nếu status = PENDING_ACCOUNTANT_EXECUTION)
+3. **Nút "Từ chối"** (red outline, luôn hiển thị nếu status = APPROVED_BY_TEAM_LEADER)
 
 ### ⚙️ Disburse handler
 ```typescript

@@ -125,7 +125,7 @@ Sprint chờ:         5
 
 Checklist UI:
 - [ ] Header: `requestCode`, `type` badge, `status` badge, `amount`
-- [ ] Timeline approval 4 bước: PENDING → APPROVED_BY_TEAM_LEADER → PENDING_ACCOUNTANT_EXECUTION → PAID
+- [ ] Timeline approval 4 bước: PENDING → APPROVED_BY_TEAM_LEADER → APPROVED_BY_TEAM_LEADER → PAID
   - Mỗi bước: icon trạng thái, timestamp nếu có, tên người duyệt
 - [ ] Thông tin yêu cầu: description, project/phase/category, file attachments
 - [ ] Thông tin người tạo: avatar, name, department
@@ -282,10 +282,10 @@ Sprint chờ:         6
 ```
 
 Checklist:
-- [ ] Filter tab: PENDING_ACCOUNTANT_EXECUTION (nổi bật) / PAID / REJECTED
+- [ ] Filter tab: APPROVED_BY_TEAM_LEADER (nổi bật) / PAID / REJECTED
 - [ ] Bảng: `requestCode`, `requester.fullName`, `type` badge, `amount`, `status` badge, `createdAt`
 - [ ] Click → `/accountant/disbursements/[id]`
-- [ ] Count badge trên tab PENDING_ACCOUNTANT_EXECUTION
+- [ ] Count badge trên tab APPROVED_BY_TEAM_LEADER
 - [ ] Mock data dùng đúng `DisbursementListItem`
 
 ### B13. `accountant/disbursements/[id]/page.tsx` — Giải ngân chi tiết (ACCOUNTANT)

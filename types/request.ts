@@ -24,7 +24,7 @@ export enum RequestType {
  * khớp với request.entity.RequestStatus — 8 giá trị
  *
  * Flow 1 (ADVANCE/EXPENSE/REIMBURSE):
- *   PENDING → APPROVED_BY_TEAM_LEADER → PENDING_ACCOUNTANT_EXECUTION → PAID
+ *   PENDING → APPROVED_BY_TEAM_LEADER → PAID (Accountant disburse)
  *
  * Flow 2 (PROJECT_TOPUP):
  *   PENDING → APPROVED_BY_MANAGER → PAID (auto)
@@ -35,7 +35,6 @@ export enum RequestType {
 export enum RequestStatus {
   PENDING = "PENDING",
   APPROVED_BY_TEAM_LEADER = "APPROVED_BY_TEAM_LEADER",
-  PENDING_ACCOUNTANT_EXECUTION = "PENDING_ACCOUNTANT_EXECUTION",
   APPROVED_BY_MANAGER = "APPROVED_BY_MANAGER",
   APPROVED_BY_CFO = "APPROVED_BY_CFO",
   PAID = "PAID",
@@ -118,7 +117,6 @@ export interface RequestDetailResponse extends RequestListItem {
  */
 export interface RequestSummaryResponse {
   totalPendingApproval: number;
-  totalPendingAccountant: number;
   totalApproved: number;
   totalRejected: number;
   totalPaid: number;

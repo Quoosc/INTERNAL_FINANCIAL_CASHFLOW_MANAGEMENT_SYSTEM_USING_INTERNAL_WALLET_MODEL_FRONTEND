@@ -74,9 +74,6 @@ Type: `ADVANCE | EXPENSE | REIMBURSE`
 EMPLOYEE tạo request (PENDING)
     ↓
 TEAM_LEADER duyệt (APPROVED_BY_TEAM_LEADER)
-    ↓ [tự động]
-PENDING_ACCOUNTANT_EXECUTION
-    ↓
 ACCOUNTANT kiểm tra chứng từ + nhập PIN + disburse
     ↓
 PAID
@@ -162,7 +159,6 @@ Khi run payroll: `auto-netting` tính `advanceDeduct = min(debtBalance, 50% * ne
 ```
 PENDING                      — Mọi flow khi mới tạo
 APPROVED_BY_TEAM_LEADER      — Flow 1: TL duyệt (trước Accountant execution)
-PENDING_ACCOUNTANT_EXECUTION — Flow 1: chờ Accountant giải ngân
 APPROVED_BY_MANAGER          — Flow 2: Manager duyệt (chờ auto-pay)
 APPROVED_BY_CFO              — Flow 3: CFO duyệt (chờ auto-pay)
 PAID                         — Terminal: đã giải ngân (mọi flow)

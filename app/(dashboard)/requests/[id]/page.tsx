@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { RequestStatusBadge, RequestTypeBadge } from "@/components/ui/status-badge";
-import { useToast } from "@/contexts/toast-context";import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { useToast } from "@/contexts/toast-context";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 import {
   RequestAction,
@@ -36,7 +37,7 @@ const MOCK_REQUEST: RequestDetailResponse = {
   id: 501,
   requestCode: "REQ-EMP-0426-001",
   type: RequestType.ADVANCE,
-  status: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
+  status: RequestStatus.APPROVED_BY_TEAM_LEADER,
   amount: 1_500_000,
   approvedAmount: 1_300_000,
   description:
@@ -74,7 +75,7 @@ const MOCK_REQUEST: RequestDetailResponse = {
     {
       id: 1,
       action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
+      statusAfterAction: RequestStatus.APPROVED_BY_TEAM_LEADER,
       actorId: 23,
       actorName: "Trần Thị B - Team Leader",
       comment: "Duyệt với mức phù hợp ngân sách.",
@@ -163,14 +164,6 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
       rows.push({
         title: "Team Leader đã duyệt",
         subtitle: "Đang chờ Accountant xử lý giải ngân",
-        time: "Hiện tại",
-        tone: "current",
-      });
-      break;
-    case RequestStatus.PENDING_ACCOUNTANT_EXECUTION:
-      rows.push({
-        title: "Đang chờ Kế toán giải ngân",
-        subtitle: "Đã được Team Leader duyệt",
         time: "Hiện tại",
         tone: "current",
       });

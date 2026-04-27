@@ -103,19 +103,18 @@ export function RequestTypeBadge({ type, size }: { type: RequestType | string; s
 
 const REQUEST_STATUS_VARIANT: Record<string, BadgeVariant> = {
   [RequestStatus.PENDING]:                         "amber",
-  [RequestStatus.APPROVED_BY_TEAM_LEADER]:         "blue",
-  [RequestStatus.PENDING_ACCOUNTANT_EXECUTION]:    "indigo",
+  [RequestStatus.APPROVED_BY_TEAM_LEADER]:         "indigo",
   [RequestStatus.APPROVED_BY_MANAGER]:             "teal",
   [RequestStatus.APPROVED_BY_CFO]:                 "cyan",
   [RequestStatus.PAID]:                            "emerald",
   [RequestStatus.REJECTED]:                        "rose",
   [RequestStatus.CANCELLED]:                       "slate",
+  PENDING_ACCOUNTANT_EXECUTION:                    "indigo",
 };
 
 const REQUEST_STATUS_LABEL: Partial<Record<RequestStatus, string>> = {
   [RequestStatus.PENDING]:                         "Đang chờ",
-  [RequestStatus.APPROVED_BY_TEAM_LEADER]:         "TL đã duyệt",
-  [RequestStatus.PENDING_ACCOUNTANT_EXECUTION]:    "Chờ giải ngân",
+  [RequestStatus.APPROVED_BY_TEAM_LEADER]:         "Chờ giải ngân",
   [RequestStatus.APPROVED_BY_MANAGER]:             "Manager đã duyệt",
   [RequestStatus.APPROVED_BY_CFO]:                 "CFO đã duyệt",
   [RequestStatus.PAID]:                            "Đã thanh toán",
@@ -124,7 +123,8 @@ const REQUEST_STATUS_LABEL: Partial<Record<RequestStatus, string>> = {
 };
 
 export function RequestStatusBadge({ status, size }: { status: RequestStatus | string; size?: "xs" | "sm" }) {
+  const normalizedStatus = status === "PENDING_ACCOUNTANT_EXECUTION" ? RequestStatus.APPROVED_BY_TEAM_LEADER : status;
   const variant = REQUEST_STATUS_VARIANT[status] ?? "slate";
-  const label = REQUEST_STATUS_LABEL[status as RequestStatus] ?? status;
+  const label = REQUEST_STATUS_LABEL[normalizedStatus as RequestStatus] ?? status;
   return <StatusBadge variant={variant} label={label} size={size} />;
 }

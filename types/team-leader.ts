@@ -3,7 +3,12 @@
 // Endpoints prefix: /team-leader/*
 // =============================================================
 
-import type { RequestAttachmentResponse, RequestStatus, RequestType } from "./request";
+import type {
+  RequestAttachmentResponse,
+  RequestStatus,
+  RequestTimelineEntry,
+  RequestType,
+} from "./request";
 import type { ProjectDetailResponse } from "./project";
 
 // --- TL Projects ---
@@ -35,29 +40,29 @@ export interface ApprovalRequester {
   avatar: string | null;
   employeeCode: string;
   jobTitle: string | null;
-  email: string;
+  email?: string;
 }
 
 /** Project info trong approval cards */
 export interface ApprovalProject {
   id: number;
   projectCode: string;
-  name: string;
+  name?: string | null;
 }
 
 /** Phase info trong approval cards (có budget) */
 export interface ApprovalPhase {
   id: number;
   phaseCode: string;
-  name: string;
-  budgetLimit: number;
-  currentSpent: number;
+  name?: string | null;
+  budgetLimit?: number;
+  currentSpent?: number;
 }
 
 /** Category info trong approval cards */
 export interface ApprovalCategory {
   id: number;
-  name: string;
+  name: string | null;
 }
 
 /** GET /team-leader/approvals — response item */
@@ -67,13 +72,36 @@ export interface TLApprovalListItem {
   type: RequestType;
   status: RequestStatus;
   amount: number;
-  description: string | null;
+  description?: string | null;
   requester: ApprovalRequester;
   project: ApprovalProject;
   phase: ApprovalPhase;
-  category: ApprovalCategory;
-  attachments: RequestAttachmentResponse[];
+  category?: ApprovalCategory | null;
+  categoryId?: number | null;
+  categoryName?: string | null;
+  attachments?: RequestAttachmentResponse[];
   createdAt: string;
+}
+
+/** GET /team-leader/approvals/:id — response (chi tiết) */
+export interface TLApprovalDetailResponse {
+  id: number;
+  requestCode: string;
+  type: RequestType;
+  status: RequestStatus;
+  amount: number;
+  approvedAmount?: number | null;
+  description: string | null;
+  rejectReason?: string | null;
+  requester: ApprovalRequester;
+  project: ApprovalProject;
+  phase: ApprovalPhase;
+  categoryId: number | null;
+  categoryName: string | null;
+  attachments: RequestAttachmentResponse[];
+  timeline?: RequestTimelineEntry[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** POST /team-leader/approvals/:id/approve — body */
@@ -91,7 +119,7 @@ export interface TLRejectBody {
 export interface TLApproveResponse {
   id: number;
   requestCode: string;
-  status: "PENDING_ACCOUNTANT_EXECUTION";
+  status: "APPROVED_BY_TEAM_LEADER";
   approvedAmount: number;
   comment: string | null;
 }
@@ -164,6 +192,7 @@ export interface TLApprovalFilterParams {
   projectId?: number;
   search?: string;
   page?: number;
+  size?: number;
   limit?: number;
 }
 
@@ -172,6 +201,7 @@ export interface TLTeamMemberFilterParams {
   projectId?: number;
   search?: string;
   page?: number;
+  size?: number;
   limit?: number;
 }
 
@@ -180,5 +210,6 @@ export interface TLProjectFilterParams {
   status?: string;
   search?: string;
   page?: number;
+  size?: number;
   limit?: number;
 }

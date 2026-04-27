@@ -298,7 +298,7 @@ SECURITY_ALERT            — Cảnh báo bảo mật (PIN bị khoá, v.v.)
 ```
 RequestType:   ADVANCE | EXPENSE | REIMBURSE | PROJECT_TOPUP | DEPARTMENT_TOPUP
 
-RequestStatus: PENDING | APPROVED_BY_TEAM_LEADER | PENDING_ACCOUNTANT_EXECUTION |
+RequestStatus: PENDING | APPROVED_BY_TEAM_LEADER |
                APPROVED_BY_MANAGER | APPROVED_BY_CFO | PAID | REJECTED | CANCELLED
                ⚠ Mỗi status là flow-specific — xem financial-architecture.md
 
@@ -309,7 +309,6 @@ RequestAction: APPROVE | REJECT | PAYOUT | CANCEL
 ```json
 {
   "totalPendingApproval": 2,
-  "totalPendingAccountant": 1,
   "totalApproved": 12,
   "totalRejected": 2,
   "totalPaid": 8,
@@ -336,7 +335,7 @@ RequestAction: APPROVE | REJECT | PAYOUT | CANCEL
 
 | Method | Endpoint |
 |---|---|
-| GET | `/team-leader/projects?status=&search=&page=1&limit=20` |
+| GET | `/team-leader/projects?status=&search=&page=0&size=20` |
 | GET | `/team-leader/projects/:id` |
 | POST | `/team-leader/projects/:id/members` — body: `{ userId, position }` |
 | PUT | `/team-leader/projects/:id/members/:userId` — body: `{ position }` |
@@ -345,14 +344,14 @@ RequestAction: APPROVE | REJECT | PAYOUT | CANCEL
 | POST | `/team-leader/projects/:id/phases` — body: `{ name, budgetLimit, startDate, endDate }` |
 | PUT | `/team-leader/projects/:id/phases/:phaseId` — body: `{ name?, budgetLimit?, endDate?, status? }` |
 | GET | `/team-leader/projects/:id/categories?phaseId=` |
-| PUT | `/team-leader/projects/:id/categories` — body: `{ phaseId, categories: [{categoryId, budgetLimit}] }` |
-| GET | `/team-leader/expense-categories` |
+| PUT | `/team-leader/projects/:id/categories` — body: `{ phaseId, categoryId, budgetLimit }` |
+| GET | `/team-leader/expense-categories?projectId=` |
 
 ### Team Members
 
 | Method | Endpoint |
 |---|---|
-| GET | `/team-leader/team-members?projectId=&search=&page=1&limit=20` |
+| GET | `/team-leader/team-members?projectId=&search=&page=0&size=20` |
 | GET | `/team-leader/team-members/:userId` |
 
 ### Approvals (Flow 1: ADVANCE/EXPENSE/REIMBURSE)
@@ -366,7 +365,7 @@ RequestAction: APPROVE | REJECT | PAYOUT | CANCEL
 
 Notes:
 - TL chỉ thấy requests trong projects mình là LEADER
-- Sau approve: `PENDING → APPROVED_BY_TEAM_LEADER → PENDING_ACCOUNTANT_EXECUTION`
+- Sau approve: `PENDING → APPROVED_BY_TEAM_LEADER` (chờ Accountant giải ngân)
 - TL chỉ **decision** (approve/reject), không execute payout (SoD)
 
 ---
@@ -377,7 +376,7 @@ Notes:
 
 | Method | Endpoint |
 |---|---|
-| GET | `/manager/approvals?search=&page=1&limit=20` |
+| GET | `/manager/approvals?search=&page=0&size=20` |
 | GET | `/manager/approvals/:id` |
 | POST | `/manager/approvals/:id/approve` — body: `{ comment?, approvedAmount }` |
 | POST | `/manager/approvals/:id/reject` — body: `{ reason }` |
@@ -391,7 +390,7 @@ Notes:
 
 | Method | Endpoint |
 |---|---|
-| GET | `/manager/projects?status=&search=&page=1&limit=20` |
+| GET | `/manager/projects?status=&search=&page=0&size=20` |
 | GET | `/manager/projects/:id` |
 | POST | `/manager/projects` — body: `{ name, description?, totalBudget, teamLeaderId }` |
 | PUT | `/manager/projects/:id` — body: `{ name?, description?, totalBudget?, status?, teamLeaderId? }` |
@@ -401,7 +400,7 @@ Notes:
 
 | Method | Endpoint |
 |---|---|
-| GET | `/manager/department/members?search=&page=1&limit=20` |
+| GET | `/manager/department/members?search=&page=0&size=20` |
 | GET | `/manager/department/members/:id` |
 
 ---
@@ -418,7 +417,7 @@ Notes:
 | POST | `/accountant/disbursements/:id/reject` — body: `{ reason }` |
 
 Notes:
-- Chỉ thấy requests ở trạng thái `PENDING_ACCOUNTANT_EXECUTION`
+- Chỉ thấy requests ở trạng thái `APPROVED_BY_TEAM_LEADER`
 - `disburse` yêu cầu PIN 5 số của Accountant
 - Sau disburse: `PAID` + tạo Transaction `REQUEST_PAYMENT` (PROJECT → USER wallet)
 - Accountant **có thể reject** ngay cả sau khi TL đã approve (checkpoint chứng từ)

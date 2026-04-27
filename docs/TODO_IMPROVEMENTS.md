@@ -2,6 +2,8 @@
 
 > Danh sách các cải tiến cần triển khai khi bắt đầu phát triển giao diện thật.
 > Đánh dấu `[x]` khi hoàn thành.
+> 🔄 Cập nhật 2026-04-27: Frontend đã sync contract mới theo backend cho các track A-F (status Flow 1, TL DTO/categories, manager pagination, summary/docs). Xem `docs/FRONTEND_BACKEND_SYNC_GAP_AND_FIX_PLAN.md`.
+> Lưu ý: chuẩn Flow 1 hiện tại dùng `APPROVED_BY_TEAM_LEADER` cho queue accountant; chỉ giữ `PENDING_ACCOUNTANT_EXECUTION` ở lớp tương thích ngược nếu backend trả legacy payload.
 
 ---
 

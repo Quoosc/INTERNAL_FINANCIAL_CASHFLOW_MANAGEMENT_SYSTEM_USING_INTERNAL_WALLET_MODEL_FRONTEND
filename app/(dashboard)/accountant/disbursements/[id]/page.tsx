@@ -10,10 +10,10 @@ import {
   DisbursementDetailResponse,
   DisbursementRejectBody,
   RequestAction,
-  RequestStatus,
   RequestType,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -198,20 +198,27 @@ export default function AccountantDisbursementDetailPage({
     [checklist],
   );
 
+  const canProcessDisbursement = useMemo(
+    () => (detail ? isAccountantQueueStatus(detail.status) : false),
+    [detail],
+  );
+
   const tlApprovalEntry = useMemo(() => {
     if (!detail) return null;
 
     return detail.timeline.find(
       (entry) =>
         entry.action === RequestAction.APPROVE &&
-        entry.statusAfterAction === RequestStatus.PENDING_ACCOUNTANT_EXECUTION,
+        isAccountantQueueStatus(entry.statusAfterAction),
     );
   }, [detail]);
 
   const budgetStillAvailable = useMemo(() => {
     if (!detail) return false;
 
-    const remaining = detail.phase.budgetLimit - detail.phase.currentSpent;
+    const budgetLimit = detail.phase.budgetLimit ?? 0;
+    const currentSpent = detail.phase.currentSpent ?? 0;
+    const remaining = budgetLimit - currentSpent;
     return remaining >= detail.approvedAmount;
   }, [detail]);
 
@@ -230,6 +237,10 @@ export default function AccountantDisbursementDetailPage({
 
   async function handleDisburse() {
     if (!detail) return;
+    if (!canProcessDisbursement) {
+      setPinError("Yêu cầu không còn ở trạng thái chờ giải ngân.");
+      return;
+    }
     if (!allChecked) {
       setPinError("Vui lòng hoàn tất checklist trước khi giải ngân.");
       return;
@@ -465,7 +476,7 @@ export default function AccountantDisbursementDetailPage({
               />
               <InfoCard
                 label="Ngân sách phase"
-                value={`${formatCurrency(detail.phase.currentSpent)} / ${formatCurrency(detail.phase.budgetLimit)}`}
+                value={`${formatCurrency(detail.phase.currentSpent ?? 0)} / ${formatCurrency(detail.phase.budgetLimit ?? 0)}`}
               />
               <InfoCard
                 label="Số tiền giải ngân"
@@ -627,7 +638,7 @@ export default function AccountantDisbursementDetailPage({
                 : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
             </button>
 
-            {detail.status === "PENDING_ACCOUNTANT_EXECUTION" && (
+            {canProcessDisbursement && (
               <button
                 type="button"
                 onClick={() => {

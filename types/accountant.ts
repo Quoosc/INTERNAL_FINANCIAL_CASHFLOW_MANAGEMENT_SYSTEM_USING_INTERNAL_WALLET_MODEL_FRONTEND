@@ -26,7 +26,7 @@ export interface DisbursementListItem {
   id: number;
   requestCode: string;
   type: RequestType;
-  status: "PENDING_ACCOUNTANT_EXECUTION";
+  status: RequestStatus;
   amount: number;
   approvedAmount: number;
   description: string | null;
@@ -50,7 +50,7 @@ export interface DisbursementDetailResponse {
   id: number;
   requestCode: string;
   type: RequestType;
-  status: "PENDING_ACCOUNTANT_EXECUTION";
+  status: RequestStatus;
   amount: number;
   approvedAmount: number;
   description: string | null;
@@ -129,5 +129,6 @@ export interface DisbursementFilterParams {
   type?: RequestType;
   search?: string;
   page?: number;
+  size?: number;
   limit?: number;
 }

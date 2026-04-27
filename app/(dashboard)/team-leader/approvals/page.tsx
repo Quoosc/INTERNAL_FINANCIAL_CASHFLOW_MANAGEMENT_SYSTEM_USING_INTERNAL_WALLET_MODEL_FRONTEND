@@ -11,6 +11,7 @@ import {
 } from "@/types";
 import { formatCurrency } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
+import { normalizeTLApprovalListItem } from "@/lib/adapters/team-leader";
 
 const PAGE_LIMIT = 10;
 
@@ -206,6 +207,10 @@ function parsePage(value: string | null): number {
   return Number.isFinite(page) && page > 0 ? page : 1;
 }
 
+function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
+  return Array.isArray(payload) ? payload : payload.items;
+}
+
 function filterMock(source: TLApprovalListItem[], type?: RequestType, search = ""): TLApprovalListItem[] {
   const q = search.trim().toLowerCase();
   return source.filter((item) => {
@@ -301,15 +306,24 @@ export default function TLApprovalsPage() {
         query.set("page", String(Math.max(0, page - 1)));
         query.set("size", String(PAGE_LIMIT));
 
-        const res = await api.get<PaginatedResponse<TLApprovalListItem>>(
+        const res = await api.get<PaginatedResponse<unknown> | unknown[]>(
           `/api/v1/team-leader/approvals?${query.toString()}`
         );
 
         if (cancelled) return;
 
-        setItems(res.data.items.filter((item) => item.status === RequestStatus.PENDING));
-        setTotal(res.data.total);
-        setTotalPages(res.data.totalPages);
+        const normalizedItems = pickItems(res.data)
+          .map((item) => normalizeTLApprovalListItem(item))
+          .filter((item) => item.status === RequestStatus.PENDING);
+
+        const apiTotal = Array.isArray(res.data) ? normalizedItems.length : res.data.total;
+        const apiTotalPages = Array.isArray(res.data)
+          ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
+          : res.data.totalPages;
+
+        setItems(normalizedItems);
+        setTotal(apiTotal);
+        setTotalPages(apiTotalPages);
       } catch (err) {
         if (cancelled) return;
 
@@ -416,8 +430,13 @@ export default function TLApprovalsPage() {
       ) : (
         <div className="space-y-3">
           {items.map((item) => {
-            const projectedSpent = item.phase.currentSpent + item.amount;
-            const overBudget = projectedSpent > item.phase.budgetLimit;
+            const phaseCurrentSpent = item.phase.currentSpent ?? 0;
+            const phaseBudgetLimit = item.phase.budgetLimit ?? 0;
+            const projectedSpent = phaseCurrentSpent + item.amount;
+            const overBudget = phaseBudgetLimit > 0 && projectedSpent > phaseBudgetLimit;
+            const projectLabel = item.project.name ?? item.project.projectCode;
+            const phaseLabel = item.phase.name ?? item.phase.phaseCode;
+            const categoryLabel = item.category?.name ?? item.categoryName ?? "Chưa phân loại";
 
             return (
               <button
@@ -446,18 +465,20 @@ export default function TLApprovalsPage() {
                   </div>
 
                   <p className="text-sm text-slate-600">
-                    {item.project.name} <span className="text-slate-500">/</span> {item.phase.name} <span className="text-slate-500">/</span> {item.category.name}
+                    {projectLabel} <span className="text-slate-500">/</span> {phaseLabel} <span className="text-slate-500">/</span> {categoryLabel}
                   </p>
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
-                      {overBudget ? (
+                      {phaseBudgetLimit <= 0 ? (
+                        <p className="text-sm text-slate-500">Chưa có dữ liệu ngân sách phase</p>
+                      ) : overBudget ? (
                         <p className="text-sm text-rose-700 font-medium">⚠ Vượt ngân sách phase</p>
                       ) : (
                         <p className="text-sm text-emerald-700">Ngân sách phase còn an toàn</p>
                       )}
                       <p className="text-xs text-slate-500 mt-1">
-                        {formatCurrency(item.phase.currentSpent)} + {formatCurrency(item.amount)} / {formatCurrency(item.phase.budgetLimit)}
+                        {formatCurrency(phaseCurrentSpent)} + {formatCurrency(item.amount)} / {formatCurrency(phaseBudgetLimit)}
                       </p>
                     </div>
 

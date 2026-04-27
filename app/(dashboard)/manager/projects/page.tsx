@@ -11,6 +11,7 @@ import {
   ProjectStatus,
   TeamLeaderOptionResponse,
 } from "@/types";
+import { toApiPage } from "@/lib/adapters/pagination";
 import { formatCurrency } from "@/lib/format";
 import { MOCK_TL_OPTIONS } from "@/lib/mocks/projects";
 
@@ -268,14 +269,14 @@ export default function ManagerProjectsPage() {
           status: statusFilter,
           search: search.trim() || undefined,
           page,
-          limit: PAGE_LIMIT,
+          size: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
         if (filters.status) query.set("status", filters.status);
         if (filters.search) query.set("search", filters.search);
-        query.set("page", String(filters.page ?? 1));
-        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
+        query.set("page", String(toApiPage(filters.page ?? 1)));
+        query.set("size", String(filters.size ?? PAGE_LIMIT));
 
         const res = await api.get<PaginatedResponse<ManagerProjectListItem> | ManagerProjectListItem[]>(
           `/api/v1/manager/projects?${query.toString()}`

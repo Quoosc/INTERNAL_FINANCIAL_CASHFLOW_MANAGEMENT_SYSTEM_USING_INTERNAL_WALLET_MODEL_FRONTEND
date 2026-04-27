@@ -25,7 +25,7 @@
 >   - Flow 1 (ADVANCE/EXPENSE/REIMBURSE): `Employee` tạo → `Team Leader` duyệt → `Accountant` giải ngân (nhập PIN) → **KHÔNG qua Manager hay Admin**
 >   - Flow 2 (PROJECT_TOPUP): `Team Leader` tạo → `Manager` duyệt → Auto PAID (không qua Accountant)
 >   - Flow 3 (DEPARTMENT_TOPUP): `Manager` tạo → `CFO` duyệt → Auto PAID (không qua Accountant)
-> - ❌ **RequestStatus enum**: `d:\src` dùng `PENDING_MANAGER | PENDING_ADMIN`. Thực tế dùng flow-specific status: `PENDING`, `APPROVED_BY_TEAM_LEADER`, `PENDING_ACCOUNTANT_EXECUTION`, `APPROVED_BY_MANAGER`, `APPROVED_BY_CFO`, `PAID`, `REJECTED`, `CANCELLED`
+> - ❌ **RequestStatus enum**: `d:\src` dùng `PENDING_MANAGER | PENDING_ADMIN`. Thực tế dùng flow-specific status: `PENDING`, `APPROVED_BY_TEAM_LEADER`, `APPROVED_BY_MANAGER`, `APPROVED_BY_CFO`, `PAID`, `REJECTED`, `CANCELLED`
 > - ❌ **Manager Approvals page** trong `d:\src`: xử lý Flow 1 (chi tiêu cá nhân). Thực tế Manager chỉ duyệt Flow 2 (PROJECT_TOPUP)
 > - ❌ **Admin Approvals page** trong `d:\src`: xử lý Flow 2. Thực tế Flow 3 do CFO duyệt (frontend có thể vẫn đặt UI dưới namespace `/admin`)
 > - ❌ **Types**: `UserRole`, `RequestStatus`, `RequestType` trong `d:\src\lib\` đều sai — luôn dùng từ `@/types`

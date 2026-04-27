@@ -177,7 +177,10 @@ function projectStatusClass(status: string): string {
 
 function burnPercent(project: ManagerProjectListItem): number {
   if (project.totalBudget <= 0) return 0;
-  return Math.min(100, Math.round((project.totalSpent / project.totalBudget) * 100));
+  return Math.min(
+    100,
+    Math.round((project.totalSpent / project.totalBudget) * 100),
+  );
 }
 
 function burnClass(percent: number): string {
@@ -187,14 +190,14 @@ function burnClass(percent: number): string {
 }
 
 const ACCENT_TO_GRADIENT: Record<string, string> = {
-  "text-blue-700":    "bg-linear-to-br from-blue-500 to-blue-600",
+  "text-blue-700": "bg-linear-to-br from-blue-500 to-blue-600",
   "text-emerald-700": "bg-linear-to-br from-emerald-500 to-emerald-600",
-  "text-amber-700":   "bg-linear-to-br from-amber-500 to-orange-500",
-  "text-violet-700":  "bg-linear-to-br from-violet-500 to-purple-600",
-  "text-indigo-700":  "bg-linear-to-br from-indigo-500 to-indigo-600",
-  "text-rose-700":    "bg-linear-to-br from-rose-500 to-rose-600",
-  "text-teal-700":    "bg-linear-to-br from-teal-500 to-teal-600",
-  "text-cyan-700":    "bg-linear-to-br from-cyan-500 to-cyan-600",
+  "text-amber-700": "bg-linear-to-br from-amber-500 to-orange-500",
+  "text-violet-700": "bg-linear-to-br from-violet-500 to-purple-600",
+  "text-indigo-700": "bg-linear-to-br from-indigo-500 to-indigo-600",
+  "text-rose-700": "bg-linear-to-br from-rose-500 to-rose-600",
+  "text-teal-700": "bg-linear-to-br from-teal-500 to-teal-600",
+  "text-cyan-700": "bg-linear-to-br from-cyan-500 to-cyan-600",
 };
 
 function StatCard({
@@ -212,7 +215,8 @@ function StatCard({
   accent: string;
   icon: React.ReactNode;
 }) {
-  const iconGradient = ACCENT_TO_GRADIENT[accent] ?? "bg-linear-to-br from-slate-400 to-slate-500";
+  const iconGradient =
+    ACCENT_TO_GRADIENT[accent] ?? "bg-linear-to-br from-slate-400 to-slate-500";
   return (
     <Link
       href={href}
@@ -224,7 +228,9 @@ function StatCard({
           <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
           {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
         </div>
-        <span className={`w-9 h-9 rounded-lg ${iconGradient} text-white flex items-center justify-center shadow-sm`}>
+        <span
+          className={`w-9 h-9 rounded-lg ${iconGradient} text-white flex items-center justify-center shadow-sm`}
+        >
           {icon}
         </span>
       </div>
@@ -236,7 +242,9 @@ export function ManagerDashboard() {
   const { user } = useAuth();
   const { fetchWallet } = useWallet();
 
-  const [dashboard, setDashboard] = useState<ManagerDashboardResponse | null>(null);
+  const [dashboard, setDashboard] = useState<ManagerDashboardResponse | null>(
+    null,
+  );
   const [approvals, setApprovals] = useState<ManagerApprovalListItem[]>([]);
   const [projects, setProjects] = useState<ManagerProjectListItem[]>([]);
 
@@ -261,12 +269,13 @@ export function ManagerDashboard() {
       try {
         const [dashRes, approvalsRes, projectsRes] = await Promise.all([
           api.get<ManagerDashboardResponse>("/api/v1/dashboard/manager"),
-          api.get<PaginatedResponse<ManagerApprovalListItem> | ManagerApprovalListItem[]>(
-            "/api/v1/manager/approvals?page=0&size=3"
-          ),
-          api.get<PaginatedResponse<ManagerProjectListItem> | ManagerProjectListItem[]>(
-            "/api/v1/manager/projects?page=0&size=4"
-          ),
+          api.get<
+            | PaginatedResponse<ManagerApprovalListItem>
+            | ManagerApprovalListItem[]
+          >("/api/v1/manager/approvals?page=0&size=3"),
+          api.get<
+            PaginatedResponse<ManagerProjectListItem> | ManagerProjectListItem[]
+          >("/api/v1/manager/projects?page=0&size=4"),
         ]);
 
         if (cancelled) return;
@@ -275,7 +284,7 @@ export function ManagerDashboard() {
           .filter(
             (item) =>
               item.type === RequestType.PROJECT_TOPUP &&
-              item.status === RequestStatus.PENDING
+              item.status === RequestStatus.PENDING,
           )
           .slice(0, 3);
 
@@ -292,7 +301,9 @@ export function ManagerDashboard() {
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải dashboard từ API, đang hiển thị dữ liệu mẫu.");
+          setError(
+            "Không thể tải dashboard từ API, đang hiển thị dữ liệu mẫu.",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -314,10 +325,12 @@ export function ManagerDashboard() {
         month: "2-digit",
         year: "numeric",
       }).format(new Date()),
-    []
+    [],
   );
 
-  const activeProjects = dashboard?.projectStatusSummary.active ?? projects.filter((p) => p.status === "ACTIVE").length;
+  const activeProjects =
+    dashboard?.projectStatusSummary.active ??
+    projects.filter((p) => p.status === "ACTIVE").length;
   const pendingCount = dashboard?.pendingApprovalsCount ?? approvals.length;
   const deptBalance = dashboard?.departmentBudget.totalAvailableBalance ?? 0;
   const teamDebt = dashboard?.teamDebtSummary.totalDebt ?? 0;
@@ -365,7 +378,9 @@ export function ManagerDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Xin chào, {user?.fullName ?? "Quản lý"}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Xin chào, {user?.fullName ?? "Quản lý"}
+          </h1>
           <p className="text-slate-500 mt-1">Hôm nay là {todayLabel}</p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
@@ -376,7 +391,10 @@ export function ManagerDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {loading ? (
           [...Array(4)].map((_, index) => (
-            <div key={`manager-stat-skeleton-${index}`} className="h-24 rounded-2xl bg-white animate-pulse" />
+            <div
+              key={`manager-stat-skeleton-${index}`}
+              className="h-24 rounded-2xl bg-white animate-pulse"
+            />
           ))
         ) : (
           <>
@@ -387,7 +405,12 @@ export function ManagerDashboard() {
               href="/manager/department"
               accent="text-blue-700"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -405,7 +428,12 @@ export function ManagerDashboard() {
               href="/manager/approvals"
               accent="text-amber-700"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -423,7 +451,12 @@ export function ManagerDashboard() {
               href="/manager/projects"
               accent="text-emerald-700"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -441,7 +474,12 @@ export function ManagerDashboard() {
               href="/manager/department"
               accent={teamDebt > 0 ? "text-rose-700" : "text-slate-600"}
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -458,8 +496,13 @@ export function ManagerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">PROJECT_TOPUP chờ duyệt</h2>
-            <Link href="/manager/approvals" className="text-sm text-blue-700 hover:text-blue-600">
+            <h2 className="text-lg font-semibold text-slate-900">
+              PROJECT_TOPUP chờ duyệt
+            </h2>
+            <Link
+              href="/manager/approvals"
+              className="text-sm text-blue-700 hover:text-blue-600"
+            >
               Xem tất cả →
             </Link>
           </div>
@@ -467,7 +510,10 @@ export function ManagerDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`manager-approval-skeleton-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
+                <div
+                  key={`manager-approval-skeleton-${index}`}
+                  className="h-24 rounded-xl bg-white animate-pulse"
+                />
               ))}
             </div>
           ) : approvals.length === 0 ? (
@@ -488,16 +534,25 @@ export function ManagerDashboard() {
                         <span className="inline-flex px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700">
                           Cấp vốn DA
                         </span>
-                        <span className="text-slate-500 font-mono">{item.requestCode}</span>
-                        <span className="text-slate-500">{formatRelativeTime(item.createdAt)}</span>
+                        <span className="text-slate-500 font-mono">
+                          {item.requestCode}
+                        </span>
+                        <span className="text-slate-500">
+                          {formatRelativeTime(item.createdAt)}
+                        </span>
                       </div>
 
                       <p className="text-sm text-slate-900 truncate">
-                        <span className="font-medium text-slate-900">{item.project.name}</span> • {item.requester.fullName}
+                        <span className="font-medium text-slate-900">
+                          {item.project.name}
+                        </span>{" "}
+                        • {item.requester.fullName}
                       </p>
                     </div>
 
-                    <p className="text-sm font-semibold text-slate-900">{formatCurrency(item.amount)}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {formatCurrency(item.amount)}
+                    </p>
                   </div>
                 </Link>
               ))}
@@ -507,8 +562,13 @@ export function ManagerDashboard() {
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Dự án phòng ban</h2>
-            <Link href="/manager/projects" className="text-sm text-blue-700 hover:text-blue-600">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Dự án phòng ban
+            </h2>
+            <Link
+              href="/manager/projects"
+              className="text-sm text-blue-700 hover:text-blue-600"
+            >
               Xem tất cả →
             </Link>
           </div>
@@ -516,7 +576,10 @@ export function ManagerDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`manager-project-skeleton-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
+                <div
+                  key={`manager-project-skeleton-${index}`}
+                  className="h-24 rounded-xl bg-white animate-pulse"
+                />
               ))}
             </div>
           ) : projects.length === 0 ? (
@@ -534,7 +597,9 @@ export function ManagerDashboard() {
                     className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{project.name}</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {project.name}
+                      </p>
                       <span
                         className={`shrink-0 inline-flex px-2 py-1 rounded-full border text-[11px] ${projectStatusClass(project.status)}`}
                       >
@@ -548,7 +613,10 @@ export function ManagerDashboard() {
                         <span>{burn}%</span>
                       </div>
                       <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
-                        <div className={`h-full ${burnClass(burn)}`} style={{ width: `${burn}%` }} />
+                        <div
+                          className={`h-full ${burnClass(burn)}`}
+                          style={{ width: `${burn}%` }}
+                        />
                       </div>
                     </div>
                   </Link>
@@ -582,8 +650,18 @@ export function ManagerDashboard() {
             onClick={handleOpenQuotaModal}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v14m7-7H5" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 5v14m7-7H5"
+              />
             </svg>
             Xin cấp vốn PB
           </button>
@@ -592,7 +670,12 @@ export function ManagerDashboard() {
             href="/wallet"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -627,11 +710,17 @@ export function ManagerDashboard() {
           />
 
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Xin cấp vốn phòng ban</h3>
-            <p className="text-sm text-slate-500">Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.</p>
+            <h3 className="text-xl font-bold text-slate-900">
+              Xin cấp vốn phòng ban
+            </h3>
+            <p className="text-sm text-slate-500">
+              Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.
+            </p>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Số tiền cần cấp</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Số tiền cần cấp
+              </label>
               <input
                 type="number"
                 min={1}
@@ -643,7 +732,9 @@ export function ManagerDashboard() {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Mô tả nhu cầu</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Mô tả nhu cầu
+              </label>
               <textarea
                 rows={4}
                 value={quotaDescription}

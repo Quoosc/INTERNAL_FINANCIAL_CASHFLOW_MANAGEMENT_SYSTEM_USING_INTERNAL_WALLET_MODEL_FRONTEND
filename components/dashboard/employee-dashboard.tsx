@@ -221,9 +221,18 @@ const REQUEST_STATUS_CONFIG: Record<
     label: "Chờ duyệt",
     cls: "text-amber-700",
   },
-  [RequestStatus.APPROVED_BY_TEAM_LEADER]: { label: "Chờ giải ngân", cls: "text-blue-600" },
-  [RequestStatus.APPROVED_BY_MANAGER]: { label: "Manager đã duyệt", cls: "text-emerald-700" },
-  [RequestStatus.APPROVED_BY_CFO]: { label: "CFO đã duyệt", cls: "text-emerald-700" },
+  [RequestStatus.APPROVED_BY_TEAM_LEADER]: {
+    label: "Chờ giải ngân",
+    cls: "text-blue-600",
+  },
+  [RequestStatus.APPROVED_BY_MANAGER]: {
+    label: "Manager đã duyệt",
+    cls: "text-emerald-700",
+  },
+  [RequestStatus.APPROVED_BY_CFO]: {
+    label: "CFO đã duyệt",
+    cls: "text-emerald-700",
+  },
   [RequestStatus.PAID]: { label: "Đã chi", cls: "text-emerald-700" },
   [RequestStatus.REJECTED]: { label: "Từ chối", cls: "text-rose-700" },
   [RequestStatus.CANCELLED]: { label: "Đã hủy", cls: "text-slate-500" },
@@ -426,11 +435,12 @@ export function EmployeeDashboard() {
   const chartData = MOCK_MONTHLY.slice(-chartRange);
 
   const availableBalance = data
-    ? data.wallet.availableBalance ??
-      (data.wallet.balance - (data.wallet.lockedBalance ?? data.wallet.pendingBalance ?? 0))
+    ? (data.wallet.availableBalance ??
+      data.wallet.balance -
+        (data.wallet.lockedBalance ?? data.wallet.pendingBalance ?? 0))
     : 0;
   const lockedBalance = data
-    ? data.wallet.lockedBalance ?? data.wallet.pendingBalance ?? 0
+    ? (data.wallet.lockedBalance ?? data.wallet.pendingBalance ?? 0)
     : 0;
   const debtBalance = data?.wallet.debtBalance ?? 0;
 
@@ -827,9 +837,18 @@ export function EmployeeDashboard() {
               sub="Tạm ứng / Chi phí / Hoàn ứng"
               iconBg="bg-linear-to-br from-violet-500 to-purple-600"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
                 </svg>
               }
             />
@@ -839,9 +858,18 @@ export function EmployeeDashboard() {
               sub="Chuyển về tài khoản ngân hàng"
               iconBg="bg-linear-to-br from-blue-500 to-blue-600"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
                 </svg>
               }
             />
@@ -851,8 +879,18 @@ export function EmployeeDashboard() {
               sub="Nạp tiền vào ví qua QR"
               iconBg="bg-linear-to-br from-emerald-500 to-teal-600"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m6-6H6" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 6v12m6-6H6"
+                  />
                 </svg>
               }
             />
@@ -894,8 +932,18 @@ function QuickAction({
         </p>
         {sub && <p className="text-xs text-slate-500 mt-0.5 truncate">{sub}</p>}
       </div>
-      <svg className="w-4 h-4 text-slate-400 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      <svg
+        className="w-4 h-4 text-slate-400 ml-auto shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 5l7 7-7 7"
+        />
       </svg>
     </Link>
   );

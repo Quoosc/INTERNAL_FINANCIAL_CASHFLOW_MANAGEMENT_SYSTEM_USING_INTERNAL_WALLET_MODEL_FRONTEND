@@ -22,8 +22,6 @@ interface PageProps {
 // DisburseResponse v3.0: id, requestCode, status, transactionCode, amount, disbursedAt
 type DisburseSuccessView = DisburseResponse;
 
-
-
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -258,7 +256,7 @@ export default function AccountantDisbursementDetailPage({
       const body: DisburseBody = { pin };
       const res = await api.post<DisburseResponse>(
         `/api/v1/accountant/disbursements/${id}/disburse`,
-        body
+        body,
       );
       setSuccessData(res.data);
       setShowSuccess(true);

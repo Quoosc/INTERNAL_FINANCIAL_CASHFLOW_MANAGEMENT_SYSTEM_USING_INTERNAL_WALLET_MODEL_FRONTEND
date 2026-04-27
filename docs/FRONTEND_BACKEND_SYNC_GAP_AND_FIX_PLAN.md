@@ -323,7 +323,7 @@ Documentation:
 
 Completed implementation and smoke results.
 
-| Date | PR  | Scope | Owner | Status | Notes |
-| ---- | --- | ----- | ----- | ------ | ----- |
-| 2026-04-27 | Local patchset | Tracks A-F (types, adapters, pages, docs) | FE | Done | Lint passed |
-| 2026-04-27 | Local smoke run | Role matrix: Employee, Team Leader, Manager, Accountant, CFO, Admin | FE | Done | 24/24 route checks passed |
+| Date       | PR              | Scope                                                               | Owner | Status | Notes                     |
+| ---------- | --------------- | ------------------------------------------------------------------- | ----- | ------ | ------------------------- |
+| 2026-04-27 | Local patchset  | Tracks A-F (types, adapters, pages, docs)                           | FE    | Done   | Lint passed               |
+| 2026-04-27 | Local smoke run | Role matrix: Employee, Team Leader, Manager, Accountant, CFO, Admin | FE    | Done   | 24/24 route checks passed |

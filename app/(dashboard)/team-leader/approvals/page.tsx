@@ -31,7 +31,11 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
       jobTitle: "Frontend Developer",
       email: "emp.it1@ifms.vn",
     },
-    project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
+    project: {
+      id: 1,
+      projectCode: "PRJ-IT-001",
+      name: "Hệ thống quản lý nội bộ",
+    },
     phase: {
       id: 1,
       phaseCode: "PH-001",
@@ -58,7 +62,11 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
       jobTitle: "Backend Developer",
       email: "emp.it2@ifms.vn",
     },
-    project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
+    project: {
+      id: 1,
+      projectCode: "PRJ-IT-001",
+      name: "Hệ thống quản lý nội bộ",
+    },
     phase: {
       id: 2,
       phaseCode: "PH-002",
@@ -85,7 +93,11 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
       jobTitle: "Frontend Developer",
       email: "emp.it1@ifms.vn",
     },
-    project: { id: 2, projectCode: "PRJ-IT-002", name: "Nâng cấp hạ tầng mạng" },
+    project: {
+      id: 2,
+      projectCode: "PRJ-IT-002",
+      name: "Nâng cấp hạ tầng mạng",
+    },
     phase: {
       id: 3,
       phaseCode: "PH-001",
@@ -112,7 +124,11 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
       jobTitle: "QA Engineer",
       email: "emp.sales1@ifms.vn",
     },
-    project: { id: 1, projectCode: "PRJ-IT-001", name: "Hệ thống quản lý nội bộ" },
+    project: {
+      id: 1,
+      projectCode: "PRJ-IT-001",
+      name: "Hệ thống quản lý nội bộ",
+    },
     phase: {
       id: 2,
       phaseCode: "PH-002",
@@ -139,7 +155,11 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
       jobTitle: "Backend Developer",
       email: "emp.it2@ifms.vn",
     },
-    project: { id: 2, projectCode: "PRJ-IT-002", name: "Nâng cấp hạ tầng mạng" },
+    project: {
+      id: 2,
+      projectCode: "PRJ-IT-002",
+      name: "Nâng cấp hạ tầng mạng",
+    },
     phase: {
       id: 3,
       phaseCode: "PH-001",
@@ -152,7 +172,6 @@ const MOCK_APPROVALS: TLApprovalListItem[] = [
     createdAt: "2026-03-29T16:45:00",
   },
 ];
-
 
 function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -198,8 +217,14 @@ function getTypeLabel(type: RequestType): string {
 
 function parseType(value: string | null): RequestType | undefined {
   if (!value) return undefined;
-  const valid = [RequestType.ADVANCE, RequestType.EXPENSE, RequestType.REIMBURSE];
-  return valid.includes(value as RequestType) ? (value as RequestType) : undefined;
+  const valid = [
+    RequestType.ADVANCE,
+    RequestType.EXPENSE,
+    RequestType.REIMBURSE,
+  ];
+  return valid.includes(value as RequestType)
+    ? (value as RequestType)
+    : undefined;
 }
 
 function parsePage(value: string | null): number {
@@ -211,13 +236,18 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
 }
 
-function filterMock(source: TLApprovalListItem[], type?: RequestType, search = ""): TLApprovalListItem[] {
+function filterMock(
+  source: TLApprovalListItem[],
+  type?: RequestType,
+  search = "",
+): TLApprovalListItem[] {
   const q = search.trim().toLowerCase();
   return source.filter((item) => {
     if (item.status !== RequestStatus.PENDING) return false;
     if (type && item.type !== type) return false;
     if (q) {
-      const haystack = `${item.requestCode} ${item.requester.fullName}`.toLowerCase();
+      const haystack =
+        `${item.requestCode} ${item.requester.fullName}`.toLowerCase();
       if (!haystack.includes(q)) return false;
     }
     return true;
@@ -230,9 +260,18 @@ export default function TLApprovalsPage() {
   const searchParams = useSearchParams();
 
   const searchParamsString = searchParams.toString();
-  const typeFilter = useMemo(() => parseType(searchParams.get("type")), [searchParams]);
-  const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
-  const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const typeFilter = useMemo(
+    () => parseType(searchParams.get("type")),
+    [searchParams],
+  );
+  const search = useMemo(
+    () => searchParams.get("search") ?? "",
+    [searchParams],
+  );
+  const page = useMemo(
+    () => parsePage(searchParams.get("page")),
+    [searchParams],
+  );
 
   const [items, setItems] = useState<TLApprovalListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -250,7 +289,7 @@ export default function TLApprovalsPage() {
       const query = params.toString();
       router.push(query ? `${pathname}?${query}` : pathname);
     },
-    [pathname, router]
+    [pathname, router],
   );
 
   const updateParam = useCallback(
@@ -264,7 +303,7 @@ export default function TLApprovalsPage() {
       if (key !== "page") params.delete("page");
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   const goToPage = useCallback(
@@ -277,7 +316,7 @@ export default function TLApprovalsPage() {
       }
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   useEffect(() => {
@@ -307,7 +346,7 @@ export default function TLApprovalsPage() {
         query.set("size", String(PAGE_LIMIT));
 
         const res = await api.get<PaginatedResponse<unknown> | unknown[]>(
-          `/api/v1/team-leader/approvals?${query.toString()}`
+          `/api/v1/team-leader/approvals?${query.toString()}`,
         );
 
         if (cancelled) return;
@@ -316,7 +355,9 @@ export default function TLApprovalsPage() {
           .map((item) => normalizeTLApprovalListItem(item))
           .filter((item) => item.status === RequestStatus.PENDING);
 
-        const apiTotal = Array.isArray(res.data) ? normalizedItems.length : res.data.total;
+        const apiTotal = Array.isArray(res.data)
+          ? normalizedItems.length
+          : res.data.total;
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
           : res.data.totalPages;
@@ -370,7 +411,9 @@ export default function TLApprovalsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Duyệt yêu cầu</h1>
-          <p className="text-slate-500 mt-1">Danh sách yêu cầu Flow 1 đang chờ Trưởng nhóm phê duyệt.</p>
+          <p className="text-slate-500 mt-1">
+            Danh sách yêu cầu Flow 1 đang chờ Trưởng nhóm phê duyệt.
+          </p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-300 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ duyệt
@@ -380,7 +423,8 @@ export default function TLApprovalsPage() {
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {typeTabs.map((tab) => {
-            const active = typeFilter === tab.value || (!typeFilter && !tab.value);
+            const active =
+              typeFilter === tab.value || (!typeFilter && !tab.value);
             return (
               <button
                 key={tab.label}
@@ -405,7 +449,12 @@ export default function TLApprovalsPage() {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35m1.6-5.65a7.25 7.25 0 11-14.5 0 7.25 7.25 0 0114.5 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M21 21l-4.35-4.35m1.6-5.65a7.25 7.25 0 11-14.5 0 7.25 7.25 0 0114.5 0z"
+            />
           </svg>
           <input
             value={searchInput}
@@ -421,11 +470,23 @@ export default function TLApprovalsPage() {
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
           <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-2 7H6l-2-7m16 0H4" />
+            <svg
+              className="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-2 7H6l-2-7m16 0H4"
+              />
             </svg>
           </div>
-          <p className="text-slate-600 mt-4">Không có yêu cầu nào đang chờ duyệt</p>
+          <p className="text-slate-600 mt-4">
+            Không có yêu cầu nào đang chờ duyệt
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -433,10 +494,12 @@ export default function TLApprovalsPage() {
             const phaseCurrentSpent = item.phase.currentSpent ?? 0;
             const phaseBudgetLimit = item.phase.budgetLimit ?? 0;
             const projectedSpent = phaseCurrentSpent + item.amount;
-            const overBudget = phaseBudgetLimit > 0 && projectedSpent > phaseBudgetLimit;
+            const overBudget =
+              phaseBudgetLimit > 0 && projectedSpent > phaseBudgetLimit;
             const projectLabel = item.project.name ?? item.project.projectCode;
             const phaseLabel = item.phase.name ?? item.phase.phaseCode;
-            const categoryLabel = item.category?.name ?? item.categoryName ?? "Chưa phân loại";
+            const categoryLabel =
+              item.category?.name ?? item.categoryName ?? "Chưa phân loại";
 
             return (
               <button
@@ -447,11 +510,17 @@ export default function TLApprovalsPage() {
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className={`inline-flex px-2 py-1 rounded-full border ${getTypeClass(item.type)}`}>
+                    <span
+                      className={`inline-flex px-2 py-1 rounded-full border ${getTypeClass(item.type)}`}
+                    >
                       {getTypeLabel(item.type)}
                     </span>
-                    <span className="font-mono text-slate-600">{item.requestCode}</span>
-                    <span className="text-slate-500">{formatRelativeTime(item.createdAt)}</span>
+                    <span className="font-mono text-slate-600">
+                      {item.requestCode}
+                    </span>
+                    <span className="text-slate-500">
+                      {formatRelativeTime(item.createdAt)}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -459,31 +528,47 @@ export default function TLApprovalsPage() {
                       {getInitials(item.requester.fullName)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{item.requester.fullName}</p>
-                      <p className="text-xs text-slate-500">{item.requester.employeeCode}</p>
+                      <p className="text-sm font-medium text-slate-900">
+                        {item.requester.fullName}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {item.requester.employeeCode}
+                      </p>
                     </div>
                   </div>
 
                   <p className="text-sm text-slate-600">
-                    {projectLabel} <span className="text-slate-500">/</span> {phaseLabel} <span className="text-slate-500">/</span> {categoryLabel}
+                    {projectLabel} <span className="text-slate-500">/</span>{" "}
+                    {phaseLabel} <span className="text-slate-500">/</span>{" "}
+                    {categoryLabel}
                   </p>
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
                       {phaseBudgetLimit <= 0 ? (
-                        <p className="text-sm text-slate-500">Chưa có dữ liệu ngân sách phase</p>
+                        <p className="text-sm text-slate-500">
+                          Chưa có dữ liệu ngân sách phase
+                        </p>
                       ) : overBudget ? (
-                        <p className="text-sm text-rose-700 font-medium">⚠ Vượt ngân sách phase</p>
+                        <p className="text-sm text-rose-700 font-medium">
+                          ⚠ Vượt ngân sách phase
+                        </p>
                       ) : (
-                        <p className="text-sm text-emerald-700">Ngân sách phase còn an toàn</p>
+                        <p className="text-sm text-emerald-700">
+                          Ngân sách phase còn an toàn
+                        </p>
                       )}
                       <p className="text-xs text-slate-500 mt-1">
-                        {formatCurrency(phaseCurrentSpent)} + {formatCurrency(item.amount)} / {formatCurrency(phaseBudgetLimit)}
+                        {formatCurrency(phaseCurrentSpent)} +{" "}
+                        {formatCurrency(item.amount)} /{" "}
+                        {formatCurrency(phaseBudgetLimit)}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <p className="text-lg font-semibold text-slate-900">{formatCurrency(item.amount)}</p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        {formatCurrency(item.amount)}
+                      </p>
                       <span className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
                         Chi tiết →
                       </span>

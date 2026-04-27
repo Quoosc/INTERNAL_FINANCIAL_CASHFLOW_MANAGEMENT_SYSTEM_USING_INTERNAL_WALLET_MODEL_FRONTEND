@@ -88,7 +88,9 @@ function parsePage(value: string | null): number {
 function parseStatus(value: string | null): ProjectStatus | undefined {
   if (!value) return undefined;
   const values = Object.values(ProjectStatus);
-  return values.includes(value as ProjectStatus) ? (value as ProjectStatus) : undefined;
+  return values.includes(value as ProjectStatus)
+    ? (value as ProjectStatus)
+    : undefined;
 }
 
 function statusLabel(status: string): string {
@@ -123,7 +125,10 @@ function statusClass(status: string): string {
 
 function burnPercent(project: ManagerProjectListItem): number {
   if (project.totalBudget <= 0) return 0;
-  return Math.min(100, Math.round((project.totalSpent / project.totalBudget) * 100));
+  return Math.min(
+    100,
+    Math.round((project.totalSpent / project.totalBudget) * 100),
+  );
 }
 
 function burnClass(percent: number): string {
@@ -136,8 +141,12 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
 }
 
-function normalizeProject(item: ManagerProjectListItem): ManagerProjectViewItem {
-  const withLeader = item as ManagerProjectListItem & { teamLeaderName?: string | null };
+function normalizeProject(
+  item: ManagerProjectListItem,
+): ManagerProjectViewItem {
+  const withLeader = item as ManagerProjectListItem & {
+    teamLeaderName?: string | null;
+  };
   return {
     ...item,
     teamLeaderName: withLeader.teamLeaderName ?? null,
@@ -147,7 +156,7 @@ function normalizeProject(item: ManagerProjectListItem): ManagerProjectViewItem 
 function filterMock(
   source: ManagerProjectViewItem[],
   status?: ProjectStatus,
-  search = ""
+  search = "",
 ): ManagerProjectViewItem[] {
   const q = search.trim().toLowerCase();
 
@@ -156,7 +165,8 @@ function filterMock(
 
     if (!q) return true;
 
-    const haystack = `${item.projectCode} ${item.name} ${item.teamLeaderName ?? ""}`.toLowerCase();
+    const haystack =
+      `${item.projectCode} ${item.name} ${item.teamLeaderName ?? ""}`.toLowerCase();
     return haystack.includes(q);
   });
 }
@@ -167,9 +177,18 @@ export default function ManagerProjectsPage() {
   const searchParams = useSearchParams();
 
   const searchParamsString = searchParams.toString();
-  const statusFilter = useMemo(() => parseStatus(searchParams.get("status")), [searchParams]);
-  const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
-  const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const statusFilter = useMemo(
+    () => parseStatus(searchParams.get("status")),
+    [searchParams],
+  );
+  const search = useMemo(
+    () => searchParams.get("search") ?? "",
+    [searchParams],
+  );
+  const page = useMemo(
+    () => parsePage(searchParams.get("page")),
+    [searchParams],
+  );
 
   const [items, setItems] = useState<ManagerProjectViewItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -179,7 +198,9 @@ export default function ManagerProjectsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(search);
 
-  const [teamLeaderOptions, setTeamLeaderOptions] = useState<TeamLeaderOptionResponse[]>([]);
+  const [teamLeaderOptions, setTeamLeaderOptions] = useState<
+    TeamLeaderOptionResponse[]
+  >([]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [projectName, setProjectName] = useState("");
@@ -197,7 +218,7 @@ export default function ManagerProjectsPage() {
       const query = params.toString();
       router.push(query ? `${pathname}?${query}` : pathname);
     },
-    [pathname, router]
+    [pathname, router],
   );
 
   const updateParam = useCallback(
@@ -211,7 +232,7 @@ export default function ManagerProjectsPage() {
       if (key !== "page") params.delete("page");
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   const goToPage = useCallback(
@@ -221,7 +242,7 @@ export default function ManagerProjectsPage() {
       else params.set("page", String(nextPage));
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   useEffect(() => {
@@ -241,7 +262,9 @@ export default function ManagerProjectsPage() {
 
     const loadTeamLeaders = async () => {
       try {
-        const res = await api.get<TeamLeaderOptionResponse[]>("/api/v1/manager/department/team-leaders");
+        const res = await api.get<TeamLeaderOptionResponse[]>(
+          "/api/v1/manager/department/team-leaders",
+        );
         if (cancelled) return;
         setTeamLeaderOptions(res.data);
       } catch {
@@ -278,14 +301,16 @@ export default function ManagerProjectsPage() {
         query.set("page", String(toApiPage(filters.page ?? 1)));
         query.set("size", String(filters.size ?? PAGE_LIMIT));
 
-        const res = await api.get<PaginatedResponse<ManagerProjectListItem> | ManagerProjectListItem[]>(
-          `/api/v1/manager/projects?${query.toString()}`
-        );
+        const res = await api.get<
+          PaginatedResponse<ManagerProjectListItem> | ManagerProjectListItem[]
+        >(`/api/v1/manager/projects?${query.toString()}`);
 
         if (cancelled) return;
 
         const normalized = pickItems(res.data).map(normalizeProject);
-        const apiTotal = Array.isArray(res.data) ? normalized.length : res.data.total;
+        const apiTotal = Array.isArray(res.data)
+          ? normalized.length
+          : res.data.total;
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
           : res.data.totalPages;
@@ -373,10 +398,14 @@ export default function ManagerProjectsPage() {
     };
 
     const selectedTlName =
-      teamLeaderOptions.find((option) => option.id === selectedTl)?.fullName ?? "Team Leader";
+      teamLeaderOptions.find((option) => option.id === selectedTl)?.fullName ??
+      "Team Leader";
 
     try {
-      const res = await api.post<ManagerProjectListItem>("/api/v1/manager/projects", body);
+      const res = await api.post<ManagerProjectListItem>(
+        "/api/v1/manager/projects",
+        body,
+      );
 
       const created = normalizeProject(res.data);
       created.teamLeaderName = created.teamLeaderName ?? selectedTlName;
@@ -415,7 +444,9 @@ export default function ManagerProjectsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dự án phòng ban</h1>
-          <p className="text-slate-500 mt-1">Quản lý danh sách dự án, ngân sách và Team Leader phụ trách.</p>
+          <p className="text-slate-500 mt-1">
+            Quản lý danh sách dự án, ngân sách và Team Leader phụ trách.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -435,7 +466,8 @@ export default function ManagerProjectsPage() {
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
-            const active = statusFilter === tab.value || (!statusFilter && !tab.value);
+            const active =
+              statusFilter === tab.value || (!statusFilter && !tab.value);
 
             return (
               <button
@@ -480,14 +512,27 @@ export default function ManagerProjectsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
-            <div key={`manager-project-skeleton-${index}`} className="h-56 rounded-2xl bg-white animate-pulse" />
+            <div
+              key={`manager-project-skeleton-${index}`}
+              className="h-56 rounded-2xl bg-white animate-pulse"
+            />
           ))}
         </div>
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
           <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h18M3 12h18M3 17h18" />
+            <svg
+              className="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M3 7h18M3 12h18M3 17h18"
+              />
             </svg>
           </div>
           <p className="text-slate-600 mt-4">Không có dự án phù hợp bộ lọc.</p>
@@ -504,10 +549,16 @@ export default function ManagerProjectsPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs text-slate-500 font-mono">{project.projectCode}</p>
-                    <p className="text-base font-semibold text-slate-900 mt-1 truncate">{project.name}</p>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {project.projectCode}
+                    </p>
+                    <p className="text-base font-semibold text-slate-900 mt-1 truncate">
+                      {project.name}
+                    </p>
                   </div>
-                  <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusClass(project.status)}`}>
+                  <span
+                    className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusClass(project.status)}`}
+                  >
                     {statusLabel(project.status)}
                   </span>
                 </div>
@@ -522,13 +573,19 @@ export default function ManagerProjectsPage() {
                     <span>{burn}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
-                    <div className={`h-full ${burnClass(burn)}`} style={{ width: `${burn}%` }} />
+                    <div
+                      className={`h-full ${burnClass(burn)}`}
+                      style={{ width: `${burn}%` }}
+                    />
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-500">
-                      {formatCurrency(project.totalSpent)} / {formatCurrency(project.totalBudget)}
+                      {formatCurrency(project.totalSpent)} /{" "}
+                      {formatCurrency(project.totalBudget)}
                     </span>
-                    <span className="text-emerald-700">{formatCurrency(project.availableBudget)}</span>
+                    <span className="text-emerald-700">
+                      {formatCurrency(project.availableBudget)}
+                    </span>
                   </div>
                 </div>
 
@@ -595,7 +652,9 @@ export default function ManagerProjectsPage() {
             <h3 className="text-xl font-bold text-slate-900">Tạo dự án mới</h3>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Tên dự án</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Tên dự án
+              </label>
               <input
                 value={projectName}
                 onChange={(event) => setProjectName(event.target.value)}
@@ -616,7 +675,9 @@ export default function ManagerProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Tổng ngân sách (VND)</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Tổng ngân sách (VND)
+              </label>
               <input
                 type="number"
                 min={1}
@@ -628,7 +689,9 @@ export default function ManagerProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Trưởng nhóm phụ trách</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Trưởng nhóm phụ trách
+              </label>
               <select
                 value={teamLeaderId}
                 onChange={(event) => setTeamLeaderId(event.target.value)}

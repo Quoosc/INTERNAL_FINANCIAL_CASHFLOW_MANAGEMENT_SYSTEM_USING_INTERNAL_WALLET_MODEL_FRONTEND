@@ -161,21 +161,21 @@ const CASHFLOW: Record<PeriodKey, CashFlowPoint[]> = {
   last6m: [
     { label: "T11/25", inflow: 240, outflow: 130 },
     { label: "T12/25", inflow: 290, outflow: 155 },
-    { label: "T1/26",  inflow: 280, outflow: 145 },
-    { label: "T2/26",  inflow: 310, outflow: 162 },
-    { label: "T3/26",  inflow: 295, outflow: 178 },
-    { label: "T4/26",  inflow: 320, outflow: 188 },
+    { label: "T1/26", inflow: 280, outflow: 145 },
+    { label: "T2/26", inflow: 310, outflow: 162 },
+    { label: "T3/26", inflow: 295, outflow: 178 },
+    { label: "T4/26", inflow: 320, outflow: 188 },
   ],
   fy2025: [
-    { label: "T1",  inflow: 195, outflow: 112 },
-    { label: "T2",  inflow: 210, outflow: 118 },
-    { label: "T3",  inflow: 225, outflow: 130 },
-    { label: "T4",  inflow: 240, outflow: 138 },
-    { label: "T5",  inflow: 255, outflow: 147 },
-    { label: "T6",  inflow: 270, outflow: 155 },
-    { label: "T7",  inflow: 260, outflow: 150 },
-    { label: "T8",  inflow: 248, outflow: 143 },
-    { label: "T9",  inflow: 265, outflow: 152 },
+    { label: "T1", inflow: 195, outflow: 112 },
+    { label: "T2", inflow: 210, outflow: 118 },
+    { label: "T3", inflow: 225, outflow: 130 },
+    { label: "T4", inflow: 240, outflow: 138 },
+    { label: "T5", inflow: 255, outflow: 147 },
+    { label: "T6", inflow: 270, outflow: 155 },
+    { label: "T7", inflow: 260, outflow: 150 },
+    { label: "T8", inflow: 248, outflow: 143 },
+    { label: "T9", inflow: 265, outflow: 152 },
     { label: "T10", inflow: 275, outflow: 158 },
     { label: "T11", inflow: 240, outflow: 130 },
     { label: "T12", inflow: 290, outflow: 155 },
@@ -506,10 +506,24 @@ export function AccountantDashboard() {
                 {dashboard?.pendingDisbursementsCount ??
                   pendingDisbursements.length}
               </p>
-              <p className="text-xs text-slate-500 mt-1">APPROVED_BY_TEAM_LEADER</p>
+              <p className="text-xs text-slate-500 mt-1">
+                APPROVED_BY_TEAM_LEADER
+              </p>
             </div>
             <span className="w-9 h-9 rounded-lg bg-linear-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </span>
           </div>
         </Link>
@@ -523,7 +537,19 @@ export function AccountantDashboard() {
               </p>
             </div>
             <span className="w-9 h-9 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M7 11l5-5m0 0l5 5m-5-5v12"
+                />
+              </svg>
             </span>
           </div>
         </div>
@@ -535,12 +561,26 @@ export function AccountantDashboard() {
               <p className="text-3xl font-bold text-rose-700 mt-1">
                 {formatCurrency(dashboard?.monthlyOutflow ?? 0)}
               </p>
-              <p className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+              <p
+                className={`text-xs mt-1 ${monthlyNetFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+              >
                 Dòng tiền ròng: {formatCurrency(monthlyNetFlow)}
               </p>
             </div>
             <span className="w-9 h-9 rounded-lg bg-linear-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center shadow-sm shrink-0">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 13l-5 5m0 0l-5-5m5 5V6" /></svg>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M17 13l-5 5m0 0l-5-5m5 5V6"
+                />
+              </svg>
             </span>
           </div>
         </div>
@@ -548,7 +588,9 @@ export function AccountantDashboard() {
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-lg font-semibold text-slate-900">Xu hướng dòng tiền</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Xu hướng dòng tiền
+          </h2>
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
             {PERIOD_OPTIONS.map((opt) => (
               <button
@@ -580,7 +622,10 @@ export function AccountantDashboard() {
 
         <div className="h-52">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={CASHFLOW[period]} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <AreaChart
+              data={CASHFLOW[period]}
+              margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="acctGradIn" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -591,12 +636,41 @@ export function AccountantDashboard() {
                   <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={fmtM} tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={40} />
+              <CartesianGrid
+                stroke="#f1f5f9"
+                strokeDasharray="3 3"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tickFormatter={fmtM}
+                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                axisLine={false}
+                tickLine={false}
+                width={40}
+              />
               <RechartsTooltip content={<CashFlowTooltip />} />
-              <Area type="monotone" dataKey="inflow" stroke="#10b981" strokeWidth={2} fill="url(#acctGradIn)" dot={false} />
-              <Area type="monotone" dataKey="outflow" stroke="#f43f5e" strokeWidth={2} fill="url(#acctGradOut)" dot={false} />
+              <Area
+                type="monotone"
+                dataKey="inflow"
+                stroke="#10b981"
+                strokeWidth={2}
+                fill="url(#acctGradIn)"
+                dot={false}
+              />
+              <Area
+                type="monotone"
+                dataKey="outflow"
+                stroke="#f43f5e"
+                strokeWidth={2}
+                fill="url(#acctGradOut)"
+                dot={false}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>

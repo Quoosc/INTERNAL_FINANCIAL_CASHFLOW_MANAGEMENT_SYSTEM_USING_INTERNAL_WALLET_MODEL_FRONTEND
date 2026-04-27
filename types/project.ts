@@ -136,8 +136,8 @@ export interface PhaseCategoriesResponse {
 export interface CreatePhaseBody {
   name: string;
   budgetLimit: number;
-  startDate: string;          // "YYYY-MM-DD"
-  endDate: string;            // "YYYY-MM-DD"
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string; // "YYYY-MM-DD"
 }
 
 /** PUT /team-leader/projects/:id/phases/:phaseId — body */

@@ -4,7 +4,10 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
-import { RequestStatusBadge, RequestTypeBadge } from "@/components/ui/status-badge";
+import {
+  RequestStatusBadge,
+  RequestTypeBadge,
+} from "@/components/ui/status-badge";
 import { useToast } from "@/contexts/toast-context";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 
@@ -91,15 +94,20 @@ function parseDescription(description: string | null): ParsedDescription {
 
   const lines = description.split("\n").map((line) => line.trim());
   const titleLine = lines.find((line) => line.startsWith("Tiêu đề:"));
-  const expenseDateLine = lines.find((line) => line.startsWith("Ngày chi tiêu:"));
+  const expenseDateLine = lines.find((line) =>
+    line.startsWith("Ngày chi tiêu:"),
+  );
 
   const bodyLines = lines.filter(
-    (line) => !line.startsWith("Tiêu đề:") && !line.startsWith("Ngày chi tiêu:")
+    (line) =>
+      !line.startsWith("Tiêu đề:") && !line.startsWith("Ngày chi tiêu:"),
   );
 
   return {
     title: titleLine ? titleLine.replace("Tiêu đề:", "").trim() : "",
-    expenseDate: expenseDateLine ? expenseDateLine.replace("Ngày chi tiêu:", "").trim() : "",
+    expenseDate: expenseDateLine
+      ? expenseDateLine.replace("Ngày chi tiêu:", "").trim()
+      : "",
     body: bodyLines.join("\n").trim(),
   };
 }
@@ -125,7 +133,7 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
   ];
 
   const sortedTimeline = [...request.timeline].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
   sortedTimeline.forEach((entry) => {
@@ -195,7 +203,9 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
     case RequestStatus.REJECTED:
       rows.push({
         title: "Yêu cầu kết thúc với trạng thái từ chối",
-        subtitle: request.rejectReason ? `Lý do: ${request.rejectReason}` : "Không có lý do chi tiết",
+        subtitle: request.rejectReason
+          ? `Lý do: ${request.rejectReason}`
+          : "Không có lý do chi tiết",
         time: "Hiện tại",
         tone: "rejected",
       });
@@ -269,10 +279,12 @@ export default function RequestDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);  const [confirmState, setConfirmState] = useState<{ open: boolean; message: string; onConfirm: () => void }>(
-    { open: false, message: "", onConfirm: () => {} }
-  );
-
+  const [actionLoading, setActionLoading] = useState(false);
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, message: "", onConfirm: () => {} });
 
   const [editAmount, setEditAmount] = useState("");
   const [editTitle, setEditTitle] = useState("");
@@ -287,7 +299,9 @@ export default function RequestDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        const res = await api.get<RequestDetailResponse>(`/api/v1/requests/${id}`);
+        const res = await api.get<RequestDetailResponse>(
+          `/api/v1/requests/${id}`,
+        );
 
         if (cancelled) return;
         setRequest(res.data);
@@ -317,8 +331,14 @@ export default function RequestDetailPage({ params }: PageProps) {
     };
   }, [id]);
 
-  const parsed = useMemo(() => parseDescription(request?.description ?? ""), [request]);
-  const timelineRows = useMemo(() => (request ? buildTimelineRows(request) : []), [request]);
+  const parsed = useMemo(
+    () => parseDescription(request?.description ?? ""),
+    [request],
+  );
+  const timelineRows = useMemo(
+    () => (request ? buildTimelineRows(request) : []),
+    [request],
+  );
 
   const canEditOrCancel = request?.status === RequestStatus.PENDING;
 
@@ -375,7 +395,10 @@ export default function RequestDetailPage({ params }: PageProps) {
     setActionLoading(true);
 
     try {
-      const res = await api.put<RequestDetailResponse>(`/api/v1/requests/${id}`, updateBody);
+      const res = await api.put<RequestDetailResponse>(
+        `/api/v1/requests/${id}`,
+        updateBody,
+      );
       setRequest(res.data);
       setEditing(false);
       toast.success("Yêu cầu đã được cập nhật thành công!");
@@ -388,14 +411,16 @@ export default function RequestDetailPage({ params }: PageProps) {
               description: mergedDescription,
               updatedAt: new Date().toISOString(),
             }
-          : prev
+          : prev,
       );
       setEditing(false);
 
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
-        setError("Không thể cập nhật qua API, đã cập nhật dữ liệu mẫu trên giao diện.");
+        setError(
+          "Không thể cập nhật qua API, đã cập nhật dữ liệu mẫu trên giao diện.",
+        );
       }
     } finally {
       setActionLoading(false);
@@ -447,8 +472,18 @@ export default function RequestDetailPage({ params }: PageProps) {
           onClick={() => router.push("/requests")}
           className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Quay lại danh sách
         </button>
@@ -466,16 +501,30 @@ export default function RequestDetailPage({ params }: PageProps) {
         onClick={() => router.push("/requests")}
         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
         Quay lại danh sách
       </button>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{request.requestCode}</h1>
-          <p className="text-slate-500 text-sm mt-1">Tạo lúc: {formatDateTime(request.createdAt)}</p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {request.requestCode}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Tạo lúc: {formatDateTime(request.createdAt)}
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -487,15 +536,40 @@ export default function RequestDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
-            <h2 className="text-lg font-semibold text-slate-900">Chi tiết yêu cầu</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Chi tiết yêu cầu
+            </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DetailCell label="Số tiền" value={formatCurrency(request.amount)} />
+              <DetailCell
+                label="Số tiền"
+                value={formatCurrency(request.amount)}
+              />
               <DetailCell label="Tiêu đề" value={parsed.title || "—"} />
-              <DetailCell label="Dự án" value={`${request.projectCode ?? ""} ${request.projectName ?? ""}`.trim() || "—"} />
-              <DetailCell label="Phase" value={`${request.phaseCode ?? ""} ${request.phaseName ?? ""}`.trim() || "—"} />
-              <DetailCell label="Category" value={request.categoryName ?? "—"} />
-              <DetailCell label="Ngày chi tiêu" value={parsed.expenseDate ? formatDate(parsed.expenseDate) : "—"} />
+              <DetailCell
+                label="Dự án"
+                value={
+                  `${request.projectCode ?? ""} ${request.projectName ?? ""}`.trim() ||
+                  "—"
+                }
+              />
+              <DetailCell
+                label="Phase"
+                value={
+                  `${request.phaseCode ?? ""} ${request.phaseName ?? ""}`.trim() ||
+                  "—"
+                }
+              />
+              <DetailCell
+                label="Category"
+                value={request.categoryName ?? "—"}
+              />
+              <DetailCell
+                label="Ngày chi tiêu"
+                value={
+                  parsed.expenseDate ? formatDate(parsed.expenseDate) : "—"
+                }
+              />
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
@@ -507,7 +581,9 @@ export default function RequestDetailPage({ params }: PageProps) {
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Tệp đính kèm</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              Tệp đính kèm
+            </h2>
 
             {request.attachments.length === 0 ? (
               <p className="text-sm text-slate-500">Không có tệp đính kèm.</p>
@@ -519,7 +595,9 @@ export default function RequestDetailPage({ params }: PageProps) {
                     className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-white"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm text-slate-900 truncate">{file.fileName}</p>
+                      <p className="text-sm text-slate-900 truncate">
+                        {file.fileName}
+                      </p>
                       <p className="text-xs text-slate-500 mt-1">
                         {file.fileType} • {formatAttachmentSize(file.size)}
                       </p>
@@ -549,7 +627,9 @@ export default function RequestDetailPage({ params }: PageProps) {
 
           {canEditOrCancel && (
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Thao tác</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                Thao tác
+              </h2>
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -574,7 +654,9 @@ export default function RequestDetailPage({ params }: PageProps) {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Timeline xử lý</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+            Timeline xử lý
+          </h2>
 
           <div className="space-y-3">
             {timelineRows.map((row, index) => (
@@ -585,8 +667,12 @@ export default function RequestDetailPage({ params }: PageProps) {
                 <span
                   className={`absolute left-0 top-1 w-[22px] h-[22px] rounded-full border-2 ${getTimelineToneClass(row.tone)}`}
                 />
-                <div className={`rounded-xl border p-3 ${getTimelineCardClass(row.tone)}`}>
-                  <p className="text-sm font-semibold text-slate-900">{row.title}</p>
+                <div
+                  className={`rounded-xl border p-3 ${getTimelineCardClass(row.tone)}`}
+                >
+                  <p className="text-sm font-semibold text-slate-900">
+                    {row.title}
+                  </p>
                   <p className="text-xs text-slate-600 mt-1">{row.subtitle}</p>
                   <p className="text-xs text-slate-500 mt-1">{row.time}</p>
                 </div>
@@ -612,22 +698,34 @@ export default function RequestDetailPage({ params }: PageProps) {
           />
 
           <div className="absolute inset-x-0 top-8 mx-auto w-[calc(100%-2rem)] max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-sm shadow-2xl p-6">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Chỉnh sửa yêu cầu</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-4">
+              Chỉnh sửa yêu cầu
+            </h3>
 
             <form onSubmit={handleUpdate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Số tiền
+                </label>
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={editAmount ? formatCurrency(Number(editAmount.replace(/\D/g, ""))) : ""}
-                  onChange={(e) => setEditAmount(e.target.value.replace(/\D/g, ""))}
+                  value={
+                    editAmount
+                      ? formatCurrency(Number(editAmount.replace(/\D/g, "")))
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setEditAmount(e.target.value.replace(/\D/g, ""))
+                  }
                   className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Tiêu đề</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Tiêu đề
+                </label>
                 <input
                   type="text"
                   value={editTitle}
@@ -637,7 +735,9 @@ export default function RequestDetailPage({ params }: PageProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Ngày chi tiêu</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Ngày chi tiêu
+                </label>
                 <input
                   type="date"
                   value={editExpenseDate}
@@ -647,7 +747,9 @@ export default function RequestDetailPage({ params }: PageProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Mô tả</label>
+                <label className="block text-sm font-medium text-slate-600 mb-2">
+                  Mô tả
+                </label>
                 <textarea
                   rows={4}
                   value={editDescription}

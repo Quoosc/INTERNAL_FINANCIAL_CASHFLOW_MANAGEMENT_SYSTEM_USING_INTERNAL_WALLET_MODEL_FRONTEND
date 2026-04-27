@@ -70,7 +70,7 @@ export interface ManagerRejectBody {
 export interface ManagerApproveResponse {
   id: number;
   requestCode: string;
-  status: "PAID";          // auto PAID cho PROJECT_TOPUP
+  status: "PAID"; // auto PAID cho PROJECT_TOPUP
   approvedAmount: number;
   comment: string | null;
 }

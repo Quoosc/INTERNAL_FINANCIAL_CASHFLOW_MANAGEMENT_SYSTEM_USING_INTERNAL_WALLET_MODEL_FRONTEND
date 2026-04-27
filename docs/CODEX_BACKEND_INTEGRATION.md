@@ -26,6 +26,7 @@ CLAUDE.md                     → conventions: types, api-client, Tailwind v4, i
 ```
 
 **Conventions cứng:**
+
 - Types: chỉ import từ `@/types` barrel — KHÔNG tự định nghĩa interface trùng với type có sẵn
 - API: chỉ dùng `api` từ `@/lib/api-client` — KHÔNG dùng `fetch` hoặc `axios` trực tiếp
 - `"use client"` chỉ khi cần hooks — default Server Component
@@ -39,6 +40,7 @@ CLAUDE.md                     → conventions: types, api-client, Tailwind v4, i
 ## Task 1 — Profile & Security (hoàn toàn chưa có UI)
 
 **Backend endpoints sẵn sàng:**
+
 ```
 GET  /api/v1/users/me/profile          → UserProfileResponse
 PUT  /api/v1/users/me/profile          body: UpdateProfileRequest → UserProfileResponse
@@ -55,9 +57,11 @@ GET  /api/v1/uploads/signature?folder=AVATAR  → { signature, timestamp, cloudN
 ### 1a. Tạo trang Profile (`app/(dashboard)/profile/page.tsx`)
 
 Tạo route mới `app/(dashboard)/profile/` gồm:
+
 - `page.tsx` — trang profile cá nhân (ALL ROLES)
 
 Nội dung trang:
+
 1. **Tab "Thông tin"**: Hiển thị + edit `fullName`, `email`, `phone`, `address` từ `UserProfileResponse`
    - Load: `GET /api/v1/users/me/profile`
    - Save: `PUT /api/v1/users/me/profile` với body `UpdateProfileRequest`
@@ -84,6 +88,7 @@ Trong `app/(dashboard)/layout.tsx` (hoặc sidebar component), thêm menu item *
 ## Task 2 — Wallet: Transaction Detail Page
 
 **Backend endpoint sẵn sàng:**
+
 ```
 GET /api/v1/wallet/transactions/{transactionId}  → TransactionResponse
 ```
@@ -91,6 +96,7 @@ GET /api/v1/wallet/transactions/{transactionId}  → TransactionResponse
 **Việc cần làm:**
 
 Tạo `app/(dashboard)/wallet/transactions/[id]/page.tsx`:
+
 - Load: `GET /api/v1/wallet/transactions/${id}`
 - Type: `TransactionResponse`
 - Hiển thị: `transactionCode`, `type`, `status`, `amount`, `description`, `createdAt`, `referenceId`
@@ -98,6 +104,7 @@ Tạo `app/(dashboard)/wallet/transactions/[id]/page.tsx`:
 - Dùng `use(params)` để lấy `id` (Next.js 16)
 
 Trong `app/(dashboard)/wallet/transactions/page.tsx`:
+
 - Mỗi row trong danh sách giao dịch — wrap thành link `<Link href={/wallet/transactions/${tx.id}}>` hoặc thêm nút "Xem chi tiết"
 
 ---
@@ -105,6 +112,7 @@ Trong `app/(dashboard)/wallet/transactions/page.tsx`:
 ## Task 3 — Wallet: Withdrawal History (User)
 
 **Backend endpoints sẵn sàng:**
+
 ```
 GET    /api/v1/wallet/withdraw/my?page=0&size=10   → PageResponse<WithdrawRequestResponse>
 DELETE /api/v1/wallet/withdraw/{id}                → WithdrawRequestResponse  (cancel PENDING)
@@ -115,6 +123,7 @@ Hàm đã có trong `/lib/api/withdrawal.ts`: `getMyWithdrawRequests()`, `cancel
 **Việc cần làm:**
 
 Trong `app/(dashboard)/wallet/withdraw/page.tsx` (trang rút tiền hiện tại):
+
 - Thêm section "Lịch sử yêu cầu rút tiền" phía dưới form
 - Load: `getMyWithdrawRequests({ page: 0, size: 10 })`
 - Hiển thị danh sách dạng bảng: `amount`, `status`, `userNote`, `createdAt`
@@ -128,6 +137,7 @@ Types: `WithdrawRequestResponse` (xem `types/wallet.ts`)
 ## Task 4 — Accountant: Withdrawal Management
 
 **Backend endpoints sẵn sàng:**
+
 ```
 GET /api/v1/wallet/withdraw?status=PENDING&page=0&size=20  → PageResponse<WithdrawRequestResponse>
 PUT /api/v1/wallet/withdraw/{id}/execute                   → WithdrawRequestResponse
@@ -139,6 +149,7 @@ Hàm đã có: `getAllWithdrawRequests()`, `executeWithdraw(id)`, `rejectWithdra
 **Việc cần làm:**
 
 Tạo `app/(dashboard)/accountant/withdrawals/page.tsx`:
+
 - Chỉ render khi role = `ACCOUNTANT` (dùng `hasRole(RoleName.ACCOUNTANT)`)
 - Load: `getAllWithdrawRequests({ status: "PENDING", page: 0, size: 20 })`
 - Bảng: `requester.fullName`, `amount`, `bankAccount`, `bankName`, `userNote`, `createdAt`, `status`
@@ -153,6 +164,7 @@ Thêm link vào sidebar cho ACCOUNTANT: **"Yêu cầu rút tiền"** → `/accou
 ## Task 5 — Company Fund: Full Integration
 
 **Backend endpoints sẵn sàng (tất cả đã có hàm trong `/lib/api/company-fund.ts`):**
+
 ```
 POST /api/v1/company-fund/topup               body: SystemTopupRequest → TransactionResponse
 PUT  /api/v1/company-fund/bank-statement      body: UpdateBankStatementRequest → CompanyFundResponse
@@ -166,6 +178,7 @@ Hiện tại `app/(dashboard)/admin/system-fund/page.tsx` và `app/(dashboard)/c
 ### 5a. Nút "Nạp quỹ hệ thống"
 
 Trong cả hai trang `admin/system-fund` và `cfo/system-fund`:
+
 - Thêm nút **"Nạp tiền từ ngân hàng"**
 - Mở modal form: `amount` (số tiền), `description` (ghi chú), `referenceCode` (mã tham chiếu ngân hàng)
 - Submit: `topupCompanyFund({ amount, description, referenceCode })`
@@ -190,6 +203,7 @@ Trong cả hai trang `admin/system-fund` và `cfo/system-fund`:
 ## Task 6 — Admin Settings: Replace Mock with Real API
 
 **Backend endpoints sẵn sàng:**
+
 ```
 GET    /api/v1/system-configs            → SystemConfigItem[]
 GET    /api/v1/system-configs/{key}      → SystemConfigItem
@@ -204,6 +218,7 @@ Tất cả hàm đã có trong `/lib/api/system-config.ts`: `getAllConfigs()`, `
 **Việc cần làm:**
 
 Trong `app/(dashboard)/admin/settings/page.tsx`:
+
 - Xoá `MOCK_SETTINGS` constant và `// TODO: Replace when Sprint 6 is complete` comment
 - Thay bằng `useEffect` gọi `getAllConfigs()` thật
 - Edit inline: khi user sửa một config value → `PUT /api/v1/system-configs/{key}` qua `updateConfig(key, newValue)`
@@ -215,6 +230,7 @@ Trong `app/(dashboard)/admin/settings/page.tsx`:
 ## Task 7 — Notifications: Verify & Fix Unread Badge
 
 **Backend endpoints sẵn sàng:**
+
 ```
 GET   /api/v1/notifications?unreadOnly=false&page=0&size=20  → NotificationListResponse
 GET   /api/v1/notifications/unread-count                     → number
@@ -227,11 +243,13 @@ Hàm đã có trong `/lib/api/notification.ts`. Trang `notifications/page.tsx` �
 **Việc cần làm:**
 
 ### 7a. Xoá mock fallback trong `notifications/page.tsx`
+
 - Xoá `MOCK_NOTIFICATIONS` array
 - Xoá logic `catch` dùng mock — khi API lỗi chỉ set `error` state, không dùng mock
 - Đảm bảo real API được gọi ngay từ `useEffect` ban đầu
 
 ### 7b. Unread count badge trong sidebar/header
+
 - Gọi `getUnreadCount()` (`GET /api/v1/notifications/unread-count`) khi mount
 - Hiển thị badge số đỏ bên cạnh menu item "Thông báo" trong sidebar nếu count > 0
 - Re-fetch count sau khi `markAllAsRead()` được gọi
@@ -242,6 +260,7 @@ Hàm đã có trong `/lib/api/notification.ts`. Trang `notifications/page.tsx` �
 ## Task 8 — Requests: Phase Categories Integration
 
 **Backend endpoint sẵn sàng:**
+
 ```
 GET /api/v1/projects/{phaseId}   → ExpenseCategoryListResponse  (categories của 1 phase)
 ```
@@ -249,6 +268,7 @@ GET /api/v1/projects/{phaseId}   → ExpenseCategoryListResponse  (categories c�
 **Việc cần làm:**
 
 Trong `app/(dashboard)/requests/new/page.tsx` (form tạo yêu cầu):
+
 - Khi user chọn **Phase** → gọi `GET /api/v1/projects/${phaseId}` để load danh sách **Category**
 - Hiển thị dropdown **"Hạng mục chi phí"** populate từ kết quả
 - Type: `ExpenseCategoryResponse[]` (xem `types/project.ts`)
@@ -259,6 +279,7 @@ Trong `app/(dashboard)/requests/new/page.tsx` (form tạo yêu cầu):
 ## Task 9 — Verify PIN in Disbursement Flow
 
 **Backend endpoint sẵn sàng:**
+
 ```
 POST /api/v1/users/me/pin/verify   body: VerifyPinRequest → VerifyPinResponse { valid: boolean }
 ```
@@ -268,6 +289,7 @@ Type đã có: `VerifyPinRequest`, `VerifyPinResponse` trong `types/user.ts`.
 **Việc cần làm:**
 
 Trong `app/(dashboard)/accountant/disbursements/[id]/page.tsx` (màn hình giải ngân):
+
 - Nếu hiện tại form disbursement chỉ send PIN thẳng lên `POST /api/v1/accountant/disbursements/:id/disburse` → đây là đúng, **không cần verify trước** (backend tự verify PIN trong disburse endpoint)
 - Nếu có modal nhập PIN riêng chưa được wired → đảm bảo PIN được truyền vào body `DisburseBody.pin`
 - **Bonus**: Thêm bước verify PIN inline (`POST /users/me/pin/verify`) trước khi submit để UX nhanh hơn (optional, không bắt buộc)
@@ -276,17 +298,17 @@ Trong `app/(dashboard)/accountant/disbursements/[id]/page.tsx` (màn hình giả
 
 ## Thứ tự ưu tiên thực hiện
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 1 | **Task 6** — Admin Settings real API | Cao (xoá mock) | Thấp |
-| 2 | **Task 7** — Notifications fix + badge | Cao (UX) | Thấp |
-| 3 | **Task 2** — Transaction Detail page | Trung bình | Thấp |
-| 4 | **Task 3** — Withdrawal History (User) | Trung bình | Thấp |
-| 5 | **Task 1** — Profile page | Cao (chưa có) | Cao |
-| 6 | **Task 4** — Accountant Withdrawal Mgmt | Cao (chưa có) | Trung bình |
-| 7 | **Task 5** — Company Fund full | Trung bình | Trung bình |
-| 8 | **Task 8** — Phase Categories | Trung bình | Thấp |
-| 9 | **Task 9** — PIN verify disbursement | Thấp | Thấp |
+| #   | Task                                    | Impact         | Effort     |
+| --- | --------------------------------------- | -------------- | ---------- |
+| 1   | **Task 6** — Admin Settings real API    | Cao (xoá mock) | Thấp       |
+| 2   | **Task 7** — Notifications fix + badge  | Cao (UX)       | Thấp       |
+| 3   | **Task 2** — Transaction Detail page    | Trung bình     | Thấp       |
+| 4   | **Task 3** — Withdrawal History (User)  | Trung bình     | Thấp       |
+| 5   | **Task 1** — Profile page               | Cao (chưa có)  | Cao        |
+| 6   | **Task 4** — Accountant Withdrawal Mgmt | Cao (chưa có)  | Trung bình |
+| 7   | **Task 5** — Company Fund full          | Trung bình     | Trung bình |
+| 8   | **Task 8** — Phase Categories           | Trung bình     | Thấp       |
+| 9   | **Task 9** — PIN verify disbursement    | Thấp           | Thấp       |
 
 ---
 
@@ -294,13 +316,13 @@ Trong `app/(dashboard)/accountant/disbursements/[id]/page.tsx` (màn hình giả
 
 Các nhóm dưới đây chưa được xác nhận full contract trong lần sync mới nhất và cần theo dõi riêng theo sprint:
 
-| Nhóm | Endpoint | Lý do |
-|------|----------|-------|
+| Nhóm                  | Endpoint           | Lý do                                                 |
+| --------------------- | ------------------ | ----------------------------------------------------- |
 | `/accountant/payroll` | Payroll management | Chưa xác nhận full contract trong scope sync hiện tại |
-| `/accountant/ledger` | Ledger entries | Chưa xác nhận full contract trong scope sync hiện tại |
-| `/cfo/approvals` | Flow 3 approvals | Chưa xác nhận full contract trong scope sync hiện tại |
-| `/admin/departments` | CRUD departments | Chưa xác nhận full contract trong scope sync hiện tại |
-| `/admin/audit-logs` | Audit log list | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/accountant/ledger`  | Ledger entries     | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/cfo/approvals`      | Flow 3 approvals   | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/admin/departments`  | CRUD departments   | Chưa xác nhận full contract trong scope sync hiện tại |
+| `/admin/audit-logs`   | Audit log list     | Chưa xác nhận full contract trong scope sync hiện tại |
 
 ---
 

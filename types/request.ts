@@ -60,7 +60,7 @@ export interface RequestAttachmentResponse {
   fileId: number;
   fileName: string;
   cloudinaryPublicId?: string;
-  url: string;                      // Signed URL Cloudinary (15 min)
+  url: string; // Signed URL Cloudinary (15 min)
   fileType: string;
   size: number;
 }
@@ -139,7 +139,7 @@ export interface CreateRequestBody {
   categoryId?: number;
   amount: number;
   description: string;
-  attachmentFileIds?: number[];    // file_storages.id
+  attachmentFileIds?: number[]; // file_storages.id
 }
 
 /** PUT /requests/:id — body (chỉ khi PENDING) */

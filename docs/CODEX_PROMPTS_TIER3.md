@@ -56,8 +56,8 @@ import { api } from "@/lib/api-client";
 
 ### 🔌 API endpoints
 
-| Method | Endpoint                            | Sprint     |
-| ------ | ----------------------------------- | ---------- |
+| Method | Endpoint                                  | Sprint     |
+| ------ | ----------------------------------------- | ---------- |
 | GET    | `/api/v1/manager/approvals?page=0&size=3` | Sprint 4-5 |
 | GET    | `/api/v1/manager/projects?page=0&size=4`  | Sprint 4   |
 

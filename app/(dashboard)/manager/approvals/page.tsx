@@ -23,7 +23,8 @@ const MOCK_APPROVALS: ManagerApprovalListItem[] = [
     type: RequestType.PROJECT_TOPUP,
     status: RequestStatus.PENDING,
     amount: 50_000_000,
-    description: "Xin cấp vốn bổ sung Phase 2 - nhóm IT thiếu ngân sách phát triển module báo cáo",
+    description:
+      "Xin cấp vốn bổ sung Phase 2 - nhóm IT thiếu ngân sách phát triển module báo cáo",
     requester: {
       id: 4,
       fullName: "Hoàng Minh Tuấn",
@@ -46,7 +47,8 @@ const MOCK_APPROVALS: ManagerApprovalListItem[] = [
     type: RequestType.PROJECT_TOPUP,
     status: RequestStatus.PENDING,
     amount: 30_000_000,
-    description: "Cấp vốn phase triển khai - mua thêm server và license phần mềm",
+    description:
+      "Cấp vốn phase triển khai - mua thêm server và license phần mềm",
     requester: {
       id: 4,
       fullName: "Hoàng Minh Tuấn",
@@ -88,14 +90,15 @@ const MOCK_APPROVALS: ManagerApprovalListItem[] = [
   },
 ];
 
-
-
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
   return Number.isFinite(page) && page > 0 ? page : 1;
 }
 
-function filterMock(items: ManagerApprovalListItem[], search = ""): ManagerApprovalListItem[] {
+function filterMock(
+  items: ManagerApprovalListItem[],
+  search = "",
+): ManagerApprovalListItem[] {
   const q = search.trim().toLowerCase();
   return items.filter((item) => {
     if (item.type !== RequestType.PROJECT_TOPUP) return false;
@@ -103,7 +106,8 @@ function filterMock(items: ManagerApprovalListItem[], search = ""): ManagerAppro
 
     if (!q) return true;
 
-    const haystack = `${item.requestCode} ${item.requester.fullName} ${item.project.projectCode} ${item.project.name}`.toLowerCase();
+    const haystack =
+      `${item.requestCode} ${item.requester.fullName} ${item.project.projectCode} ${item.project.name}`.toLowerCase();
     return haystack.includes(q);
   });
 }
@@ -118,8 +122,14 @@ export default function ManagerApprovalsPage() {
   const searchParams = useSearchParams();
 
   const searchParamsString = searchParams.toString();
-  const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
-  const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const search = useMemo(
+    () => searchParams.get("search") ?? "",
+    [searchParams],
+  );
+  const page = useMemo(
+    () => parsePage(searchParams.get("page")),
+    [searchParams],
+  );
 
   const [items, setItems] = useState<ManagerApprovalListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -137,7 +147,7 @@ export default function ManagerApprovalsPage() {
       const query = params.toString();
       router.push(query ? `${pathname}?${query}` : pathname);
     },
-    [pathname, router]
+    [pathname, router],
   );
 
   const updateParam = useCallback(
@@ -152,7 +162,7 @@ export default function ManagerApprovalsPage() {
       if (key !== "page") params.delete("page");
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   const goToPage = useCallback(
@@ -162,7 +172,7 @@ export default function ManagerApprovalsPage() {
       else params.set("page", String(nextPage));
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   useEffect(() => {
@@ -196,19 +206,21 @@ export default function ManagerApprovalsPage() {
         query.set("page", String(toApiPage(filters.page ?? 1)));
         query.set("size", String(filters.size ?? PAGE_LIMIT));
 
-        const res = await api.get<PaginatedResponse<ManagerApprovalListItem> | ManagerApprovalListItem[]>(
-          `/api/v1/manager/approvals?${query.toString()}`
-        );
+        const res = await api.get<
+          PaginatedResponse<ManagerApprovalListItem> | ManagerApprovalListItem[]
+        >(`/api/v1/manager/approvals?${query.toString()}`);
 
         if (cancelled) return;
 
         const filteredItems = pickItems(res.data).filter(
           (item) =>
             item.type === RequestType.PROJECT_TOPUP &&
-            item.status === RequestStatus.PENDING
+            item.status === RequestStatus.PENDING,
         );
 
-        const apiTotal = Array.isArray(res.data) ? filteredItems.length : res.data.total;
+        const apiTotal = Array.isArray(res.data)
+          ? filteredItems.length
+          : res.data.total;
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
           : res.data.totalPages;
@@ -254,8 +266,12 @@ export default function ManagerApprovalsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Duyệt cấp vốn dự án</h1>
-          <p className="text-slate-500 mt-1">Flow 2: chỉ xử lý PROJECT_TOPUP từ Team Leaders.</p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Duyệt cấp vốn dự án
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Flow 2: chỉ xử lý PROJECT_TOPUP từ Team Leaders.
+          </p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-300 bg-amber-100 text-amber-700 text-sm font-medium">
           {total} chờ duyệt
@@ -263,7 +279,8 @@ export default function ManagerApprovalsPage() {
       </div>
 
       <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-        Phê duyệt sẽ tự động cấp vốn từ quỹ phòng ban sang dự án, không cần qua Kế toán.
+        Phê duyệt sẽ tự động cấp vốn từ quỹ phòng ban sang dự án, không cần qua
+        Kế toán.
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
@@ -295,7 +312,12 @@ export default function ManagerApprovalsPage() {
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
           <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -304,7 +326,9 @@ export default function ManagerApprovalsPage() {
               />
             </svg>
           </div>
-          <p className="text-slate-600 mt-4">Không có yêu cầu PROJECT_TOPUP chờ duyệt.</p>
+          <p className="text-slate-600 mt-4">
+            Không có yêu cầu PROJECT_TOPUP chờ duyệt.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -323,25 +347,39 @@ export default function ManagerApprovalsPage() {
                     <span className="inline-flex px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700">
                       Cấp vốn DA
                     </span>
-                    <span className="font-mono text-slate-600">{item.requestCode}</span>
-                    <span className="text-slate-500">{formatDateTime(item.createdAt)}</span>
+                    <span className="font-mono text-slate-600">
+                      {item.requestCode}
+                    </span>
+                    <span className="text-slate-500">
+                      {formatDateTime(item.createdAt)}
+                    </span>
                   </div>
 
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-900">{item.requester.fullName}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {item.requester.fullName}
+                    </p>
                     <p className="text-sm text-slate-600">
-                      {item.project.name} <span className="text-slate-500">({item.project.projectCode})</span>
+                      {item.project.name}{" "}
+                      <span className="text-slate-500">
+                        ({item.project.projectCode})
+                      </span>
                     </p>
                     <p className="text-xs text-slate-500">
-                      Ngân sách DA hiện có: {formatCurrency(item.project.availableBudget)}
+                      Ngân sách DA hiện có:{" "}
+                      {formatCurrency(item.project.availableBudget)}
                     </p>
                   </div>
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-1">
-                      <p className="text-2xl font-bold text-slate-900">{formatCurrency(item.amount)}</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(item.amount)}
+                      </p>
                       {overBudget && (
-                        <p className="text-sm text-rose-700 font-medium">Vượt ngân sách DA</p>
+                        <p className="text-sm text-rose-700 font-medium">
+                          Vượt ngân sách DA
+                        </p>
                       )}
                     </div>
 
@@ -351,7 +389,9 @@ export default function ManagerApprovalsPage() {
                   </div>
 
                   {item.description && (
-                    <p className="text-sm text-slate-500 line-clamp-2">{item.description}</p>
+                    <p className="text-sm text-slate-500 line-clamp-2">
+                      {item.description}
+                    </p>
                   )}
                 </div>
               </button>

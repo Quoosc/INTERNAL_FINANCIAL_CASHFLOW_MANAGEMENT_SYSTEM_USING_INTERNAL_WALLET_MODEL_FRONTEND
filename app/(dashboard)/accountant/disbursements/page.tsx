@@ -174,8 +174,6 @@ const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
   },
 ];
 
-
-
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
   return Number.isFinite(page) && page > 0 ? page : 1;

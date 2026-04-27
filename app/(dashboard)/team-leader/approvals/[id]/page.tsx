@@ -50,7 +50,10 @@ interface TLApprovalDetailView {
   timeline: NonNullable<TLApprovalDetailResponse["timeline"]>;
 }
 
-const PHASE_BUDGET_FALLBACK: Record<number, { budgetLimit: number; currentSpent: number }> = {
+const PHASE_BUDGET_FALLBACK: Record<
+  number,
+  { budgetLimit: number; currentSpent: number }
+> = {
   1: { budgetLimit: 50_000_000, currentSpent: 47_000_000 },
   2: { budgetLimit: 80_000_000, currentSpent: 31_000_000 },
   3: { budgetLimit: 30_000_000, currentSpent: 8_500_000 },
@@ -94,7 +97,8 @@ const MOCK_DETAIL: TLApprovalDetailView = {
       fileId: 2,
       fileName: "bang_bao_gia.xlsx",
       url: "#",
-      fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      fileType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       size: 184_000,
     },
   ],
@@ -111,7 +115,9 @@ const MOCK_DETAIL: TLApprovalDetailView = {
   ],
 };
 
-function toTLApprovalDetailView(detail: TLApprovalDetailResponse): TLApprovalDetailView {
+function toTLApprovalDetailView(
+  detail: TLApprovalDetailResponse,
+): TLApprovalDetailView {
   return {
     id: detail.id,
     requestCode: detail.requestCode,
@@ -141,8 +147,6 @@ function toTLApprovalDetailView(detail: TLApprovalDetailResponse): TLApprovalDet
     timeline: detail.timeline ?? [],
   };
 }
-
-
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -219,26 +223,66 @@ function getTimelineIcon(action: RequestAction): React.ReactNode {
   switch (action) {
     case RequestAction.APPROVE:
       return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M5 13l4 4L19 7"
+          />
         </svg>
       );
     case RequestAction.REJECT:
       return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       );
     case RequestAction.PAYOUT:
       return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1"
+          />
         </svg>
       );
     default:
       return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       );
   }
@@ -264,42 +308,115 @@ function getAttachmentIcon(fileType: string): React.ReactNode {
 
   if (lower.includes("pdf")) {
     return (
-      <svg className="w-5 h-5 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 3h7l5 5v13H7V3zm7 0v5h5" />
+      <svg
+        className="w-5 h-5 text-rose-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M7 3h7l5 5v13H7V3zm7 0v5h5"
+        />
       </svg>
     );
   }
 
   if (lower.includes("image")) {
     return (
-      <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11l3 3 2-2 4 4" />
+      <svg
+        className="w-5 h-5 text-emerald-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M8 11l3 3 2-2 4 4"
+        />
       </svg>
     );
   }
 
-  if (lower.includes("excel") || lower.includes("spreadsheet") || lower.includes("sheet")) {
+  if (
+    lower.includes("excel") ||
+    lower.includes("spreadsheet") ||
+    lower.includes("sheet")
+  ) {
     return (
-      <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 3h10l4 4v14H7V3zm10 0v4h4" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 10l4 6m0-6l-4 6" />
+      <svg
+        className="w-5 h-5 text-emerald-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M7 3h10l4 4v14H7V3zm10 0v4h4"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M10 10l4 6m0-6l-4 6"
+        />
       </svg>
     );
   }
 
-  if (lower.includes("word") || lower.includes("document") || lower.includes("doc")) {
+  if (
+    lower.includes("word") ||
+    lower.includes("document") ||
+    lower.includes("doc")
+  ) {
     return (
-      <svg className="w-5 h-5 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 3h10l4 4v14H7V3zm10 0v4h4" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 11l1.5 5L12 11l1.5 5L15 11" />
+      <svg
+        className="w-5 h-5 text-sky-700"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M7 3h10l4 4v14H7V3zm10 0v4h4"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M9 11l1.5 5L12 11l1.5 5L15 11"
+        />
       </svg>
     );
   }
 
   return (
-    <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 3h10l4 4v14H7V3zm10 0v4h4" />
+    <svg
+      className="w-5 h-5 text-slate-600"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M7 3h10l4 4v14H7V3zm10 0v4h4"
+      />
     </svg>
   );
 }
@@ -328,7 +445,9 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        const res = await api.get<unknown>(`/api/v1/team-leader/approvals/${id}`);
+        const res = await api.get<unknown>(
+          `/api/v1/team-leader/approvals/${id}`,
+        );
 
         if (cancelled) return;
 
@@ -342,8 +461,10 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
 
         setRequest({
           ...mapped,
-          phaseBudgetLimit: mapped.phaseBudgetLimit ?? fallbackBudget?.budgetLimit,
-          phaseCurrentSpent: mapped.phaseCurrentSpent ?? fallbackBudget?.currentSpent,
+          phaseBudgetLimit:
+            mapped.phaseBudgetLimit ?? fallbackBudget?.budgetLimit,
+          phaseCurrentSpent:
+            mapped.phaseCurrentSpent ?? fallbackBudget?.currentSpent,
         });
       } catch (err) {
         if (cancelled) return;
@@ -375,16 +496,25 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
   const budgetSummary = useMemo(() => {
     if (!request) return null;
 
-    const fromMap = request.phaseId ? PHASE_BUDGET_FALLBACK[request.phaseId] : undefined;
-    const budgetLimit = request.phaseBudgetLimit ?? fromMap?.budgetLimit ?? Math.max(request.amount, 1);
-    const currentSpent = request.phaseCurrentSpent ?? fromMap?.currentSpent ?? 0;
+    const fromMap = request.phaseId
+      ? PHASE_BUDGET_FALLBACK[request.phaseId]
+      : undefined;
+    const budgetLimit =
+      request.phaseBudgetLimit ??
+      fromMap?.budgetLimit ??
+      Math.max(request.amount, 1);
+    const currentSpent =
+      request.phaseCurrentSpent ?? fromMap?.currentSpent ?? 0;
     const totalAfter = currentSpent + request.amount;
 
     const safeLimit = Math.max(1, budgetLimit);
-    const spentPercent = Math.max(0, Math.min(100, (currentSpent / safeLimit) * 100));
+    const spentPercent = Math.max(
+      0,
+      Math.min(100, (currentSpent / safeLimit) * 100),
+    );
     const requestPercent = Math.max(
       0,
-      Math.min(100 - spentPercent, (request.amount / safeLimit) * 100)
+      Math.min(100 - spentPercent, (request.amount / safeLimit) * 100),
     );
 
     const severityClass =
@@ -444,7 +574,10 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
     };
 
     try {
-      await api.post<TLApproveResponse>(`/api/v1/team-leader/approvals/${id}/approve`, body);
+      await api.post<TLApproveResponse>(
+        `/api/v1/team-leader/approvals/${id}/approve`,
+        body,
+      );
       router.push("/team-leader/approvals");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -471,7 +604,10 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
     const body: TLRejectBody = { reason: rejectReason.trim() };
 
     try {
-      await api.post<TLRejectResponse>(`/api/v1/team-leader/approvals/${id}/reject`, body);
+      await api.post<TLRejectResponse>(
+        `/api/v1/team-leader/approvals/${id}/reject`,
+        body,
+      );
       router.push("/team-leader/approvals");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -497,9 +633,22 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
   if (!request) {
     return (
       <div className="space-y-4">
-        <Link href="/team-leader/approvals" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+        <Link
+          href="/team-leader/approvals"
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Quay lại danh sách
         </Link>
@@ -511,13 +660,16 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
   }
 
   const sortedTimeline = [...request.timeline].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/team-leader/approvals" className="hover:text-slate-900 transition-colors">
+        <Link
+          href="/team-leader/approvals"
+          className="hover:text-slate-900 transition-colors"
+        >
           Duyệt yêu cầu
         </Link>
         <span>/</span>
@@ -528,32 +680,46 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500">Mã yêu cầu</p>
-            <h1 className="text-2xl font-bold text-slate-900 font-mono mt-1">{request.requestCode}</h1>
-            <p className="text-sm text-slate-500 mt-1">Tạo lúc {formatDateTime(request.createdAt)}</p>
+            <h1 className="text-2xl font-bold text-slate-900 font-mono mt-1">
+              {request.requestCode}
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Tạo lúc {formatDateTime(request.createdAt)}
+            </p>
           </div>
 
           <div className="flex flex-col items-start lg:items-end gap-2">
             <div className="flex flex-wrap gap-2">
-              <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getTypeClass(request.type)}`}>
+              <span
+                className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getTypeClass(request.type)}`}
+              >
                 {getTypeLabel(request.type)}
               </span>
-              <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getStatusClass(request.status)}`}>
+              <span
+                className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getStatusClass(request.status)}`}
+              >
                 {getStatusLabel(request.status)}
               </span>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{formatCurrency(request.amount)}</p>
+            <p className="text-2xl font-bold text-slate-900">
+              {formatCurrency(request.amount)}
+            </p>
           </div>
         </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Người gửi yêu cầu</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          Người gửi yêu cầu
+        </h2>
         <div className="mt-3 flex items-center gap-3">
           <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-900 flex items-center justify-center text-sm font-semibold">
             {getInitials(request.requesterName)}
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-900">{request.requesterName}</p>
+            <p className="text-sm font-medium text-slate-900">
+              {request.requesterName}
+            </p>
             <p className="text-xs text-slate-500">
               {request.requesterEmployeeCode ?? `ID ${request.requesterId}`}
               {request.requesterEmail ? ` • ${request.requesterEmail}` : ""}
@@ -565,17 +731,29 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Thông tin chi tiết</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Thông tin chi tiết
+            </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <InfoCard label="Mô tả" value={request.description || "Không có mô tả"} multiline />
+              <InfoCard
+                label="Mô tả"
+                value={request.description || "Không có mô tả"}
+                multiline
+              />
               <InfoCard
                 label="Dự án"
-                value={`${request.projectCode ?? ""} ${request.projectName ?? ""}`.trim() || "—"}
+                value={
+                  `${request.projectCode ?? ""} ${request.projectName ?? ""}`.trim() ||
+                  "—"
+                }
               />
               <InfoCard
                 label="Phase"
-                value={`${request.phaseCode ?? ""} ${request.phaseName ?? ""}`.trim() || "—"}
+                value={
+                  `${request.phaseCode ?? ""} ${request.phaseName ?? ""}`.trim() ||
+                  "—"
+                }
               />
               <InfoCard label="Danh mục" value={request.categoryName ?? "—"} />
             </div>
@@ -588,37 +766,57 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
               </h2>
 
               <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden flex">
-                <div className={`h-full ${budgetSummary.severityClass}`} style={{ width: `${budgetSummary.spentPercent}%` }} />
-                <div className="h-full bg-slate-300/60" style={{ width: `${budgetSummary.requestPercent}%` }} />
+                <div
+                  className={`h-full ${budgetSummary.severityClass}`}
+                  style={{ width: `${budgetSummary.spentPercent}%` }}
+                />
+                <div
+                  className="h-full bg-slate-300/60"
+                  style={{ width: `${budgetSummary.requestPercent}%` }}
+                />
               </div>
 
               <p className="text-sm text-slate-600">
-                {formatCurrency(budgetSummary.currentSpent)} đã dùng + {formatCurrency(request.amount)} yêu cầu ={" "}
-                {formatCurrency(budgetSummary.totalAfter)} / {formatCurrency(budgetSummary.budgetLimit)}
+                {formatCurrency(budgetSummary.currentSpent)} đã dùng +{" "}
+                {formatCurrency(request.amount)} yêu cầu ={" "}
+                {formatCurrency(budgetSummary.totalAfter)} /{" "}
+                {formatCurrency(budgetSummary.budgetLimit)}
               </p>
 
               {budgetSummary.overBudget && (
                 <div className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-                  ⚠ Yêu cầu này vượt ngân sách phase - xem xét kỹ trước khi duyệt
+                  ⚠ Yêu cầu này vượt ngân sách phase - xem xét kỹ trước khi
+                  duyệt
                 </div>
               )}
             </div>
           )}
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Tệp đính kèm</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Tệp đính kèm
+            </h2>
 
             {request.attachments.length === 0 ? (
               <p className="text-sm text-slate-500">Không có tệp đính kèm.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {request.attachments.map((file) => (
-                  <div key={file.fileId} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
+                  <div
+                    key={file.fileId}
+                    className="rounded-xl border border-slate-200 bg-white p-3 space-y-2"
+                  >
                     <div className="flex items-start gap-2">
-                      <span className="mt-0.5">{getAttachmentIcon(file.fileType)}</span>
+                      <span className="mt-0.5">
+                        {getAttachmentIcon(file.fileType)}
+                      </span>
                       <div className="min-w-0">
-                        <p className="text-sm text-slate-900 truncate">{file.fileName}</p>
-                        <p className="text-xs text-slate-500 mt-1">{formatFileSize(file.size)}</p>
+                        <p className="text-sm text-slate-900 truncate">
+                          {file.fileName}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {formatFileSize(file.size)}
+                        </p>
                       </div>
                     </div>
 
@@ -629,8 +827,18 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
                       className="inline-flex items-center gap-1 text-sm text-blue-700 hover:text-blue-600"
                     >
                       Tải xuống
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v14m0 0l-4-4m4 4l4-4" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M12 5v14m0 0l-4-4m4 4l4-4"
+                        />
                       </svg>
                     </a>
                   </div>
@@ -641,7 +849,9 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
 
           {canTakeAction && (
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-              <h2 className="text-lg font-semibold text-slate-900">Thao tác phê duyệt</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Thao tác phê duyệt
+              </h2>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -664,7 +874,9 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Timeline</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+            Timeline
+          </h2>
 
           <div className="space-y-3">
             {sortedTimeline.map((entry, index) => (
@@ -676,10 +888,20 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
                   {getTimelineIcon(entry.action)}
                 </span>
                 <div className="rounded-xl border border-slate-200 bg-white p-3">
-                  <p className="text-sm font-medium text-slate-900">{getTimelineActionLabel(entry.action)}</p>
-                  <p className="text-xs text-slate-500 mt-1">{entry.actorName}</p>
-                  {entry.comment && <p className="text-xs text-slate-600 mt-1">{entry.comment}</p>}
-                  <p className="text-xs text-slate-500 mt-1">{formatDateTime(entry.createdAt)}</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {getTimelineActionLabel(entry.action)}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {entry.actorName}
+                  </p>
+                  {entry.comment && (
+                    <p className="text-xs text-slate-600 mt-1">
+                      {entry.comment}
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500 mt-1">
+                    {formatDateTime(entry.createdAt)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -703,13 +925,17 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
           />
 
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Xác nhận duyệt yêu cầu</h3>
+            <h3 className="text-xl font-bold text-slate-900">
+              Xác nhận duyệt yêu cầu
+            </h3>
             <p className="text-sm text-slate-500">
               {request.requestCode} - {request.requesterName}
             </p>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Số tiền duyệt</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Số tiền duyệt
+              </label>
               <input
                 type="number"
                 min={1}
@@ -718,11 +944,15 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
                 onChange={(event) => setApprovedAmount(event.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
               />
-              <p className="text-xs text-slate-500 mt-1">Tối đa {formatCurrency(request.amount)}</p>
+              <p className="text-xs text-slate-500 mt-1">
+                Tối đa {formatCurrency(request.amount)}
+              </p>
             </div>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Ghi chú</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Ghi chú
+              </label>
               <textarea
                 rows={4}
                 value={approveComment}
@@ -769,10 +999,14 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
           />
 
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Từ chối yêu cầu - {request.requestCode}</h3>
+            <h3 className="text-xl font-bold text-slate-900">
+              Từ chối yêu cầu - {request.requestCode}
+            </h3>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Lý do từ chối</label>
+              <label className="block text-sm text-slate-600 mb-2">
+                Lý do từ chối
+              </label>
               <textarea
                 rows={4}
                 value={rejectReason}
@@ -782,20 +1016,27 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {["Thiếu chứng từ", "Số tiền không hợp lý", "Không đúng danh mục", "Vượt ngân sách"].map(
-                (reasonChip) => (
-                  <button
-                    key={reasonChip}
-                    type="button"
-                    onClick={() =>
-                      setRejectReason((prev) => (prev.trim() ? `${prev.trim()}. ${reasonChip}` : reasonChip))
-                    }
-                    className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-600 hover:bg-slate-100"
-                  >
-                    {reasonChip}
-                  </button>
-                )
-              )}
+              {[
+                "Thiếu chứng từ",
+                "Số tiền không hợp lý",
+                "Không đúng danh mục",
+                "Vượt ngân sách",
+              ].map((reasonChip) => (
+                <button
+                  key={reasonChip}
+                  type="button"
+                  onClick={() =>
+                    setRejectReason((prev) =>
+                      prev.trim()
+                        ? `${prev.trim()}. ${reasonChip}`
+                        : reasonChip,
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-600 hover:bg-slate-100"
+                >
+                  {reasonChip}
+                </button>
+              ))}
             </div>
 
             {actionError && (
@@ -840,7 +1081,11 @@ function InfoCard({
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm text-slate-900 mt-1 ${multiline ? "whitespace-pre-line" : ""}`}>{value}</p>
+      <p
+        className={`text-sm text-slate-900 mt-1 ${multiline ? "whitespace-pre-line" : ""}`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

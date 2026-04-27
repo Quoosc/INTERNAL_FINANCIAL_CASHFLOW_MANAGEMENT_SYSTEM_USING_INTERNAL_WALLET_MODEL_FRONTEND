@@ -85,7 +85,9 @@ function mapTimeline(value: unknown): RequestTimelineEntry[] {
   });
 }
 
-export function normalizeTLApprovalListItem(input: unknown): TLApprovalListItem {
+export function normalizeTLApprovalListItem(
+  input: unknown,
+): TLApprovalListItem {
   const raw = asRecord(input);
   const requester = asRecord(raw.requester);
   const project = asRecord(raw.project);
@@ -113,26 +115,34 @@ export function normalizeTLApprovalListItem(input: unknown): TLApprovalListItem 
     project: {
       id: asNumber(project.id, 0),
       projectCode: asString(project.projectCode, "N/A"),
-      name: asNullableString(project.name) ?? asString(project.projectCode, "N/A"),
+      name:
+        asNullableString(project.name) ?? asString(project.projectCode, "N/A"),
     },
     phase: {
       id: asNumber(phase.id, 0),
       phaseCode: asString(phase.phaseCode, "N/A"),
       name: asNullableString(phase.name) ?? asString(phase.phaseCode, "N/A"),
       budgetLimit:
-        typeof phase.budgetLimit === "number" ? asNumber(phase.budgetLimit, 0) : undefined,
+        typeof phase.budgetLimit === "number"
+          ? asNumber(phase.budgetLimit, 0)
+          : undefined,
       currentSpent:
-        typeof phase.currentSpent === "number" ? asNumber(phase.currentSpent, 0) : undefined,
+        typeof phase.currentSpent === "number"
+          ? asNumber(phase.currentSpent, 0)
+          : undefined,
     },
     category:
       Number.isFinite(categoryId) || typeof category.name === "string"
         ? {
             id: Number.isFinite(categoryId) ? categoryId : 0,
-            name: asNullableString(raw.categoryName) ?? asNullableString(category.name),
+            name:
+              asNullableString(raw.categoryName) ??
+              asNullableString(category.name),
           }
         : null,
     categoryId: Number.isFinite(categoryId) ? categoryId : null,
-    categoryName: asNullableString(raw.categoryName) ?? asNullableString(category.name),
+    categoryName:
+      asNullableString(raw.categoryName) ?? asNullableString(category.name),
     attachments: mapAttachments(raw.attachments),
     createdAt: asString(raw.createdAt, new Date().toISOString()),
   };
@@ -143,7 +153,9 @@ export function normalizeTLApprovalList(input: unknown): TLApprovalListItem[] {
   return input.map((item) => normalizeTLApprovalListItem(item));
 }
 
-export function normalizeTLApprovalDetail(input: unknown): TLApprovalDetailResponse {
+export function normalizeTLApprovalDetail(
+  input: unknown,
+): TLApprovalDetailResponse {
   const raw = asRecord(input);
   const requester = asRecord(raw.requester);
   const project = asRecord(raw.project);
@@ -172,16 +184,21 @@ export function normalizeTLApprovalDetail(input: unknown): TLApprovalDetailRespo
     project: {
       id: asNumber(project.id, 0),
       projectCode: asString(project.projectCode, "N/A"),
-      name: asNullableString(project.name) ?? asString(project.projectCode, "N/A"),
+      name:
+        asNullableString(project.name) ?? asString(project.projectCode, "N/A"),
     },
     phase: {
       id: asNumber(phase.id, 0),
       phaseCode: asString(phase.phaseCode, "N/A"),
       name: asNullableString(phase.name) ?? asString(phase.phaseCode, "N/A"),
       budgetLimit:
-        typeof phase.budgetLimit === "number" ? asNumber(phase.budgetLimit, 0) : undefined,
+        typeof phase.budgetLimit === "number"
+          ? asNumber(phase.budgetLimit, 0)
+          : undefined,
       currentSpent:
-        typeof phase.currentSpent === "number" ? asNumber(phase.currentSpent, 0) : undefined,
+        typeof phase.currentSpent === "number"
+          ? asNumber(phase.currentSpent, 0)
+          : undefined,
     },
     categoryId:
       raw.categoryId === null || raw.categoryId === undefined
@@ -191,6 +208,9 @@ export function normalizeTLApprovalDetail(input: unknown): TLApprovalDetailRespo
     attachments: mapAttachments(raw.attachments),
     timeline: mapTimeline(raw.timeline),
     createdAt: asString(raw.createdAt, new Date().toISOString()),
-    updatedAt: asString(raw.updatedAt, asString(raw.createdAt, new Date().toISOString())),
+    updatedAt: asString(
+      raw.updatedAt,
+      asString(raw.createdAt, new Date().toISOString()),
+    ),
   };
 }

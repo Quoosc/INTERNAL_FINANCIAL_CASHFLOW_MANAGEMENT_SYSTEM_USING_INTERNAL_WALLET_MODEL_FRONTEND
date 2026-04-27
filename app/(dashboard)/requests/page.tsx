@@ -5,7 +5,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { RequestStatusBadge, RequestTypeBadge } from "@/components/ui/status-badge";
+import {
+  RequestStatusBadge,
+  RequestTypeBadge,
+} from "@/components/ui/status-badge";
 import {
   PaginatedResponse,
   RequestFilterParams,
@@ -188,7 +191,9 @@ function parseType(value: string | null): RequestType | undefined {
   return valid.has(value) ? (value as RequestType) : undefined;
 }
 
-function buildInitialState(searchParams: { get: (key: string) => string | null }): {
+function buildInitialState(searchParams: {
+  get: (key: string) => string | null;
+}): {
   filters: RequestFilterParams;
   fromDate: string;
   toDate: string;
@@ -214,7 +219,7 @@ function filterMock(
   source: RequestListItem[],
   filters: RequestFilterParams,
   fromDate: string,
-  toDate: string
+  toDate: string,
 ): RequestListItem[] {
   return source.filter((item) => {
     if (filters.status && item.status !== filters.status) return false;
@@ -238,7 +243,10 @@ export default function RequestsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initial = useMemo(() => buildInitialState(searchParams), [searchParams]);
+  const initial = useMemo(
+    () => buildInitialState(searchParams),
+    [searchParams],
+  );
 
   const [requests, setRequests] = useState<RequestListItem[]>([]);
   const [summary, setSummary] = useState<RequestSummaryResponse | null>(null);
@@ -260,7 +268,12 @@ export default function RequestsPage() {
   }, [searchParams]);
 
   const syncUrl = useCallback(
-    (nextFilters: RequestFilterParams, nextPage: number, nextFrom: string, nextTo: string) => {
+    (
+      nextFilters: RequestFilterParams,
+      nextPage: number,
+      nextFrom: string,
+      nextTo: string,
+    ) => {
       const params = new URLSearchParams();
       if (nextFilters.status) params.set("status", nextFilters.status);
       if (nextFilters.type) params.set("type", nextFilters.type);
@@ -271,7 +284,7 @@ export default function RequestsPage() {
       const query = params.toString();
       router.replace(query ? `/requests?${query}` : "/requests");
     },
-    [router]
+    [router],
   );
 
   useEffect(() => {
@@ -291,7 +304,9 @@ export default function RequestsPage() {
         query.set("limit", String(PAGE_LIMIT));
 
         const [reqRes, sumRes] = await Promise.all([
-          api.get<PaginatedResponse<RequestListItem>>(`/api/v1/requests?${query.toString()}`),
+          api.get<PaginatedResponse<RequestListItem>>(
+            `/api/v1/requests?${query.toString()}`,
+          ),
           api.get<RequestSummaryResponse>("/api/v1/requests/summary"),
         ]);
 
@@ -400,25 +415,65 @@ export default function RequestsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Yêu cầu của tôi</h1>
-          <p className="text-slate-500 mt-1">Theo dõi toàn bộ yêu cầu tạm ứng, chi phí, hoàn ứng.</p>
+          <p className="text-slate-500 mt-1">
+            Theo dõi toàn bộ yêu cầu tạm ứng, chi phí, hoàn ứng.
+          </p>
         </div>
 
         <Link
           href="/requests/new"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m6-6H6" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 6v12m6-6H6"
+            />
           </svg>
           Tạo yêu cầu mới
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <SummaryCard title="Tổng yêu cầu" value={totalCount} accent="text-slate-900" borderColor="border-slate-200" iconBg="bg-slate-100" iconColor="text-slate-600" />
-        <SummaryCard title="Đang chờ" value={pendingCount} accent="text-amber-700" borderColor="border-amber-200" iconBg="bg-amber-100" iconColor="text-amber-600" />
-        <SummaryCard title="Đã duyệt" value={approvedCount} accent="text-emerald-700" borderColor="border-emerald-200" iconBg="bg-emerald-100" iconColor="text-emerald-600" />
-        <SummaryCard title="Từ chối" value={rejectedCount} accent="text-rose-700" borderColor="border-rose-200" iconBg="bg-rose-100" iconColor="text-rose-600" />
+        <SummaryCard
+          title="Tổng yêu cầu"
+          value={totalCount}
+          accent="text-slate-900"
+          borderColor="border-slate-200"
+          iconBg="bg-slate-100"
+          iconColor="text-slate-600"
+        />
+        <SummaryCard
+          title="Đang chờ"
+          value={pendingCount}
+          accent="text-amber-700"
+          borderColor="border-amber-200"
+          iconBg="bg-amber-100"
+          iconColor="text-amber-600"
+        />
+        <SummaryCard
+          title="Đã duyệt"
+          value={approvedCount}
+          accent="text-emerald-700"
+          borderColor="border-emerald-200"
+          iconBg="bg-emerald-100"
+          iconColor="text-emerald-600"
+        />
+        <SummaryCard
+          title="Từ chối"
+          value={rejectedCount}
+          accent="text-rose-700"
+          borderColor="border-rose-200"
+          iconBg="bg-rose-100"
+          iconColor="text-rose-600"
+        />
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
@@ -468,24 +523,56 @@ export default function RequestsPage() {
           <table className="w-full min-w-[980px]">
             <thead>
               <tr className="border-b border-slate-200 bg-white/30">
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mã yêu cầu</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loại</th>
-                <th className="px-4 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Số tiền</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dự án</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày tạo</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Mã yêu cầu
+                </th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Loại
+                </th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Số tiền
+                </th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Dự án
+                </th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Ngày tạo
+                </th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Thao tác
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500 text-sm">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center text-slate-500 text-sm"
+                  >
                     <span className="inline-flex items-center gap-2">
-                      <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <svg
+                        className="animate-spin h-5 w-5 text-blue-500"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
                       </svg>
                       Đang tải dữ liệu yêu cầu...
                     </span>
@@ -493,7 +580,10 @@ export default function RequestsPage() {
                 </tr>
               ) : requests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500 text-sm">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center text-slate-500 text-sm"
+                  >
                     Không có yêu cầu phù hợp bộ lọc.
                   </td>
                 </tr>
@@ -504,7 +594,9 @@ export default function RequestsPage() {
                     className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/requests/${request.id}`)}
                   >
-                    <td className="px-4 py-3 text-sm text-slate-900 font-medium">{request.requestCode}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900 font-medium">
+                      {request.requestCode}
+                    </td>
                     <td className="px-4 py-3">
                       <RequestTypeBadge type={request.type} />
                     </td>
@@ -514,8 +606,12 @@ export default function RequestsPage() {
                     <td className="px-4 py-3">
                       <RequestStatusBadge status={request.status} />
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{request.projectName ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-500">{formatDateTime(request.createdAt)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {request.projectName ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-500">
+                      {formatDateTime(request.createdAt)}
+                    </td>
                     <td className="px-4 py-3">
                       <button
                         type="button"
@@ -582,14 +678,28 @@ function SummaryCard({
   iconColor: string;
 }) {
   return (
-    <div className={`bg-white border ${borderColor} rounded-xl shadow-sm p-5 flex items-center justify-between`}>
+    <div
+      className={`bg-white border ${borderColor} rounded-xl shadow-sm p-5 flex items-center justify-between`}
+    >
       <div>
         <p className="text-sm text-slate-500">{title}</p>
         <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
       </div>
-      <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
-        <svg className={`w-6 h-6 ${iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      <div
+        className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}
+      >
+        <svg
+          className={`w-6 h-6 ${iconColor}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
       </div>
     </div>

@@ -37,6 +37,7 @@ Note: `/create-pin` và `/register` là orphaned pages — không có endpoint b
 ## 3. Roles và Fund Tiers
 
 **6 Roles:**
+
 - `EMPLOYEE` — tạo requests chi tiêu
 - `TEAM_LEADER` — duyệt Flow 1, quản lý project/phase/budget
 - `MANAGER` — duyệt Flow 2, tạo/quản lý projects
@@ -61,6 +62,7 @@ Tier 3: Project Wallet
 ```
 
 **FLOAT_MAIN** (`Wallet(FLOAT_MAIN, ownerId=0)`):
+
 - Control wallet — invariant checker, không có owner thực
 - Invariant: `FLOAT_MAIN.balance = SUM(balance của tất cả wallet trừ FLOAT_MAIN)`
 - Chỉ thay đổi khi có boundary transaction (SYSTEM_TOPUP, DEPOSIT, WITHDRAW)
@@ -82,6 +84,7 @@ PAID
 Money movement: `Project Wallet → User Wallet` (transaction type: `REQUEST_PAYMENT`)
 
 Segregation of Duties:
+
 - TEAM_LEADER: **Decision** — approve/reject
 - ACCOUNTANT: **Execution** — review chứng từ, kiểm tra số dư, giải ngân
 
@@ -178,6 +181,7 @@ UI event
 ```
 
 Error handling:
+
 ```ts
 import { ApiError } from "@/lib/api-client";
 try {
@@ -200,12 +204,12 @@ Từ v3.3, backend chuyển từ STOMP/WebSocket sang **SSE** với **1 endpoint
 
 ### 4 event backend đẩy về
 
-| Event name | Payload (raw, không wrap) | FE Handler |
-|---|---|---|
-| `connected` | `"SSE connected"` | No-op / log debug |
-| `wallet.updated` | `WalletResponse` | `WalletContext.updateFromSse(wallet)` — replace state |
-| `transaction.created` | `LedgerEntryResponse` | Prepend row vào `wallet/transactions` list |
-| `notification` | `NotificationResponse` | Prepend vào notification list + tăng unread badge |
+| Event name            | Payload (raw, không wrap) | FE Handler                                            |
+| --------------------- | ------------------------- | ----------------------------------------------------- |
+| `connected`           | `"SSE connected"`         | No-op / log debug                                     |
+| `wallet.updated`      | `WalletResponse`          | `WalletContext.updateFromSse(wallet)` — replace state |
+| `transaction.created` | `LedgerEntryResponse`     | Prepend row vào `wallet/transactions` list            |
+| `notification`        | `NotificationResponse`    | Prepend vào notification list + tăng unread badge     |
 
 > Không còn `REQUEST_STATUS_CHANGED` — sau action approve/reject/disburse, UI gọi caller tự `refetch` list/detail. Gate lại bằng wallet + notification nếu cần.
 
@@ -215,9 +219,9 @@ Chi tiết payload + ví dụ đầy đủ: xem [API_CONTRACT §15](./API_CONTRA
 
 ## 12. Server vs Client Component
 
-| Component type | Khi nào dùng |
-|---|---|
-| **Server Component** (default) | Render props/static data, không cần hook/interactivity |
+| Component type                        | Khi nào dùng                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Server Component** (default)        | Render props/static data, không cần hook/interactivity                               |
 | **Client Component** (`"use client"`) | Cần `useState`, `useEffect`, `useContext`, `useRouter`, `usePathname`, form handlers |
 
 Rule: Default là Server Component. Chỉ thêm `"use client"` khi thực sự cần.

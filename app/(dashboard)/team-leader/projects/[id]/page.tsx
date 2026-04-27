@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { use, useEffect, useMemo, useState } from "react";
@@ -93,9 +92,27 @@ const MOCK_PHASE_CATEGORIES: Record<number, PhaseCategoriesResponse> = {
     phaseId: 1,
     phaseName: "Phase 1 - Phân tích",
     categories: [
-      { categoryId: 1, categoryName: "Thiết bị", budgetLimit: 20_000_000, currentSpent: 18_500_000, remaining: 1_500_000 },
-      { categoryId: 2, categoryName: "Công tác", budgetLimit: 10_000_000, currentSpent: 8_200_000, remaining: 1_800_000 },
-      { categoryId: 3, categoryName: "Đào tạo", budgetLimit: 15_000_000, currentSpent: 14_300_000, remaining: 700_000 },
+      {
+        categoryId: 1,
+        categoryName: "Thiết bị",
+        budgetLimit: 20_000_000,
+        currentSpent: 18_500_000,
+        remaining: 1_500_000,
+      },
+      {
+        categoryId: 2,
+        categoryName: "Công tác",
+        budgetLimit: 10_000_000,
+        currentSpent: 8_200_000,
+        remaining: 1_800_000,
+      },
+      {
+        categoryId: 3,
+        categoryName: "Đào tạo",
+        budgetLimit: 15_000_000,
+        currentSpent: 14_300_000,
+        remaining: 700_000,
+      },
     ],
   },
   2: {
@@ -103,16 +120,48 @@ const MOCK_PHASE_CATEGORIES: Record<number, PhaseCategoriesResponse> = {
     phaseId: 2,
     phaseName: "Phase 2 - Phát triển",
     categories: [
-      { categoryId: 4, categoryName: "Cloud", budgetLimit: 30_000_000, currentSpent: 7_500_000, remaining: 22_500_000 },
-      { categoryId: 5, categoryName: "Tools", budgetLimit: 25_000_000, currentSpent: 2_000_000, remaining: 23_000_000 },
-      { categoryId: 1, categoryName: "Thiết bị", budgetLimit: 25_000_000, currentSpent: 5_000_000, remaining: 20_000_000 },
+      {
+        categoryId: 4,
+        categoryName: "Cloud",
+        budgetLimit: 30_000_000,
+        currentSpent: 7_500_000,
+        remaining: 22_500_000,
+      },
+      {
+        categoryId: 5,
+        categoryName: "Tools",
+        budgetLimit: 25_000_000,
+        currentSpent: 2_000_000,
+        remaining: 23_000_000,
+      },
+      {
+        categoryId: 1,
+        categoryName: "Thiết bị",
+        budgetLimit: 25_000_000,
+        currentSpent: 5_000_000,
+        remaining: 20_000_000,
+      },
     ],
   },
 };
 
 const MOCK_AVAILABLE_MEMBERS: AvailableMemberResponse[] = [
-  { id: 14, fullName: "Nguyễn Thị Minh", employeeCode: "EMP004", avatar: null, email: "emp.fin1@ifms.vn", jobTitle: "Business Analyst" },
-  { id: 15, fullName: "Trần Văn Nam", employeeCode: "EMP005", avatar: null, email: "emp.it5@ifms.vn", jobTitle: "DevOps Engineer" },
+  {
+    id: 14,
+    fullName: "Nguyễn Thị Minh",
+    employeeCode: "EMP004",
+    avatar: null,
+    email: "emp.fin1@ifms.vn",
+    jobTitle: "Business Analyst",
+  },
+  {
+    id: 15,
+    fullName: "Trần Văn Nam",
+    employeeCode: "EMP005",
+    avatar: null,
+    email: "emp.it5@ifms.vn",
+    jobTitle: "DevOps Engineer",
+  },
 ];
 
 const MOCK_EXPENSE_CATEGORIES: ExpenseCategoryResponse[] = [
@@ -122,7 +171,6 @@ const MOCK_EXPENSE_CATEGORIES: ExpenseCategoryResponse[] = [
   { id: 4, name: "Cloud", description: null, isSystemDefault: true },
   { id: 5, name: "Tools", description: null, isSystemDefault: true },
 ];
-
 
 function burn(spent: number, budget: number): number {
   if (budget <= 0) return 0;
@@ -144,9 +192,12 @@ function initials(name: string): string {
 }
 
 function statusBadge(status: ProjectStatus): string {
-  if (status === ProjectStatus.ACTIVE) return "bg-emerald-100 border-emerald-200 text-emerald-700";
-  if (status === ProjectStatus.PLANNING) return "bg-sky-100 border-sky-200 text-sky-700";
-  if (status === ProjectStatus.PAUSED) return "bg-amber-100 border-amber-200 text-amber-700";
+  if (status === ProjectStatus.ACTIVE)
+    return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  if (status === ProjectStatus.PLANNING)
+    return "bg-sky-100 border-sky-200 text-sky-700";
+  if (status === ProjectStatus.PAUSED)
+    return "bg-amber-100 border-amber-200 text-amber-700";
   return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
@@ -161,9 +212,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const router = useRouter();
 
   const [project, setProject] = useState<TLProjectDetailResponse | null>(null);
-  const [phaseCategories, setPhaseCategories] = useState<PhaseCategoriesResponse | null>(null);
-  const [availableMembers, setAvailableMembers] = useState<AvailableMemberResponse[]>([]);
-  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategoryResponse[]>([]);
+  const [phaseCategories, setPhaseCategories] =
+    useState<PhaseCategoriesResponse | null>(null);
+  const [availableMembers, setAvailableMembers] = useState<
+    AvailableMemberResponse[]
+  >([]);
+  const [expenseCategories, setExpenseCategories] = useState<
+    ExpenseCategoryResponse[]
+  >([]);
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
   const [tab, setTab] = useState<TabKey>("phases");
   const [loading, setLoading] = useState(true);
@@ -186,7 +242,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const [editPhaseName, setEditPhaseName] = useState("");
   const [editPhaseBudget, setEditPhaseBudget] = useState("");
   const [editPhaseEnd, setEditPhaseEnd] = useState("");
-  const [editPhaseStatus, setEditPhaseStatus] = useState<PhaseStatus>(PhaseStatus.ACTIVE);
+  const [editPhaseStatus, setEditPhaseStatus] = useState<PhaseStatus>(
+    PhaseStatus.ACTIVE,
+  );
 
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState<Record<number, string>>({});
@@ -211,10 +269,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setLoading(true);
       setError(null);
       try {
-        const res = await api.get<TLProjectDetailResponse>(`/api/v1/team-leader/projects/${id}`);
+        const res = await api.get<TLProjectDetailResponse>(
+          `/api/v1/team-leader/projects/${id}`,
+        );
         if (cancelled) return;
         setProject(res.data);
-        setSelectedPhaseId(res.data.currentPhaseId ?? res.data.phases[0]?.id ?? null);
+        setSelectedPhaseId(
+          res.data.currentPhaseId ?? res.data.phases[0]?.id ?? null,
+        );
       } catch {
         if (cancelled) return;
         const safe = Number(id);
@@ -224,7 +286,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           projectCode: `PRJ-TL-${String(id).padStart(3, "0")}`,
         };
         setProject(fallback);
-        setSelectedPhaseId(fallback.currentPhaseId ?? fallback.phases[0]?.id ?? null);
+        setSelectedPhaseId(
+          fallback.currentPhaseId ?? fallback.phases[0]?.id ?? null,
+        );
         setError("Không thể tải API, đang dùng dữ liệu mẫu.");
       } finally {
         if (!cancelled) setLoading(false);
@@ -242,8 +306,12 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     const loadAux = async () => {
       try {
         const [mRes, cRes] = await Promise.all([
-          api.get<AvailableMemberResponse[]>(`/api/v1/team-leader/projects/${project.id}/available-members`),
-          api.get<ExpenseCategoryResponse[]>(`/api/v1/team-leader/expense-categories?projectId=${project.id}`),
+          api.get<AvailableMemberResponse[]>(
+            `/api/v1/team-leader/projects/${project.id}/available-members`,
+          ),
+          api.get<ExpenseCategoryResponse[]>(
+            `/api/v1/team-leader/expense-categories?projectId=${project.id}`,
+          ),
         ]);
         if (cancelled) return;
         setAvailableMembers(mRes.data);
@@ -268,26 +336,37 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     let cancelled = false;
     const load = async () => {
       try {
-        const res = await api.get<PhaseCategoriesResponse>(`/api/v1/team-leader/projects/${project.id}/categories?phaseId=${selectedPhaseId}`);
+        const res = await api.get<PhaseCategoriesResponse>(
+          `/api/v1/team-leader/projects/${project.id}/categories?phaseId=${selectedPhaseId}`,
+        );
         if (!cancelled) setPhaseCategories(res.data);
       } catch {
         if (cancelled) return;
         const mapped = MOCK_PHASE_CATEGORIES[selectedPhaseId];
         if (mapped) {
-          setPhaseCategories({ ...mapped, projectId: project.id, phaseId: selectedPhaseId });
+          setPhaseCategories({
+            ...mapped,
+            projectId: project.id,
+            phaseId: selectedPhaseId,
+          });
         } else {
           const phase = project.phases.find((p) => p.id === selectedPhaseId);
           setPhaseCategories({
             projectId: project.id,
             phaseId: selectedPhaseId,
             phaseName: phase?.name ?? `Phase ${selectedPhaseId}`,
-            categories: (expenseCategories.length ? expenseCategories : MOCK_EXPENSE_CATEGORIES).slice(0, 3).map((c) => ({
-              categoryId: c.id,
-              categoryName: c.name,
-              budgetLimit: 5_000_000,
-              currentSpent: 0,
-              remaining: 5_000_000,
-            })),
+            categories: (expenseCategories.length
+              ? expenseCategories
+              : MOCK_EXPENSE_CATEGORIES
+            )
+              .slice(0, 3)
+              .map((c) => ({
+                categoryId: c.id,
+                categoryName: c.name,
+                budgetLimit: 5_000_000,
+                currentSpent: 0,
+                remaining: 5_000_000,
+              })),
           });
         }
       }
@@ -298,12 +377,17 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     };
   }, [project, selectedPhaseId, expenseCategories]);
 
-  const overallBurn = useMemo(() => (project ? burn(project.totalSpent, project.totalBudget) : 0), [project]);
+  const overallBurn = useMemo(
+    () => (project ? burn(project.totalSpent, project.totalBudget) : 0),
+    [project],
+  );
 
   const filteredAvailable = useMemo(() => {
     const q = memberSearch.trim().toLowerCase();
     if (!q) return availableMembers;
-    return availableMembers.filter((m) => `${m.fullName} ${m.employeeCode}`.toLowerCase().includes(q));
+    return availableMembers.filter((m) =>
+      `${m.fullName} ${m.employeeCode}`.toLowerCase().includes(q),
+    );
   }, [availableMembers, memberSearch]);
 
   const openEditPhase = (phase: ProjectPhaseResponse) => {
@@ -323,7 +407,12 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
   const onCreatePhase = async () => {
     if (!project) return;
-    if (!phaseName.trim() || !phaseStart || !phaseEnd || Number(phaseBudget) <= 0) {
+    if (
+      !phaseName.trim() ||
+      !phaseStart ||
+      !phaseEnd ||
+      Number(phaseBudget) <= 0
+    ) {
       setError("Vui lòng nhập đủ thông tin phase hợp lệ.");
       return;
     }
@@ -336,8 +425,13 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       endDate: phaseEnd,
     };
     try {
-      const res = await api.post<ProjectPhaseResponse>(`/api/v1/team-leader/projects/${project.id}/phases`, body);
-      setProject((prev) => (prev ? { ...prev, phases: [...prev.phases, res.data] } : prev));
+      const res = await api.post<ProjectPhaseResponse>(
+        `/api/v1/team-leader/projects/${project.id}/phases`,
+        body,
+      );
+      setProject((prev) =>
+        prev ? { ...prev, phases: [...prev.phases, res.data] } : prev,
+      );
       setSelectedPhaseId(res.data.id);
     } catch {
       const mock: ProjectPhaseResponse = {
@@ -350,7 +444,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         startDate: body.startDate,
         endDate: body.endDate,
       };
-      setProject((prev) => (prev ? { ...prev, phases: [...prev.phases, mock] } : prev));
+      setProject((prev) =>
+        prev ? { ...prev, phases: [...prev.phases, mock] } : prev,
+      );
       setSelectedPhaseId(mock.id);
     } finally {
       setSubmitting(false);
@@ -364,7 +460,12 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   };
 
   const onUpdatePhase = async () => {
-    if (!project || !editingPhaseId || !editPhaseName.trim() || Number(editPhaseBudget) <= 0) {
+    if (
+      !project ||
+      !editingPhaseId ||
+      !editPhaseName.trim() ||
+      Number(editPhaseBudget) <= 0
+    ) {
       setError("Thông tin cập nhật phase chưa hợp lệ.");
       return;
     }
@@ -376,9 +477,19 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       status: editPhaseStatus,
     };
     try {
-      const res = await api.put<ProjectPhaseResponse>(`/api/v1/team-leader/projects/${project.id}/phases/${editingPhaseId}`, body);
+      const res = await api.put<ProjectPhaseResponse>(
+        `/api/v1/team-leader/projects/${project.id}/phases/${editingPhaseId}`,
+        body,
+      );
       setProject((prev) =>
-        prev ? { ...prev, phases: prev.phases.map((p) => (p.id === editingPhaseId ? res.data : p)) } : prev
+        prev
+          ? {
+              ...prev,
+              phases: prev.phases.map((p) =>
+                p.id === editingPhaseId ? res.data : p,
+              ),
+            }
+          : prev,
       );
     } catch {
       setProject((prev) =>
@@ -387,11 +498,17 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               ...prev,
               phases: prev.phases.map((p) =>
                 p.id === editingPhaseId
-                  ? { ...p, name: body.name ?? p.name, budgetLimit: body.budgetLimit ?? p.budgetLimit, endDate: body.endDate ?? p.endDate, status: body.status ?? p.status }
-                  : p
+                  ? {
+                      ...p,
+                      name: body.name ?? p.name,
+                      budgetLimit: body.budgetLimit ?? p.budgetLimit,
+                      endDate: body.endDate ?? p.endDate,
+                      status: body.status ?? p.status,
+                    }
+                  : p,
               ),
             }
-          : prev
+          : prev,
       );
     } finally {
       setSubmitting(false);
@@ -416,14 +533,24 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     setSubmitting(true);
     setError(null);
     setNotice(null);
-    const updates: UpdateCategoryBudgetBody[] = phaseCategories.categories.map((c) => ({
-      phaseId: selectedPhaseId,
-      categoryId: c.categoryId,
-      budgetLimit: Number(budgetDraft[c.categoryId]) > 0 ? Number(budgetDraft[c.categoryId]) : c.budgetLimit,
-    }));
+    const updates: UpdateCategoryBudgetBody[] = phaseCategories.categories.map(
+      (c) => ({
+        phaseId: selectedPhaseId,
+        categoryId: c.categoryId,
+        budgetLimit:
+          Number(budgetDraft[c.categoryId]) > 0
+            ? Number(budgetDraft[c.categoryId])
+            : c.budgetLimit,
+      }),
+    );
     try {
       const results = await Promise.allSettled(
-        updates.map((body) => api.put(`/api/v1/team-leader/projects/${project.id}/categories`, body))
+        updates.map((body) =>
+          api.put(
+            `/api/v1/team-leader/projects/${project.id}/categories`,
+            body,
+          ),
+        ),
       );
 
       const total = updates.length;
@@ -445,7 +572,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       if (successCount > 0) {
         try {
           const refreshed = await api.get<PhaseCategoriesResponse>(
-            `/api/v1/team-leader/projects/${project.id}/categories?phaseId=${selectedPhaseId}`
+            `/api/v1/team-leader/projects/${project.id}/categories?phaseId=${selectedPhaseId}`,
           );
           setPhaseCategories(refreshed.data);
         } catch {
@@ -455,7 +582,11 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               if (!succeededIds.has(c.categoryId)) return c;
               const match = updates.find((x) => x.categoryId === c.categoryId);
               const budgetLimit = match ? match.budgetLimit : c.budgetLimit;
-              return { ...c, budgetLimit, remaining: budgetLimit - c.currentSpent };
+              return {
+                ...c,
+                budgetLimit,
+                remaining: budgetLimit - c.currentSpent,
+              };
             }),
           });
         }
@@ -474,7 +605,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
       setEditingBudget(false);
       setNotice(`Đã cập nhật ${successCount}/${total} danh mục ngân sách.`);
-      setError(`Có ${failedCount}/${total} danh mục cập nhật thất bại. Vui lòng kiểm tra và thử lại.`);
+      setError(
+        `Có ${failedCount}/${total} danh mục cập nhật thất bại. Vui lòng kiểm tra và thử lại.`,
+      );
     } catch {
       setError("Không thể cập nhật ngân sách. Vui lòng thử lại.");
     } finally {
@@ -490,9 +623,15 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     const selected = availableMembers.find((m) => m.id === selectedMemberId);
     if (!selected) return;
     setSubmitting(true);
-    const body: AddMemberBody = { userId: selected.id, position: memberPosition.trim() };
+    const body: AddMemberBody = {
+      userId: selected.id,
+      position: memberPosition.trim(),
+    };
     try {
-      await api.post(`/api/v1/team-leader/projects/${project.id}/members`, body);
+      await api.post(
+        `/api/v1/team-leader/projects/${project.id}/members`,
+        body,
+      );
     } catch {
       // mock-first
     } finally {
@@ -500,9 +639,20 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         prev
           ? {
               ...prev,
-              members: [...prev.members, { userId: selected.id, fullName: selected.fullName, avatar: selected.avatar, employeeCode: selected.employeeCode, projectRole: ProjectRole.MEMBER, position: body.position, joinedAt: new Date().toISOString() }],
+              members: [
+                ...prev.members,
+                {
+                  userId: selected.id,
+                  fullName: selected.fullName,
+                  avatar: selected.avatar,
+                  employeeCode: selected.employeeCode,
+                  projectRole: ProjectRole.MEMBER,
+                  position: body.position,
+                  joinedAt: new Date().toISOString(),
+                },
+              ],
             }
-          : prev
+          : prev,
       );
       setAvailableMembers((prev) => prev.filter((m) => m.id !== selected.id));
       setSubmitting(false);
@@ -522,7 +672,10 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     setSubmitting(true);
     const body: UpdateMemberBody = { position: editingPosition.trim() };
     try {
-      await api.put(`/api/v1/team-leader/projects/${project.id}/members/${editingMemberId}`, body);
+      await api.put(
+        `/api/v1/team-leader/projects/${project.id}/members/${editingMemberId}`,
+        body,
+      );
     } catch {
       // mock-first
     } finally {
@@ -530,9 +683,13 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         prev
           ? {
               ...prev,
-              members: prev.members.map((m) => (m.userId === editingMemberId ? { ...m, position: body.position } : m)),
+              members: prev.members.map((m) =>
+                m.userId === editingMemberId
+                  ? { ...m, position: body.position }
+                  : m,
+              ),
             }
-          : prev
+          : prev,
       );
       setSubmitting(false);
       setShowEditMember(false);
@@ -556,11 +713,20 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         setConfirmState((prev) => ({ ...prev, open: false }));
         setSubmitting(true);
         try {
-          await api.delete(`/api/v1/team-leader/projects/${project.id}/members/${userId}`);
+          await api.delete(
+            `/api/v1/team-leader/projects/${project.id}/members/${userId}`,
+          );
         } catch {
           // mock-first
         } finally {
-          setProject((prev) => (prev ? { ...prev, members: prev.members.filter((m) => m.userId !== userId) } : prev));
+          setProject((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  members: prev.members.filter((m) => m.userId !== userId),
+                }
+              : prev,
+          );
           setSubmitting(false);
           setNotice("Đã xóa thành viên.");
         }
@@ -579,7 +745,8 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         type: RequestType.PROJECT_TOPUP,
         projectId: project.id,
         amount: Number(topupAmount),
-        description: topupNote.trim() || `Xin cấp vốn cho ${project.projectCode}`,
+        description:
+          topupNote.trim() || `Xin cấp vốn cho ${project.projectCode}`,
       });
     } catch {
       // mock-first
@@ -608,51 +775,118 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <button onClick={() => router.push("/team-leader/projects")} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" /></svg>
+      <button
+        onClick={() => router.push("/team-leader/projects")}
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
         Quay lại
       </button>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
-            <p className="text-xs text-slate-500 font-mono">{project.projectCode}</p>
-            <h1 className="text-2xl font-bold text-slate-900 mt-1">{project.name}</h1>
-            <p className="text-slate-500 mt-1">{project.description ?? "Không có mô tả"}</p>
+            <p className="text-xs text-slate-500 font-mono">
+              {project.projectCode}
+            </p>
+            <h1 className="text-2xl font-bold text-slate-900 mt-1">
+              {project.name}
+            </h1>
+            <p className="text-slate-500 mt-1">
+              {project.description ?? "Không có mô tả"}
+            </p>
           </div>
-          <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusBadge(project.status)}`}>{project.status}</span>
+          <span
+            className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusBadge(project.status)}`}
+          >
+            {project.status}
+          </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-        <Card title="Tổng ngân sách" value={formatCurrency(project.totalBudget)} tone="text-slate-900" />
-        <Card title="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-700" />
-        <Card title="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-700" />
-        <Card title="Phase hiện tại" value={project.phases.find((p) => p.id === project.currentPhaseId)?.name ?? "Chưa có"} tone="text-slate-900" />
-        <Card title="Thành viên" value={String(project.members.length)} tone="text-indigo-700" />
+        <Card
+          title="Tổng ngân sách"
+          value={formatCurrency(project.totalBudget)}
+          tone="text-slate-900"
+        />
+        <Card
+          title="Đã chi"
+          value={formatCurrency(project.totalSpent)}
+          tone="text-rose-700"
+        />
+        <Card
+          title="Còn lại"
+          value={formatCurrency(project.availableBudget)}
+          tone="text-emerald-700"
+        />
+        <Card
+          title="Phase hiện tại"
+          value={
+            project.phases.find((p) => p.id === project.currentPhaseId)?.name ??
+            "Chưa có"
+          }
+          tone="text-slate-900"
+        />
+        <Card
+          title="Thành viên"
+          value={String(project.members.length)}
+          tone="text-indigo-700"
+        />
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Tổng quan ngân sách</h2>
-          <button onClick={() => setShowTopup(true)} className="px-4 py-2 rounded-xl border border-blue-300 text-blue-700 hover:bg-blue-50 text-sm">Xin cấp vốn</button>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Tổng quan ngân sách
+          </h2>
+          <button
+            onClick={() => setShowTopup(true)}
+            className="px-4 py-2 rounded-xl border border-blue-300 text-blue-700 hover:bg-blue-50 text-sm"
+          >
+            Xin cấp vốn
+          </button>
         </div>
         <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden">
-          <div className={`h-full ${burnColor(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
+          <div
+            className={`h-full ${burnColor(overallBurn)}`}
+            style={{ width: `${overallBurn}%` }}
+          />
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-500">{formatCurrency(project.totalSpent)} / {formatCurrency(project.totalBudget)}</span>
+          <span className="text-slate-500">
+            {formatCurrency(project.totalSpent)} /{" "}
+            {formatCurrency(project.totalBudget)}
+          </span>
           <span className="text-slate-900">{overallBurn}%</span>
         </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-3 flex gap-2 flex-wrap">
-        {([
-          ["phases", "Phases"],
-          ["budget", "Ngân sách"],
-          ["members", "Thành viên"],
-        ] as [TabKey, string][]).map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} className={`px-4 py-2 rounded-xl text-sm border ${tab === key ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}>
+        {(
+          [
+            ["phases", "Phases"],
+            ["budget", "Ngân sách"],
+            ["members", "Thành viên"],
+          ] as [TabKey, string][]
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-4 py-2 rounded-xl text-sm border ${tab === key ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}
+          >
             {label}
           </button>
         ))}
@@ -661,27 +895,60 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {tab === "phases" && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900">Danh sách phase</h3>
-            <button onClick={() => setShowCreatePhase(true)} className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm">+ Tạo phase</button>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Danh sách phase
+            </h3>
+            <button
+              onClick={() => setShowCreatePhase(true)}
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm"
+            >
+              + Tạo phase
+            </button>
           </div>
           {project.phases.map((p) => {
             const pct = burn(p.currentSpent, p.budgetLimit);
             return (
-              <div key={p.id} className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+              <div
+                key={p.id}
+                className="rounded-xl border border-slate-200 bg-white p-4 space-y-2"
+              >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs text-slate-500 font-mono">{p.phaseCode}</p>
-                    <p className="text-sm text-slate-900 font-semibold mt-1">{p.name}</p>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {p.phaseCode}
+                    </p>
+                    <p className="text-sm text-slate-900 font-semibold mt-1">
+                      {p.name}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${p.status === PhaseStatus.ACTIVE ? "bg-emerald-100 border-emerald-200 text-emerald-700" : "bg-slate-100 border-slate-200 text-slate-600"}`}>{p.status}</span>
-                    <button onClick={() => openEditPhase(p)} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">Sửa</button>
+                    <span
+                      className={`inline-flex px-2 py-1 rounded-full border text-xs ${p.status === PhaseStatus.ACTIVE ? "bg-emerald-100 border-emerald-200 text-emerald-700" : "bg-slate-100 border-slate-200 text-slate-600"}`}
+                    >
+                      {p.status}
+                    </span>
+                    <button
+                      onClick={() => openEditPhase(p)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs"
+                    >
+                      Sửa
+                    </button>
                   </div>
                 </div>
-                <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden"><div className={`h-full ${burnColor(pct)}`} style={{ width: `${pct}%` }} /></div>
+                <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
+                  <div
+                    className={`h-full ${burnColor(pct)}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 gap-2">
-                  <span>{formatCurrency(p.currentSpent)} / {formatCurrency(p.budgetLimit)}</span>
-                  <span>{p.startDate ?? "—"} - {p.endDate ?? "—"}</span>
+                  <span>
+                    {formatCurrency(p.currentSpent)} /{" "}
+                    {formatCurrency(p.budgetLimit)}
+                  </span>
+                  <span>
+                    {p.startDate ?? "—"} - {p.endDate ?? "—"}
+                  </span>
                 </div>
               </div>
             );
@@ -693,53 +960,113 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-slate-900">Ngân sách theo danh mục</h3>
-              <select value={selectedPhaseId ?? ""} onChange={(e) => setSelectedPhaseId(Number(e.target.value))} className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Ngân sách theo danh mục
+              </h3>
+              <select
+                value={selectedPhaseId ?? ""}
+                onChange={(e) => setSelectedPhaseId(Number(e.target.value))}
+                className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm"
+              >
                 {project.phases.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
             </div>
             {editingBudget ? (
               <div className="flex gap-2">
-                <button onClick={() => setEditingBudget(false)} className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
-                <button onClick={onSaveBudget} disabled={submitting} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm">Lưu</button>
+                <button
+                  onClick={() => setEditingBudget(false)}
+                  className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={onSaveBudget}
+                  disabled={submitting}
+                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm"
+                >
+                  Lưu
+                </button>
               </div>
             ) : (
-              <button onClick={startEditBudget} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm">Cập nhật ngân sách</button>
+              <button
+                onClick={startEditBudget}
+                className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm"
+              >
+                Cập nhật ngân sách
+              </button>
             )}
           </div>
 
           {!phaseCategories ? (
-            <p className="text-sm text-slate-500">Không có dữ liệu danh mục cho phase này.</p>
+            <p className="text-sm text-slate-500">
+              Không có dữ liệu danh mục cho phase này.
+            </p>
           ) : (
             <div className="rounded-xl border border-slate-200 overflow-x-auto">
               <table className="w-full min-w-[760px]">
                 <thead>
                   <tr className="bg-white/70 border-b border-slate-200">
-                    <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Danh mục</th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Ngân sách</th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Đã dùng</th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Còn lại</th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Burn %</th>
+                    <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Danh mục
+                    </th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Ngân sách
+                    </th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Đã dùng
+                    </th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Còn lại
+                    </th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Burn %
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {phaseCategories.categories.map((c) => {
                     const pct = burn(c.currentSpent, c.budgetLimit);
                     return (
-                      <tr key={c.categoryId} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3 text-sm text-slate-900">{c.categoryName}</td>
+                      <tr
+                        key={c.categoryId}
+                        className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors"
+                      >
+                        <td className="px-4 py-3 text-sm text-slate-900">
+                          {c.categoryName}
+                        </td>
                         <td className="px-4 py-3 text-right text-sm text-slate-900">
                           {editingBudget ? (
-                            <input type="number" min={0} value={budgetDraft[c.categoryId] ?? ""} onChange={(e) => setBudgetDraft((prev) => ({ ...prev, [c.categoryId]: e.target.value }))} className="w-32 px-2 py-1 rounded bg-white border border-slate-200 text-right" />
+                            <input
+                              type="number"
+                              min={0}
+                              value={budgetDraft[c.categoryId] ?? ""}
+                              onChange={(e) =>
+                                setBudgetDraft((prev) => ({
+                                  ...prev,
+                                  [c.categoryId]: e.target.value,
+                                }))
+                              }
+                              className="w-32 px-2 py-1 rounded bg-white border border-slate-200 text-right"
+                            />
                           ) : (
                             formatCurrency(c.budgetLimit)
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(c.currentSpent)}</td>
-                        <td className={`px-4 py-3 text-right text-sm ${c.remaining < 0 ? "text-rose-700 font-semibold" : "text-emerald-700"}`}>{formatCurrency(c.remaining)}</td>
-                        <td className="px-4 py-3 text-right text-sm text-slate-600">{pct}%</td>
+                        <td className="px-4 py-3 text-right text-sm text-rose-700">
+                          {formatCurrency(c.currentSpent)}
+                        </td>
+                        <td
+                          className={`px-4 py-3 text-right text-sm ${c.remaining < 0 ? "text-rose-700 font-semibold" : "text-emerald-700"}`}
+                        >
+                          {formatCurrency(c.remaining)}
+                        </td>
+                        <td className="px-4 py-3 text-right text-sm text-slate-600">
+                          {pct}%
+                        </td>
                       </tr>
                     );
                   })}
@@ -753,23 +1080,54 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {tab === "members" && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900">Thành viên dự án</h3>
-            <button onClick={() => setShowAddMember(true)} className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm">Thêm thành viên</button>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Thành viên dự án
+            </h3>
+            <button
+              onClick={() => setShowAddMember(true)}
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm"
+            >
+              Thêm thành viên
+            </button>
           </div>
           <div className="space-y-2">
             {project.members.map((m) => (
-              <div key={m.userId} className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-3">
+              <div
+                key={m.userId}
+                className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-3"
+              >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center text-xs font-semibold">{initials(m.fullName)}</div>
+                  <div className="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center text-xs font-semibold">
+                    {initials(m.fullName)}
+                  </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">{m.fullName}</p>
-                    <p className="text-xs text-slate-500 truncate">{m.employeeCode} • {m.position}</p>
+                    <p className="text-sm font-medium text-slate-900 truncate">
+                      {m.fullName}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">
+                      {m.employeeCode} • {m.position}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${roleBadge(m.projectRole)}`}>{m.projectRole}</span>
-                  <button onClick={() => openEditMember(m.userId, m.position)} className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">Sửa</button>
-                  <button onClick={() => onRemoveMember(m.userId)} disabled={submitting} className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs">Xóa</button>
+                  <span
+                    className={`inline-flex px-2 py-1 rounded-full border text-xs ${roleBadge(m.projectRole)}`}
+                  >
+                    {m.projectRole}
+                  </span>
+                  <button
+                    onClick={() => openEditMember(m.userId, m.position)}
+                    className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs"
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => onRemoveMember(m.userId)}
+                    disabled={submitting}
+                    className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs"
+                  >
+                    Xóa
+                  </button>
                 </div>
               </div>
             ))}
@@ -777,15 +1135,39 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {error && <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
-      {notice && <div className="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">{notice}</div>}
+      {error && (
+        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
+          {error}
+        </div>
+      )}
+      {notice && (
+        <div className="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">
+          {notice}
+        </div>
+      )}
 
       {showTopup && (
         <Modal title="Xin cấp vốn dự án" onClose={() => setShowTopup(false)}>
           <div className="space-y-3">
-            <input type="number" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} placeholder="Số tiền cần cấp" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
-            <textarea rows={4} value={topupNote} onChange={(e) => setTopupNote(e.target.value)} placeholder="Lý do (tuỳ chọn)" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none" />
-            <ModalActions onClose={() => setShowTopup(false)} onConfirm={onTopup} confirmText={submitting ? "Đang gửi..." : "Gửi yêu cầu"} />
+            <input
+              type="number"
+              value={topupAmount}
+              onChange={(e) => setTopupAmount(e.target.value)}
+              placeholder="Số tiền cần cấp"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+            <textarea
+              rows={4}
+              value={topupNote}
+              onChange={(e) => setTopupNote(e.target.value)}
+              placeholder="Lý do (tuỳ chọn)"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none"
+            />
+            <ModalActions
+              onClose={() => setShowTopup(false)}
+              onConfirm={onTopup}
+              confirmText={submitting ? "Đang gửi..." : "Gửi yêu cầu"}
+            />
           </div>
         </Modal>
       )}
@@ -793,13 +1175,38 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showCreatePhase && (
         <Modal title="Tạo phase mới" onClose={() => setShowCreatePhase(false)}>
           <div className="space-y-3">
-            <input value={phaseName} onChange={(e) => setPhaseName(e.target.value)} placeholder="Tên phase" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
-            <input type="number" value={phaseBudget} onChange={(e) => setPhaseBudget(e.target.value)} placeholder="Ngân sách" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+            <input
+              value={phaseName}
+              onChange={(e) => setPhaseName(e.target.value)}
+              placeholder="Tên phase"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+            <input
+              type="number"
+              value={phaseBudget}
+              onChange={(e) => setPhaseBudget(e.target.value)}
+              placeholder="Ngân sách"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="date" value={phaseStart} onChange={(e) => setPhaseStart(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
-              <input type="date" value={phaseEnd} onChange={(e) => setPhaseEnd(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+              <input
+                type="date"
+                value={phaseStart}
+                onChange={(e) => setPhaseStart(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+              />
+              <input
+                type="date"
+                value={phaseEnd}
+                onChange={(e) => setPhaseEnd(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+              />
             </div>
-            <ModalActions onClose={() => setShowCreatePhase(false)} onConfirm={onCreatePhase} confirmText={submitting ? "Đang lưu..." : "Tạo phase"} />
+            <ModalActions
+              onClose={() => setShowCreatePhase(false)}
+              onConfirm={onCreatePhase}
+              confirmText={submitting ? "Đang lưu..." : "Tạo phase"}
+            />
           </div>
         </Modal>
       )}
@@ -807,16 +1214,42 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showEditPhase && (
         <Modal title="Cập nhật phase" onClose={() => setShowEditPhase(false)}>
           <div className="space-y-3">
-            <input value={editPhaseName} onChange={(e) => setEditPhaseName(e.target.value)} placeholder="Tên phase" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
-            <input type="number" value={editPhaseBudget} onChange={(e) => setEditPhaseBudget(e.target.value)} placeholder="Ngân sách" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+            <input
+              value={editPhaseName}
+              onChange={(e) => setEditPhaseName(e.target.value)}
+              placeholder="Tên phase"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+            <input
+              type="number"
+              value={editPhaseBudget}
+              onChange={(e) => setEditPhaseBudget(e.target.value)}
+              placeholder="Ngân sách"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="date" value={editPhaseEnd} onChange={(e) => setEditPhaseEnd(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
-              <select value={editPhaseStatus} onChange={(e) => setEditPhaseStatus(e.target.value as PhaseStatus)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900">
+              <input
+                type="date"
+                value={editPhaseEnd}
+                onChange={(e) => setEditPhaseEnd(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+              />
+              <select
+                value={editPhaseStatus}
+                onChange={(e) =>
+                  setEditPhaseStatus(e.target.value as PhaseStatus)
+                }
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+              >
                 <option value={PhaseStatus.ACTIVE}>ACTIVE</option>
                 <option value={PhaseStatus.CLOSED}>CLOSED</option>
               </select>
             </div>
-            <ModalActions onClose={() => setShowEditPhase(false)} onConfirm={onUpdatePhase} confirmText={submitting ? "Đang lưu..." : "Lưu cập nhật"} />
+            <ModalActions
+              onClose={() => setShowEditPhase(false)}
+              onConfirm={onUpdatePhase}
+              confirmText={submitting ? "Đang lưu..." : "Lưu cập nhật"}
+            />
           </div>
         </Modal>
       )}
@@ -824,21 +1257,45 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showAddMember && (
         <Modal title="Thêm thành viên" onClose={() => setShowAddMember(false)}>
           <div className="space-y-3">
-            <input value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} placeholder="Tìm theo tên hoặc mã..." className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
+            <input
+              value={memberSearch}
+              onChange={(e) => setMemberSearch(e.target.value)}
+              placeholder="Tìm theo tên hoặc mã..."
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
             <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white">
               {filteredAvailable.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-slate-500">Không có thành viên phù hợp.</p>
+                <p className="px-4 py-3 text-sm text-slate-500">
+                  Không có thành viên phù hợp.
+                </p>
               ) : (
                 filteredAvailable.map((m) => (
-                  <button key={m.id} type="button" onClick={() => setSelectedMemberId(m.id)} className={`w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${selectedMemberId === m.id ? "bg-blue-100 text-blue-700" : "text-slate-900 hover:bg-slate-100"}`}>
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSelectedMemberId(m.id)}
+                    className={`w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${selectedMemberId === m.id ? "bg-blue-100 text-blue-700" : "text-slate-900 hover:bg-slate-100"}`}
+                  >
                     <p className="text-sm font-medium">{m.fullName}</p>
-                    <p className="text-xs text-slate-500 mt-1">{m.employeeCode}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {m.employeeCode}
+                    </p>
                   </button>
                 ))
               )}
             </div>
-            <input value={memberPosition} onChange={(e) => setMemberPosition(e.target.value)} placeholder="Vị trí trong dự án" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
-            <ModalActions onClose={() => setShowAddMember(false)} onConfirm={onAddMember} confirmText={submitting ? "Đang thêm..." : "Thêm"} disabled={!selectedMemberId} />
+            <input
+              value={memberPosition}
+              onChange={(e) => setMemberPosition(e.target.value)}
+              placeholder="Vị trí trong dự án"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+            <ModalActions
+              onClose={() => setShowAddMember(false)}
+              onConfirm={onAddMember}
+              confirmText={submitting ? "Đang thêm..." : "Thêm"}
+              disabled={!selectedMemberId}
+            />
           </div>
         </Modal>
       )}
@@ -846,8 +1303,17 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {showEditMember && (
         <Modal title="Cập nhật vị trí" onClose={() => setShowEditMember(false)}>
           <div className="space-y-3">
-            <input value={editingPosition} onChange={(e) => setEditingPosition(e.target.value)} placeholder="Vị trí" className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900" />
-            <ModalActions onClose={() => setShowEditMember(false)} onConfirm={onUpdateMember} confirmText={submitting ? "Đang lưu..." : "Lưu"} />
+            <input
+              value={editingPosition}
+              onChange={(e) => setEditingPosition(e.target.value)}
+              placeholder="Vị trí"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+            <ModalActions
+              onClose={() => setShowEditMember(false)}
+              onConfirm={onUpdateMember}
+              confirmText={submitting ? "Đang lưu..." : "Lưu"}
+            />
           </div>
         </Modal>
       )}
@@ -861,7 +1327,15 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   );
 }
 
-function Card({ title, value, tone }: { title: string; value: string; tone: string }) {
+function Card({
+  title,
+  value,
+  tone,
+}: {
+  title: string;
+  value: string;
+  tone: string;
+}) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{title}</p>
@@ -870,10 +1344,23 @@ function Card({ title, value, tone }: { title: string; value: string; tone: stri
   );
 }
 
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <div className="fixed inset-0 z-50">
-      <button type="button" className="absolute inset-0 bg-black/70" onClick={onClose} aria-label="Đóng modal" />
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/70"
+        onClick={onClose}
+        aria-label="Đóng modal"
+      />
       <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
         <h3 className="text-xl font-bold text-slate-900 mb-4">{title}</h3>
         {children}
@@ -895,10 +1382,19 @@ function ModalActions({
 }) {
   return (
     <div className="flex items-center justify-end gap-3 pt-2">
-      <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+      >
         Hủy
       </button>
-      <button type="button" onClick={onConfirm} disabled={disabled} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm">
+      <button
+        type="button"
+        onClick={onConfirm}
+        disabled={disabled}
+        className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm"
+      >
         {confirmText}
       </button>
     </div>

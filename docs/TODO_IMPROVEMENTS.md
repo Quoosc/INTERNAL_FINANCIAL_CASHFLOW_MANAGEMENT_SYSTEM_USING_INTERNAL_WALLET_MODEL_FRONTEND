@@ -74,33 +74,33 @@
 
 > **Lý do đầu tiên**: Tất cả role đều share các trang này. Base layer cho mọi role.
 
-| Trang | API endpoint | Sprint | Trạng thái |
-|---|---|---|---|
-| Dashboard (`/dashboard`) | `GET /dashboard/employee` | 9 | [ ] Chờ code |
-| Ví của tôi (`/wallet`) | `GET /wallet` | 3 | [ ] Chờ code |
-| Nạp tiền (`/wallet/deposit`) | `POST /wallet/deposit` → VNPay URL | 3 | [ ] Chờ code |
-| Rút tiền (`/wallet/withdraw`) | `POST /wallet/withdraw` | 3 | [ ] Chờ code |
-| Lịch sử GD (`/wallet/transactions`) | `GET /wallet/transactions` | 3 | [ ] Chờ code |
-| Danh sách YC (`/requests`) | `GET /requests` | 5 | [ ] Chờ code |
-| Tạo YC mới (`/requests/new`) | `POST /requests` | 5 | [ ] Chờ code |
-| Chi tiết YC (`/requests/[id]`) | `GET /requests/:id` | 5 | [ ] Chờ code |
-| Bảng lương (`/payroll`) | `GET /payslips` | 7 | [ ] Chờ code |
-| Chi tiết payslip (`/payroll/[id]`) | `GET /payslips/:id` | 7 | [ ] Chờ code |
-| Thông báo (`/notifications`) | `GET /notifications` | 8 | [ ] Chờ code |
+| Trang                               | API endpoint                       | Sprint | Trạng thái   |
+| ----------------------------------- | ---------------------------------- | ------ | ------------ |
+| Dashboard (`/dashboard`)            | `GET /dashboard/employee`          | 9      | [ ] Chờ code |
+| Ví của tôi (`/wallet`)              | `GET /wallet`                      | 3      | [ ] Chờ code |
+| Nạp tiền (`/wallet/deposit`)        | `POST /wallet/deposit` → VNPay URL | 3      | [ ] Chờ code |
+| Rút tiền (`/wallet/withdraw`)       | `POST /wallet/withdraw`            | 3      | [ ] Chờ code |
+| Lịch sử GD (`/wallet/transactions`) | `GET /wallet/transactions`         | 3      | [ ] Chờ code |
+| Danh sách YC (`/requests`)          | `GET /requests`                    | 5      | [ ] Chờ code |
+| Tạo YC mới (`/requests/new`)        | `POST /requests`                   | 5      | [ ] Chờ code |
+| Chi tiết YC (`/requests/[id]`)      | `GET /requests/:id`                | 5      | [ ] Chờ code |
+| Bảng lương (`/payroll`)             | `GET /payslips`                    | 7      | [ ] Chờ code |
+| Chi tiết payslip (`/payroll/[id]`)  | `GET /payslips/:id`                | 7      | [ ] Chờ code |
+| Thông báo (`/notifications`)        | `GET /notifications`               | 8      | [ ] Chờ code |
 
 ---
 
-### 🥈 Tier 2 — TEAM_LEADER _(sau khi Employee xong)_
+### 🥈 Tier 2 — TEAM*LEADER *(sau khi Employee xong)\_
 
 > **Role bổ sung**: Approvals (Flow 1), quản lý Project phases/categories, Team overview.
 
-| Trang | API endpoint | Sprint | Trạng thái |
-|---|---|---|---|
-| Duyệt yêu cầu (`/team-leader/approvals`) | `GET /team-leader/approvals` | 4-5 | [ ] Chờ code |
-| Chi tiết duyệt (`/team-leader/approvals/[id]`) | `GET /team-leader/approvals/:id` | 4-5 | [ ] Chờ code |
-| Dự án của TL (`/team-leader/projects`) | `GET /team-leader/projects` | 4 | [ ] Chờ code |
-| Chi tiết DA (`/team-leader/projects/[id]`) | `GET /team-leader/projects/:id` | 4 | [ ] Chờ code |
-| Thành viên nhóm (`/team-leader/team`) | `GET /team-leader/team-members` | 5 | [ ] Chờ code |
+| Trang                                          | API endpoint                     | Sprint | Trạng thái   |
+| ---------------------------------------------- | -------------------------------- | ------ | ------------ |
+| Duyệt yêu cầu (`/team-leader/approvals`)       | `GET /team-leader/approvals`     | 4-5    | [ ] Chờ code |
+| Chi tiết duyệt (`/team-leader/approvals/[id]`) | `GET /team-leader/approvals/:id` | 4-5    | [ ] Chờ code |
+| Dự án của TL (`/team-leader/projects`)         | `GET /team-leader/projects`      | 4      | [ ] Chờ code |
+| Chi tiết DA (`/team-leader/projects/[id]`)     | `GET /team-leader/projects/:id`  | 4      | [ ] Chờ code |
+| Thành viên nhóm (`/team-leader/team`)          | `GET /team-leader/team-members`  | 5      | [ ] Chờ code |
 
 ---
 
@@ -108,12 +108,12 @@
 
 > **Role bổ sung**: Duyệt PROJECT_TOPUP (Flow 2), tạo/sửa dự án, quản lý phòng ban.
 
-| Trang | API endpoint | Sprint | Trạng thái |
-|---|---|---|---|
-| Duyệt YC phòng ban (`/manager/approvals`) | `GET /manager/approvals` | 4-5 | [ ] Chờ code |
-| Quản lý dự án (`/manager/projects`) | `GET /manager/projects` | 4 | [ ] Chờ code |
-| Tạo/Sửa dự án | `POST/PUT /manager/projects` | 4 | [ ] Chờ code |
-| Thành viên phòng ban (`/manager/department`) | `GET /manager/department/members` | 5 | [ ] Chờ code |
+| Trang                                        | API endpoint                      | Sprint | Trạng thái   |
+| -------------------------------------------- | --------------------------------- | ------ | ------------ |
+| Duyệt YC phòng ban (`/manager/approvals`)    | `GET /manager/approvals`          | 4-5    | [ ] Chờ code |
+| Quản lý dự án (`/manager/projects`)          | `GET /manager/projects`           | 4      | [ ] Chờ code |
+| Tạo/Sửa dự án                                | `POST/PUT /manager/projects`      | 4      | [ ] Chờ code |
+| Thành viên phòng ban (`/manager/department`) | `GET /manager/department/members` | 5      | [ ] Chờ code |
 
 ---
 
@@ -122,23 +122,23 @@
 > **Role bổ sung**: CFO duyệt DEPARTMENT_TOPUP (Flow 3), quản lý quỹ hệ thống.
 > ⚠ Route riêng tại `/cfo/*` — KHÔNG dùng chung `/admin/*`.
 
-| Trang | API endpoint | Sprint | Trạng thái |
-|---|---|---|---|
-| Duyệt YC cấp quota (`/cfo/approvals`) | `GET /cfo/approvals` | 6 | [ ] Chờ code |
-| Chi tiết duyệt (`/cfo/approvals/[id]`) | `GET /cfo/approvals/:id` | 6 | [ ] Chờ code |
-| Quỹ hệ thống (`/cfo/system-fund`) | `GET /company-fund` | 6 | [ ] Chờ code |
+| Trang                                  | API endpoint             | Sprint | Trạng thái   |
+| -------------------------------------- | ------------------------ | ------ | ------------ |
+| Duyệt YC cấp quota (`/cfo/approvals`)  | `GET /cfo/approvals`     | 6      | [ ] Chờ code |
+| Chi tiết duyệt (`/cfo/approvals/[id]`) | `GET /cfo/approvals/:id` | 6      | [ ] Chờ code |
+| Quỹ hệ thống (`/cfo/system-fund`)      | `GET /company-fund`      | 6      | [ ] Chờ code |
 
 ### 🏅 Tier 4B — ADMIN _(song song hoặc sau CFO)_
 
 > **Role bổ sung**: ADMIN quản trị IAM/system — KHÔNG tham gia duyệt tài chính.
 
-| Trang | API endpoint | Sprint | Trạng thái |
-|---|---|---|---|
-| Quản lý nhân sự (`/admin/users`) | `GET /admin/users` | 2 | [ ] Chờ code |
-| Tạo/Sửa user | `POST/PUT /admin/users` | 2 | [ ] Chờ code |
-| Quản lý phòng ban (`/admin/departments`) | `GET /admin/departments` | 2 | [ ] Chờ code |
-| Nhật ký hệ thống (`/admin/audit-logs`) | `GET /admin/audit` | 6 | [ ] Chờ code |
-| Cấu hình hệ thống (`/admin/settings`) | `GET/PUT /admin/settings` | 6 | [ ] Chờ code |
+| Trang                                    | API endpoint              | Sprint | Trạng thái   |
+| ---------------------------------------- | ------------------------- | ------ | ------------ |
+| Quản lý nhân sự (`/admin/users`)         | `GET /admin/users`        | 2      | [ ] Chờ code |
+| Tạo/Sửa user                             | `POST/PUT /admin/users`   | 2      | [ ] Chờ code |
+| Quản lý phòng ban (`/admin/departments`) | `GET /admin/departments`  | 2      | [ ] Chờ code |
+| Nhật ký hệ thống (`/admin/audit-logs`)   | `GET /admin/audit`        | 6      | [ ] Chờ code |
+| Cấu hình hệ thống (`/admin/settings`)    | `GET/PUT /admin/settings` | 6      | [ ] Chờ code |
 
 ---
 
@@ -146,26 +146,26 @@
 
 > **Role phức tạp nhất**: Giải ngân PIN, Payroll Excel import, Ledger double-entry, System Fund.
 
-| Trang | API endpoint | Sprint | Trạng thái |
-|---|---|---|---|
-| Giải ngân (`/accountant/disbursements`) | `GET /accountant/disbursements` | 6 | [ ] Chờ code |
-| Xử lý giải ngân (nhập PIN) | `POST /accountant/disbursements/:id/disburse` | 6 | [ ] Chờ code |
-| Quản lý lương (`/accountant/payroll`) | `GET /accountant/payroll` | 7 | [ ] Chờ code |
-| Import Excel lương | `POST /accountant/payroll/:id/import` | 7 | [ ] Chờ code |
-| Auto-netting & Run payroll | `POST /accountant/payroll/:id/auto-netting` + `/run` | 7 | [ ] Chờ code |
-| Sổ cái (`/accountant/ledger`) | `GET /accountant/ledger` | 7 | [ ] Chờ code |
-| Chi tiết giao dịch sổ cái | `GET /accountant/ledger/:transactionId` | 7 | [ ] Chờ code |
-| Quỹ hệ thống — Accountant view (`/admin/system-fund`) | `GET /company-fund` + reconciliation | 7 | [ ] Chờ code |
+| Trang                                                 | API endpoint                                         | Sprint | Trạng thái   |
+| ----------------------------------------------------- | ---------------------------------------------------- | ------ | ------------ |
+| Giải ngân (`/accountant/disbursements`)               | `GET /accountant/disbursements`                      | 6      | [ ] Chờ code |
+| Xử lý giải ngân (nhập PIN)                            | `POST /accountant/disbursements/:id/disburse`        | 6      | [ ] Chờ code |
+| Quản lý lương (`/accountant/payroll`)                 | `GET /accountant/payroll`                            | 7      | [ ] Chờ code |
+| Import Excel lương                                    | `POST /accountant/payroll/:id/import`                | 7      | [ ] Chờ code |
+| Auto-netting & Run payroll                            | `POST /accountant/payroll/:id/auto-netting` + `/run` | 7      | [ ] Chờ code |
+| Sổ cái (`/accountant/ledger`)                         | `GET /accountant/ledger`                             | 7      | [ ] Chờ code |
+| Chi tiết giao dịch sổ cái                             | `GET /accountant/ledger/:transactionId`              | 7      | [ ] Chờ code |
+| Quỹ hệ thống — Accountant view (`/admin/system-fund`) | `GET /company-fund` + reconciliation                 | 7      | [ ] Chờ code |
 
 ---
 
 ## ⚙️ Shared Pages (tất cả role)
 
-| Trang | Ghi chú |
-|---|---|
+| Trang                                | Ghi chú                                 |
+| ------------------------------------ | --------------------------------------- |
 | Change Password (`/change-password`) | First login flow (1 bước: đổi MK + PIN) |
-| Create PIN (`/create-pin`) | Orphaned (flow cũ — không sử dụng) |
-| Profile / Settings | Chưa có route riêng |
+| Create PIN (`/create-pin`)           | Orphaned (flow cũ — không sử dụng)      |
+| Profile / Settings                   | Chưa có route riêng                     |
 
 ---
 

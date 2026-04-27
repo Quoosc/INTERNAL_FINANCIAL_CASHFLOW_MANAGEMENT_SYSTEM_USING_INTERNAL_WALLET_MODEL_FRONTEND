@@ -3,7 +3,12 @@
 // Endpoints prefix: /accountant/*
 // =============================================================
 
-import type { RequestAttachmentResponse, RequestTimelineEntry, RequestStatus, RequestType } from "./request";
+import type {
+  RequestAttachmentResponse,
+  RequestTimelineEntry,
+  RequestStatus,
+  RequestType,
+} from "./request";
 import type { ApprovalPhase } from "./team-leader";
 
 // --- Disbursement DTOs ---
@@ -17,7 +22,7 @@ export interface DisbursementRequester {
   jobTitle: string | null;
   departmentName: string;
   bankName: string;
-  bankAccountNum: string;       // unmasked cho Accountant
+  bankAccountNum: string; // unmasked cho Accountant
   bankAccountOwner: string;
 }
 

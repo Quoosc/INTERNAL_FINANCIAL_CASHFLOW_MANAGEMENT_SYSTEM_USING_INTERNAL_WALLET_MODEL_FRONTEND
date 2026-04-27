@@ -234,7 +234,10 @@ function getProjectStatusLabel(status: string): string {
 
 function getBurnPercent(project: TLProjectListItem): number {
   if (project.totalBudget <= 0) return 0;
-  return Math.min(100, Math.round((project.totalSpent / project.totalBudget) * 100));
+  return Math.min(
+    100,
+    Math.round((project.totalSpent / project.totalBudget) * 100),
+  );
 }
 
 function getBurnBarClass(percent: number): string {
@@ -248,14 +251,14 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
 }
 
 const ACCENT_TO_GRADIENT: Record<string, string> = {
-  "text-blue-700":    "bg-linear-to-br from-blue-500 to-blue-600",
+  "text-blue-700": "bg-linear-to-br from-blue-500 to-blue-600",
   "text-emerald-700": "bg-linear-to-br from-emerald-500 to-emerald-600",
-  "text-amber-700":   "bg-linear-to-br from-amber-500 to-orange-500",
-  "text-violet-700":  "bg-linear-to-br from-violet-500 to-purple-600",
-  "text-indigo-700":  "bg-linear-to-br from-indigo-500 to-indigo-600",
-  "text-rose-700":    "bg-linear-to-br from-rose-500 to-rose-600",
-  "text-teal-700":    "bg-linear-to-br from-teal-500 to-teal-600",
-  "text-cyan-700":    "bg-linear-to-br from-cyan-500 to-cyan-600",
+  "text-amber-700": "bg-linear-to-br from-amber-500 to-orange-500",
+  "text-violet-700": "bg-linear-to-br from-violet-500 to-purple-600",
+  "text-indigo-700": "bg-linear-to-br from-indigo-500 to-indigo-600",
+  "text-rose-700": "bg-linear-to-br from-rose-500 to-rose-600",
+  "text-teal-700": "bg-linear-to-br from-teal-500 to-teal-600",
+  "text-cyan-700": "bg-linear-to-br from-cyan-500 to-cyan-600",
 };
 
 function StatCard({
@@ -271,7 +274,8 @@ function StatCard({
   accent: string;
   icon: React.ReactNode;
 }) {
-  const iconGradient = ACCENT_TO_GRADIENT[accent] ?? "bg-linear-to-br from-slate-400 to-slate-500";
+  const iconGradient =
+    ACCENT_TO_GRADIENT[accent] ?? "bg-linear-to-br from-slate-400 to-slate-500";
   return (
     <Link
       href={href}
@@ -282,7 +286,9 @@ function StatCard({
           <p className="text-xs text-slate-500">{title}</p>
           <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
         </div>
-        <span className={`w-9 h-9 rounded-lg ${iconGradient} text-white flex items-center justify-center shadow-sm`}>
+        <span
+          className={`w-9 h-9 rounded-lg ${iconGradient} text-white flex items-center justify-center shadow-sm`}
+        >
           {icon}
         </span>
       </div>
@@ -311,10 +317,10 @@ export function TeamLeaderDashboard() {
       try {
         const [approvalRes, projectRes] = await Promise.all([
           api.get<PaginatedResponse<unknown> | unknown[]>(
-            "/api/v1/team-leader/approvals?page=0&size=3&status=PENDING"
+            "/api/v1/team-leader/approvals?page=0&size=3&status=PENDING",
           ),
           api.get<PaginatedResponse<TLProjectListItem> | TLProjectListItem[]>(
-            "/api/v1/team-leader/projects?page=0&size=3"
+            "/api/v1/team-leader/projects?page=0&size=3",
           ),
         ]);
 
@@ -323,7 +329,7 @@ export function TeamLeaderDashboard() {
         setApprovals(
           pickItems(approvalRes.data)
             .map((item) => normalizeTLApprovalListItem(item))
-            .slice(0, 3)
+            .slice(0, 3),
         );
         setProjects(pickItems(projectRes.data).slice(0, 3));
       } catch (err) {
@@ -335,7 +341,9 @@ export function TeamLeaderDashboard() {
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải dashboard từ API, đang hiển thị dữ liệu mẫu.");
+          setError(
+            "Không thể tải dashboard từ API, đang hiển thị dữ liệu mẫu.",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -351,7 +359,7 @@ export function TeamLeaderDashboard() {
 
   const totalMembers = useMemo(
     () => projects.reduce((sum, project) => sum + project.memberCount, 0),
-    [projects]
+    [projects],
   );
 
   const todayLabel = useMemo(
@@ -362,14 +370,16 @@ export function TeamLeaderDashboard() {
         month: "2-digit",
         year: "numeric",
       }).format(new Date()),
-    []
+    [],
   );
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Xin chào, {user?.fullName ?? "Team Leader"}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Xin chào, {user?.fullName ?? "Team Leader"}
+          </h1>
           <p className="text-slate-500 mt-1">Hôm nay là {todayLabel}</p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-indigo-500/40 bg-indigo-100 text-indigo-700 text-sm font-medium">
@@ -380,7 +390,10 @@ export function TeamLeaderDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {loading ? (
           [...Array(4)].map((_, index) => (
-            <div key={`stat-skeleton-${index}`} className="h-24 rounded-2xl bg-white animate-pulse" />
+            <div
+              key={`stat-skeleton-${index}`}
+              className="h-24 rounded-2xl bg-white animate-pulse"
+            />
           ))
         ) : (
           <>
@@ -390,7 +403,12 @@ export function TeamLeaderDashboard() {
               href="/wallet"
               accent="text-emerald-700"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -406,7 +424,12 @@ export function TeamLeaderDashboard() {
               href="/team-leader/approvals"
               accent="text-amber-700"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -422,7 +445,12 @@ export function TeamLeaderDashboard() {
               href="/team-leader/projects"
               accent="text-sky-700"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -438,7 +466,12 @@ export function TeamLeaderDashboard() {
               href="/team-leader/team"
               accent="text-indigo-700"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -455,8 +488,13 @@ export function TeamLeaderDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Yêu cầu đang chờ duyệt</h2>
-            <Link href="/team-leader/approvals" className="text-sm text-blue-700 hover:text-blue-600">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Yêu cầu đang chờ duyệt
+            </h2>
+            <Link
+              href="/team-leader/approvals"
+              className="text-sm text-blue-700 hover:text-blue-600"
+            >
               Xem tất cả →
             </Link>
           </div>
@@ -464,7 +502,10 @@ export function TeamLeaderDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`approval-skeleton-${index}`} className="h-20 rounded-xl bg-white animate-pulse" />
+                <div
+                  key={`approval-skeleton-${index}`}
+                  className="h-20 rounded-xl bg-white animate-pulse"
+                />
               ))}
             </div>
           ) : approvals.length === 0 ? (
@@ -482,19 +523,30 @@ export function TeamLeaderDashboard() {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-2 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getApprovalTypeClass(item.type)}`}>
+                        <span
+                          className={`inline-flex px-2 py-1 rounded-full border text-xs ${getApprovalTypeClass(item.type)}`}
+                        >
                           {getApprovalTypeLabel(item.type)}
                         </span>
-                        <span className="text-xs text-slate-500 font-mono">{item.requestCode}</span>
-                        <span className="text-xs text-slate-500">{formatRelativeTime(item.createdAt)}</span>
+                        <span className="text-xs text-slate-500 font-mono">
+                          {item.requestCode}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {formatRelativeTime(item.createdAt)}
+                        </span>
                       </div>
 
                       <p className="text-sm text-slate-900 truncate">
-                        <span className="font-medium text-slate-900">{item.requester.fullName}</span> • {item.project.name ?? item.project.projectCode}
+                        <span className="font-medium text-slate-900">
+                          {item.requester.fullName}
+                        </span>{" "}
+                        • {item.project.name ?? item.project.projectCode}
                       </p>
                     </div>
 
-                    <p className="text-sm font-semibold text-slate-900">{formatCurrency(item.amount)}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {formatCurrency(item.amount)}
+                    </p>
                   </div>
                 </Link>
               ))}
@@ -504,8 +556,13 @@ export function TeamLeaderDashboard() {
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Dự án của tôi</h2>
-            <Link href="/team-leader/projects" className="text-sm text-blue-700 hover:text-blue-600">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Dự án của tôi
+            </h2>
+            <Link
+              href="/team-leader/projects"
+              className="text-sm text-blue-700 hover:text-blue-600"
+            >
               Xem tất cả →
             </Link>
           </div>
@@ -513,7 +570,10 @@ export function TeamLeaderDashboard() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={`project-skeleton-${index}`} className="h-24 rounded-xl bg-white animate-pulse" />
+                <div
+                  key={`project-skeleton-${index}`}
+                  className="h-24 rounded-xl bg-white animate-pulse"
+                />
               ))}
             </div>
           ) : projects.length === 0 ? (
@@ -531,7 +591,9 @@ export function TeamLeaderDashboard() {
                     className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{project.name}</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {project.name}
+                      </p>
                       <span
                         className={`shrink-0 inline-flex px-2 py-1 rounded-full border text-[11px] ${getProjectStatusClass(project.status)}`}
                       >
@@ -545,7 +607,10 @@ export function TeamLeaderDashboard() {
                         <span>{burn}%</span>
                       </div>
                       <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
-                        <div className={`h-full ${getBurnBarClass(burn)}`} style={{ width: `${burn}%` }} />
+                        <div
+                          className={`h-full ${getBurnBarClass(burn)}`}
+                          style={{ width: `${burn}%` }}
+                        />
                       </div>
                     </div>
                   </Link>
@@ -563,8 +628,18 @@ export function TeamLeaderDashboard() {
             href="/wallet/deposit"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v14m7-7H5" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 5v14m7-7H5"
+              />
             </svg>
             Nạp tiền
           </Link>
@@ -573,8 +648,18 @@ export function TeamLeaderDashboard() {
             href="/wallet/withdraw"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M5 12h14"
+              />
             </svg>
             Rút tiền
           </Link>

@@ -136,8 +136,6 @@ const MOCK_MEMBER_DETAIL: ManagerDeptMemberDetailResponse = {
   ],
 };
 
-
-
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
   return Number.isFinite(page) && page > 0 ? page : 1;
@@ -159,7 +157,9 @@ function inferRole(member: ManagerDeptMemberListItem): MemberRole {
 }
 
 function normalizeMember(member: ManagerDeptMemberListItem): ManagerMemberView {
-  const withCounts = member as ManagerDeptMemberListItem & { projectsCount?: number };
+  const withCounts = member as ManagerDeptMemberListItem & {
+    projectsCount?: number;
+  };
   return {
     ...member,
     role: inferRole(member),
@@ -170,7 +170,7 @@ function normalizeMember(member: ManagerDeptMemberListItem): ManagerMemberView {
 function filterMock(
   source: ManagerMemberView[],
   role?: MemberRole,
-  search = ""
+  search = "",
 ): ManagerMemberView[] {
   const q = search.trim().toLowerCase();
 
@@ -179,7 +179,8 @@ function filterMock(
 
     if (!q) return true;
 
-    const haystack = `${item.fullName} ${item.employeeCode} ${item.email}`.toLowerCase();
+    const haystack =
+      `${item.fullName} ${item.employeeCode} ${item.email}`.toLowerCase();
     return haystack.includes(q);
   });
 }
@@ -191,7 +192,8 @@ function roleBadgeClass(role: MemberRole): string {
 }
 
 function statusBadgeClass(status: string): string {
-  if (status === "ACTIVE") return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  if (status === "ACTIVE")
+    return "bg-emerald-100 border-emerald-200 text-emerald-700";
   if (status === "LOCKED") return "bg-rose-100 border-rose-200 text-rose-700";
   return "bg-slate-100 border-slate-200 text-slate-600";
 }
@@ -202,11 +204,21 @@ export default function ManagerDepartmentPage() {
   const searchParams = useSearchParams();
 
   const searchParamsString = searchParams.toString();
-  const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
-  const roleFilter = useMemo(() => parseRole(searchParams.get("role")), [searchParams]);
-  const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const search = useMemo(
+    () => searchParams.get("search") ?? "",
+    [searchParams],
+  );
+  const roleFilter = useMemo(
+    () => parseRole(searchParams.get("role")),
+    [searchParams],
+  );
+  const page = useMemo(
+    () => parsePage(searchParams.get("page")),
+    [searchParams],
+  );
 
-  const [deptDashboard, setDeptDashboard] = useState<ManagerDashboardResponse | null>(null);
+  const [deptDashboard, setDeptDashboard] =
+    useState<ManagerDashboardResponse | null>(null);
 
   const [members, setMembers] = useState<ManagerMemberView[]>([]);
   const [total, setTotal] = useState(0);
@@ -218,7 +230,8 @@ export default function ManagerDepartmentPage() {
 
   const [showDetail, setShowDetail] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<ManagerDeptMemberDetailResponse | null>(null);
+  const [selectedMember, setSelectedMember] =
+    useState<ManagerDeptMemberDetailResponse | null>(null);
 
   useEffect(() => {
     setSearchInput(search);
@@ -229,7 +242,7 @@ export default function ManagerDepartmentPage() {
       const query = params.toString();
       router.push(query ? `${pathname}?${query}` : pathname);
     },
-    [pathname, router]
+    [pathname, router],
   );
 
   const updateParam = useCallback(
@@ -245,7 +258,7 @@ export default function ManagerDepartmentPage() {
       if (key !== "page") params.delete("page");
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   const goToPage = useCallback(
@@ -255,7 +268,7 @@ export default function ManagerDepartmentPage() {
       else params.set("page", String(nextPage));
       pushWithParams(params);
     },
-    [pushWithParams, searchParamsString]
+    [pushWithParams, searchParamsString],
   );
 
   useEffect(() => {
@@ -275,7 +288,9 @@ export default function ManagerDepartmentPage() {
 
     const loadDeptBudget = async () => {
       try {
-        const res = await api.get<ManagerDashboardResponse>("/api/v1/dashboard/manager");
+        const res = await api.get<ManagerDashboardResponse>(
+          "/api/v1/dashboard/manager",
+        );
         if (cancelled) return;
         setDeptDashboard(res.data);
       } catch {
@@ -311,16 +326,23 @@ export default function ManagerDepartmentPage() {
         query.set("page", String(toApiPage(filters.page ?? 1)));
         query.set("size", String(filters.size ?? PAGE_LIMIT));
 
-        const res = await api.get<PaginatedResponse<ManagerDeptMemberListItem> | ManagerDeptMemberListItem[]>(
-          `/api/v1/manager/department/members?${query.toString()}`
-        );
+        const res = await api.get<
+          | PaginatedResponse<ManagerDeptMemberListItem>
+          | ManagerDeptMemberListItem[]
+        >(`/api/v1/manager/department/members?${query.toString()}`);
 
         if (cancelled) return;
 
-        const normalized = (Array.isArray(res.data) ? res.data : res.data.items).map(normalizeMember);
-        const filtered = roleFilter ? normalized.filter((item) => item.role === roleFilter) : normalized;
+        const normalized = (
+          Array.isArray(res.data) ? res.data : res.data.items
+        ).map(normalizeMember);
+        const filtered = roleFilter
+          ? normalized.filter((item) => item.role === roleFilter)
+          : normalized;
 
-        const apiTotal = Array.isArray(res.data) ? filtered.length : res.data.total;
+        const apiTotal = Array.isArray(res.data)
+          ? filtered.length
+          : res.data.total;
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
           : res.data.totalPages;
@@ -374,7 +396,7 @@ export default function ManagerDepartmentPage() {
 
     try {
       const res = await api.get<ManagerDeptMemberDetailResponse>(
-        `/api/v1/manager/department/members/${memberId}`
+        `/api/v1/manager/department/members/${memberId}`,
       );
       setSelectedMember(res.data);
     } catch {
@@ -388,7 +410,9 @@ export default function ManagerDepartmentPage() {
         jobTitle: summary?.jobTitle ?? MOCK_MEMBER_DETAIL.jobTitle,
         status: summary?.status ?? MOCK_MEMBER_DETAIL.status,
         debtBalance: summary?.debtBalance ?? MOCK_MEMBER_DETAIL.debtBalance,
-        pendingRequestsCount: summary?.pendingRequestsCount ?? MOCK_MEMBER_DETAIL.pendingRequestsCount,
+        pendingRequestsCount:
+          summary?.pendingRequestsCount ??
+          MOCK_MEMBER_DETAIL.pendingRequestsCount,
       });
     } finally {
       setDetailLoading(false);
@@ -396,15 +420,21 @@ export default function ManagerDepartmentPage() {
   };
 
   const totalQuota = deptDashboard?.departmentBudget.totalProjectQuota ?? 0;
-  const availableBudget = deptDashboard?.departmentBudget.totalAvailableBalance ?? 0;
-  const availablePercent = totalQuota > 0 ? Math.round((availableBudget / totalQuota) * 100) : 0;
+  const availableBudget =
+    deptDashboard?.departmentBudget.totalAvailableBalance ?? 0;
+  const availablePercent =
+    totalQuota > 0 ? Math.round((availableBudget / totalQuota) * 100) : 0;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Phòng ban của tôi</h1>
-          <p className="text-slate-500 mt-1">Theo dõi thành viên, dư nợ và các hoạt động gần đây trong phòng ban.</p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Phòng ban của tôi
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Theo dõi thành viên, dư nợ và các hoạt động gần đây trong phòng ban.
+          </p>
         </div>
 
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
@@ -415,21 +445,33 @@ export default function ManagerDepartmentPage() {
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <p className="text-sm text-slate-600">
-            Quỹ phòng ban khả dụng: <span className="font-semibold text-emerald-700">{formatCurrency(availableBudget)}</span>
-            <span className="text-slate-500"> / {formatCurrency(totalQuota)}</span>
+            Quỹ phòng ban khả dụng:{" "}
+            <span className="font-semibold text-emerald-700">
+              {formatCurrency(availableBudget)}
+            </span>
+            <span className="text-slate-500">
+              {" "}
+              / {formatCurrency(totalQuota)}
+            </span>
           </p>
-          <span className="text-sm text-slate-500">{availablePercent}% khả dụng</span>
+          <span className="text-sm text-slate-500">
+            {availablePercent}% khả dụng
+          </span>
         </div>
 
         <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
-          <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, availablePercent)}%` }} />
+          <div
+            className="h-full bg-blue-500"
+            style={{ width: `${Math.min(100, availablePercent)}%` }}
+          />
         </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex flex-wrap gap-2">
           {roleTabs.map((tab) => {
-            const active = roleFilter === tab.value || (!roleFilter && !tab.value);
+            const active =
+              roleFilter === tab.value || (!roleFilter && !tab.value);
             return (
               <button
                 key={tab.label}
@@ -473,7 +515,10 @@ export default function ManagerDepartmentPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
-            <div key={`manager-members-skeleton-${index}`} className="h-48 rounded-2xl bg-white animate-pulse" />
+            <div
+              key={`manager-members-skeleton-${index}`}
+              className="h-48 rounded-2xl bg-white animate-pulse"
+            />
           ))}
         </div>
       ) : members.length === 0 ? (
@@ -491,19 +536,25 @@ export default function ManagerDepartmentPage() {
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{member.fullName}</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">
+                    {member.fullName}
+                  </p>
                   <p className="text-xs text-slate-500 truncate">
                     {member.jobTitle ?? "—"} • {member.employeeCode}
                   </p>
                 </div>
 
-                <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${roleBadgeClass(member.role)}`}>
+                <span
+                  className={`inline-flex px-2 py-1 rounded-full border text-xs ${roleBadgeClass(member.role)}`}
+                >
                   {member.role === "TEAM_LEADER" ? "Team Leader" : "Nhân viên"}
                 </span>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusBadgeClass(member.status)}`}>
+                <span
+                  className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusBadgeClass(member.status)}`}
+                >
                   {member.status}
                 </span>
 
@@ -515,7 +566,8 @@ export default function ManagerDepartmentPage() {
               </div>
 
               <p className="text-xs text-slate-500">
-                {member.projectsCount} dự án • {member.pendingRequestsCount} yêu cầu chờ xử lý
+                {member.projectsCount} dự án • {member.pendingRequestsCount} yêu
+                cầu chờ xử lý
               </p>
             </button>
           ))}
@@ -573,9 +625,12 @@ export default function ManagerDepartmentPage() {
               <div className="space-y-5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{selectedMember.fullName}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {selectedMember.fullName}
+                    </p>
                     <p className="text-xs text-slate-500 mt-1">
-                      {selectedMember.employeeCode} • {selectedMember.jobTitle ?? "—"}
+                      {selectedMember.employeeCode} •{" "}
+                      {selectedMember.jobTitle ?? "—"}
                     </p>
                   </div>
                   <button
@@ -589,16 +644,29 @@ export default function ManagerDepartmentPage() {
 
                 <div className="text-sm text-slate-600 space-y-1">
                   <p>{selectedMember.email}</p>
-                  <p>{selectedMember.phoneNumber ?? "Chưa cập nhật số điện thoại"}</p>
-                  <p className={selectedMember.debtBalance > 0 ? "text-rose-700 font-medium" : "text-emerald-700"}>
+                  <p>
+                    {selectedMember.phoneNumber ??
+                      "Chưa cập nhật số điện thoại"}
+                  </p>
+                  <p
+                    className={
+                      selectedMember.debtBalance > 0
+                        ? "text-rose-700 font-medium"
+                        : "text-emerald-700"
+                    }
+                  >
                     Dư nợ: {formatCurrency(selectedMember.debtBalance)}
                   </p>
                 </div>
 
                 <section className="space-y-2">
-                  <h4 className="text-sm font-semibold text-slate-900">Dự án tham gia</h4>
+                  <h4 className="text-sm font-semibold text-slate-900">
+                    Dự án tham gia
+                  </h4>
                   {selectedMember.assignedProjects.length === 0 ? (
-                    <p className="text-xs text-slate-500">Chưa có dữ liệu dự án.</p>
+                    <p className="text-xs text-slate-500">
+                      Chưa có dữ liệu dự án.
+                    </p>
                   ) : (
                     selectedMember.assignedProjects.map((project) => (
                       <div
@@ -617,17 +685,30 @@ export default function ManagerDepartmentPage() {
                 </section>
 
                 <section className="space-y-2">
-                  <h4 className="text-sm font-semibold text-slate-900">Yêu cầu gần đây</h4>
+                  <h4 className="text-sm font-semibold text-slate-900">
+                    Yêu cầu gần đây
+                  </h4>
                   {selectedMember.recentRequests.length === 0 ? (
-                    <p className="text-xs text-slate-500">Không có yêu cầu gần đây.</p>
+                    <p className="text-xs text-slate-500">
+                      Không có yêu cầu gần đây.
+                    </p>
                   ) : (
                     selectedMember.recentRequests.map((request) => (
-                      <div key={request.id} className="rounded-lg border border-slate-200 bg-white p-3 space-y-1">
+                      <div
+                        key={request.id}
+                        className="rounded-lg border border-slate-200 bg-white p-3 space-y-1"
+                      >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-mono text-slate-600">{request.requestCode}</span>
-                          <span className="text-xs text-slate-500">{request.type}</span>
+                          <span className="text-xs font-mono text-slate-600">
+                            {request.requestCode}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {request.type}
+                          </span>
                         </div>
-                        <p className="text-sm text-slate-900">{formatCurrency(request.amount)}</p>
+                        <p className="text-sm text-slate-900">
+                          {formatCurrency(request.amount)}
+                        </p>
                         <p className="text-xs text-slate-500">
                           {request.status} • {formatDateTime(request.createdAt)}
                         </p>

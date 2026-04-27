@@ -107,12 +107,12 @@ export interface TLApprovalDetailResponse {
 /** POST /team-leader/approvals/:id/approve — body */
 export interface TLApproveBody {
   comment?: string;
-  approvedAmount?: number;    // mặc định = amount nếu không gửi
+  approvedAmount?: number; // mặc định = amount nếu không gửi
 }
 
 /** POST /team-leader/approvals/:id/reject — body */
 export interface TLRejectBody {
-  reason: string;             // bắt buộc
+  reason: string; // bắt buộc
 }
 
 /** POST /team-leader/approvals/:id/approve — response */

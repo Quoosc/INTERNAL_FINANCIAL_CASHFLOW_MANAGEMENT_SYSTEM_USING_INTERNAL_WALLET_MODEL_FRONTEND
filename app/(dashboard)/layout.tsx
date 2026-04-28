@@ -511,14 +511,6 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
 
 // ─── Sidebar ──────────────────────────────────────────────────
 
-const ROLE_ACCENT: Record<string, { bg: string; text: string; bar: string; hover: string }> = {
-  [RoleName.ADMIN]:        { bg: "bg-violet-50", text: "text-violet-700", bar: "bg-violet-600", hover: "hover:bg-violet-50" },
-  [RoleName.CFO]:          { bg: "bg-emerald-50", text: "text-emerald-700", bar: "bg-emerald-600", hover: "hover:bg-emerald-50" },
-  [RoleName.MANAGER]:      { bg: "bg-indigo-50", text: "text-indigo-700", bar: "bg-indigo-600", hover: "hover:bg-indigo-50" },
-  [RoleName.ACCOUNTANT]:   { bg: "bg-indigo-50", text: "text-indigo-700", bar: "bg-indigo-600", hover: "hover:bg-indigo-50" },
-  [RoleName.TEAM_LEADER]:  { bg: "bg-teal-50", text: "text-teal-700", bar: "bg-teal-600", hover: "hover:bg-teal-50" },
-  [RoleName.EMPLOYEE]:     { bg: "bg-blue-50", text: "text-blue-700", bar: "bg-blue-600", hover: "hover:bg-blue-50" },
-};
 
 const ROLE_LABELS: Partial<Record<RoleName, string>> = {
   [RoleName.EMPLOYEE]: "Nhân viên",
@@ -534,8 +526,6 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
   const { user, logout } = useAuth();
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
-
-  const accent = ROLE_ACCENT[user?.role ?? ""] ?? ROLE_ACCENT[RoleName.EMPLOYEE];
 
   const refreshUnreadCount = React.useCallback(async () => {
     try {
@@ -578,26 +568,43 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
   return (
     <>
       <aside
-        className={`fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-sm flex flex-col z-50 transition-all duration-200 ${isCollapsed ? "w-[68px]" : "w-64"}`}
+        className={`fixed left-0 top-0 h-full flex flex-col z-50 transition-all duration-200 overflow-hidden ${isCollapsed ? "w-[68px]" : "w-64"}`}
       >
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-700 to-indigo-800" />
+
+        {/* Faint hex grid overlay */}
+        <div className="absolute inset-0 opacity-[0.07] text-white pointer-events-none">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="sidebar-hex" x="0" y="0" width="40" height="70" patternUnits="userSpaceOnUse">
+                <path d="M20 0 L40 10 L40 30 L20 40 L0 30 L0 10 Z" fill="none" stroke="currentColor" strokeWidth="1" />
+                <path d="M20 40 L20 60 L0 50 L0 30 Z" fill="none" stroke="currentColor" strokeWidth="1" />
+                <path d="M20 40 L20 60 L40 50 L40 30 Z" fill="none" stroke="currentColor" strokeWidth="1" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#sidebar-hex)" />
+          </svg>
+        </div>
+
         {/* Logo + toggle */}
-        <div className={`border-b border-slate-200 flex items-center ${isCollapsed ? "p-3 justify-center flex-col gap-2" : "p-4 gap-3"}`}>
-          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`relative border-b border-white/10 flex items-center ${isCollapsed ? "p-3 justify-center flex-col gap-2" : "p-4 gap-3"}`}>
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="text-slate-900 font-bold text-sm truncate">IFMS Finance</h2>
-              <p className="text-slate-400 text-xs truncate">Internal Wallet</p>
+              <h2 className="text-white font-bold text-base truncate">IFMS Finance</h2>
+              <p className="text-blue-200/70 text-xs truncate">Internal Wallet</p>
             </div>
           )}
           <button
             type="button"
             onClick={onToggle}
             title={isCollapsed ? "Mở rộng sidebar" : "Thu nhỏ sidebar"}
-            className={`shrink-0 w-6 h-6 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors ${isCollapsed ? "" : "ml-auto"}`}
+            className={`shrink-0 w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center text-blue-200 hover:text-white transition-colors ${isCollapsed ? "" : "ml-auto"}`}
           >
             <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isCollapsed ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -606,15 +613,15 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+        <nav className="relative flex-1 overflow-y-auto py-3 px-2 space-y-1">
           {navGroups.map((group) => (
             <div key={group.label}>
               {!isCollapsed && (
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1.5 px-3">
+                <p className="text-[10px] uppercase tracking-wider text-blue-200/50 font-semibold mb-1.5 px-3">
                   {group.label}
                 </p>
               )}
-              {isCollapsed && <div className="my-1 border-t border-slate-100" />}
+              {isCollapsed && <div className="my-1 border-t border-white/10" />}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const active = isActive(item.href);
@@ -625,12 +632,12 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
                       title={isCollapsed ? item.label : undefined}
                       className={`relative flex items-center rounded-lg text-sm font-medium transition-all duration-150 ${isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3"} ${
                         active
-                          ? `${accent.bg} ${accent.text}`
-                          : `text-slate-600 hover:text-slate-900 ${accent.hover}`
+                          ? "bg-white/15 text-white"
+                          : "text-blue-100 hover:text-white hover:bg-white/10"
                       }`}
                     >
                       {active && (
-                        <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 ${accent.bar} rounded-r-full`} />
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-white rounded-r-full" />
                       )}
                       {item.icon}
                       {!isCollapsed && (
@@ -655,9 +662,9 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
         </nav>
 
         {/* User Info */}
-        <div className={`border-t border-slate-200 ${isCollapsed ? "p-2" : "p-4"}`}>
+        <div className={`relative border-t border-white/10 ${isCollapsed ? "p-2" : "p-4"}`}>
           <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
-            <div className="w-9 h-9 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full bg-linear-to-br from-purple-400 to-pink-400 flex items-center justify-center shrink-0">
               <span className="text-white font-semibold text-sm">
                 {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
               </span>
@@ -665,14 +672,14 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
             {!isCollapsed && (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{user?.fullName ?? "User"}</p>
-                  <p className="text-xs text-slate-400 truncate">
+                  <p className="text-sm font-medium text-white truncate">{user?.fullName ?? "User"}</p>
+                  <p className="text-xs text-blue-200/70 truncate">
                     {user?.role ? (ROLE_LABELS[user.role as RoleName] ?? user.role) : "—"}
                   </p>
                 </div>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="text-slate-400 hover:text-rose-600 transition-colors p-1 shrink-0"
+                  className="text-blue-200/70 hover:text-rose-300 transition-colors p-1 shrink-0"
                   title="Đăng xuất"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

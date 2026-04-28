@@ -18,6 +18,12 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+// BLOCKED (backend chưa có):
+// - /api/v1/manager/projects*
+// - /api/v1/manager/department/team-leaders
+// Giữ mock cho đến khi backend mở endpoint chính thức.
+const MANAGER_PROJECTS_ENDPOINT_BLOCKED = true;
+
 const MOCK_PROJECT: ProjectDetailResponse = {
   id: 1,
   projectCode: "PRJ-IT-001",
@@ -189,6 +195,16 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
+        if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
+          const safeId = Number(id);
+          setProject({
+            ...MOCK_PROJECT,
+            id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_PROJECT.id,
+            projectCode: `PRJ-MGR-${String(id).padStart(3, "0")}`,
+          });
+          return;
+        }
+
         const res = await api.get<ProjectDetailResponse>(`/api/v1/manager/projects/${id}`);
         if (cancelled) return;
         setProject(res.data);
@@ -224,6 +240,11 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
     const loadTeamLeaders = async () => {
       try {
+        if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
+          setTeamLeaders(MOCK_TL_OPTIONS);
+          return;
+        }
+
         const res = await api.get<TeamLeaderOptionResponse[]>("/api/v1/manager/department/team-leaders");
         if (cancelled) return;
         setTeamLeaders(res.data);
@@ -292,6 +313,28 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       status: editStatus,
       teamLeaderId,
     };
+
+    if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
+      setProject((prev) => {
+        if (!prev) return prev;
+
+        const availableBudget = Math.max(0, totalBudgetNumber - prev.totalSpent);
+        const updated = {
+          ...prev,
+          name: body.name ?? prev.name,
+          description: body.description ?? null,
+          totalBudget: body.totalBudget ?? prev.totalBudget,
+          availableBudget,
+          status: body.status ?? prev.status,
+        };
+
+        return applyTeamLeader(updated, teamLeaderId, teamLeaders);
+      });
+      setNotice("API chưa sẵn sàng, đã mô phỏng cập nhật dự án.");
+      setSaving(false);
+      setShowEditModal(false);
+      return;
+    }
 
     try {
       const res = await api.put<ProjectDetailResponse>(`/api/v1/manager/projects/${project.id}`, body);

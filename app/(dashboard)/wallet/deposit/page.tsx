@@ -2,10 +2,10 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { ApiError, api } from "@/lib/api-client";
+import { ApiError } from "@/lib/api-client";
+import { createDeposit, getPaymentStatus } from "@/lib/api";
 import { formatCurrency, formatInputAmount } from "@/lib/format";
-import { DepositQRRequest, DepositQRResponse, PaymentStatusResponse } from "@/types";
+import { PaymentCreateResponse } from "@/types";
 
 const MIN_AMOUNT = 10_000;
 
@@ -21,7 +21,8 @@ export default function DepositPage() {
   const router = useRouter();
 
   const [amount, setAmount] = useState("");
-  const [paymentData, setPaymentData] = useState<DepositQRResponse | null>(null);
+  const [paymentData, setPaymentData] = useState<PaymentCreateResponse | null>(null);
+  const [createdAmount, setCreatedAmount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -61,6 +62,7 @@ export default function DepositPage() {
     setError(null);
     setCopied(false);
     setPaymentStatusMessage(null);
+    setCreatedAmount(null);
 
     if (amountNumber < MIN_AMOUNT) {
       setError("Số tiền nạp tối thiểu là 10.000 ₫.");
@@ -70,11 +72,12 @@ export default function DepositPage() {
     setLoading(true);
 
     try {
-      const payload: DepositQRRequest = { amount: amountNumber };
-      const res = await api.post<DepositQRResponse>("/api/v1/wallet/deposit", payload);
+      const res = await createDeposit({ amount: amountNumber });
       setPaymentData(res.data);
+      setCreatedAmount(amountNumber);
     } catch (err) {
       setPaymentData(null);
+      setCreatedAmount(null);
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
@@ -109,9 +112,7 @@ export default function DepositPage() {
     setPaymentStatusMessage(null);
 
     try {
-      const res = await api.get<PaymentStatusResponse>(
-        `/api/v1/payments/status?transactionRef=${encodeURIComponent(paymentData.transactionRef)}`
-      );
+      const res = await getPaymentStatus(paymentData.transactionRef);
       setPaymentStatusMessage(
         res.data.message
           ? `${res.data.status}: ${res.data.message}`
@@ -209,23 +210,13 @@ export default function DepositPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <InfoRow label="Mã tham chiếu" value={paymentData.transactionRef} mono />
-            <InfoRow label="Số tiền" value={formatCurrency(paymentData.amount)} />
+            <InfoRow
+              label="Số tiền"
+              value={formatCurrency(createdAmount ?? amountNumber)}
+            />
             <InfoRow label="Trạng thái" value={paymentData.status ?? "PENDING"} />
             <InfoRow label="Thông báo" value={paymentData.message ?? "Đã tạo liên kết thanh toán"} />
           </div>
-
-          {paymentData.qrDataUrl && (
-            <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center">
-              <Image
-                src={paymentData.qrDataUrl}
-                alt="Mã QR thanh toán"
-                width={256}
-                height={256}
-                unoptimized
-                className="w-64 h-64 object-contain rounded-lg bg-white p-2"
-              />
-            </div>
-          )}
 
           <div className="flex flex-wrap gap-2">
             <button

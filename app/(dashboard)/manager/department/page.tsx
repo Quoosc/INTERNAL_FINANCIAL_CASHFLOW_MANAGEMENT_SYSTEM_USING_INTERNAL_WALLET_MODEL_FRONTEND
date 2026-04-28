@@ -15,7 +15,11 @@ import { toApiPage } from "@/lib/adapters/pagination";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 const PAGE_LIMIT = 12;
+const MANAGER_DEPARTMENT_ENDPOINT_BLOCKED = true;
 
+// BLOCKED (backend chưa có):
+// - /api/v1/manager/department/*
+// Giữ mock cho đến khi backend mở endpoint chính thức.
 type MemberRole = "TEAM_LEADER" | "EMPLOYEE";
 
 type ManagerMemberView = ManagerDeptMemberListItem & {
@@ -288,6 +292,11 @@ export default function ManagerDepartmentPage() {
 
     const loadDeptBudget = async () => {
       try {
+        if (MANAGER_DEPARTMENT_ENDPOINT_BLOCKED) {
+          setDeptDashboard(MOCK_DASHBOARD);
+          return;
+        }
+
         const res = await api.get<ManagerDashboardResponse>(
           "/api/v1/dashboard/manager",
         );
@@ -314,6 +323,23 @@ export default function ManagerDepartmentPage() {
       setError(null);
 
       try {
+        if (MANAGER_DEPARTMENT_ENDPOINT_BLOCKED) {
+          const filtered = filterMock(MOCK_MEMBERS, roleFilter, search);
+          const mockTotal = filtered.length;
+          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
+          const safePage = Math.min(page, mockTotalPages);
+          const start = (safePage - 1) * PAGE_LIMIT;
+
+          setMembers(filtered.slice(start, start + PAGE_LIMIT));
+          setTotal(mockTotal);
+          setTotalPages(mockTotalPages);
+
+          if (safePage !== page) {
+            goToPage(safePage);
+          }
+          return;
+        }
+
         const filters: ManagerDeptMemberFilterParams = {
           search: search.trim() || undefined,
           page,
@@ -395,6 +421,24 @@ export default function ManagerDepartmentPage() {
     setDetailLoading(true);
 
     try {
+      if (MANAGER_DEPARTMENT_ENDPOINT_BLOCKED) {
+        const summary = members.find((member) => member.id === memberId);
+        setSelectedMember({
+          ...MOCK_MEMBER_DETAIL,
+          id: memberId,
+          fullName: summary?.fullName ?? MOCK_MEMBER_DETAIL.fullName,
+          email: summary?.email ?? MOCK_MEMBER_DETAIL.email,
+          employeeCode: summary?.employeeCode ?? MOCK_MEMBER_DETAIL.employeeCode,
+          jobTitle: summary?.jobTitle ?? MOCK_MEMBER_DETAIL.jobTitle,
+          status: summary?.status ?? MOCK_MEMBER_DETAIL.status,
+          debtBalance: summary?.debtBalance ?? MOCK_MEMBER_DETAIL.debtBalance,
+          pendingRequestsCount:
+            summary?.pendingRequestsCount ??
+            MOCK_MEMBER_DETAIL.pendingRequestsCount,
+        });
+        return;
+      }
+
       const res = await api.get<ManagerDeptMemberDetailResponse>(
         `/api/v1/manager/department/members/${memberId}`,
       );

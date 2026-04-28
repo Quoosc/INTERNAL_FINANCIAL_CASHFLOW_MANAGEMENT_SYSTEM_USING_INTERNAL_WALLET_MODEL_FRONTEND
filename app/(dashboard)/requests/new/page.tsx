@@ -11,6 +11,7 @@ import { useToast } from "@/contexts/toast-context";
 import {
   CreateRequestBody,
   ExpenseCategoryResponse,
+  FileStorageRequest,
   PhaseStatus,
   PaginatedResponse,
   ProjectListItem,
@@ -29,6 +30,23 @@ interface UploadFileItem {
 interface CategoryOption {
   id: number;
   name: string;
+}
+
+interface UploadSignatureResponse {
+  signature: string;
+  timestamp: number;
+  apiKey: string;
+  cloudName: string;
+  folder: string;
+}
+
+interface CloudinaryUploadResponse {
+  public_id: string;
+  secure_url: string;
+  resource_type: string;
+  format?: string;
+  original_filename: string;
+  bytes: number;
 }
 
 const MOCK_PROJECTS: ProjectListItem[] = [
@@ -162,20 +180,60 @@ function isImage(file: File): boolean {
   return file.type.startsWith("image/");
 }
 
-async function uploadAttachments(files: UploadFileItem[]): Promise<number[]> {
+async function uploadAttachments(files: UploadFileItem[]): Promise<FileStorageRequest[]> {
   if (files.length === 0) return [];
 
-  const uploadedFileIds: number[] = [];
+  const uploadedFiles: FileStorageRequest[] = [];
 
   for (const item of files) {
+    const signatureRes = await api.get<UploadSignatureResponse>(
+      "/api/v1/uploads/signature?folder=REQUEST"
+    );
+
+    const signature = signatureRes.data;
     const formData = new FormData();
     formData.append("file", item.file);
 
-    // await api.post('/api/v1/files/...', formData, { headers: {} })
-    uploadedFileIds.push(Date.now() + Math.floor(Math.random() * 1000));
+    formData.append("api_key", signature.apiKey);
+    formData.append("timestamp", String(signature.timestamp));
+    formData.append("signature", signature.signature);
+    formData.append("folder", signature.folder);
+
+    const cloudinaryRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${signature.cloudName}/auto/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!cloudinaryRes.ok) {
+      let detail = "";
+
+      try {
+        const errBody = (await cloudinaryRes.json()) as { error?: { message?: string } };
+        if (errBody.error?.message) detail = `: ${errBody.error.message}`;
+      } catch {
+        // ignore Cloudinary error body parse failure
+      }
+
+      throw new Error(
+        `Tải tệp ${item.file.name} thất bại${detail} (HTTP ${cloudinaryRes.status}). Vui lòng thử lại.`
+      );
+    }
+
+    const uploaded = (await cloudinaryRes.json()) as CloudinaryUploadResponse;
+
+    uploadedFiles.push({
+      fileName: item.file.name || `${uploaded.original_filename}.${uploaded.format ?? "bin"}`,
+      cloudinaryPublicId: uploaded.public_id,
+      url: uploaded.secure_url,
+      fileType: item.file.type || `${uploaded.resource_type}/${uploaded.format ?? "octet-stream"}`,
+      size: item.file.size || uploaded.bytes,
+    });
   }
 
-  return uploadedFileIds;
+  return uploadedFiles;
 }
 
 export default function NewRequestPage() {
@@ -452,7 +510,7 @@ export default function NewRequestPage() {
     setSubmitting(true);
 
     try {
-      const uploadedFileIds = await uploadAttachments(files);
+      const uploadedFiles = await uploadAttachments(files);
 
       const descriptionParts = [
         `Tiêu đề: ${title.trim()}`,
@@ -467,7 +525,7 @@ export default function NewRequestPage() {
         phaseId: form.phaseId,
         categoryId: form.categoryId,
         description: descriptionParts.join("\n"),
-        attachmentFileIds: uploadedFileIds.length > 0 ? uploadedFileIds : undefined,
+        attachments: uploadedFiles.length > 0 ? uploadedFiles : undefined,
       };
 
       const res = await api.post<RequestDetailResponse>("/api/v1/requests", payload);
@@ -476,10 +534,10 @@ export default function NewRequestPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
-        const mockId = 9000 + Math.floor(Math.random() * 999);
-        toast.success("Yêu cầu đã được tạo thành công!");
-        router.push(`/requests/${mockId}`);
+        setError("Không thể tạo yêu cầu. Vui lòng thử lại.");
       }
     } finally {
       setSubmitting(false);

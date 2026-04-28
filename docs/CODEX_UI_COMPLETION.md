@@ -1,7 +1,7 @@
 # CODEX — UI Completion Plan (All Roles)
 
-> **Ngày tạo:** 2026-04-13  | **Cập nhật lần cuối:** 2026-04-13
-> **Mục tiêu:** Hoàn thiện 100% UI cho toàn bộ 6 roles theo đúng chức năng nghiệp vụ.
+> **Ngày tạo:** 2026-04-13  | **Cập nhật lần cuối:** 2026-04-28
+> **Mục tiêu:** Hoàn thiện 100% UI + API wiring cho toàn bộ 6 roles.
 
 ---
 
@@ -30,16 +30,16 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 
 ---
 
-## Trạng thái tổng quan (cập nhật 2026-04-13)
+## Trạng thái tổng quan (cập nhật 2026-04-28)
 
 | Nhóm | Tổng | ✅ Done | ⚠️ Mock/Partial | ❌ Còn lại |
 |------|------|---------|-----------------|-----------|
 | A — Backend ready → integrate | 7 | **7** | 0 | 0 |
-| B — Mock chờ backend | 22 | **4** | 18 | 0 |
+| B — Mock chờ backend | 21 | **11** | 10 | 0 |
 | C — Skeleton | 1 | **1** | 0 | 0 |
 
-> **Nhóm A hoàn thành 100%.** Nhóm B intentionally mock — chờ backend sprint tiếp theo.
-> Nhóm C (admin/roles) đã được xây static UI hoàn chỉnh.
+> **Nhóm A hoàn thành 100%.** Nhóm B: 11/21 đã wire API thật.
+> Nhóm B còn lại intentionally mock — chờ backend sprint tiếp theo.
 
 ---
 
@@ -53,293 +53,144 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 | A2 | `payroll/[id]/page.tsx` | `GET /api/v1/payslips/{id}` | ✅ Done |
 | A3 | `projects/page.tsx` | `GET /api/v1/projects` | ✅ Done |
 | A4 | `projects/[id]/page.tsx` | `GET /api/v1/projects/{id}/phases` | ✅ Done |
-| A5 | `wallet/deposit/page.tsx` | `POST /api/v1/wallet/deposit` → VNPay redirect | ✅ Done |
+| A5 | `wallet/deposit/page.tsx` | `POST /api/v1/payments` (VNPay via PaymentController) | ✅ Done |
 | A6 | `wallet/page.tsx` | `WalletContext` + `GET /api/v1/wallet/transactions?size=5` | ✅ Done |
 | A7 | `wallet/transactions/page.tsx` | `GET /api/v1/wallet/transactions` | ✅ Done |
 
 ---
 
-## NHÓM B — Mock chờ backend: trạng thái UI
-
-> ⚠️ KHÔNG xóa mock. Backend các sprint này chưa sẵn sàng.
-> Mỗi item dưới đây: kiểm tra UI có đủ feature chưa — nếu thiếu thì build thêm.
-
-### B-DONE — Đã hoàn chỉnh UI (mock data nhưng đủ feature)
-
-| File | Ghi chú |
-|------|---------|
-| `accountant/disbursements/[id]/page.tsx` | ✅ `MOCK_DETAIL` đã xóa, chỉ còn TODO simulate Sprint 6; PIN flow, checklist, reject modal đầy đủ |
-| `admin/users/page.tsx` | ✅ Gọi `POST /api/v1/admin/users` (real), lock/unlock/reset-password wired; filter + pagination có |
-| `admin/users/[id]/page.tsx` | ✅ Profile view, role/dept edit, lock/unlock, reset-password |
+## NHÓM B — Trạng thái UI + API
 
 ---
 
-### B1. `requests/page.tsx` — Yêu cầu của tôi (EMPLOYEE)
+### ✅ B-DONE — Đã hoàn chỉnh UI + API thật (2026-04-28)
+
+| File | Endpoint | Ghi chú |
+|------|----------|---------|
+| `requests/page.tsx` | `GET /api/v1/requests` + `/requests/summary` | Filter, pagination, summary cards |
+| `requests/new/page.tsx` | `POST /api/v1/requests` | Cascading project/phase/category, attachment |
+| `requests/[id]/page.tsx` | `GET/PUT/DELETE /api/v1/requests/{id}` | Timeline, cancel, edit PENDING |
+| `team-leader/approvals/page.tsx` | `GET /api/v1/team-leader/approvals` | Filter type, pagination |
+| `team-leader/approvals/[id]/page.tsx` | `GET/POST approve/reject` | PIN-less flow, reason modal |
+| `team-leader/projects/page.tsx` | `GET /api/v1/team-leader/projects` | Filter status, search |
+| `team-leader/projects/[id]/page.tsx` | CRUD phases, members, category budgets | Tab: Phases / Ngân sách / Thành viên |
+| `manager/approvals/page.tsx` | `GET /api/v1/manager/approvals` | PROJECT_TOPUP queue |
+| `manager/approvals/[id]/page.tsx` | `GET/POST approve/reject` | BudgetHealthCard, confirm modal |
+| `accountant/disbursements/page.tsx` | `GET /api/v1/accountant/disbursements` | Status filter APPROVED_BY_TEAM_LEADER |
+| `accountant/disbursements/[id]/page.tsx` | `POST disburse` (PIN) + `POST reject` | PIN modal, 423 Locked handling |
+| `admin/users/page.tsx` | `POST /api/v1/admin/users` (real) | lock/unlock/reset-password wired |
+| `admin/users/[id]/page.tsx` | Profile view, role/dept edit, lock/unlock | — |
+| `notifications/page.tsx` | `GET /api/v1/notifications` + mark-read | SSE prepend listener |
+| `cfo/system-fund/page.tsx` | `GET /api/v1/company-fund` + topup + reconciliation | — |
+| `admin/system-fund/page.tsx` | `GET /api/v1/company-fund` | Re-use CompanyFundController |
+| `admin/settings/page.tsx` | `GET/PUT /api/v1/system-configs/*` | evict cache |
+| `cfo/settings/page.tsx` | Re-export từ admin/settings | — |
+
+---
+
+### ⚠️ B-BLOCKED — MOCK, chờ backend endpoint
+
+> **KHÔNG** xóa mock. Endpoint chưa có phía backend. Giữ block comment rõ ràng.
+
+#### B8. `team-leader/team/page.tsx` — Thành viên nhóm (TEAM_LEADER)
 
 ```
-API (chờ backend):  GET /api/v1/requests?type=&status=&search=&page=1&limit=20
-                    GET /api/v1/requests/summary
-Types:              RequestListItem, RequestSummaryResponse, RequestFilterParams
-Sprint chờ:         5
+Endpoint cần:   GET /api/v1/team-leader/team-members
+                GET /api/v1/team-leader/team-members/{userId}
+Types:          TLTeamMemberListItem, TLTeamMemberDetailResponse
+Block reason:   Backend chưa có TeamMemberController
 ```
 
-Checklist UI:
-- [ ] Summary cards: tổng YC, đang chờ, đã duyệt, đã giải ngân
-- [ ] Filter tab: ALL / PENDING / APPROVED_BY_TEAM_LEADER / PAID / REJECTED / CANCELLED
-- [ ] Filter type: ADVANCE / EXPENSE / REIMBURSE
-- [ ] Search input (lọc theo `requestCode`, `description`)
-- [ ] Bảng: `requestCode`, `type` badge, `status` badge, `amount`, `createdAt`
-- [ ] Nút **"Tạo yêu cầu mới"** → `/requests/new`
-- [ ] Click row → `/requests/[id]`
-- [ ] Pagination
-- [ ] Mock data dùng đúng `RequestListItem` type (không tự định nghĩa field)
-
-### B2. `requests/new/page.tsx` — Tạo yêu cầu (EMPLOYEE)
-
-```
-API (chờ backend):  POST /api/v1/requests  body: CreateRequestBody
-API (có sẵn):       GET /api/v1/projects (real), GET /api/v1/projects/{id}/phases (real),
-                    GET /api/v1/projects/{phaseId} categories (real)
-                    GET /api/v1/uploads/signature?folder=REQUEST (real)
-Types:              CreateRequestBody, RequestType, RequestDetailResponse
-Sprint chờ:         5
-```
-
-Checklist UI:
-- [ ] Dropdown loại YC: **chỉ** ADVANCE / EXPENSE / REIMBURSE (không có PROJECT_TOPUP — TL tạo riêng)
-- [ ] `amount`, `description` (bắt buộc)
-- [ ] Cascading: Project → Phase → Category (đã có API thật — gọi real endpoint)
-- [ ] File attachment: dùng `GET /api/v1/uploads/signature?folder=REQUEST` → upload Cloudinary
-- [ ] Validation trước submit: amount > 0, description không rỗng, phase/category nếu là EXPENSE
-- [ ] Preview summary trước khi submit
-- [ ] After submit: redirect → `/requests/[id]`
-
-### B3. `requests/[id]/page.tsx` — Chi tiết yêu cầu (EMPLOYEE)
-
-```
-API (chờ backend):  GET /api/v1/requests/{id}   → RequestDetailResponse
-                    DELETE /api/v1/requests/{id} (cancel)
-Types:              RequestDetailResponse, RequestAction, RequestStatus
-Sprint chờ:         5
-```
-
-Checklist UI:
-- [ ] Header: `requestCode`, `type` badge, `status` badge, `amount`
-- [ ] Timeline approval 4 bước: PENDING → APPROVED_BY_TEAM_LEADER → APPROVED_BY_TEAM_LEADER → PAID
-  - Mỗi bước: icon trạng thái, timestamp nếu có, tên người duyệt
-- [ ] Thông tin yêu cầu: description, project/phase/category, file attachments
-- [ ] Thông tin người tạo: avatar, name, department
-- [ ] Nút **"Huỷ yêu cầu"** chỉ hiện khi `status === "PENDING"` → gọi DELETE (mock OK)
-- [ ] Nút **"Chỉnh sửa"** chỉ hiện khi `status === "PENDING"` → edit inline hoặc redirect new form pre-filled
-- [ ] File viewer cho attachments
-
-### B4. `team-leader/approvals/page.tsx` — Duyệt YC Flow 1 (TEAM_LEADER)
-
-```
-API (chờ backend):  GET /api/v1/team-leader/approvals?type=&status=&page=1&limit=20
-Types:              TLApprovalListItem, TLApprovalFilterParams
-Sprint chờ:         4-5
-```
-
-Checklist UI:
-- [ ] Bảng: `requestCode`, `requester.fullName`, `type` badge, `amount`, `status` badge, `createdAt`
-- [ ] Filter status: PENDING / APPROVED_BY_TEAM_LEADER / REJECTED
-- [ ] Filter type: ADVANCE / EXPENSE / REIMBURSE
-- [ ] Badge PENDING nổi bật màu vàng
-- [ ] Click row → `/team-leader/approvals/[id]`
-- [ ] Pagination
-- [ ] Mock data dùng đúng `TLApprovalListItem`
-
-### B5. `team-leader/approvals/[id]/page.tsx` — Chi tiết duyệt (TEAM_LEADER)
-
-```
-API (chờ backend):
-  GET  /api/v1/team-leader/approvals/{id}              → TLApprovalDetailResponse
-  POST /api/v1/team-leader/approvals/{id}/approve      body: TLApproveBody
-  POST /api/v1/team-leader/approvals/{id}/reject       body: TLRejectBody
-Types:  TLApprovalDetailResponse, TLApproveBody, TLRejectBody
-Sprint chờ:  4-5
-```
-
-Checklist UI:
-- [ ] Header: requester info (avatar, name, dept, job title), amount, type, description
-- [ ] Thông tin project/phase/category (cho ADVANCE/EXPENSE/REIMBURSE)
-- [ ] File attachments viewer
-- [ ] Nút **"Duyệt"** → modal: `approvedAmount` (default = amount), `comment?` → POST approve
-- [ ] Nút **"Từ chối"** → modal: `reason` (bắt buộc) → POST reject
-- [ ] Cả hai nút chỉ hiện khi `status === "PENDING"`
-- [ ] Timeline trạng thái
-- [ ] Mock data dùng đúng `TLApprovalDetailResponse` (field `approver`, `approvedAt`)
-
-### B6. `team-leader/projects/page.tsx` — Dự án của TL (TEAM_LEADER)
-
-```
-API (chờ backend):  GET /api/v1/team-leader/projects?status=&search=&page=1&limit=20
-Types:              TLProjectListItem, TLProjectFilterParams
-Sprint chờ:         4
-```
-
-Checklist UI:
-- [ ] Cards hoặc bảng: `projectCode`, `name`, `status` badge, `totalBudget`, `spentAmount`, progress bar
-- [ ] Filter status: PLANNING / ACTIVE / PAUSED / CLOSED
-- [ ] Search
-- [ ] Nút **"Yêu cầu nạp quỹ"** (PROJECT_TOPUP) per project hoặc trên detail
-- [ ] Click → `/team-leader/projects/[id]`
-
-### B7. `team-leader/projects/[id]/page.tsx` — Quản lý project (TEAM_LEADER)
-
-```
-API (chờ backend):
-  GET    /api/v1/team-leader/projects/{id}
-  POST   /api/v1/team-leader/projects/{id}/phases              body: CreatePhaseBody
-  PUT    /api/v1/team-leader/projects/{id}/phases/{phaseId}    body: UpdatePhaseBody
-  GET    /api/v1/team-leader/projects/{id}/categories?phaseId=
-  PUT    /api/v1/team-leader/projects/{id}/categories
-  GET    /api/v1/team-leader/projects/{id}/available-members
-  POST   /api/v1/team-leader/projects/{id}/members             body: AddMemberBody
-  PUT    /api/v1/team-leader/projects/{id}/members/{userId}    body: UpdateMemberBody
-  DELETE /api/v1/team-leader/projects/{id}/members/{userId}
-Types:  TLProjectDetailResponse, CreatePhaseBody, UpdatePhaseBody, AddMemberBody, UpdateMemberBody
-Sprint chờ:  4
-```
-
-Checklist UI (3 tabs):
-- **Tab "Phases"**: danh sách phases (name, status, budgetLimit, startDate, endDate), nút tạo phase mới (modal form), edit phase inline
-- **Tab "Ngân sách"**: bảng category budgets per phase, edit budget amount inline
-- **Tab "Thành viên"**: danh sách members (avatar, name, role trong project), nút thêm/xóa member, đổi project role
-- Nút **"Yêu cầu nạp quỹ dự án"** (PROJECT_TOPUP) → form modal với `projectId`, `amount`, `description`
-
-### B8. `team-leader/team/page.tsx` — Thành viên nhóm (TEAM_LEADER)
-
-```
-API (chờ backend):  GET /api/v1/team-leader/team?search=&page=1&limit=20
-Types:              TLTeamMemberListItem
-Sprint chờ:         5
-```
-
-Checklist UI:
+Checklist UI (hoàn chỉnh khi backend ready):
 - [ ] Grid hoặc bảng: avatar, `fullName`, `jobTitle`, `email`, `status` badge
 - [ ] Search input
 - [ ] Click → side panel hoặc modal với `TLTeamMemberDetailResponse` (active projects, recent requests)
 
-### B9. `manager/approvals/page.tsx` & `[id]/page.tsx` — Duyệt PROJECT_TOPUP (MANAGER)
+---
+
+#### B10. `manager/projects/page.tsx` & `[id]/page.tsx` — Dự án phòng ban (MANAGER)
 
 ```
-API (chờ backend):
-  GET  /api/v1/manager/approvals?status=&page=1&limit=20
-  GET  /api/v1/manager/approvals/{id}
-  POST /api/v1/manager/approvals/{id}/approve   body: ManagerApproveBody
-  POST /api/v1/manager/approvals/{id}/reject    body: ManagerRejectBody
-Types:  ManagerApprovalListItem, ManagerApprovalDetailResponse, ManagerApproveBody, ManagerRejectBody
-Sprint chờ:  4-5
+Endpoint cần:   GET  /api/v1/manager/projects
+                POST /api/v1/manager/projects        body: CreateProjectBody
+                PUT  /api/v1/manager/projects/{id}   body: UpdateProjectBody
+                GET  /api/v1/manager/department/team-leaders   (populate dropdown TL)
+Types:          ManagerProjectListItem, CreateProjectBody, UpdateProjectBody
+Block reason:   Backend chưa có ManagerProjectController
 ```
 
-List checklist:
-- [ ] Type cố định = PROJECT_TOPUP (không cần filter type)
-- [ ] Bảng: `requestCode`, người tạo (TL), `projectName`, `amount`, `status`, `createdAt`
-- [ ] Filter status: PENDING / APPROVED_BY_MANAGER / REJECTED
-
-Detail checklist:
-- [ ] Thông tin project, dept fund balance hiện tại, `amount`, lý do TL
-- [ ] Nút Duyệt / Từ chối với confirm modal
-
-### B10. `manager/projects/page.tsx` & `[id]/page.tsx` — Dự án phòng ban (MANAGER)
-
-```
-API (chờ backend):
-  GET  /api/v1/manager/projects
-  POST /api/v1/manager/projects        body: CreateProjectBody
-  PUT  /api/v1/manager/projects/{id}   body: UpdateProjectBody
-Types:  ManagerProjectListItem, CreateProjectBody, UpdateProjectBody, ProjectDetailResponse
-Sprint chờ:  4
-```
-
-Checklist:
+Checklist UI (hoàn chỉnh khi backend ready):
 - [ ] List: nút **"Tạo dự án mới"** → modal form (name, description, departmentId, teamLeaderId)
 - [ ] Detail: thông tin dự án, phases overview (read-only), members list
 - [ ] Edit project (name, description, status)
 - [ ] Nút **"Yêu cầu ngân sách phòng ban"** (DEPARTMENT_TOPUP) → form với `amount`, `description`
 
-### B11. `manager/department/page.tsx` — Phòng ban (MANAGER)
+---
+
+#### B11. `manager/department/page.tsx` — Phòng ban (MANAGER)
 
 ```
-API (chờ backend):  GET /api/v1/manager/department/members
-Types:              ManagerDeptMemberListItem
-Sprint chờ:         4-5
+Endpoint cần:   GET /api/v1/manager/department/members
+Types:          ManagerDeptMemberListItem
+Block reason:   Backend chưa có endpoint
 ```
 
-Checklist:
+Checklist UI (hoàn chỉnh khi backend ready):
 - [ ] Summary cards: tổng nhân viên, quỹ phòng ban (dept fund balance), số dự án active
 - [ ] Danh sách thành viên với search
-- [ ] Thông tin dept fund không phải hardcode — lấy từ mock `ManagerDeptMemberDetailResponse`
+- [ ] Thông tin dept fund lấy từ API (không hardcode)
 
-### B12. `accountant/disbursements/page.tsx` — Danh sách giải ngân (ACCOUNTANT)
+---
 
-```
-API (chờ backend):  GET /api/v1/accountant/disbursements?status=&page=1&limit=20
-Types:              DisbursementListItem, DisbursementFilterParams
-Sprint chờ:         6
-```
-
-Checklist:
-- [ ] Filter tab: APPROVED_BY_TEAM_LEADER (nổi bật) / PAID / REJECTED
-- [ ] Bảng: `requestCode`, `requester.fullName`, `type` badge, `amount`, `status` badge, `createdAt`
-- [ ] Click → `/accountant/disbursements/[id]`
-- [ ] Count badge trên tab APPROVED_BY_TEAM_LEADER
-- [ ] Mock data dùng đúng `DisbursementListItem`
-
-### B13. `accountant/disbursements/[id]/page.tsx` — Giải ngân chi tiết (ACCOUNTANT)
-
-> UI đã hoàn chỉnh. `MOCK_DETAIL` fallback đã xóa (chỉ còn simulate Sprint 6).
-> Không cần làm thêm gì đến khi backend sprint 6 ready.
-
-### B14. `accountant/payroll/page.tsx` — Quản lý bảng lương (ACCOUNTANT)
+#### B14. `accountant/payroll/page.tsx` — Quản lý bảng lương (ACCOUNTANT)
 
 ```
-API (chờ backend):  GET /api/v1/accountant/payroll?year=&status=&page=1&limit=10
-                    POST /api/v1/accountant/payroll  body: CreatePayrollPeriodBody
-Types:              PayrollPeriodListItem, PayrollStatus, CreatePayrollPeriodBody
-Sprint chờ:         7
+Endpoint cần:   GET  /api/v1/accountant/payroll?year=&status=&page=1&limit=10
+                POST /api/v1/accountant/payroll  body: CreatePayrollPeriodBody
+Types:          PayrollPeriodListItem, PayrollStatus, CreatePayrollPeriodBody
+Block reason:   Backend chưa có AccountantPayrollController
 ```
 
-Checklist:
+Checklist UI (hoàn chỉnh khi backend ready):
 - [ ] Bảng kỳ lương: `period` (Tháng X/YYYY), `status` badge, `totalAmount`, `employeeCount`
 - [ ] Status badge: DRAFT=xám / PROCESSING=vàng / COMPLETED=xanh
-- [ ] Nút **"Tạo kỳ lương mới"** → modal: chọn tháng, năm → mock POST
+- [ ] Nút **"Tạo kỳ lương mới"** → modal: chọn tháng, năm
 - [ ] Click → `/accountant/payroll/[id]`
 - [ ] Pagination theo năm
 
-### B15. `accountant/payroll/[id]/page.tsx` — Chi tiết kỳ lương (ACCOUNTANT)
+---
+
+#### B15. `accountant/payroll/[id]/page.tsx` — Chi tiết kỳ lương (ACCOUNTANT)
 
 ```
-API (chờ backend):
-  GET  /api/v1/accountant/payroll/{id}
-  POST /api/v1/accountant/payroll/{id}/import         multipart Excel
-  POST /api/v1/accountant/payroll/{id}/auto-netting
-  POST /api/v1/accountant/payroll/{id}/run
-  PUT  /api/v1/accountant/payroll/{id}/entries/{userId}  body: UpdatePayslipEntryBody
-Types:  PayrollDetailResponse, PayrollEntry, PayrollImportResponse, PayrollRunResponse
-Sprint chờ:  7
+Endpoint cần:   GET  /api/v1/accountant/payroll/{id}
+                POST /api/v1/accountant/payroll/{id}/import         multipart Excel
+                POST /api/v1/accountant/payroll/{id}/auto-netting
+                POST /api/v1/accountant/payroll/{id}/run
+                PUT  /api/v1/accountant/payroll/{id}/entries/{userId}
+Types:          PayrollDetailResponse, PayrollEntry, PayrollImportResponse, PayrollRunResponse
+Block reason:   Backend chưa có endpoint
 ```
 
-Checklist:
+Checklist UI (hoàn chỉnh khi backend ready):
 - [ ] Bảng entries: `employee.fullName`, `baseSalary`, `bonuses`, `deductions`, `advanceBalance`, `netSalary`
-- [ ] Nút **"Import Excel"** → `<input type="file" accept=".xlsx,.xls">` → mock POST multipart
-  - Preview: `PayrollImportResponse` với `entries[]` (success) và `errors[]` (warning list)
-- [ ] Nút **"Auto Netting"** → confirm modal → mock POST → trừ `advanceBalance` vào `netSalary`
-- [ ] Nút **"Chạy bảng lương"** (chỉ khi status=DRAFT) → confirm modal → mock POST run
-- [ ] Edit inline từng entry: click cell `baseSalary`/`bonuses`/`deductions` → input
-- [ ] Status header badge + transition display
+- [ ] Nút **"Import Excel"** → `<input type="file" accept=".xlsx,.xls">` → POST multipart
+  - Preview: `PayrollImportResponse` với `entries[]` và `errors[]`
+- [ ] Nút **"Auto Netting"** → confirm modal → trừ `advanceBalance` vào `netSalary`
+- [ ] Nút **"Chạy bảng lương"** (chỉ khi status=DRAFT) → confirm modal
+- [ ] Edit inline từng entry: click cell `baseSalary`/`bonuses`/`deductions`
 
-### B16. `accountant/ledger/page.tsx` — Sổ cái (ACCOUNTANT)
+---
+
+#### B16. `accountant/ledger/page.tsx` — Sổ cái (ACCOUNTANT)
 
 ```
-API (chờ backend):  GET /api/v1/accountant/ledger?from=&to=&type=&page=0&size=20
-Types:              LedgerSummaryResponse
-Sprint chờ:         7
+Endpoint cần:   GET /api/v1/accountant/ledger?from=&to=&type=&page=0&size=20
+Types:          LedgerSummaryResponse
+Block reason:   Backend chưa có AccountantLedgerController
 ```
 
-Checklist:
+Checklist UI (hoàn chỉnh khi backend ready):
 - [ ] Summary cards: Tổng phát sinh Nợ, Tổng phát sinh Có, Số dư
 - [ ] Bảng double-entry: `date`, `description`, `debitAccount`, `creditAccount`, `amount`, `runningBalance`
 - [ ] Filter by date range (from/to)
@@ -347,29 +198,32 @@ Checklist:
 - [ ] Click row → `/accountant/ledger/[id]`
 - [ ] Pagination
 
-### B17. `accountant/ledger/[id]/page.tsx` — Chi tiết bút toán (ACCOUNTANT)
+---
+
+#### B17. `accountant/ledger/[id]/page.tsx` — Chi tiết bút toán (ACCOUNTANT)
 
 ```
-API (chờ backend):  GET /api/v1/accountant/ledger/{id}
-Types:              TransactionResponse
-Sprint chờ:         7
+Endpoint cần:   GET /api/v1/accountant/ledger/{id}
+Types:          TransactionResponse
+Block reason:   Backend chưa có endpoint
 ```
 
-Checklist:
+Checklist UI (hoàn chỉnh khi backend ready):
 - [ ] Journal entry: debit account, credit account, amount, description, reference code
 - [ ] Link tới nguồn gốc: request hoặc payslip (clickable nếu có `referenceId`)
 - [ ] Timestamp, created by
 
-### B18. `cfo/approvals/page.tsx` & `[id]/page.tsx` — Duyệt DEPARTMENT_TOPUP (CFO)
+---
+
+#### B18. `cfo/approvals/page.tsx` & `[id]/page.tsx` — Duyệt DEPARTMENT_TOPUP (CFO)
 
 ```
-API (chờ backend):
-  GET  /api/v1/cfo/approvals?status=&page=1&limit=20
-  GET  /api/v1/cfo/approvals/{id}
-  POST /api/v1/cfo/approvals/{id}/approve   body: AdminApproveBody
-  POST /api/v1/cfo/approvals/{id}/reject    body: AdminRejectBody
-Types:  AdminApprovalListItem, AdminApprovalDetailResponse, AdminApproveBody, AdminRejectBody
-Sprint chờ:  6
+Endpoint cần:   GET  /api/v1/cfo/approvals?status=&page=1&limit=20
+                GET  /api/v1/cfo/approvals/{id}
+                POST /api/v1/cfo/approvals/{id}/approve   body: AdminApproveBody
+                POST /api/v1/cfo/approvals/{id}/reject    body: AdminRejectBody
+Types:          AdminApprovalListItem, AdminApprovalDetailResponse, AdminApproveBody, AdminRejectBody
+Block reason:   Backend chưa có CfoApprovalController
 ```
 
 List checklist:
@@ -378,44 +232,42 @@ List checklist:
 
 Detail checklist:
 - [ ] Company fund balance hiện tại, dept fund hiện tại, số tiền yêu cầu
-- [ ] Nút **"Duyệt"** → status = APPROVED_BY_CFO → auto-pay → company fund giảm / dept fund tăng
+- [ ] Nút **"Duyệt"** → status = APPROVED_BY_CFO → auto-pay
 - [ ] Nút **"Từ chối"** → modal reason → status = REJECTED
 
-### B19 (done). `admin/users/page.tsx` & `[id]/page.tsx` — Đã hoàn chỉnh
+---
 
-> ✅ `POST /api/v1/admin/users` wired thật, lock/unlock/reset-password có UI, filter + pagination OK.
-
-### B20. `admin/departments/page.tsx` & `[id]/page.tsx` — Phòng ban (ADMIN)
+#### B20. `admin/departments/page.tsx` & `[id]/page.tsx` — Phòng ban (ADMIN)
 
 ```
-API (chờ backend):
-  GET    /api/v1/admin/departments
-  POST   /api/v1/admin/departments       body: CreateDepartmentBody
-  PUT    /api/v1/admin/departments/{id}  body: UpdateDepartmentBody
-  DELETE /api/v1/admin/departments/{id}
-Types:  DepartmentListItem, DepartmentDetailResponse, CreateDepartmentBody, UpdateDepartmentBody
-Sprint chờ:  2
+Endpoint cần:   GET    /api/v1/admin/departments
+                POST   /api/v1/admin/departments       body: CreateDepartmentBody
+                PUT    /api/v1/admin/departments/{id}  body: UpdateDepartmentBody
+                DELETE /api/v1/admin/departments/{id}
+Types:          DepartmentListItem, DepartmentDetailResponse, CreateDepartmentBody, UpdateDepartmentBody
+Block reason:   Backend chưa có AdminDepartmentController
 ```
 
 Checklist:
-- [ ] List: `name`, `managerName`, `memberCount`, `deptFundBalance` (format tiền VND)
+- [ ] List: `name`, `managerName`, `memberCount`, `deptFundBalance`
 - [ ] Nút **"Tạo phòng ban"** → modal form (name, managerId)
 - [ ] Nút edit / delete per row (delete: confirm modal)
 - [ ] Detail: danh sách thành viên, fund balance, projects liên quan
 
-### B21. `admin/audit-logs/page.tsx` — Nhật ký hệ thống (ADMIN)
+---
+
+#### B21. `admin/audit-logs/page.tsx` — Nhật ký hệ thống (ADMIN)
 
 ```
-API (chờ backend):  GET /api/v1/admin/audit-logs?userId=&action=&from=&to=&page=1&limit=20
-Types:              AuditLogResponse, AuditLogFilterParams, AuditAction
-Sprint chờ:         6
+Endpoint cần:   GET /api/v1/admin/audit-logs?userId=&action=&from=&to=&page=1&limit=20
+Types:          AuditLogResponse, AuditLogFilterParams, AuditAction
+Block reason:   Backend chưa có AdminAuditController
 ```
 
 Checklist:
 - [ ] Bảng: `timestamp`, `actor.fullName`, `action` badge, `targetType`, `targetId`, `ipAddress`
-- [ ] Filter: date range (from/to), action type dropdown (dùng `AuditAction` enum), user search
+- [ ] Filter: date range, action type dropdown (`AuditAction` enum), user search
 - [ ] Pagination
-- [ ] Mock data dùng đúng `AuditLogResponse` type (không tự định nghĩa)
 
 ---
 
@@ -427,20 +279,21 @@ Checklist:
 
 ---
 
-## Thứ tự ưu tiên (những gì còn lại)
+## Thứ tự ưu tiên — Còn lại (chờ backend)
 
-| # | Task | Sprint chờ | Priority |
-|---|------|-----------|----------|
-| 1 | **B1-B3** Requests (Employee core flow) | 5 | 🔴 Cao |
-| 2 | **B4-B5** TL Approvals | 4-5 | 🔴 Cao |
-| 3 | **B6-B8** TL Projects + Team | 4 | 🔴 Cao |
-| 4 | **B9-B11** Manager flows | 4-5 | 🔴 Cao |
-| 5 | **B12** Accountant disbursements list | 6 | 🟡 Trung bình |
-| 6 | **B14-B15** Accountant Payroll | 7 | 🟡 Trung bình |
-| 7 | **B16-B17** Accountant Ledger | 7 | 🟡 Trung bình |
-| 8 | **B18** CFO Approvals | 6 | 🟡 Trung bình |
-| 9 | **B20** Admin Departments | 2 | 🟢 Thấp |
-| 10 | **B21** Admin Audit Logs | 6 | 🟢 Thấp |
+| # | Task | Endpoint cần | Priority |
+|---|------|-------------|----------|
+| 1 | **B8** TL Team members | `/team-leader/team-members*` | 🟡 Trung bình |
+| 2 | **B10** Manager Projects | `/manager/projects*` | 🟡 Trung bình |
+| 3 | **B11** Manager Department | `/manager/department/members*` | 🟡 Trung bình |
+| 4 | **B18** CFO Approvals | `/cfo/approvals*` | 🟡 Trung bình |
+| 5 | **B14-B15** Accountant Payroll | `/accountant/payroll/*` | 🟢 Thấp |
+| 6 | **B16-B17** Accountant Ledger | `/accountant/ledger/*` | 🟢 Thấp |
+| 7 | **B20** Admin Departments | `/admin/departments*` | 🟢 Thấp |
+| 8 | **B21** Admin Audit Logs | `/admin/audit*` | 🟢 Thấp |
+
+> Tất cả items trên đều bị block bởi backend chưa implement. Khi backend sẵn sàng,
+> xem endpoint chi tiết ở `docs/CODEX_INTEGRATION_PLAN.md` §8 (BLOCKED Sprint).
 
 ---
 

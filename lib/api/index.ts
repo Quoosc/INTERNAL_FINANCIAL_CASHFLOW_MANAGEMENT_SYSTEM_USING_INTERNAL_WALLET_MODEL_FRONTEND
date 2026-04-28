@@ -6,3 +6,4 @@ export * from "./withdrawal";
 export * from "./company-fund";
 export * from "./system-config";
 export * from "./notification";
+export * from "./payment";

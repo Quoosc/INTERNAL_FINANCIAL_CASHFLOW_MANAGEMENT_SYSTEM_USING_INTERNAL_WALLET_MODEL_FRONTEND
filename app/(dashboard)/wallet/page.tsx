@@ -1,21 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
-import { createWithdrawRequest } from "@/lib/api";
+import { createWithdrawRequest, createDeposit, getPaymentStatus } from "@/lib/api";
 import { withdrawSchema, depositSchema } from "@/lib/schemas";
 import { formatCurrency, formatDateTime, formatInputAmount } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { useToast } from "@/contexts/toast-context";
 import {
-  DepositQRRequest,
-  DepositQRResponse,
   PaginatedResponse,
-  PaymentStatusResponse,
+  PaymentCreateResponse,
   TransactionResponse,
   TransactionStatus,
   TransactionType,
@@ -32,7 +29,8 @@ function formatSecondsToClock(total: number): string {
 function DepositModal({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const [amount, setAmount] = useState("");
-  const [qrData, setQrData] = useState<DepositQRResponse | null>(null);
+  const [qrData, setQrData] = useState<PaymentCreateResponse | null>(null);
+  const [createdAmount, setCreatedAmount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -59,6 +57,7 @@ function DepositModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     setError(null);
     setStatusMsg(null);
+    setCreatedAmount(null);
     const validation = depositSchema.safeParse({ amount: amountNum });
     if (!validation.success) {
       setError(validation.error.flatten().fieldErrors.amount?.[0] ?? "Số tiền không hợp lệ.");
@@ -66,9 +65,9 @@ function DepositModal({ onClose }: { onClose: () => void }) {
     }
     setLoading(true);
     try {
-      const payload: DepositQRRequest = { amount: amountNum };
-      const res = await api.post<DepositQRResponse>("/api/v1/wallet/deposit", payload);
+      const res = await createDeposit({ amount: amountNum });
       setQrData(res.data);
+      setCreatedAmount(amountNum);
       toast.success("Tạo liên kết thanh toán thành công!");
     } catch (err) {
       if (err instanceof ApiError) setError(err.apiMessage);
@@ -82,7 +81,7 @@ function DepositModal({ onClose }: { onClose: () => void }) {
     if (!qrData) return;
     setCheckingStatus(true);
     try {
-      const res = await api.get<PaymentStatusResponse>(`/api/v1/payments/status?transactionRef=${encodeURIComponent(qrData.transactionRef)}`);
+      const res = await getPaymentStatus(qrData.transactionRef);
       setStatusMsg(res.data.message ? `${res.data.status}: ${res.data.message}` : `Trạng thái: ${res.data.status}`);
     } catch {
       setStatusMsg("Không thể kiểm tra trạng thái.");
@@ -126,20 +125,14 @@ function DepositModal({ onClose }: { onClose: () => void }) {
                 <span className={`text-sm font-semibold px-3 py-1 rounded-full border ${isExpired ? "text-rose-700 bg-rose-50 border-rose-200" : "text-amber-700 bg-amber-50 border-amber-200"}`}>
                   {isExpired ? "Hết hạn" : `Hết hạn sau ${formatSecondsToClock(secondsLeft)}`}
                 </span>
-                <button type="button" onClick={() => { setQrData(null); setAmount(""); setError(null); setStatusMsg(null); }} className="text-xs text-blue-700 hover:text-blue-600">
+                <button type="button" onClick={() => { setQrData(null); setCreatedAmount(null); setAmount(""); setError(null); setStatusMsg(null); }} className="text-xs text-blue-700 hover:text-blue-600">
                   Tạo mới
                 </button>
               </div>
 
-              {qrData.qrDataUrl && (
-                <div className="flex justify-center bg-slate-50 rounded-xl p-4">
-                  <Image src={qrData.qrDataUrl} alt="QR thanh toán" width={200} height={200} unoptimized className="w-48 h-48 object-contain" />
-                </div>
-              )}
-
               <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-slate-500">Mã TK</span><span className="font-mono text-slate-900 text-xs">{qrData.transactionRef}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(qrData.amount)}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(createdAmount ?? amountNum)}</span></div>
               </div>
 
               <div className="flex flex-wrap gap-2">

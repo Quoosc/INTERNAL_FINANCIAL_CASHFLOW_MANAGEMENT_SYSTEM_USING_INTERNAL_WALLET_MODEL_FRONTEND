@@ -102,7 +102,8 @@ Client-direct upload flow:
 | GET    | `/wallet`                              | -                           | `WalletResponse`                    |
 | GET    | `/wallet/transactions`                 | `?from=&to=&page=0&size=20` | `PageResponse<LedgerEntryResponse>` |
 | GET    | `/wallet/transactions/{transactionId}` | -                           | `TransactionResponse`               |
-| POST   | `/wallet/deposit`                      | -                           | `PaymentResponse`                   |
+
+> ⚠ Backend KHÔNG có `POST /wallet/deposit`. Nạp tiền dùng `POST /payments` (xem dưới).
 
 **WalletResponse:**
 
@@ -150,19 +151,41 @@ Client-direct upload flow:
 }
 ```
 
-**POST `/wallet/deposit` body:**
+### Payments — Deposit & VNPay flow (`/payments`)
 
-```json
-{ "amount": 500000, "description": "string (optional)" }
-```
+| Method | Endpoint                                      | Body / Params                       | Response                  | Auth |
+| ------ | --------------------------------------------- | ----------------------------------- | ------------------------- | :--: |
+| POST   | `/payments`                                   | `PaymentRequest`                    | `PaymentResponse`         |  No  |
+| GET    | `/payments/status`                            | `?gateway=&transactionRef=`         | `PaymentStatusResponse`   |  No  |
+| POST   | `/payments/cancel`                            | `PaymentCancelRequest`              | `PaymentCancelResponse`   |  No  |
+| GET    | `/payments/{gateway}/return`                  | gateway callback                    | `PaymentCallbackResult`   |  No  |
+| GET    | `/payments/{gateway}/ipn`                     | gateway IPN callback                | `PaymentCallbackResult`   |  No  |
 
-**PaymentResponse** (deposit):
+**PaymentRequest body:**
 
 ```json
 {
   "gateway": "VNPAY",
-  "depositCode": "DEP-2026-000001",
-  "transactionRef": "DEP-2026-000001",
+  "depositCode": "DEP-20260428-AB12CD",
+  "depositInfo": "Nap tien vao vi noi bo",
+  "amount": 500000,
+  "ipAddress": "1.2.3.4",
+  "returnUrl": "https://app/wallet/deposit/return",
+  "bankCode": "VCB",
+  "locale": "vn",
+  "expireMinutes": 15
+}
+```
+
+> `gateway`, `depositCode`, `depositInfo`, `amount` bắt buộc. `amount` ≥ 1.000 VND.
+
+**PaymentResponse:**
+
+```json
+{
+  "gateway": "VNPAY",
+  "depositCode": "DEP-20260428-AB12CD",
+  "transactionRef": "DEP-20260428-AB12CD",
   "paymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?...",
   "qrCode": null,
   "status": "PENDING",
@@ -171,7 +194,22 @@ Client-direct upload flow:
 }
 ```
 
-> FE redirect user đến `paymentUrl` để thanh toán qua VNPay
+> FE redirect user đến `paymentUrl` để thanh toán. `qrCode` (nullable) là raw QR text — FE
+> tự render khi cần (chưa dùng trong UI hiện tại).
+
+**PaymentStatusResponse:**
+
+```json
+{
+  "gateway": "VNPAY",
+  "transactionRef": "DEP-20260428-AB12CD",
+  "status": "SUCCESS",
+  "successful": true,
+  "message": "Payment completed"
+}
+```
+
+> ⚠ `gateway` là **bắt buộc** ở `GET /payments/status`. Bỏ sẽ trả 400.
 
 ---
 

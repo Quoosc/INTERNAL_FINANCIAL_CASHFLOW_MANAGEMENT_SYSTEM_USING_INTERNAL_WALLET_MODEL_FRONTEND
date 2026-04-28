@@ -201,31 +201,48 @@ export interface ProcessWithdrawRequest {
   note?: string;
 }
 
-/** POST /wallet/deposit — body */
-export interface DepositQRRequest {
-  amount: number;
-  description?: string;
+/**
+ * POST /payments — request body
+ *
+ * Khớp backend `payment.dto.request.PaymentRequest`. Backend bắt buộc
+ * `gateway`, `depositCode`, `depositInfo`, `amount`. Các trường khác optional.
+ */
+export interface PaymentCreateRequest {
+  gateway: PaymentProvider; // e.g. VNPAY
+  depositCode: string; // mã do FE sinh, max 100
+  depositInfo: string; // mô tả ngắn (max 255), hiển thị trên cổng VNPay
+  amount: number; // VND, ≥ 1000
+  ipAddress?: string;
+  returnUrl?: string;
+  bankCode?: string;
+  locale?: string;
+  expireMinutes?: number;
 }
 
-/** POST /wallet/deposit — response (VNPay flow) */
-export interface DepositQRResponse {
-  gateway?: PaymentProvider | string;
-  depositCode?: string;
+/**
+ * POST /payments — response
+ *
+ * Khớp backend `payment.dto.response.PaymentResponse`. `qrCode` (nếu có)
+ * là chuỗi nội dung QR — FE convert sang data URL khi cần render.
+ */
+export interface PaymentCreateResponse {
+  gateway: PaymentProvider | string;
+  depositCode: string;
   transactionRef: string;
   paymentUrl: string;
-  qrDataUrl?: string | null;
-  amount: number;
-  status?: string;
-  message?: string;
+  qrCode: string | null;
+  status: string;
+  message: string;
   expiredAt: string;
 }
 
-/** GET /payments/status?transactionRef=... — response */
+/** GET /payments/status?gateway=&transactionRef=... — response */
 export interface PaymentStatusResponse {
+  gateway: PaymentProvider | string;
   transactionRef: string;
   status: string;
+  successful: boolean;
   message?: string;
-  amount?: number;
 }
 
 // --- Filter Params ---

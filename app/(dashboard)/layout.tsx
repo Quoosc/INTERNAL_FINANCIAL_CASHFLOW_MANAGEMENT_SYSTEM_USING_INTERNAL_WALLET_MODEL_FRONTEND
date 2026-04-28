@@ -12,6 +12,7 @@ import { ToastProvider } from "@/contexts/toast-context";
 import { ToastStack } from "@/components/ui/toast";
 import { Header } from "@/components/layout/header";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { useUserStream } from "@/lib/hooks/use-user-stream";
 
 // =============================================================
 // Dashboard Layout — Sidebar role-aware + Header + Providers
@@ -731,6 +732,7 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  useUserStream();
 
   if (isLoading) {
     return (

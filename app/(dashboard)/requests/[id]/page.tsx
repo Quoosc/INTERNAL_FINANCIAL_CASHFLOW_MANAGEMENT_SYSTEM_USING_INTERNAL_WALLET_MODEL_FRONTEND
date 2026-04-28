@@ -389,7 +389,13 @@ export default function RequestDetailPage({ params }: PageProps) {
     const updateBody: UpdateRequestBody = {
       amount: amountNumber,
       description: mergedDescription,
-      attachmentFileIds: request.attachments.map((file) => file.fileId),
+      attachments: request.attachments.map((file) => ({
+        fileName: file.fileName,
+        cloudinaryPublicId: file.cloudinaryPublicId || undefined,
+        url: file.url,
+        fileType: file.fileType,
+        size: file.size,
+      })),
     };
 
     setActionLoading(true);

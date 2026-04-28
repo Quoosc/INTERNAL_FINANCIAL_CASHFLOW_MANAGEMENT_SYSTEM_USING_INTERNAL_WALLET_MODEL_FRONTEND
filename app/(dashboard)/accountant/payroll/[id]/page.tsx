@@ -20,6 +20,11 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+const ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED = true;
+
+// BLOCKED (backend chưa có):
+// - /api/v1/accountant/payroll/*
+// Giữ mock cho đến khi backend mở endpoint chính thức.
 const MOCK_PERIOD: PayrollDetailResponse = {
   id: 5,
   periodCode: "PR-2026-03",
@@ -137,6 +142,13 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       setLoading(true);
       setError(null);
       try {
+        if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
+          const safeId = Number(id);
+          setPeriod({ ...MOCK_PERIOD, id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_PERIOD.id, periodCode: `PR-2026-${String(id).padStart(2, "0")}` });
+          setActiveStep(1);
+          return;
+        }
+
         const res = await api.get<PayrollDetailResponse>(`/api/v1/accountant/payroll/${id}`);
         if (cancelled) return;
         setPeriod(res.data);
@@ -257,6 +269,21 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       advanceDeduct: nextAdvance,
     };
 
+    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
+      setPeriod((prev) => {
+        if (!prev) return prev;
+        const entries = prev.entries.map((entry) =>
+          entry.id === editingEntry.id
+            ? { ...entry, baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance, finalNetSalary: recalcNet({ baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance }) }
+            : entry
+        );
+        return { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() };
+      });
+      setUploading(false);
+      closeEdit();
+      return;
+    }
+
     try {
       const res = await api.put<PayrollEntry>(`/api/v1/accountant/payroll/${period.id}/entries/${editingEntry.id}`, body);
       setPeriod((prev) => {
@@ -284,6 +311,39 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     if (!period || period.entries.length === 0) return;
     setNetting(true);
     setError(null);
+
+    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
+      const debt: Record<number, number> = { 11: 2_500_000, 12: 0, 13: 1_200_000, 14: 0 };
+      const summary = period.entries.map((entry) => {
+        const outstandingDebt = debt[entry.userId] ?? 0;
+        const gross = entry.baseSalary + entry.bonus + entry.allowance;
+        const maxDeduct = Math.max(0, gross - entry.deduction);
+        const deductedAmount = Math.min(outstandingDebt, maxDeduct);
+        return {
+          userId: entry.userId,
+          employeeCode: entry.employeeCode,
+          fullName: entry.fullName,
+          outstandingDebt,
+          deductedAmount,
+          remainingDebt: Math.max(0, outstandingDebt - deductedAmount),
+          note: deductedAmount > 0 ? "Đã bù trừ từ kỳ lương" : "Không có dư nợ",
+        };
+      });
+
+      const simulated: AutoNettingResponse = {
+        periodId: period.id,
+        periodCode: period.periodCode,
+        totalAdvanceDeducted: summary.reduce((s, item) => s + item.deductedAmount, 0),
+        summary,
+      };
+
+      const entries = applyNetting(period.entries, simulated);
+      setPeriod((prev) => (prev ? { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() } : prev));
+      setNettingResult(simulated);
+      setNetting(false);
+      setActiveStep(3);
+      return;
+    }
 
     try {
       const res = await api.post<AutoNettingResponse>(`/api/v1/accountant/payroll/${period.id}/auto-netting`);
@@ -328,6 +388,22 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     if (!period) return;
     setRunning(true);
     setError(null);
+
+    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
+      const simulated: PayrollRunResponse = {
+        periodId: period.id,
+        periodCode: period.periodCode,
+        status: PayrollStatus.COMPLETED,
+        payslipsGenerated: period.entries.length,
+        totalNetPayroll: period.entries.reduce((sum, e) => sum + e.finalNetSalary, 0),
+      };
+      setRunResult(simulated);
+      setPeriod((prev) => (prev ? { ...prev, status: PayrollStatus.COMPLETED, totalNetPayroll: simulated.totalNetPayroll, updatedAt: new Date().toISOString() } : prev));
+      setRunning(false);
+      setShowRunConfirm(false);
+      setActiveStep(4);
+      return;
+    }
 
     try {
       const res = await api.post<PayrollRunResponse>(`/api/v1/accountant/payroll/${period.id}/run`);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { getNotifications, markAllAsRead, markAsRead } from "@/lib/api";
@@ -112,6 +112,40 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<NotificationFilterTab>("ALL");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const seenSseNotificationIds = useRef<Set<number>>(new Set());
+
+  const prependNotificationFromSse = useCallback(
+    (incoming: NotificationResponse) => {
+      if (!incoming || typeof incoming.id !== "number") return;
+      if (seenSseNotificationIds.current.has(incoming.id)) return;
+      seenSseNotificationIds.current.add(incoming.id);
+
+      if (!incoming.isRead) {
+        setUnreadCount((prev) => prev + 1);
+      }
+
+      const affectsCurrentFilter =
+        filter === "ALL" || (filter === "UNREAD" && !incoming.isRead);
+
+      if (affectsCurrentFilter) {
+        setTotal((prevTotal) => {
+          const nextTotal = prevTotal + 1;
+          setTotalPages(Math.max(1, Math.ceil(nextTotal / PAGE_SIZE)));
+          return nextTotal;
+        });
+      }
+
+      if (!affectsCurrentFilter || page !== 1) return;
+
+      setNotifications((prev) => {
+        if (prev.some((item) => item.id === incoming.id)) {
+          return prev;
+        }
+        return [incoming, ...prev].slice(0, PAGE_SIZE);
+      });
+    },
+    [filter, page]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -155,6 +189,26 @@ export default function NotificationsPage() {
       cancelled = true;
     };
   }, [filter, page]);
+
+  useEffect(() => {
+    const onSseNotification = (event: Event) => {
+      const custom = event as CustomEvent<NotificationResponse | undefined>;
+      if (!custom.detail) return;
+      prependNotificationFromSse(custom.detail);
+    };
+
+    window.addEventListener(
+      "notifications:new",
+      onSseNotification as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "notifications:new",
+        onSseNotification as EventListener
+      );
+    };
+  }, [prependNotificationFromSse]);
 
   const handleTabChange = (nextFilter: NotificationFilterTab) => {
     if (nextFilter === filter) return;

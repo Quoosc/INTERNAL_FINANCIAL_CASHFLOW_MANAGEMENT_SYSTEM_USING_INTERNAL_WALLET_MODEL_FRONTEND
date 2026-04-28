@@ -194,6 +194,7 @@ export default function TransactionsPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   const syncUrl = useCallback(
     (nextFilters: TransactionFiltersState, nextPage: number) => {
@@ -261,7 +262,27 @@ export default function TransactionsPage() {
     return () => {
       cancelled = true;
     };
-  }, [filters, page, syncUrl]);
+  }, [filters, page, refreshTick, syncUrl]);
+
+  useEffect(() => {
+    if (page !== 0) return;
+
+    const onTransactionCreated = () => {
+      setRefreshTick((prev) => prev + 1);
+    };
+
+    window.addEventListener(
+      "wallet:transaction-created",
+      onTransactionCreated
+    );
+
+    return () => {
+      window.removeEventListener(
+        "wallet:transaction-created",
+        onTransactionCreated
+      );
+    };
+  }, [page]);
 
   const handleTypeChange = (value: string) => {
     const nextFilters: TransactionFiltersState = {

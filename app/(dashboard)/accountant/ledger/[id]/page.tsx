@@ -17,6 +17,11 @@ type LedgerTxnDetailView = TransactionResponse & {
   referenceCode?: string | null;
 };
 
+const ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED = true;
+
+// BLOCKED (backend chưa có):
+// - /api/v1/accountant/ledger/*
+// Giữ mock cho đến khi backend mở endpoint chính thức.
 const MOCK_TXN: LedgerTxnDetailView = {
   id: 1,
   transactionCode: "TXN-2026-0001A",
@@ -125,6 +130,16 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
+        if (ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED) {
+          const safeId = Number(id);
+          setTxn({
+            ...MOCK_TXN,
+            id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_TXN.id,
+            transactionCode: `TXN-2026-${String(id).padStart(4, "0")}A`,
+          });
+          return;
+        }
+
         const res = await api.get<LedgerTxnDetailView>(`/api/v1/accountant/ledger/${id}`);
         if (cancelled) return;
         setTxn(res.data);

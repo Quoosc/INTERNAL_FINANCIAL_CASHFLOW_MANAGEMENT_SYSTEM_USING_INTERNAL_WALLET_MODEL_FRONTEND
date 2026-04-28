@@ -13,7 +13,11 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 8;
+const ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED = true;
 
+// BLOCKED (backend chưa có):
+// - /api/v1/accountant/payroll/*
+// Giữ mock cho đến khi backend mở endpoint chính thức.
 const MOCK_PERIODS: PayrollPeriodListItem[] = [
   {
     id: 6,
@@ -241,6 +245,24 @@ export default function AccountantPayrollPage() {
       setError(null);
 
       try {
+        if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
+          const filtered = filterMock(MOCK_PERIODS, status, search);
+          const mockTotal = filtered.length;
+          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
+          const safePage = Math.min(page, mockTotalPages);
+          const start = (safePage - 1) * PAGE_LIMIT;
+
+          setItems(filtered.slice(start, start + PAGE_LIMIT));
+          setAllItems(MOCK_PERIODS);
+          setTotal(mockTotal);
+          setTotalPages(mockTotalPages);
+
+          if (safePage !== page) {
+            goToPage(safePage);
+          }
+          return;
+        }
+
         const query = new URLSearchParams();
         if (status) query.set("status", status);
         if (search.trim()) query.set("search", search.trim());
@@ -364,6 +386,33 @@ export default function AccountantPayrollPage() {
       startDate,
       endDate,
     };
+
+    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
+      const mockId = Date.now();
+      const periodCode = `PR-${periodYear}-${String(periodMonth).padStart(2, "0")}`;
+      const mockCreated: PayrollPeriodListItem = {
+        id: mockId,
+        periodCode,
+        name: body.name,
+        month: body.month,
+        year: body.year,
+        startDate: body.startDate,
+        endDate: body.endDate,
+        status: PayrollStatus.DRAFT,
+        employeeCount: 0,
+        totalNetPayroll: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setAllItems((prev) => [mockCreated, ...prev]);
+      setItems((prev) => [mockCreated, ...prev.slice(0, PAGE_LIMIT - 1)]);
+      setTotal((prev) => prev + 1);
+      setShowCreateModal(false);
+      setCreating(false);
+      router.push(`/accountant/payroll/${mockCreated.id}`);
+      return;
+    }
 
     try {
       const res = await api.post<PayrollPeriodListItem>("/api/v1/accountant/payroll", body);

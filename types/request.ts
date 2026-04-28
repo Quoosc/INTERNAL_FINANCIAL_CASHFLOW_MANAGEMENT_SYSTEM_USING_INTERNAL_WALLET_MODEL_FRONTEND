@@ -65,6 +65,15 @@ export interface RequestAttachmentResponse {
   size: number;
 }
 
+/** File attachment metadata gửi lên backend khi tạo/cập nhật request */
+export interface FileStorageRequest {
+  fileName: string;
+  cloudinaryPublicId?: string;
+  url: string;
+  fileType: string;
+  size: number;
+}
+
 /** Một dòng trong timeline (lịch sử duyệt) */
 export interface RequestTimelineEntry {
   id: number;
@@ -139,14 +148,14 @@ export interface CreateRequestBody {
   categoryId?: number;
   amount: number;
   description: string;
-  attachmentFileIds?: number[]; // file_storages.id
+  attachments?: FileStorageRequest[];
 }
 
 /** PUT /requests/:id — body (chỉ khi PENDING) */
 export interface UpdateRequestBody {
   amount?: number;
   description?: string;
-  attachmentFileIds?: number[];
+  attachments?: FileStorageRequest[];
 }
 
 // --- Employee Request Filter Params ---

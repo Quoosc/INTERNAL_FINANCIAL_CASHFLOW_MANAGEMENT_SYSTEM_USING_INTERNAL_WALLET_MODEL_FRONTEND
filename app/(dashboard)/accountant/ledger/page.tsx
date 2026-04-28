@@ -18,6 +18,7 @@ interface LedgerTransactionView extends TransactionResponse {
 }
 
 const PAGE_LIMIT = 20;
+const ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED = true;
 
 interface SpringPage<T> {
   content: T[];
@@ -32,6 +33,9 @@ type LedgerListApi =
   | PaginatedResponse<TransactionResponse>
   | TransactionResponse[];
 
+// BLOCKED (backend chưa có):
+// - /api/v1/accountant/ledger/*
+// Giữ mock cho đến khi backend mở endpoint chính thức.
 const MOCK_SUMMARY: LedgerSummaryResponse = {
   currentBalance: 1_248_500_000,
   totalInflow: 2_500_000_000,
@@ -305,6 +309,24 @@ export default function AccountantLedgerPage() {
       setError(null);
 
       try {
+        if (ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED) {
+          const filtered = filterMock(MOCK_TRANSACTIONS, type, from, to, search);
+          const mockTotal = filtered.length;
+          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
+          const safePage = Math.min(page, mockTotalPages);
+          const start = (safePage - 1) * PAGE_LIMIT;
+
+          setSummary(MOCK_SUMMARY);
+          setItems(filtered.slice(start, start + PAGE_LIMIT));
+          setTotal(mockTotal);
+          setTotalPages(mockTotalPages);
+
+          if (safePage !== page) {
+            goToPage(safePage);
+          }
+          return;
+        }
+
         const filters = {
           type,
           page,
@@ -568,4 +590,3 @@ function SummaryCard({
     </div>
   );
 }
-

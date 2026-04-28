@@ -143,6 +143,7 @@ export default function AccountantDisbursementDetailPage({
   });
 
   const [pin, setPin] = useState("");
+  const [disburseNote, setDisburseNote] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -253,16 +254,20 @@ export default function AccountantDisbursementDetailPage({
     setPinError(null);
 
     try {
-      const body: DisburseBody = { pin };
+      const body: DisburseBody = {
+        pin,
+        note: disburseNote.trim() || undefined,
+      };
       const res = await api.post<DisburseResponse>(
         `/api/v1/accountant/disbursements/${id}/disburse`,
         body,
       );
       setSuccessData(res.data);
       setShowSuccess(true);
+      setDisburseNote("");
     } catch (err) {
       if (err instanceof ApiError) {
-        if (err.status === 400 || err.status === 401) {
+        if (err.status === 400 || err.status === 401 || err.status === 423) {
           setPinError(err.apiMessage);
         } else {
           setPinError("Đã có lỗi xảy ra. Vui lòng thử lại.");
@@ -614,6 +619,14 @@ export default function AccountantDisbursementDetailPage({
                 disabled={!allChecked || submitting}
                 placeholder="•••••"
                 className="w-full px-4 py-3 rounded-xl bg-blue-50 border border-slate-200 text-slate-900 tracking-[0.35em] text-center text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+              />
+              <textarea
+                rows={2}
+                value={disburseNote}
+                onChange={(event) => setDisburseNote(event.target.value)}
+                disabled={submitting}
+                placeholder="Ghi chú giải ngân (không bắt buộc)"
+                className="mt-3 w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
               />
               {!allChecked && (
                 <p className="text-xs text-amber-700 mt-2">

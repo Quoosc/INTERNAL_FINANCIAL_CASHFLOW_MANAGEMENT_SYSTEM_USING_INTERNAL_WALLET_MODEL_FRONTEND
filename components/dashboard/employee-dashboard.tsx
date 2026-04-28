@@ -13,14 +13,18 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useAuth } from "@/contexts/auth-context";
+import { api } from "@/lib/api-client";
 import {
+  PaginatedResponse,
   EmployeeDashboardResponse,
+  PayslipListItem,
   RequestListItem,
+  RequestSummaryResponse,
   RequestType,
   RequestStatus,
+  TransactionResponse,
+  WalletResponse,
 } from "@/types";
-// import { api } from "@/lib/api-client";
-// import { PaginatedResponse } from "@/types";
 
 // =============================================================
 // Employee Dashboard Page
@@ -145,6 +149,59 @@ const MOCK_PENDING_REQUESTS: RequestListItem[] = [
     updatedAt: "2026-04-01T08:00:00",
   },
 ];
+
+function mapWalletResponse(wallet: WalletResponse): EmployeeDashboardResponse["wallet"] {
+  return {
+    balance: wallet.balance,
+    lockedBalance: wallet.lockedBalance,
+    availableBalance: wallet.availableBalance,
+  };
+}
+
+function mapRecentPayslip(
+  payload: PaginatedResponse<PayslipListItem> | null,
+): EmployeeDashboardResponse["recentPayslip"] {
+  const item = payload?.items[0];
+
+  if (!item) {
+    return null;
+  }
+
+  return {
+    id: item.id,
+    payslipCode: item.payslipCode,
+    periodName: item.periodName,
+    finalNetSalary: item.finalNetSalary,
+    status: item.status,
+  };
+}
+
+function mapRecentTransactions(
+  payload:
+    | PaginatedResponse<TransactionResponse>
+    | { content: TransactionResponse[] }
+    | TransactionResponse[]
+    | null,
+): EmployeeDashboardResponse["recentTransactions"] {
+  const items = Array.isArray(payload)
+    ? payload
+    : payload && "content" in payload
+      ? payload.content
+      : payload?.items;
+
+  if (!items?.length) {
+    return [];
+  }
+
+  return items.map((item) => ({
+    id: item.id,
+    transactionCode: item.transactionCode,
+    type: item.type,
+    amount: item.amount,
+    status: item.status,
+    createdAt: item.createdAt,
+  }));
+}
 
 // Mock dữ liệu chi tiêu theo tháng (không có API riêng — tổng hợp từ transactions)
 const MOCK_MONTHLY: { month: string; chiTieu: number; tamUng: number }[] = [
@@ -409,22 +466,43 @@ export function EmployeeDashboard() {
     async function load() {
       setIsLoading(true);
       try {
-        // ─── API CALL THẬT (bỏ comment khi backend Sprint 9 sẵn sàng) ──────
-        // const [dashRes, reqRes] = await Promise.all([
-        //   api.get<EmployeeDashboardResponse>("/api/v1/dashboard/employee"),
-        //   api.get<PaginatedResponse<RequestListItem>>("/api/v1/requests", {
-        //     params: { status: "PENDING", limit: 3 },
-        //   }),
-        // ]);
-        // setData(dashRes.data);
-        // setPendingRequests(reqRes.data.items);
-        // ─────────────────────────────────────────────────────────────────────
+        const [
+          walletResult,
+          summaryResult,
+          requestsResult,
+          payslipResult,
+          transactionsResult,
+        ] =
+          await Promise.allSettled([
+            api.get<WalletResponse>("/api/v1/wallet"),
+            api.get<RequestSummaryResponse>("/api/v1/requests/summary"),
+            api.get<PaginatedResponse<RequestListItem>>("/api/v1/requests?status=PENDING&page=1&limit=3"),
+            api.get<PaginatedResponse<PayslipListItem>>("/api/v1/payslips?page=1&limit=1"),
+            api.get<
+              PaginatedResponse<TransactionResponse>
+              | { content: TransactionResponse[] }
+              | TransactionResponse[]
+            >("/api/v1/wallet/transactions?page=0&size=5"),
+          ]);
 
-        // ─── MOCK DATA (xóa khi API sẵn sàng) ───────────────────────────────
-        await new Promise((r) => setTimeout(r, 600)); // giả lập network delay
-        setData(MOCK_DASHBOARD);
-        setPendingRequests(MOCK_PENDING_REQUESTS);
-        // ─────────────────────────────────────────────────────────────────────
+        const wallet = walletResult.status === "fulfilled" ? walletResult.value.data : null;
+        const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : null;
+        const pendingItems = requestsResult.status === "fulfilled" ? requestsResult.value.data.items : null;
+        const pendingCount = requestsResult.status === "fulfilled" ? requestsResult.value.data.total : null;
+        const recentPayslip = payslipResult.status === "fulfilled" ? payslipResult.value.data : null;
+        const recentTransactions =
+          transactionsResult.status === "fulfilled"
+            ? transactionsResult.value.data
+            : null;
+
+        setData({
+          wallet: wallet ? mapWalletResponse(wallet) : MOCK_DASHBOARD.wallet,
+          pendingRequestsCount:
+            summary?.totalPendingApproval ?? pendingCount ?? MOCK_DASHBOARD.pendingRequestsCount,
+          recentTransactions: mapRecentTransactions(recentTransactions),
+          recentPayslip: mapRecentPayslip(recentPayslip),
+        });
+        setPendingRequests(pendingItems ?? MOCK_PENDING_REQUESTS);
       } finally {
         setIsLoading(false);
       }

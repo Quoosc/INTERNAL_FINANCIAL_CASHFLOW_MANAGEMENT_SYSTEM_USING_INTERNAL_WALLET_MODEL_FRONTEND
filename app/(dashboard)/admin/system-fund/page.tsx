@@ -49,7 +49,7 @@ export default function AdminSystemFundPage() {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
-        setError("Khong the tai du lieu quy he thong.");
+        setError("Không thể tải dữ liệu quỹ hệ thống.");
       }
     } finally {
       setLoading(false);
@@ -63,7 +63,7 @@ export default function AdminSystemFundPage() {
   const handleTopup = async () => {
     const amount = Number(topupAmount.replace(/\D/g, ""));
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError("So tien nap khong hop le.");
+      setError("Số tiền nạp không hợp lệ.");
       return;
     }
 
@@ -81,13 +81,13 @@ export default function AdminSystemFundPage() {
       setTopupAmount("");
       setTopupDescription("");
       setTopupReferenceCode("");
-      setNotice("Da nap tien vao quy he thong.");
+      setNotice("Đã nạp tiền vào quỹ hệ thống.");
       await loadData();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
-        setError("Khong the nap tien vao quy he thong.");
+        setError("Không thể nạp tiền vào quỹ hệ thống.");
       }
     } finally {
       setTopupSubmitting(false);
@@ -97,7 +97,7 @@ export default function AdminSystemFundPage() {
   const handleUpdateStatement = async () => {
     const bankBalance = Number(statementBalance.replace(/\D/g, ""));
     if (!Number.isFinite(bankBalance) || bankBalance < 0) {
-      setError("So du ngan hang khong hop le.");
+      setError("Số dư ngân hàng không hợp lệ.");
       return;
     }
 
@@ -111,13 +111,13 @@ export default function AdminSystemFundPage() {
         lastStatementDate: new Date().toISOString().slice(0, 10),
       });
       setShowStatementModal(false);
-      setNotice("Da cap nhat so du ngan hang.");
+      setNotice("Đã cập nhật số dư ngân hàng.");
       await loadData();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
-        setError("Khong the cap nhat so du ngan hang.");
+        setError("Không thể cập nhật số dư ngân hàng.");
       }
     } finally {
       setStatementSubmitting(false);
@@ -138,8 +138,8 @@ export default function AdminSystemFundPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quy he thong</h1>
-          <p className="text-slate-500 mt-1">Quan ly quy company fund va doi soat ngan hang.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Quỹ hệ thống</h1>
+          <p className="text-slate-500 mt-1">Quản lý quỹ hệ thống và đối soát ngân hàng.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -148,14 +148,14 @@ export default function AdminSystemFundPage() {
             onClick={() => setShowTopupModal(true)}
             className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
           >
-            Nap tien tu ngan hang
+            Nạp tiền từ ngân hàng
           </button>
           <button
             type="button"
             onClick={() => setShowStatementModal(true)}
             className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold"
           >
-            Cap nhat so du ngan hang
+            Cập nhật số dư ngân hàng
           </button>
           <button
             type="button"
@@ -163,31 +163,31 @@ export default function AdminSystemFundPage() {
             disabled={loading}
             className="px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
           >
-            Tai lai
+            Tải lại
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
-          title="So du he thong"
+          title="Số dư hệ thống"
           value={formatCurrency(companyFund?.currentWalletBalance ?? 0)}
           tone="text-slate-900"
         />
         <StatCard
-          title="So du ngan hang"
+          title="Số dư ngân hàng"
           value={formatCurrency(companyFund?.externalBankBalance ?? 0)}
           tone="text-slate-700"
         />
         <StatCard
-          title="Chenh lech doi soat"
+          title="Chênh lệch đối soát"
           value={formatCurrency(companyFund?.bankDiscrepancy ?? 0)}
           tone={Math.abs(companyFund?.bankDiscrepancy ?? 0) > 0 ? "text-rose-700" : "text-emerald-700"}
         />
       </div>
 
       <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Bao cao doi soat</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Báo cáo đối soát</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <InfoRow
@@ -210,7 +210,7 @@ export default function AdminSystemFundPage() {
 
         {reconEntries.length > 0 && (
           <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
-            <p className="text-sm text-slate-900 font-medium">Chi tiet doi soat</p>
+            <p className="text-sm text-slate-900 font-medium">Chi tiết đối soát</p>
             {reconEntries.map((entry, index) => (
               <div key={`${entry.label ?? "entry"}-${index}`} className="text-sm text-slate-600 flex items-center justify-between gap-2">
                 <span>{entry.label ?? entry.description ?? `Entry ${index + 1}`}</span>
@@ -222,13 +222,13 @@ export default function AdminSystemFundPage() {
       </section>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Truy cap nhanh</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Truy cập nhanh</h2>
         <div className="mt-3">
           <Link
             href="/accountant/ledger"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
           >
-            Xem so cai
+            Xem sổ cái
           </Link>
         </div>
       </div>
@@ -246,22 +246,22 @@ export default function AdminSystemFundPage() {
       )}
 
       {showTopupModal && (
-        <Modal title="Nap tien tu ngan hang" onClose={() => setShowTopupModal(false)}>
+        <Modal title="Nạp tiền từ ngân hàng" onClose={() => setShowTopupModal(false)}>
           <div className="space-y-3">
             <InputField
-              label="So tien"
+              label="Số tiền"
               value={topupAmount}
               onChange={setTopupAmount}
-              placeholder="Nhap so tien"
+              placeholder="Nhập số tiền"
             />
             <InputField
-              label="Ghi chu"
+              label="Ghi chú"
               value={topupDescription}
               onChange={setTopupDescription}
-              placeholder="Mo ta giao dich"
+              placeholder="Mô tả giao dịch"
             />
             <InputField
-              label="Ma tham chieu ngan hang"
+              label="Mã tham chiếu ngân hàng"
               value={topupReferenceCode}
               onChange={setTopupReferenceCode}
               placeholder="VD: VCB-2026-001"
@@ -272,7 +272,7 @@ export default function AdminSystemFundPage() {
                 onClick={() => setShowTopupModal(false)}
                 className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
-                Huy
+                Hủy
               </button>
               <button
                 type="button"
@@ -280,7 +280,7 @@ export default function AdminSystemFundPage() {
                 disabled={topupSubmitting}
                 className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
               >
-                {topupSubmitting ? "Dang xu ly..." : "Xac nhan nap"}
+                {topupSubmitting ? "Đang xử lý..." : "Xác nhận nạp"}
               </button>
             </div>
           </div>
@@ -288,13 +288,13 @@ export default function AdminSystemFundPage() {
       )}
 
       {showStatementModal && (
-        <Modal title="Cap nhat so du ngan hang" onClose={() => setShowStatementModal(false)}>
+        <Modal title="Cập nhật số dư ngân hàng" onClose={() => setShowStatementModal(false)}>
           <div className="space-y-3">
             <InputField
-              label="So du ngan hang thuc te"
+              label="Số dư ngân hàng thực tế"
               value={statementBalance}
               onChange={setStatementBalance}
-              placeholder="Nhap so du"
+              placeholder="Nhập số dư"
             />
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
@@ -302,7 +302,7 @@ export default function AdminSystemFundPage() {
                 onClick={() => setShowStatementModal(false)}
                 className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
-                Huy
+                Hủy
               </button>
               <button
                 type="button"
@@ -310,7 +310,7 @@ export default function AdminSystemFundPage() {
                 disabled={statementSubmitting}
                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
               >
-                {statementSubmitting ? "Dang cap nhat..." : "Luu so du"}
+                {statementSubmitting ? "Đang cập nhật..." : "Lưu số dư"}
               </button>
             </div>
           </div>

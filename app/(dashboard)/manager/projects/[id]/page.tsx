@@ -4,7 +4,6 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import {
-  PhaseStatus,
   ProjectDetailResponse,
   ProjectRole,
   ProjectStatus,
@@ -18,69 +17,6 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// BLOCKED (backend chưa có):
-// - /api/v1/manager/projects*
-// - /api/v1/manager/department/team-leaders
-// Giữ mock cho đến khi backend mở endpoint chính thức.
-const MANAGER_PROJECTS_ENDPOINT_BLOCKED = true;
-
-const MOCK_PROJECT: ProjectDetailResponse = {
-  id: 1,
-  projectCode: "PRJ-IT-001",
-  name: "Hệ thống quản lý nội bộ",
-  description: "Quản lý tài chính nội bộ theo phase và workflow duyệt.",
-  status: ProjectStatus.ACTIVE,
-  totalBudget: 150_000_000,
-  availableBudget: 88_500_000,
-  totalSpent: 61_500_000,
-  departmentId: 1,
-  managerId: 5,
-  currentPhaseId: 1,
-  phases: [
-    {
-      id: 1,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Phân tích",
-      budgetLimit: 50_000_000,
-      currentSpent: 47_000_000,
-      status: PhaseStatus.ACTIVE,
-      startDate: "2026-01-10",
-      endDate: "2026-03-31",
-    },
-    {
-      id: 2,
-      phaseCode: "PH-002",
-      name: "Phase 2 - Phát triển",
-      budgetLimit: 80_000_000,
-      currentSpent: 14_500_000,
-      status: PhaseStatus.ACTIVE,
-      startDate: "2026-04-01",
-      endDate: "2026-07-31",
-    },
-  ],
-  members: [
-    {
-      userId: 4,
-      fullName: "Hoàng Minh Tuấn",
-      avatar: null,
-      employeeCode: "TL001",
-      projectRole: ProjectRole.LEADER,
-      position: "Team Leader IT",
-      joinedAt: "2026-01-10T08:00:00",
-    },
-    {
-      userId: 11,
-      fullName: "Đỗ Quốc Bảo",
-      avatar: null,
-      employeeCode: "EMP001",
-      projectRole: ProjectRole.MEMBER,
-      position: "Frontend Developer",
-      joinedAt: "2026-01-15T08:00:00",
-    },
-  ],
-  createdAt: "2026-01-10T08:00:00",
-  updatedAt: "2026-04-01T08:00:00",
-};
 
 function statusClass(status: string): string {
   switch (status) {
@@ -123,50 +59,6 @@ function burnClass(percent: number): string {
   return "bg-emerald-500";
 }
 
-function applyTeamLeader(
-  project: ProjectDetailResponse,
-  nextLeaderId: number,
-  teamLeaders: TeamLeaderOptionResponse[]
-): ProjectDetailResponse {
-  const selectedLeader = teamLeaders.find((option) => option.id === nextLeaderId);
-  if (!selectedLeader) return project;
-
-  const existingLeader = project.members.find((member) => member.projectRole === ProjectRole.LEADER);
-
-  const membersWithoutLeaders = project.members.map((member) => {
-    if (member.projectRole !== ProjectRole.LEADER) return member;
-    return { ...member, projectRole: ProjectRole.MEMBER };
-  });
-
-  const existingSelected = membersWithoutLeaders.find((member) => member.userId === nextLeaderId);
-
-  if (existingSelected) {
-    return {
-      ...project,
-      members: membersWithoutLeaders.map((member) =>
-        member.userId === nextLeaderId
-          ? { ...member, projectRole: ProjectRole.LEADER, position: selectedLeader.jobTitle ?? member.position }
-          : member
-      ),
-    };
-  }
-
-  return {
-    ...project,
-    members: [
-      ...membersWithoutLeaders,
-      {
-        userId: selectedLeader.id,
-        fullName: selectedLeader.fullName,
-        avatar: selectedLeader.avatar,
-        employeeCode: selectedLeader.employeeCode,
-        projectRole: ProjectRole.LEADER,
-        position: selectedLeader.jobTitle ?? "Team Leader",
-        joinedAt: existingLeader?.joinedAt ?? new Date().toISOString(),
-      },
-    ],
-  };
-}
 
 export default function ManagerProjectDetailPage({ params }: PageProps) {
   const { id } = use(params);
@@ -195,33 +87,15 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       setError(null);
 
       try {
-        if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
-          const safeId = Number(id);
-          setProject({
-            ...MOCK_PROJECT,
-            id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_PROJECT.id,
-            projectCode: `PRJ-MGR-${String(id).padStart(3, "0")}`,
-          });
-          return;
-        }
-
         const res = await api.get<ProjectDetailResponse>(`/api/v1/manager/projects/${id}`);
         if (cancelled) return;
         setProject(res.data);
       } catch (err) {
         if (cancelled) return;
-
-        const safeId = Number(id);
-        setProject({
-          ...MOCK_PROJECT,
-          id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_PROJECT.id,
-          projectCode: `PRJ-MGR-${String(id).padStart(3, "0")}`,
-        });
-
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          setError("Không thể tải thông tin dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -240,11 +114,6 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
     const loadTeamLeaders = async () => {
       try {
-        if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
-          setTeamLeaders(MOCK_TL_OPTIONS);
-          return;
-        }
-
         const res = await api.get<TeamLeaderOptionResponse[]>("/api/v1/manager/department/team-leaders");
         if (cancelled) return;
         setTeamLeaders(res.data);
@@ -314,53 +183,19 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       teamLeaderId,
     };
 
-    if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
-      setProject((prev) => {
-        if (!prev) return prev;
-
-        const availableBudget = Math.max(0, totalBudgetNumber - prev.totalSpent);
-        const updated = {
-          ...prev,
-          name: body.name ?? prev.name,
-          description: body.description ?? null,
-          totalBudget: body.totalBudget ?? prev.totalBudget,
-          availableBudget,
-          status: body.status ?? prev.status,
-        };
-
-        return applyTeamLeader(updated, teamLeaderId, teamLeaders);
-      });
-      setNotice("API chưa sẵn sàng, đã mô phỏng cập nhật dự án.");
-      setSaving(false);
-      setShowEditModal(false);
-      return;
-    }
-
     try {
       const res = await api.put<ProjectDetailResponse>(`/api/v1/manager/projects/${project.id}`, body);
       setProject(res.data);
       setNotice("Đã cập nhật thông tin dự án.");
-    } catch {
-      setProject((prev) => {
-        if (!prev) return prev;
-
-        const availableBudget = Math.max(0, totalBudgetNumber - prev.totalSpent);
-        const updated = {
-          ...prev,
-          name: body.name ?? prev.name,
-          description: body.description ?? null,
-          totalBudget: body.totalBudget ?? prev.totalBudget,
-          availableBudget,
-          status: body.status ?? prev.status,
-        };
-
-        return applyTeamLeader(updated, teamLeaderId, teamLeaders);
-      });
-
-      setNotice("API chưa sẵn sàng, đã mô phỏng cập nhật dự án.");
+      setShowEditModal(false);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setNotice(err.apiMessage);
+      } else {
+        setNotice("Không thể cập nhật dự án. Vui lòng thử lại.");
+      }
     } finally {
       setSaving(false);
-      setShowEditModal(false);
     }
   };
 

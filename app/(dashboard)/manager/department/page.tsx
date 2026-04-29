@@ -9,17 +9,10 @@ import {
   ManagerDeptMemberFilterParams,
   ManagerDeptMemberListItem,
   PaginatedResponse,
-  RequestStatus,
 } from "@/types";
-import { toApiPage } from "@/lib/adapters/pagination";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 
 const PAGE_LIMIT = 12;
-const MANAGER_DEPARTMENT_ENDPOINT_BLOCKED = true;
-
-// BLOCKED (backend chưa có):
-// - /api/v1/manager/department/*
-// Giữ mock cho đến khi backend mở endpoint chính thức.
 type MemberRole = "TEAM_LEADER" | "EMPLOYEE";
 
 type ManagerMemberView = ManagerDeptMemberListItem & {
@@ -118,24 +111,6 @@ const MOCK_MEMBER_DETAIL: ManagerDeptMemberDetailResponse = {
       projectName: "Nghiên cứu AI integration",
       projectRole: "MEMBER",
       position: "Frontend Developer",
-    },
-  ],
-  recentRequests: [
-    {
-      id: 1001,
-      requestCode: "REQ-2026-0041",
-      type: "ADVANCE",
-      amount: 3_500_000,
-      status: RequestStatus.PENDING,
-      createdAt: "2026-04-03T09:15:00",
-    },
-    {
-      id: 1002,
-      requestCode: "REQ-2026-0035",
-      type: "EXPENSE",
-      amount: 850_000,
-      status: RequestStatus.PAID,
-      createdAt: "2026-03-28T14:00:00",
     },
   ],
 };
@@ -292,11 +267,6 @@ export default function ManagerDepartmentPage() {
 
     const loadDeptBudget = async () => {
       try {
-        if (MANAGER_DEPARTMENT_ENDPOINT_BLOCKED) {
-          setDeptDashboard(MOCK_DASHBOARD);
-          return;
-        }
-
         const res = await api.get<ManagerDashboardResponse>(
           "/api/v1/dashboard/manager",
         );
@@ -323,34 +293,17 @@ export default function ManagerDepartmentPage() {
       setError(null);
 
       try {
-        if (MANAGER_DEPARTMENT_ENDPOINT_BLOCKED) {
-          const filtered = filterMock(MOCK_MEMBERS, roleFilter, search);
-          const mockTotal = filtered.length;
-          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-          const safePage = Math.min(page, mockTotalPages);
-          const start = (safePage - 1) * PAGE_LIMIT;
-
-          setMembers(filtered.slice(start, start + PAGE_LIMIT));
-          setTotal(mockTotal);
-          setTotalPages(mockTotalPages);
-
-          if (safePage !== page) {
-            goToPage(safePage);
-          }
-          return;
-        }
-
         const filters: ManagerDeptMemberFilterParams = {
           search: search.trim() || undefined,
           page,
-          size: PAGE_LIMIT,
+          limit: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
         if (filters.search) query.set("search", filters.search);
         if (roleFilter) query.set("role", roleFilter);
-        query.set("page", String(toApiPage(filters.page ?? 1)));
-        query.set("size", String(filters.size ?? PAGE_LIMIT));
+        query.set("page", String(filters.page ?? 1));
+        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
 
         const res = await api.get<
           | PaginatedResponse<ManagerDeptMemberListItem>
@@ -421,24 +374,6 @@ export default function ManagerDepartmentPage() {
     setDetailLoading(true);
 
     try {
-      if (MANAGER_DEPARTMENT_ENDPOINT_BLOCKED) {
-        const summary = members.find((member) => member.id === memberId);
-        setSelectedMember({
-          ...MOCK_MEMBER_DETAIL,
-          id: memberId,
-          fullName: summary?.fullName ?? MOCK_MEMBER_DETAIL.fullName,
-          email: summary?.email ?? MOCK_MEMBER_DETAIL.email,
-          employeeCode: summary?.employeeCode ?? MOCK_MEMBER_DETAIL.employeeCode,
-          jobTitle: summary?.jobTitle ?? MOCK_MEMBER_DETAIL.jobTitle,
-          status: summary?.status ?? MOCK_MEMBER_DETAIL.status,
-          debtBalance: summary?.debtBalance ?? MOCK_MEMBER_DETAIL.debtBalance,
-          pendingRequestsCount:
-            summary?.pendingRequestsCount ??
-            MOCK_MEMBER_DETAIL.pendingRequestsCount,
-        });
-        return;
-      }
-
       const res = await api.get<ManagerDeptMemberDetailResponse>(
         `/api/v1/manager/department/members/${memberId}`,
       );
@@ -728,38 +663,6 @@ export default function ManagerDepartmentPage() {
                   )}
                 </section>
 
-                <section className="space-y-2">
-                  <h4 className="text-sm font-semibold text-slate-900">
-                    Yêu cầu gần đây
-                  </h4>
-                  {selectedMember.recentRequests.length === 0 ? (
-                    <p className="text-xs text-slate-500">
-                      Không có yêu cầu gần đây.
-                    </p>
-                  ) : (
-                    selectedMember.recentRequests.map((request) => (
-                      <div
-                        key={request.id}
-                        className="rounded-lg border border-slate-200 bg-white p-3 space-y-1"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-mono text-slate-600">
-                            {request.requestCode}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {request.type}
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-900">
-                          {formatCurrency(request.amount)}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {request.status} • {formatDateTime(request.createdAt)}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </section>
               </div>
             )}
           </div>

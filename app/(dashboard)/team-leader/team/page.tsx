@@ -13,12 +13,7 @@ import {
 } from "@/types";
 
 const PAGE_LIMIT = 20;
-const TL_TEAM_ENDPOINT_BLOCKED = true;
 
-// BLOCKED (backend chưa có):
-// - GET /api/v1/team-leader/team-members
-// - GET /api/v1/team-leader/team-members/{userId}
-// Giữ mock cho đến khi backend mở endpoint chính thức.
 const MOCK_MEMBERS: TLTeamMemberListItem[] = [
   {
     id: 11,
@@ -197,19 +192,6 @@ export default function TLTeamPage() {
       setLoading(true);
       setError(null);
       try {
-        if (TL_TEAM_ENDPOINT_BLOCKED) {
-          const filtered = filterMock(MOCK_MEMBERS, search, projectFilter);
-          const mockTotal = filtered.length;
-          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-          const safePage = Math.min(page, mockTotalPages);
-          const start = (safePage - 1) * PAGE_LIMIT;
-          setMembers(filtered.slice(start, start + PAGE_LIMIT));
-          setTotal(mockTotal);
-          setTotalPages(mockTotalPages);
-          if (safePage !== page) goToPage(safePage);
-          return;
-        }
-
         const query = new URLSearchParams();
         if (search.trim()) query.set("search", search.trim());
         if (projectFilter) query.set("projectId", projectFilter);
@@ -233,7 +215,7 @@ export default function TLTeamPage() {
         setTotalPages(mockTotalPages);
         if (safePage !== page) goToPage(safePage);
         if (err instanceof ApiError) setError(err.apiMessage);
-        else setError("Không thể tải API, đang hiển thị dữ liệu mẫu.");
+        else setError("Không thể tải dữ liệu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -246,7 +228,7 @@ export default function TLTeamPage() {
 
   const projectOptions = useMemo(() => {
     const map = new Map<number, string>();
-    [...members, ...MOCK_MEMBERS].forEach((m) => {
+    members.forEach((m) => {
       m.projects.forEach((p) => map.set(p.projectId, `${p.projectCode} - ${p.projectName}`));
     });
     return [...map.entries()].map(([id, label]) => ({ id, label }));
@@ -256,26 +238,8 @@ export default function TLTeamPage() {
     setShowDetail(true);
     setDetailLoading(true);
     try {
-      if (!TL_TEAM_ENDPOINT_BLOCKED) {
-        const res = await api.get<TLTeamMemberDetailResponse>(`/api/v1/team-leader/team-members/${userId}`);
-        setSelectedMember(res.data);
-        return;
-      }
-
-      const member = members.find((m) => m.id === userId);
-      setSelectedMember({
-        ...MOCK_MEMBER_DETAIL,
-        id: userId,
-        fullName: member?.fullName ?? MOCK_MEMBER_DETAIL.fullName,
-        employeeCode: member?.employeeCode ?? MOCK_MEMBER_DETAIL.employeeCode,
-        email: member?.email ?? MOCK_MEMBER_DETAIL.email,
-        jobTitle: member?.jobTitle ?? MOCK_MEMBER_DETAIL.jobTitle,
-        debtBalance: member?.debtBalance ?? MOCK_MEMBER_DETAIL.debtBalance,
-        pendingRequestsCount: member?.pendingRequestsCount ?? MOCK_MEMBER_DETAIL.pendingRequestsCount,
-        projects: member
-          ? member.projects.map((p) => ({ ...p, joinedAt: new Date().toISOString() }))
-          : MOCK_MEMBER_DETAIL.projects,
-      });
+      const res = await api.get<TLTeamMemberDetailResponse>(`/api/v1/team-leader/team-members/${userId}`);
+      setSelectedMember(res.data);
     } catch {
       const member = members.find((m) => m.id === userId);
       setSelectedMember({

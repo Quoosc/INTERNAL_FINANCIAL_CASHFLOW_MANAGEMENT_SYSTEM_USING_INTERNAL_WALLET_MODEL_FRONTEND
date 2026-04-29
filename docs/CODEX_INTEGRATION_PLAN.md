@@ -39,7 +39,7 @@
 
 ---
 
-## 1. Backend coverage matrix (snapshot 2026-04-28)
+## 1. Backend coverage matrix (snapshot 2026-04-29)
 
 Đối chiếu thực tế `*Controller.java` với các đường dẫn FE đang gọi.
 
@@ -63,11 +63,11 @@
 | `/team-leader/projects*`     | ✅ Đã có       | TeamLeaderProjectController                             |
 | `/team-leader/categories*`   | ✅ Đã có       | TeamLeaderCategoryController                            |
 | `/team-leader/approvals*`    | ✅ Đã có       | TeamLeaderApprovalController                            |
+| `/team-leader/team-members*` | ✅ Đã có       | TeamLeaderProjectController — thêm commit 3cdcc25       |
 | `/manager/approvals*`        | ✅ Đã có       | ManagerApprovalController                               |
+| `/manager/projects*`         | ✅ Đã có       | ManagerProjectController — thêm commit 3cdcc25          |
+| `/manager/department/*`      | ✅ Đã có       | ManagerProjectController — thêm commit 3cdcc25          |
 | `/accountant/disbursements*` | ✅ Đã có       | AccountantDisbursementController                        |
-| `/team-leader/team-members*` | ❌ Chưa có     | FE còn MOCK — block                                     |
-| `/manager/projects*`         | ❌ Chưa có     | FE còn MOCK — block                                     |
-| `/manager/department/*`      | ❌ Chưa có     | FE còn MOCK — block (members + team-leaders)            |
 | `/accountant/payroll/*`      | ❌ Chưa có     | FE còn MOCK — block                                     |
 | `/accountant/ledger/*`       | ❌ Chưa có     | FE còn MOCK — block                                     |
 | `/cfo/*`                     | ❌ Chưa có     | FE còn MOCK — block                                     |
@@ -77,8 +77,11 @@
 | `/admin/settings*`           | ⚠ Một phần    | Dùng `/system-configs` (path khác)                      |
 | `/dashboard/*`               | ❌ Chưa có     | FE còn MOCK — block                                     |
 
-**Tổng kết**: 20 modules ↔ ~80 endpoints sẵn sàng. ~9 module backend chưa implement.
+**Tổng kết**: 23 modules ↔ ~90 endpoints sẵn sàng. ~6 module backend chưa implement.
 Plan dưới đây phân biệt rõ phần "WIRE NOW" (backend đã có) và "BLOCKED" (đợi backend).
+
+> **Pagination convention cho các endpoint mới (manager/TL team-members):**
+> Backend nhận `page` **1-indexed** và `limit` (không phải `size`). Không dùng `toApiPage()` cho nhóm này.
 
 ---
 
@@ -93,7 +96,8 @@ Theo dependency từ thấp lên cao của business graph:
 | 3 | MANAGER — Approvals (PROJECT_TOPUP) | MANAGER                          | 1 ngày   | ✅ Done     |
 | 4 | ACCOUNTANT — Disbursements only     | ACCOUNTANT                       | 1 ngày   | ✅ Done     |
 | 5 | Cross-cutting — SSE realtime        | All                              | 1 ngày   | ✅ Done     |
-| 6 | BLOCKED Sprint — đợi backend        | TL/Manager/Accountant/Admin/CFO  | TBD      | ⏳ Blocked  |
+| 6 | TL Team + Manager Projects + Dept   | TL/Manager                       | 1 ngày   | ✅ Done     |
+| 7 | BLOCKED Sprint — đợi backend        | Accountant/Admin/CFO             | TBD      | ⏳ Blocked  |
 
 > Mỗi sprint là 1 PR. Lint xanh trước khi merge.
 
@@ -182,7 +186,7 @@ Trang shared dưới `app/(dashboard)/`:
 - `app/(dashboard)/team-leader/approvals/[id]/page.tsx`
 - `app/(dashboard)/team-leader/projects/page.tsx`
 - `app/(dashboard)/team-leader/projects/[id]/page.tsx`
-- `app/(dashboard)/team-leader/team/page.tsx` ← **BLOCKED**, giữ MOCK
+- `app/(dashboard)/team-leader/team/page.tsx` ← wired tại Sprint 6
 
 ### 4.2 Endpoints sẵn sàng (WIRE NOW)
 
@@ -241,10 +245,10 @@ Trang shared dưới `app/(dashboard)/`:
 - `app/(dashboard)/manager/approvals/page.tsx`
 - `app/(dashboard)/manager/approvals/[id]/page.tsx`
 
-### 5.2 Phạm vi BLOCKED (giữ MOCK)
+### 5.2 Phạm vi BLOCKED (đã unblock tại Sprint 6)
 
-- `manager/projects/page.tsx`, `manager/projects/[id]/page.tsx` — chưa có `/manager/projects*`.
-- `manager/department/page.tsx` — chưa có `/manager/department/*`.
+- `manager/projects/page.tsx`, `manager/projects/[id]/page.tsx` — wired tại Sprint 6.
+- `manager/department/page.tsx` — wired tại Sprint 6.
 
 ### 5.3 Endpoints
 
@@ -365,18 +369,47 @@ Events backend đẩy:
 
 ---
 
-## 8. BLOCKED Sprint — đợi backend ⏳
+## 8. Sprint 6 — TL Team + Manager Projects + Dept Members ✅
 
-Các trang sau **không** được wire ở Sprint 1–5. Codex giữ MOCK + comment block. Khi
-backend mở endpoint, mở PR riêng theo plan này (sao chép cấu trúc Sprint 2-4).
+### 8.1 Phạm vi
+
+- `app/(dashboard)/team-leader/team/page.tsx`
+- `app/(dashboard)/manager/projects/page.tsx`
+- `app/(dashboard)/manager/projects/[id]/page.tsx`
+- `app/(dashboard)/manager/department/page.tsx`
+
+### 8.2 Endpoints wired
+
+| Trang                          | Method | Endpoint                                               | Notes                                     |
+| ------------------------------ | ------ | ------------------------------------------------------ | ----------------------------------------- |
+| team/page.tsx                  | GET    | `/api/v1/team-leader/team-members?search&projectId&page&limit` | page 1-indexed, param `limit`       |
+| team/page.tsx                  | GET    | `/api/v1/team-leader/team-members/{userId}`            | detail panel                              |
+| manager/projects/page.tsx      | GET    | `/api/v1/manager/projects?status&search&page&limit`    | page 1-indexed, param `limit`             |
+| manager/projects/page.tsx      | POST   | `/api/v1/manager/projects`                             | body `{ name, description?, totalBudget, teamLeaderId }` |
+| manager/projects/page.tsx      | GET    | `/api/v1/manager/department/team-leaders`              | populate dropdown                         |
+| manager/projects/[id]/page.tsx | GET    | `/api/v1/manager/projects/{id}`                        |                                           |
+| manager/projects/[id]/page.tsx | PUT    | `/api/v1/manager/projects/{id}`                        | body `{ name?, description?, totalBudget?, status?, teamLeaderId? }` |
+| manager/projects/[id]/page.tsx | GET    | `/api/v1/manager/department/team-leaders`              | populate dropdown                         |
+| department/page.tsx            | GET    | `/api/v1/manager/department/members?search&page&limit` | page 1-indexed, param `limit`             |
+| department/page.tsx            | GET    | `/api/v1/manager/department/members/{id}`              | detail panel                              |
+
+### 8.3 Acceptance criteria (Sprint 6)
+
+- [x] `/team-leader/team` list + filter + detail panel live từ API.
+- [x] `/manager/projects` list + tạo dự án + chọn TL từ dropdown thật.
+- [x] `/manager/projects/:id` detail + sửa tên/budget/status/TL live.
+- [x] `/manager/department` list thành viên + detail panel live.
+- [x] `npm run lint` 0 error.
+
+---
+
+## 9. BLOCKED Sprint — đợi backend ⏳
+
+Các trang sau **không** được wire ở Sprint 1–6. Codex giữ MOCK + comment block. Khi
+backend mở endpoint, mở PR riêng theo plan này.
 
 | Trang                                 | Endpoint cần                              | Notes                             |
 | ------------------------------------- | ----------------------------------------- | --------------------------------- |
-| `team-leader/team/page.tsx`           | `/team-leader/team-members*`              | TL xem nhân sự nhóm               |
-| `manager/projects/page.tsx`           | `/manager/projects?status&search&page&size` |                                 |
-| `manager/projects/[id]/page.tsx`      | `/manager/projects/{id}` + PUT            |                                   |
-| `manager/projects/page.tsx`           | `/manager/department/team-leaders`        | populate dropdown TL              |
-| `manager/department/page.tsx`         | `/manager/department/members*`            | dashboard + members               |
 | `accountant/payroll/*`                | toàn bộ `/accountant/payroll/*`           | import → auto-netting → run       |
 | `accountant/ledger/*`                 | `/accountant/ledger/*`                    | sổ cái + transaction inspector    |
 | `cfo/approvals/*`                     | `/cfo/approvals/*`                        | duyệt DEPARTMENT_TOPUP            |
@@ -388,10 +421,9 @@ backend mở endpoint, mở PR riêng theo plan này (sao chép cấu trúc Spri
 | `admin/approvals/*`                   | Legacy stub, scope nghi ngờ               | xem `CLAUDE.md` đã chuyển CFO    |
 | `dashboard/*` (Manager/Acc/CFO/Admin) | `/dashboard/<role>`                       | composite metrics                 |
 
-> **Đề nghị backend escalation**: ưu tiên `/admin/users*`, `/admin/departments*`,
-> `/cfo/approvals*` vì có user-facing impact lớn nhất.
+> **Đề nghị backend escalation**: ưu tiên `/cfo/approvals*`, `/admin/users*`, `/admin/departments*`.
 
-### 8.1 Wire-now sub-tasks (có thể làm ngay — endpoint đã có) ✅
+### 9.1 Wire-now sub-tasks (có thể làm ngay — endpoint đã có) ✅
 
 | Trang                        | Endpoint sẵn có             | Trạng thái    |
 | ---------------------------- | --------------------------- | ------------- |

@@ -11,17 +11,10 @@ import {
   ProjectStatus,
   TeamLeaderOptionResponse,
 } from "@/types";
-import { toApiPage } from "@/lib/adapters/pagination";
 import { formatCurrency } from "@/lib/format";
 import { MOCK_TL_OPTIONS } from "@/lib/mocks/projects";
 
 const PAGE_LIMIT = 9;
-const MANAGER_PROJECTS_ENDPOINT_BLOCKED = true;
-
-// BLOCKED (backend chưa có):
-// - /api/v1/manager/projects*
-// - /api/v1/manager/department/team-leaders
-// Giữ mock cho đến khi backend mở endpoint chính thức.
 type ManagerProjectViewItem = ManagerProjectListItem & {
   teamLeaderName?: string | null;
 };
@@ -267,11 +260,6 @@ export default function ManagerProjectsPage() {
 
     const loadTeamLeaders = async () => {
       try {
-        if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
-          setTeamLeaderOptions(MOCK_TL_OPTIONS);
-          return;
-        }
-
         const res = await api.get<TeamLeaderOptionResponse[]>(
           "/api/v1/manager/department/team-leaders",
         );
@@ -298,35 +286,18 @@ export default function ManagerProjectsPage() {
       setError(null);
 
       try {
-        if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
-          const filtered = filterMock(MOCK_PROJECTS, statusFilter, search);
-          const mockTotal = filtered.length;
-          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-          const safePage = Math.min(page, mockTotalPages);
-          const start = (safePage - 1) * PAGE_LIMIT;
-
-          setItems(filtered.slice(start, start + PAGE_LIMIT));
-          setTotal(mockTotal);
-          setTotalPages(mockTotalPages);
-
-          if (safePage !== page) {
-            goToPage(safePage);
-          }
-          return;
-        }
-
         const filters: ManagerProjectFilterParams = {
           status: statusFilter,
           search: search.trim() || undefined,
           page,
-          size: PAGE_LIMIT,
+          limit: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
         if (filters.status) query.set("status", filters.status);
         if (filters.search) query.set("search", filters.search);
-        query.set("page", String(toApiPage(filters.page ?? 1)));
-        query.set("size", String(filters.size ?? PAGE_LIMIT));
+        query.set("page", String(filters.page ?? 1));
+        query.set("limit", String(filters.limit ?? PAGE_LIMIT));
 
         const res = await api.get<
           PaginatedResponse<ManagerProjectListItem> | ManagerProjectListItem[]
@@ -428,31 +399,6 @@ export default function ManagerProjectsPage() {
       teamLeaderOptions.find((option) => option.id === selectedTl)?.fullName ??
       "Team Leader";
 
-    if (MANAGER_PROJECTS_ENDPOINT_BLOCKED) {
-      const now = Date.now();
-      const mockCreated: ManagerProjectViewItem = {
-        id: now,
-        projectCode: `PRJ-NEW-${String(now).slice(-4)}`,
-        name: body.name,
-        status: ProjectStatus.PLANNING,
-        totalBudget: body.totalBudget,
-        availableBudget: body.totalBudget,
-        totalSpent: 0,
-        memberCount: 1,
-        currentPhaseId: null,
-        currentPhaseName: null,
-        createdAt: new Date().toISOString(),
-        teamLeaderName: selectedTlName,
-      };
-
-      setItems((prev) => [mockCreated, ...prev].slice(0, PAGE_LIMIT));
-      setTotal((prev) => prev + 1);
-      setNotice("API chưa sẵn sàng, đã mô phỏng tạo dự án mới.");
-      setCreating(false);
-      setShowCreateModal(false);
-      return;
-    }
-
     try {
       const res = await api.post<ManagerProjectListItem>(
         "/api/v1/manager/projects",
@@ -465,29 +411,15 @@ export default function ManagerProjectsPage() {
       setItems((prev) => [created, ...prev].slice(0, PAGE_LIMIT));
       setTotal((prev) => prev + 1);
       setNotice("Đã tạo dự án mới.");
-    } catch {
-      const now = Date.now();
-      const mockCreated: ManagerProjectViewItem = {
-        id: now,
-        projectCode: `PRJ-NEW-${String(now).slice(-4)}`,
-        name: body.name,
-        status: ProjectStatus.PLANNING,
-        totalBudget: body.totalBudget,
-        availableBudget: body.totalBudget,
-        totalSpent: 0,
-        memberCount: 1,
-        currentPhaseId: null,
-        currentPhaseName: null,
-        createdAt: new Date().toISOString(),
-        teamLeaderName: selectedTlName,
-      };
-
-      setItems((prev) => [mockCreated, ...prev].slice(0, PAGE_LIMIT));
-      setTotal((prev) => prev + 1);
-      setNotice("API chưa sẵn sàng, đã mô phỏng tạo dự án mới.");
+      setShowCreateModal(false);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setNotice(err.apiMessage);
+      } else {
+        setNotice("Không thể tạo dự án. Vui lòng thử lại.");
+      }
     } finally {
       setCreating(false);
-      setShowCreateModal(false);
     }
   };
 

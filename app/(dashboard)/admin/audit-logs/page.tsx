@@ -244,7 +244,7 @@ export default function AuditLogsPage() {
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError("Khong the tai du lieu API, dang hien thi du lieu mau.");
+          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -264,15 +264,15 @@ export default function AuditLogsPage() {
   };
 
   const handleExport = () => {
-    setNotice("Xuat CSV se duoc bo sung o Sprint tiep theo.");
+    setNotice("Xuất CSV sẽ được bổ sung ở Sprint tiếp theo.");
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Nhat ky he thong</h1>
-          <p className="text-slate-500 mt-1">Audit trail bat bien cho moi thao tac quan trong trong he thong.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Nhật ký hệ thống</h1>
+          <p className="text-slate-500 mt-1">Audit trail bất biến cho mọi thao tác quan trọng trong hệ thống.</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -284,7 +284,7 @@ export default function AuditLogsPage() {
             onClick={handleExport}
             className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm text-slate-900"
           >
-            Xuat CSV
+            Xuất CSV
           </button>
         </div>
       </div>
@@ -293,7 +293,7 @@ export default function AuditLogsPage() {
         <input
           value={actorInput}
           onChange={(event) => setActorInput(event.target.value)}
-          placeholder="Nguoi thuc hien (ID/ten)"
+          placeholder="Người thực hiện (ID/tên)"
           className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
         />
 
@@ -302,7 +302,7 @@ export default function AuditLogsPage() {
           onChange={(event) => updateParam("action", event.target.value || undefined)}
           className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
         >
-          <option value="">Tat ca hanh dong</option>
+          <option value="">Tất cả hành động</option>
           {Object.values(AuditAction).map((action) => (
             <option key={action} value={action}>
               {action}
@@ -330,11 +330,11 @@ export default function AuditLogsPage() {
           <table className="w-full min-w-[980px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Thoi gian</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Nguoi thuc hien</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Hanh dong</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Doi tuong</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Chi tiet</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Thời gian</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Người thực hiện</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Hành động</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Đối tượng</th>
+                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Chi tiết</th>
               </tr>
             </thead>
             <tbody>
@@ -343,7 +343,7 @@ export default function AuditLogsPage() {
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center text-slate-500 text-sm py-12">
-                    Khong co ban ghi audit phu hop.
+                    Không có bản ghi audit phù hợp.
                   </td>
                 </tr>
               ) : (
@@ -363,7 +363,7 @@ export default function AuditLogsPage() {
                     <td className="px-4 py-3 text-sm text-slate-600">
                       {item.entityName}#{item.entityId}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-500">Xem chi tiet</td>
+                    <td className="px-4 py-3 text-sm text-slate-500">Xem chi tiết</td>
                   </tr>
                 ))
               )}
@@ -374,7 +374,7 @@ export default function AuditLogsPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          Trang {page}/{totalPages} • Tong {total} ban ghi
+          Trang {page}/{totalPages} • Tổng {total} bản ghi
         </p>
 
         <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ export default function AuditLogsPage() {
             disabled={page <= 1}
             className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
-            Truoc
+            Trước
           </button>
           <button
             type="button"
@@ -415,13 +415,13 @@ export default function AuditLogsPage() {
             type="button"
             className="absolute inset-0 bg-black/70"
             onClick={() => setShowDetailModal(false)}
-            aria-label="Dong modal chi tiet audit"
+            aria-label="Đóng modal chi tiết audit"
           />
 
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-3xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Chi tiet audit #{selectedLog.id}</h3>
+                <h3 className="text-xl font-bold text-slate-900">Chi tiết audit #{selectedLog.id}</h3>
                 <p className="text-sm text-slate-500 mt-1">{formatDateTime(selectedLog.createdAt)}</p>
               </div>
               <button
@@ -434,14 +434,14 @@ export default function AuditLogsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <InfoCard label="Nguoi thuc hien" value={selectedLog.actorName ?? "System"} />
-              <InfoCard label="Hanh dong" value={selectedLog.action} />
-              <InfoCard label="Doi tuong" value={`${selectedLog.entityName}#${selectedLog.entityId}`} />
+              <InfoCard label="Người thực hiện" value={selectedLog.actorName ?? "System"} />
+              <InfoCard label="Hành động" value={selectedLog.action} />
+              <InfoCard label="Đối tượng" value={`${selectedLog.entityName}#${selectedLog.entityId}`} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <JsonCard title="Gia tri cu" value={selectedLog.oldValues} />
-              <JsonCard title="Gia tri moi" value={selectedLog.newValues} />
+              <JsonCard title="Giá trị cũ" value={selectedLog.oldValues} />
+              <JsonCard title="Giá trị mới" value={selectedLog.newValues} />
             </div>
           </div>
         </div>
@@ -454,7 +454,7 @@ function InfoCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-3">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-slate-100 mt-1">{value}</p>
+      <p className="text-sm text-slate-900 mt-1">{value}</p>
     </div>
   );
 }

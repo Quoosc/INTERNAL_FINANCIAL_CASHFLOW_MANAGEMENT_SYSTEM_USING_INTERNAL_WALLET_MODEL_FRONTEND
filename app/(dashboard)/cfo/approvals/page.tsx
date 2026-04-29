@@ -288,7 +288,7 @@ export default function CfoApprovalsPage() {
             <p className="text-xs text-slate-500">
               Tổng đề xuất trong trang hiện tại
             </p>
-            <p className="text-sm font-semibold text-slate-100 mt-1">
+            <p className="text-sm font-semibold text-slate-900 mt-1">
               {formatCurrency(totalRequestedAmount)}
             </p>
           </div>
@@ -386,7 +386,7 @@ export default function CfoApprovalsPage() {
                       <p className="text-xs text-slate-500">
                         Quỹ phòng ban hiện tại
                       </p>
-                      <p className="text-sm font-semibold text-slate-100 mt-1">
+                      <p className="text-sm font-semibold text-slate-900 mt-1">
                         {formatCurrency(deptCurrent)}
                       </p>
                     </div>

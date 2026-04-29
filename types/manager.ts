@@ -134,14 +134,6 @@ export interface ManagerDeptMemberDetailResponse {
     projectRole: string;
     position: string;
   }[];
-  recentRequests: {
-    id: number;
-    requestCode: string;
-    type: string;
-    amount: number;
-    status: RequestStatus;
-    createdAt: string;
-  }[];
 }
 
 // --- Filter Params ---

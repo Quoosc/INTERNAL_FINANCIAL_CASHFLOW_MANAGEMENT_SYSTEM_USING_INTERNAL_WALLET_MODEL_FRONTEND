@@ -1,6 +1,6 @@
 # CODEX — UI Completion Plan (All Roles)
 
-> **Ngày tạo:** 2026-04-13  | **Cập nhật lần cuối:** 2026-04-28
+> **Ngày tạo:** 2026-04-13  | **Cập nhật lần cuối:** 2026-04-30
 > **Mục tiêu:** Hoàn thiện 100% UI + API wiring cho toàn bộ 6 roles.
 
 ---
@@ -30,16 +30,18 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 
 ---
 
-## Trạng thái tổng quan (cập nhật 2026-04-28)
+## Trạng thái tổng quan (cập nhật 2026-04-30)
 
 | Nhóm | Tổng | ✅ Done | ⚠️ Mock/Partial | ❌ Còn lại |
 |------|------|---------|-----------------|-----------|
 | A — Backend ready → integrate | 7 | **7** | 0 | 0 |
-| B — Mock chờ backend | 21 | **11** | 10 | 0 |
+| B — Mock chờ backend | 21 | **17** | 4 | 0 |
 | C — Skeleton | 1 | **1** | 0 | 0 |
+| Auth pages | 3 | **3** | 0 | 0 |
 
-> **Nhóm A hoàn thành 100%.** Nhóm B: 11/21 đã wire API thật.
-> Nhóm B còn lại intentionally mock — chờ backend sprint tiếp theo.
+> **Nhóm A + C hoàn thành 100%.** Nhóm B: 17/21 wired.
+> Nhóm B còn mock: accountant/payroll (x2), accountant/ledger (x2) — blocked by backend.
+> Auth pages: login, change-password, forgot-password đều LIVE.
 
 ---
 
@@ -63,7 +65,7 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 
 ---
 
-### ✅ B-DONE — Đã hoàn chỉnh UI + API thật (2026-04-28)
+### ✅ B-DONE — Đã hoàn chỉnh UI + API thật (2026-04-30)
 
 | File | Endpoint | Ghi chú |
 |------|----------|---------|
@@ -74,73 +76,34 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 | `team-leader/approvals/[id]/page.tsx` | `GET/POST approve/reject` | PIN-less flow, reason modal |
 | `team-leader/projects/page.tsx` | `GET /api/v1/team-leader/projects` | Filter status, search |
 | `team-leader/projects/[id]/page.tsx` | CRUD phases, members, category budgets | Tab: Phases / Ngân sách / Thành viên |
+| `team-leader/team/page.tsx` | `GET /api/v1/team-leader/team-members` | Sprint 6 — page 1-indexed + limit |
 | `manager/approvals/page.tsx` | `GET /api/v1/manager/approvals` | PROJECT_TOPUP queue |
 | `manager/approvals/[id]/page.tsx` | `GET/POST approve/reject` | BudgetHealthCard, confirm modal |
+| `manager/projects/page.tsx` | `GET/POST /api/v1/manager/projects` | Sprint 6 — tạo dự án, dropdown TL |
+| `manager/projects/[id]/page.tsx` | `GET/PUT /api/v1/manager/projects/{id}` | Sprint 6 — sửa tên/budget/status/TL |
+| `manager/department/page.tsx` | `GET /api/v1/manager/department/members` | Sprint 6 — list + detail panel |
 | `accountant/disbursements/page.tsx` | `GET /api/v1/accountant/disbursements` | Status filter APPROVED_BY_TEAM_LEADER |
 | `accountant/disbursements/[id]/page.tsx` | `POST disburse` (PIN) + `POST reject` | PIN modal, 423 Locked handling |
-| `admin/users/page.tsx` | `POST /api/v1/admin/users` (real) | lock/unlock/reset-password wired |
-| `admin/users/[id]/page.tsx` | Profile view, role/dept edit, lock/unlock | — |
+| `accountant/withdrawals/page.tsx` | `GET/PUT /api/v1/wallet/withdraw` | Quản lý rút tiền user — có trong sidebar |
+| `admin/users/page.tsx` | `GET/POST /api/v1/admin/users` | lock/unlock/reset-password wired |
+| `admin/users/[id]/page.tsx` | `GET/PUT /api/v1/admin/users/{id}` | Role + dept edit |
+| `admin/departments/page.tsx` | `GET/POST /api/v1/admin/departments` | CRUD |
+| `admin/departments/[id]/page.tsx` | `GET/PUT/DELETE /api/v1/admin/departments/{id}` | — |
+| `admin/audit-logs/page.tsx` | `GET /api/v1/admin/audit` | Filter, pagination, detail modal |
 | `notifications/page.tsx` | `GET /api/v1/notifications` + mark-read | SSE prepend listener |
+| `cfo/approvals/page.tsx` | `GET /api/v1/cfo/approvals` | DEPARTMENT_TOPUP queue |
+| `cfo/approvals/[id]/page.tsx` | `GET/POST approve/reject` | — |
 | `cfo/system-fund/page.tsx` | `GET /api/v1/company-fund` + topup + reconciliation | — |
 | `admin/system-fund/page.tsx` | `GET /api/v1/company-fund` | Re-use CompanyFundController |
 | `admin/settings/page.tsx` | `GET/PUT /api/v1/system-configs/*` | evict cache |
 | `cfo/settings/page.tsx` | Re-export từ admin/settings | — |
+| `cfo/audit-logs/page.tsx` | Re-export từ admin/audit-logs | — |
 
 ---
 
 ### ⚠️ B-BLOCKED — MOCK, chờ backend endpoint
 
-> **KHÔNG** xóa mock. Endpoint chưa có phía backend. Giữ block comment rõ ràng.
-
-#### B8. `team-leader/team/page.tsx` — Thành viên nhóm (TEAM_LEADER)
-
-```
-Endpoint cần:   GET /api/v1/team-leader/team-members
-                GET /api/v1/team-leader/team-members/{userId}
-Types:          TLTeamMemberListItem, TLTeamMemberDetailResponse
-Block reason:   Backend chưa có TeamMemberController
-```
-
-Checklist UI (hoàn chỉnh khi backend ready):
-- [ ] Grid hoặc bảng: avatar, `fullName`, `jobTitle`, `email`, `status` badge
-- [ ] Search input
-- [ ] Click → side panel hoặc modal với `TLTeamMemberDetailResponse` (active projects, recent requests)
-
----
-
-#### B10. `manager/projects/page.tsx` & `[id]/page.tsx` — Dự án phòng ban (MANAGER)
-
-```
-Endpoint cần:   GET  /api/v1/manager/projects
-                POST /api/v1/manager/projects        body: CreateProjectBody
-                PUT  /api/v1/manager/projects/{id}   body: UpdateProjectBody
-                GET  /api/v1/manager/department/team-leaders   (populate dropdown TL)
-Types:          ManagerProjectListItem, CreateProjectBody, UpdateProjectBody
-Block reason:   Backend chưa có ManagerProjectController
-```
-
-Checklist UI (hoàn chỉnh khi backend ready):
-- [ ] List: nút **"Tạo dự án mới"** → modal form (name, description, departmentId, teamLeaderId)
-- [ ] Detail: thông tin dự án, phases overview (read-only), members list
-- [ ] Edit project (name, description, status)
-- [ ] Nút **"Yêu cầu ngân sách phòng ban"** (DEPARTMENT_TOPUP) → form với `amount`, `description`
-
----
-
-#### B11. `manager/department/page.tsx` — Phòng ban (MANAGER)
-
-```
-Endpoint cần:   GET /api/v1/manager/department/members
-Types:          ManagerDeptMemberListItem
-Block reason:   Backend chưa có endpoint
-```
-
-Checklist UI (hoàn chỉnh khi backend ready):
-- [ ] Summary cards: tổng nhân viên, quỹ phòng ban (dept fund balance), số dự án active
-- [ ] Danh sách thành viên với search
-- [ ] Thông tin dept fund lấy từ API (không hardcode)
-
----
+> **KHÔNG** xóa mock. Endpoint chưa có phía backend. Giữ block comment `ENDPOINT_BLOCKED = true`.
 
 #### B14. `accountant/payroll/page.tsx` — Quản lý bảng lương (ACCOUNTANT)
 
@@ -215,62 +178,6 @@ Checklist UI (hoàn chỉnh khi backend ready):
 
 ---
 
-#### B18. `cfo/approvals/page.tsx` & `[id]/page.tsx` — Duyệt DEPARTMENT_TOPUP (CFO)
-
-```
-Endpoint cần:   GET  /api/v1/cfo/approvals?status=&page=1&limit=20
-                GET  /api/v1/cfo/approvals/{id}
-                POST /api/v1/cfo/approvals/{id}/approve   body: AdminApproveBody
-                POST /api/v1/cfo/approvals/{id}/reject    body: AdminRejectBody
-Types:          AdminApprovalListItem, AdminApprovalDetailResponse, AdminApproveBody, AdminRejectBody
-Block reason:   Backend chưa có CfoApprovalController
-```
-
-List checklist:
-- [ ] Type cố định = DEPARTMENT_TOPUP
-- [ ] Bảng: `requestCode`, người tạo (Manager), `departmentName`, `amount`, `status`
-
-Detail checklist:
-- [ ] Company fund balance hiện tại, dept fund hiện tại, số tiền yêu cầu
-- [ ] Nút **"Duyệt"** → status = APPROVED_BY_CFO → auto-pay
-- [ ] Nút **"Từ chối"** → modal reason → status = REJECTED
-
----
-
-#### B20. `admin/departments/page.tsx` & `[id]/page.tsx` — Phòng ban (ADMIN)
-
-```
-Endpoint cần:   GET    /api/v1/admin/departments
-                POST   /api/v1/admin/departments       body: CreateDepartmentBody
-                PUT    /api/v1/admin/departments/{id}  body: UpdateDepartmentBody
-                DELETE /api/v1/admin/departments/{id}
-Types:          DepartmentListItem, DepartmentDetailResponse, CreateDepartmentBody, UpdateDepartmentBody
-Block reason:   Backend chưa có AdminDepartmentController
-```
-
-Checklist:
-- [ ] List: `name`, `managerName`, `memberCount`, `deptFundBalance`
-- [ ] Nút **"Tạo phòng ban"** → modal form (name, managerId)
-- [ ] Nút edit / delete per row (delete: confirm modal)
-- [ ] Detail: danh sách thành viên, fund balance, projects liên quan
-
----
-
-#### B21. `admin/audit-logs/page.tsx` — Nhật ký hệ thống (ADMIN)
-
-```
-Endpoint cần:   GET /api/v1/admin/audit-logs?userId=&action=&from=&to=&page=1&limit=20
-Types:          AuditLogResponse, AuditLogFilterParams, AuditAction
-Block reason:   Backend chưa có AdminAuditController
-```
-
-Checklist:
-- [ ] Bảng: `timestamp`, `actor.fullName`, `action` badge, `targetType`, `targetId`, `ipAddress`
-- [ ] Filter: date range, action type dropdown (`AuditAction` enum), user search
-- [ ] Pagination
-
----
-
 ## NHÓM C — ✅ Đã hoàn thành (Skeleton → Full UI)
 
 | File | Trạng thái | Ghi chú |
@@ -279,21 +186,16 @@ Checklist:
 
 ---
 
-## Thứ tự ưu tiên — Còn lại (chờ backend)
+## Còn lại — Chờ backend (2026-04-30)
 
 | # | Task | Endpoint cần | Priority |
 |---|------|-------------|----------|
-| 1 | **B8** TL Team members | `/team-leader/team-members*` | 🟡 Trung bình |
-| 2 | **B10** Manager Projects | `/manager/projects*` | 🟡 Trung bình |
-| 3 | **B11** Manager Department | `/manager/department/members*` | 🟡 Trung bình |
-| 4 | **B18** CFO Approvals | `/cfo/approvals*` | 🟡 Trung bình |
-| 5 | **B14-B15** Accountant Payroll | `/accountant/payroll/*` | 🟢 Thấp |
-| 6 | **B16-B17** Accountant Ledger | `/accountant/ledger/*` | 🟢 Thấp |
-| 7 | **B20** Admin Departments | `/admin/departments*` | 🟢 Thấp |
-| 8 | **B21** Admin Audit Logs | `/admin/audit*` | 🟢 Thấp |
+| 1 | **B14-B15** Accountant Payroll | `/accountant/payroll/*` | 🔴 Blocked by backend |
+| 2 | **B16-B17** Accountant Ledger | `/accountant/ledger/*` | 🔴 Blocked by backend |
+| 3 | Dashboard live stats | `/api/v1/dashboard/*` | 🟡 Nice-to-have |
 
-> Tất cả items trên đều bị block bởi backend chưa implement. Khi backend sẵn sàng,
-> xem endpoint chi tiết ở `docs/CODEX_INTEGRATION_PLAN.md` §8 (BLOCKED Sprint).
+> UI scaffolding cho tất cả items đã hoàn chỉnh. Chỉ cần xóa `ENDPOINT_BLOCKED = true`
+> và replace mock data bằng API thật khi backend implement xong.
 
 ---
 

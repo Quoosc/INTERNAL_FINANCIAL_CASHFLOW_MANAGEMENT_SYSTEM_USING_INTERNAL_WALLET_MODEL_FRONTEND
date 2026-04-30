@@ -4,6 +4,7 @@ import {
   FirstLoginChangePasswordRequest,
   FirstLoginSetupRequest,
   ForgotPasswordRequest,
+  VerifyOtpPasswordResetRequest,
   AuthUser,
 } from "@/types";
 import { api, setTokens, setTokenCookie, clearTokens, clearTokenCookie } from "./api-client";
@@ -94,6 +95,18 @@ export async function forgotPassword(
   request: ForgotPasswordRequest
 ): Promise<void> {
   await api.post("/api/v1/auth/forgot-password", request, { skipAuth: true });
+}
+
+/**
+ * Xác thực OTP đặt lại mật khẩu - POST /api/v1/auth/verify-password-reset
+ * Backend áp dụng mật khẩu mới đã lưu trong Redis cache từ step 1.
+ */
+export async function verifyPasswordReset(
+  request: VerifyOtpPasswordResetRequest
+): Promise<void> {
+  await api.post("/api/v1/auth/verify-password-reset", request, {
+    skipAuth: true,
+  });
 }
 
 /**

@@ -1,22 +1,33 @@
 # Tiến độ phát triển Frontend
 
 > File này được cập nhật sau **mỗi lần hoàn thành task**.
-> Cập nhật lần cuối: **2026-04-29**
+> Cập nhật lần cuối: **2026-04-30**
 
 ---
 
 ## Tổng quan nhanh
 
-| Hạng mục | Số lượng | Tỉ lệ |
+| Hạng mục | Số lượng | Ghi chú |
 |---|---|---|
-| Pages LIVE (gọi API thật / hoàn chỉnh) | 40 | ~89% |
-| Pages BLOCKED (chờ backend) | 4 | ~9% |
-| Pages chưa có backend API | 1 | ~2% |
-| **Tổng pages** | **45** | 100% |
+| Auth pages LIVE | 3 | login, change-password, forgot-password |
+| Dashboard pages LIVE (API thật / hoàn chỉnh) | 41 | +accountant/withdrawals so với Sprint 7 |
+| Dashboard pages BLOCKED (chờ backend) | 4 | accountant payroll + ledger |
+| Dashboard pages mock (backend chưa có) | 1 | dashboard/page.tsx |
+| **Tổng pages** | **49** | không tính 2 orphaned đã xóa |
 
 ---
 
-## ✅ LIVE — Hoàn chỉnh (API thật + UI đúng)
+## ✅ LIVE — Auth Pages
+
+| Page | Endpoint chính | Ghi chú |
+|---|---|---|
+| `(auth)/login/page.tsx` | `POST /api/v1/auth/login` | Role selector UI, handle `?reset=success` banner |
+| `(auth)/change-password/page.tsx` | `POST /api/v1/auth/first-login/complete` | setupToken flow, 1 bước (MK + PIN) |
+| `(auth)/forgot-password/page.tsx` | `POST /auth/forgot-password` + `POST /auth/verify-password-reset` | 2-step OTP flow — Sprint 8 |
+
+---
+
+## ✅ LIVE — Dashboard Pages (API thật + UI đúng)
 
 | Page | Endpoint chính | Ghi chú |
 |---|---|---|
@@ -46,6 +57,7 @@
 | `manager/department/page.tsx` | `GET /api/v1/manager/department/members` | Wired Sprint 6 |
 | `accountant/disbursements/page.tsx` | `GET /api/v1/accountant/disbursements` | APPROVED_BY_TEAM_LEADER queue |
 | `accountant/disbursements/[id]/page.tsx` | `POST disburse` (PIN) + `POST reject` | 423 Locked handling |
+| `accountant/withdrawals/page.tsx` | `GET/PUT /api/v1/wallet/withdraw` | Quản lý rút tiền của user — Sprint 9 |
 | `admin/users/page.tsx` | `GET/POST /api/v1/admin/users` | Lock/unlock/reset-password |
 | `admin/users/[id]/page.tsx` | `GET/PUT /api/v1/admin/users/{id}` | Role + dept edit |
 | `admin/departments/page.tsx` | `GET /api/v1/admin/departments` | CRUD |
@@ -83,6 +95,39 @@
 ---
 
 ## Nhật ký thay đổi
+
+### Sprint 9 — 2026-04-30
+
+**Mục tiêu:** Cleanup + UX gap fixes + cập nhật docs
+
+| Task | Kết quả |
+|---|---|
+| Fix `login/page.tsx` handle `?reset=success` | Banner emerald "Đặt lại mật khẩu thành công" hiển thị sau forgot-password |
+| Xác nhận `accountant/withdrawals` đã trong sidebar | Sidebar layout đã có "Yêu cầu rút tiền" → `/accountant/withdrawals` từ trước |
+| Thêm `accountant/withdrawals/page.tsx` vào PROGRESS tracking | `GET/PUT /api/v1/wallet/withdraw` — 41 LIVE dashboard pages |
+| Xóa orphaned pages | `register/page.tsx` + `create-pin/page.tsx` — không có backend endpoint |
+| Cập nhật toàn bộ docs | PROGRESS, CODEX_INTEGRATION_PLAN, CODEX_UI_COMPLETION, PROJECT_STRUCTURE |
+
+---
+
+### Sprint 8 — 2026-04-30
+
+**Mục tiêu:** Implement forgot-password flow (2 bước: request OTP → verify OTP)
+
+| Task | Kết quả |
+|---|---|
+| Phân tích backend `ForgotPasswordRequest.java` | `{ email, newPassword, confirmPassword }` — không phải chỉ `email` |
+| Phân tích backend `ForgotPasswordOtpData.java` | Redis cache lưu `{ email, newPassword, otp }` — mật khẩu mới ở step 1 |
+| Cập nhật `types/auth.ts` | Fix `ForgotPasswordRequest` thêm `newPassword` + `confirmPassword`; thêm `VerifyOtpPasswordResetRequest` |
+| Cập nhật `lib/auth.ts` | Thêm `verifyPasswordReset()` → `POST /api/v1/auth/verify-password-reset` |
+| Tạo `app/(auth)/forgot-password/page.tsx` | 2-step state machine: Step 1 nhập email+MK mới → Step 2 nhập OTP → redirect /login |
+| Cập nhật `app/(auth)/login/page.tsx` | Thêm link "Quên mật khẩu?" → `/forgot-password` |
+
+**Flow xác nhận:**
+- Step 1: `POST /auth/forgot-password { email, newPassword, confirmPassword }` → backend lưu MK mới vào Redis + gửi OTP email
+- Step 2: `POST /auth/verify-password-reset { email, otp }` → backend áp dụng MK mới từ Redis → user đăng nhập lại
+
+---
 
 ### Sprint 7 — 2026-04-29
 
@@ -144,3 +189,5 @@ Wire `notifications`, `cfo/system-fund`, `admin/settings`, `cfo/approvals/[id]`,
 - **Color**: không dùng `text-slate-100`/`text-slate-200` cho text trên nền trắng
 - **API client**: chỉ dùng `api` từ `@/lib/api-client`
 - **Types**: chỉ import từ `@/types` barrel
+- **Auth pages**: không kể vào tổng dashboard pages — tracking riêng
+- **Orphaned pages đã xóa**: `register/page.tsx`, `create-pin/page.tsx` — middleware vẫn để `/register` + `/create-pin` trong PUBLIC_ROUTES (vô hại, route 404)

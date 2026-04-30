@@ -36,6 +36,14 @@ export interface FirstLoginSetupRequest {
 /** POST /auth/forgot-password */
 export interface ForgotPasswordRequest {
   email: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+/** POST /auth/verify-password-reset */
+export interface VerifyOtpPasswordResetRequest {
+  email: string;
+  otp: string;
 }
 
 // --- Response DTOs ---

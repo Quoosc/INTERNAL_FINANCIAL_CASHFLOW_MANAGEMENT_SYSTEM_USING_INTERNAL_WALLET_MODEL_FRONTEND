@@ -1,7 +1,6 @@
 # PROJECT_STRUCTURE.md — Cấu trúc dự án Frontend
 
-> **Cập nhật v3.3 (2026-04-25):** Aligned với filesystem thực tế (types — 16 modules, 6 roles).
-> Realtime transport STOMP/WebSocket → **SSE** (`GET /users/stream`). `wallet-context.tsx` dùng `updateFromSse()` thay cho `updateFromWS()`.
+> **Cập nhật v3.4 (2026-04-30):** Xóa orphaned pages (`register`, `create-pin`). Thêm `forgot-password`. Thêm `accountant/withdrawals`. Cập nhật `lib/auth.ts` với `verifyPasswordReset()`.
 
 ## Tổng quan
 
@@ -18,9 +17,9 @@ financial-wallet-frontend/
 ├── app/                             # App Router (file-based routing)
 │   ├── (auth)/                      # Route Group: public, no sidebar, no providers
 │   │   ├── layout.tsx               # [Server] Centered layout
-│   │   ├── login/page.tsx           # [Client] Form đăng nhập
+│   │   ├── login/page.tsx           # [Client] Form đăng nhập — handle ?reset=success banner
 │   │   ├── change-password/page.tsx # [Client] First-login setup (1 bước: mật khẩu + PIN)
-│   │   └── register/page.tsx        # [Client] ⚠ orphaned — no backend endpoint
+│   │   └── forgot-password/page.tsx # [Client] 2-step: email+MK mới → OTP → redirect /login
 │   │
 │   ├── (dashboard)/                 # Route Group: protected, AuthProvider + WalletProvider
 │   │   ├── layout.tsx               # [Client] Sidebar role-aware + Providers wrapper
@@ -67,14 +66,15 @@ financial-wallet-frontend/
 │   │   │
 │   │   ├── accountant/              # ACCOUNTANT only
 │   │   │   ├── disbursements/       # Giải ngân Flow 1 (nhập PIN)
-│   │   │   │   ├── page.tsx         # [Client]
-│   │   │   │   └── [id]/page.tsx    # [Client]
+│   │   │   │   ├── page.tsx         # [Client] ✅ LIVE
+│   │   │   │   └── [id]/page.tsx    # [Client] ✅ LIVE
+│   │   │   ├── withdrawals/page.tsx # [Client] ✅ LIVE — quản lý rút tiền user (execute/reject)
 │   │   │   ├── payroll/             # Quản lý bảng lương (import Excel, run)
-│   │   │   │   ├── page.tsx         # [Client]
-│   │   │   │   └── [id]/page.tsx    # [Client]
+│   │   │   │   ├── page.tsx         # [Client] ⛔ BLOCKED — AccountantPayrollController chưa có
+│   │   │   │   └── [id]/page.tsx    # [Client] ⛔ BLOCKED
 │   │   │   └── ledger/              # Sổ cái double-entry
-│   │   │       ├── page.tsx         # [Client]
-│   │   │       └── [id]/page.tsx    # [Client]
+│   │   │       ├── page.tsx         # [Client] ⛔ BLOCKED — AccountantLedgerController chưa có
+│   │   │       └── [id]/page.tsx    # [Client] ⛔ BLOCKED
 │   │   │
 │   │   ├── cfo/                     # CFO only — quản trị tài chính
 │   │   │   ├── approvals/           # Flow 3: duyệt DEPARTMENT_TOPUP
@@ -104,9 +104,9 @@ financial-wallet-frontend/
 │   ├── globals.css                  # Tailwind global styles
 │   └── favicon.ico
 │
-│   ⚠ Flow first-login hiện tại:
-│      app/(auth)/change-password/page.tsx   → POST /api/v1/auth/first-login/complete
-│      app/(auth)/create-pin/page.tsx        → orphaned (flow đã gộp)
+│   Auth flows:
+│      login → change-password (first-login, requiresSetup=true)
+│      login → forgot-password (2-step OTP) → login?reset=success
 │
 ├── types/                           # TypeScript DTOs — khớp backend contract v3.1
 │   ├── api.ts                       # ApiResponse<T>, PaginatedResponse<T>
@@ -128,7 +128,26 @@ financial-wallet-frontend/
 │
 ├── lib/                             # Utilities & API client
 │   ├── api-client.ts                # Fetch wrapper: JWT auto-attach, 401 auto-refresh, ApiResponse unwrap, ApiError
-│   └── auth.ts                      # login(), logout(), changePasswordFirstLogin(), forgotPassword(), getMe() (+ legacy helpers)
+│   ├── auth.ts                      # login(), firstLoginSetup(), logout(), forgotPassword(), verifyPasswordReset(), getMe()
+│   ├── api/                         # Named API modules (re-exported via api/index.ts)
+│   │   ├── index.ts                 # Barrel: export * from "./withdrawal", "./company-fund", etc.
+│   │   ├── withdrawal.ts            # createWithdrawRequest(), getMyWithdrawRequests(), getAllWithdrawRequests(), executeWithdraw(), rejectWithdraw()
+│   │   ├── company-fund.ts          # getCompanyFund(), topupCompanyFund(), updateBankStatement(), getReconciliationReport()
+│   │   ├── system-config.ts         # getSystemConfigs(), updateSystemConfig(), evictConfigCache()
+│   │   ├── notification.ts          # getNotifications(), getUnreadCount(), markRead(), markAllRead()
+│   │   └── payment.ts               # createPayment(), getPaymentStatus()
+│   ├── hooks/
+│   │   └── use-user-stream.ts       # SSE hook — 1 connection/session, auto-reconnect
+│   ├── adapters/
+│   │   ├── pagination.ts            # Helpers chuyển đổi UI page ↔ API page
+│   │   ├── request-status.ts        # Map backend RequestStatus → display label/color
+│   │   └── team-leader.ts           # Normalize TL approval/project responses
+│   ├── mocks/                       # Mock data cho BLOCKED endpoints
+│   │   ├── system.ts
+│   │   ├── projects.ts
+│   │   └── departments.ts
+│   ├── format.ts                    # formatCurrency(), formatDateTime(), formatDate()
+│   └── schemas.ts                   # Zod schemas (nếu dùng)
 │
 ├── contexts/                        # React Context providers
 │   ├── auth-context.tsx             # useAuth() → { user, hasRole(), hasAnyRole(), isFirstLogin, logout }
@@ -181,7 +200,7 @@ financial-wallet-frontend/
 
 | Backend Module | Frontend Route | API prefix | Ghi chú |
 |---|---|---|---|
-| `auth` | `/login`, `/change-password` | `/auth` | `/register` orphaned — no backend endpoint |
+| `auth` | `/login`, `/change-password`, `/forgot-password` | `/auth` | 2-step OTP flow cho forgot-password |
 | `wallet` | `/wallet/*` | `/wallet` | Ví, nạp tiền (VNPay), rút tiền, lịch sử GD |
 | `request` | `/requests/*` | `/requests` | Employee: tạo/xem YC cá nhân (3 flows) |
 | `team-leader` | `/team-leader/*` | `/team-leader` | Approvals Flow 1, quản lý project/team |
@@ -200,10 +219,12 @@ financial-wallet-frontend/
 
 ---
 
-## Pages chưa implement
+## Pages còn BLOCKED (backend chưa implement)
 
-| Route | Cần cho | API endpoint |
+| Route | Cần cho | Lý do |
 |---|---|---|
-| `app/(auth)/change-password/` | `isFirstLogin = true` flow | `POST /api/v1/auth/first-login/complete` |
-| `app/(auth)/create-pin/` | Legacy flow cũ | Orphaned — không dùng trong contract mới |
-| `app/(auth)/register/` | Đăng ký mới | Orphaned — không có backend `/auth/register` |
+| `app/(dashboard)/accountant/payroll/*` | Quản lý bảng lương | `AccountantPayrollController` chưa có |
+| `app/(dashboard)/accountant/ledger/*` | Sổ cái double-entry | `AccountantLedgerController` chưa có |
+| `app/(dashboard)/dashboard/page.tsx` | Live stats 6 roles | `/api/v1/dashboard/*` chưa có — render mock |
+
+> Tất cả orphaned pages (`register`, `create-pin`) đã bị xóa khỏi codebase (2026-04-30).

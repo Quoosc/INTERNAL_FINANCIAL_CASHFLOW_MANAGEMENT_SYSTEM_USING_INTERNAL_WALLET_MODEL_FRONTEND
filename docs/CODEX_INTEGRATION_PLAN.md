@@ -1,6 +1,6 @@
 # CODEX Integration Plan — Frontend ↔ Backend, Role-by-Role
 
-> Version: 1.0 (2026-04-28)
+> Version: 2.0 (2026-04-30)
 > Scope: Wire each frontend page hiện đang dùng MOCK data sang gọi API thật của backend.
 > Prerequisite: đã đọc `docs/API_CONTRACT.md`, `docs/FLOW.md`, `CLAUDE.md`.
 > Backend chạy ở `localhost:8080`, proxy qua `next.config.ts` (`/api/:path*`).
@@ -39,49 +39,47 @@
 
 ---
 
-## 1. Backend coverage matrix (snapshot 2026-04-29)
+## 1. Backend coverage matrix (snapshot 2026-04-30)
 
-Đối chiếu thực tế `*Controller.java` với các đường dẫn FE đang gọi.
+Đối chiếu thực tế `*Controller.java` với trạng thái FE hiện tại.
 
-| Module                       | Backend status | Notes                                                   |
-| ---------------------------- | -------------- | ------------------------------------------------------- |
-| `/auth/*`                    | ✅ Đã có       | AuthController                                          |
-| `/users/me/*`                | ✅ Đã có       | ProfileController                                       |
-| `/users/stream` (SSE)        | ✅ Đã có       | UserController, 4 channels                              |
-| `/users/onboard`             | ✅ Đã có       | UserController, ADMIN-only                              |
-| `/banks`                     | ✅ Đã có       | BankController                                          |
-| `/uploads/signature`         | ✅ Đã có       | FileStorageController                                   |
-| `/wallet`                    | ✅ Đã có       | WalletController (3 GET endpoints)                      |
-| `/wallet/withdraw*`          | ✅ Đã có       | WithdrawController                                      |
-| `/payments*`                 | ✅ Đã có       | PaymentController — thay cho `/wallet/deposit` (đã sửa) |
-| `/company-fund*`             | ✅ Đã có       | CompanyFundController                                   |
-| `/system-configs*`           | ✅ Đã có       | SystemConfigController                                  |
-| `/notifications*`            | ✅ Đã có       | NotificationController                                  |
-| `/payslips*`                 | ✅ Đã có       | PayslipController                                       |
-| `/projects*`                 | ✅ Đã có       | ProjectController (read-only options)                   |
-| `/requests*`                 | ✅ Đã có       | RequestController                                       |
-| `/team-leader/projects*`     | ✅ Đã có       | TeamLeaderProjectController                             |
-| `/team-leader/categories*`   | ✅ Đã có       | TeamLeaderCategoryController                            |
-| `/team-leader/approvals*`    | ✅ Đã có       | TeamLeaderApprovalController                            |
-| `/team-leader/team-members*` | ✅ Đã có       | TeamLeaderProjectController — thêm commit 3cdcc25       |
-| `/manager/approvals*`        | ✅ Đã có       | ManagerApprovalController                               |
-| `/manager/projects*`         | ✅ Đã có       | ManagerProjectController — thêm commit 3cdcc25          |
-| `/manager/department/*`      | ✅ Đã có       | ManagerProjectController — thêm commit 3cdcc25          |
-| `/accountant/disbursements*` | ✅ Đã có       | AccountantDisbursementController                        |
-| `/accountant/payroll/*`      | ❌ Chưa có     | FE còn MOCK — block                                     |
-| `/accountant/ledger/*`       | ❌ Chưa có     | FE còn MOCK — block                                     |
-| `/cfo/*`                     | ❌ Chưa có     | FE còn MOCK — block                                     |
-| `/admin/users*`              | ❌ Chưa có     | FE còn MOCK — block (chỉ có `POST /users/onboard`)      |
-| `/admin/departments*`        | ❌ Chưa có     | FE còn MOCK — block                                     |
-| `/admin/audit*`              | ❌ Chưa có     | FE còn MOCK — block                                     |
-| `/admin/settings*`           | ⚠ Một phần    | Dùng `/system-configs` (path khác)                      |
-| `/dashboard/*`               | ❌ Chưa có     | FE còn MOCK — block                                     |
+| Module                       | Backend status | FE status | Notes |
+| ---------------------------- | -------------- | --------- | ----- |
+| `/auth/*`                    | ✅ Đã có       | ✅ Wired  | AuthController — kể cả forgot-password 2-step |
+| `/users/me/*`                | ✅ Đã có       | ✅ Wired  | ProfileController |
+| `/users/stream` (SSE)        | ✅ Đã có       | ✅ Wired  | UserController, 4 event channels |
+| `/banks`                     | ✅ Đã có       | ✅ Wired  | BankController |
+| `/uploads/signature`         | ✅ Đã có       | ✅ Wired  | FileStorageController |
+| `/wallet`                    | ✅ Đã có       | ✅ Wired  | WalletController |
+| `/wallet/withdraw*`          | ✅ Đã có       | ✅ Wired  | WithdrawController — user + accountant endpoints |
+| `/payments*`                 | ✅ Đã có       | ✅ Wired  | PaymentController (VNPay) |
+| `/company-fund*`             | ✅ Đã có       | ✅ Wired  | CompanyFundController — CFO + Admin |
+| `/system-configs*`           | ✅ Đã có       | ✅ Wired  | SystemConfigController — dùng path `/system-configs` không phải `/admin/settings` |
+| `/notifications*`            | ✅ Đã có       | ✅ Wired  | NotificationController |
+| `/payslips*`                 | ✅ Đã có       | ✅ Wired  | PayslipController |
+| `/projects*`                 | ✅ Đã có       | ✅ Wired  | ProjectController (read-only) |
+| `/requests*`                 | ✅ Đã có       | ✅ Wired  | RequestController |
+| `/team-leader/projects*`     | ✅ Đã có       | ✅ Wired  | TeamLeaderProjectController |
+| `/team-leader/categories*`   | ✅ Đã có       | ✅ Wired  | TeamLeaderCategoryController |
+| `/team-leader/approvals*`    | ✅ Đã có       | ✅ Wired  | TeamLeaderApprovalController |
+| `/team-leader/team-members*` | ✅ Đã có       | ✅ Wired  | Sprint 6 — page 1-indexed + limit |
+| `/manager/approvals*`        | ✅ Đã có       | ✅ Wired  | ManagerApprovalController |
+| `/manager/projects*`         | ✅ Đã có       | ✅ Wired  | ManagerProjectController — Sprint 6 |
+| `/manager/department/*`      | ✅ Đã có       | ✅ Wired  | ManagerProjectController — Sprint 6 |
+| `/accountant/disbursements*` | ✅ Đã có       | ✅ Wired  | AccountantDisbursementController |
+| `/cfo/approvals*`            | ✅ Đã có       | ✅ Wired  | Sprint 5 — DEPARTMENT_TOPUP queue |
+| `/admin/users*`              | ✅ Đã có       | ✅ Wired  | UserController — CRUD, lock/unlock, reset-password |
+| `/admin/departments*`        | ✅ Đã có       | ✅ Wired  | AdminDepartmentController |
+| `/admin/audit*`              | ✅ Đã có       | ✅ Wired  | AuditController |
+| `/accountant/payroll/*`      | ❌ Chưa có     | ⛔ MOCK   | `AccountantPayrollController` chưa implement |
+| `/accountant/ledger/*`       | ❌ Chưa có     | ⛔ MOCK   | `AccountantLedgerController` chưa implement |
+| `/dashboard/*`               | ❌ Chưa có     | ⛔ MOCK   | 6 role dashboards dùng mock data |
 
-**Tổng kết**: 23 modules ↔ ~90 endpoints sẵn sàng. ~6 module backend chưa implement.
-Plan dưới đây phân biệt rõ phần "WIRE NOW" (backend đã có) và "BLOCKED" (đợi backend).
+**Tổng kết (2026-04-30)**: 26/29 modules đã wire API thật. 3 modules còn MOCK do backend chưa implement.
 
-> **Pagination convention cho các endpoint mới (manager/TL team-members):**
-> Backend nhận `page` **1-indexed** và `limit` (không phải `size`). Không dùng `toApiPage()` cho nhóm này.
+> **Pagination convention:**
+> - TL/Manager/Notifications/Payslips: `page` **1-indexed** + `limit` — không dùng `toApiPage()`
+> - Spring Data (wallet, withdraw, requests, disbursements, projects): `page` **0-indexed** + `size`
 
 ---
 
@@ -97,7 +95,10 @@ Theo dependency từ thấp lên cao của business graph:
 | 4 | ACCOUNTANT — Disbursements only     | ACCOUNTANT                       | 1 ngày   | ✅ Done     |
 | 5 | Cross-cutting — SSE realtime        | All                              | 1 ngày   | ✅ Done     |
 | 6 | TL Team + Manager Projects + Dept   | TL/Manager                       | 1 ngày   | ✅ Done     |
-| 7 | BLOCKED Sprint — đợi backend        | Accountant/Admin/CFO             | TBD      | ⏳ Blocked  |
+| 7 | CFO/Admin/Quality fixes             | CFO/Admin/All                    | 1 ngày   | ✅ Done     |
+| 8 | Auth flows — forgot-password        | All                              | 0.5 ngày | ✅ Done     |
+| 9 | Cleanup + docs                      | —                                | 0.5 ngày | ✅ Done     |
+| — | BLOCKED — đợi backend               | Accountant                       | TBD      | ⏳ Blocked  |
 
 > Mỗi sprint là 1 PR. Lint xanh trước khi merge.
 
@@ -405,32 +406,18 @@ Events backend đẩy:
 
 ## 9. BLOCKED Sprint — đợi backend ⏳
 
-Các trang sau **không** được wire ở Sprint 1–6. Codex giữ MOCK + comment block. Khi
-backend mở endpoint, mở PR riêng theo plan này.
+Chỉ còn 2 module thực sự bị block. Tất cả module khác đã wire xong.
 
-| Trang                                 | Endpoint cần                              | Notes                             |
-| ------------------------------------- | ----------------------------------------- | --------------------------------- |
-| `accountant/payroll/*`                | toàn bộ `/accountant/payroll/*`           | import → auto-netting → run       |
-| `accountant/ledger/*`                 | `/accountant/ledger/*`                    | sổ cái + transaction inspector    |
-| `cfo/approvals/*`                     | `/cfo/approvals/*`                        | duyệt DEPARTMENT_TOPUP            |
-| `cfo/audit-logs/page.tsx`             | `/admin/audit*` hoặc `/cfo/audit*`        | TBD                               |
-| `admin/users/*`                       | `/admin/users*`                           | trừ `POST /users/onboard` đã có   |
-| `admin/departments/*`                 | `/admin/departments*`                     |                                   |
-| `admin/audit-logs/page.tsx`           | `/admin/audit*`                           |                                   |
-| `admin/roles/page.tsx`                | TBD                                       | scope chưa định nghĩa             |
-| `admin/approvals/*`                   | Legacy stub, scope nghi ngờ               | xem `CLAUDE.md` đã chuyển CFO    |
-| `dashboard/*` (Manager/Acc/CFO/Admin) | `/dashboard/<role>`                       | composite metrics                 |
+| Trang                  | Endpoint cần                   | Notes                                                 |
+| ---------------------- | ------------------------------ | ----------------------------------------------------- |
+| `accountant/payroll/*` | toàn bộ `/accountant/payroll/*`| import Excel → auto-netting → run. UI sẵn sàng.       |
+| `accountant/ledger/*`  | `/accountant/ledger/*`         | Sổ cái double-entry + summary. UI sẵn sàng.           |
+| `dashboard/page.tsx`   | `/api/v1/dashboard/<role>`     | 6 role components đang dùng mock — không block flow.  |
 
-> **Đề nghị backend escalation**: ưu tiên `/cfo/approvals*`, `/admin/users*`, `/admin/departments*`.
-
-### 9.1 Wire-now sub-tasks (có thể làm ngay — endpoint đã có) ✅
-
-| Trang                        | Endpoint sẵn có             | Trạng thái    |
-| ---------------------------- | --------------------------- | ------------- |
-| `cfo/system-fund/page.tsx`   | `GET /company-fund`         | ✅ Đã wire    |
-| `admin/system-fund/page.tsx` | `GET /company-fund`         | ✅ Đã wire    |
-| `admin/settings/page.tsx`    | `GET/PUT /system-configs/*` | ✅ Đã wire    |
-| `cfo/settings/page.tsx`      | `GET/PUT /system-configs/*` | ✅ Đã wire    |
+Khi backend implement `AccountantPayrollController` + `AccountantLedgerController`:
+1. Xóa `ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED = true` và `ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED = true`
+2. Thay mock data bằng API calls thật
+3. Verify types khớp với response thực tế của backend
 
 ---
 

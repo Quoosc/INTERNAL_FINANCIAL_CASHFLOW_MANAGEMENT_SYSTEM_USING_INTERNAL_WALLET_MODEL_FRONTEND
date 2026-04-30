@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/auth";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError } from "@/lib/api-client";
@@ -169,7 +170,10 @@ function RoleCard({
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setUser } = useAuth();
+
+  const passwordReset = searchParams.get("reset") === "success";
 
   const [selectedRole, setSelectedRole] = useState<DisplayRole>("EMPLOYEE");
   const [form, setForm] = useState<LoginRequest>({ email: "", password: "" });
@@ -285,6 +289,15 @@ export default function LoginPage() {
             </div>
             <h2 className="text-xl font-bold text-slate-900">IFMS Finance</h2>
           </div>
+
+          {passwordReset && (
+            <div className="mb-5 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Đặt lại mật khẩu thành công. Vui lòng đăng nhập với mật khẩu mới.
+            </div>
+          )}
 
           {/* Heading */}
           <div className="mb-6">
@@ -413,6 +426,15 @@ export default function LoginPage() {
                 "Đăng nhập"
               )}
             </button>
+
+            <div className="text-center mt-4">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-slate-500 hover:text-blue-600 transition-colors"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
           </form>
         </div>
       </div>

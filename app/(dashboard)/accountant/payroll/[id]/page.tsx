@@ -20,34 +20,23 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-const ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED = true;
-
-// BLOCKED (backend chưa có):
-// - /api/v1/accountant/payroll/*
-// Giữ mock cho đến khi backend mở endpoint chính thức.
+// ─── MOCK fallback (dùng khi API lỗi) ──────────────────────────────────────
 const MOCK_PERIOD: PayrollDetailResponse = {
-  id: 5,
-  periodCode: "PR-2026-03",
-  name: "Luong thang 03/2026",
-  month: 3,
+  id: 0,
+  periodCode: "PR-XXXX-XX",
+  name: "Dữ liệu mẫu",
+  month: 1,
   year: 2026,
-  startDate: "2026-03-01",
-  endDate: "2026-03-31",
+  startDate: "2026-01-01",
+  endDate: "2026-01-31",
   status: PayrollStatus.DRAFT,
   employeeCount: 0,
   totalNetPayroll: 0,
   entries: [],
-  createdAt: "2026-04-01T08:00:00",
-  updatedAt: "2026-04-01T08:00:00",
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
-
-const MOCK_IMPORTED_ENTRIES: PayrollEntry[] = [
-  { id: 201, payslipCode: "PS-2026-03-001", userId: 11, fullName: "Do Quoc Bao", avatar: null, employeeCode: "EMP001", jobTitle: "Frontend Developer", baseSalary: 13_500_000, bonus: 1_500_000, allowance: 1_500_000, deduction: 500_000, advanceDeduct: 0, finalNetSalary: 16_000_000, status: PayslipStatus.DRAFT },
-  { id: 202, payslipCode: "PS-2026-03-002", userId: 12, fullName: "Vu Thi Lan", avatar: null, employeeCode: "EMP002", jobTitle: "Backend Developer", baseSalary: 13_000_000, bonus: 1_000_000, allowance: 1_000_000, deduction: 400_000, advanceDeduct: 0, finalNetSalary: 14_600_000, status: PayslipStatus.DRAFT },
-  { id: 203, payslipCode: "PS-2026-03-003", userId: 13, fullName: "Pham Van Duc", avatar: null, employeeCode: "EMP003", jobTitle: "QA Engineer", baseSalary: 11_500_000, bonus: 500_000, allowance: 800_000, deduction: 300_000, advanceDeduct: 0, finalNetSalary: 12_500_000, status: PayslipStatus.DRAFT },
-  { id: 204, payslipCode: "PS-2026-03-004", userId: 14, fullName: "Nguyen Thi Minh", avatar: null, employeeCode: "EMP004", jobTitle: "Business Analyst", baseSalary: 12_600_000, bonus: 700_000, allowance: 1_200_000, deduction: 250_000, advanceDeduct: 0, finalNetSalary: 14_250_000, status: PayslipStatus.DRAFT },
-];
-
+// ────────────────────────────────────────────────────────────────────────────
 
 function getStatusLabel(status: PayrollStatus): string {
   if (status === PayrollStatus.DRAFT) return "Nháp";
@@ -59,10 +48,6 @@ function getStatusClass(status: PayrollStatus): string {
   if (status === PayrollStatus.DRAFT) return "bg-slate-100 border-slate-200 text-slate-600";
   if (status === PayrollStatus.PROCESSING) return "bg-amber-100 border-amber-200 text-amber-700";
   return "bg-emerald-100 border-emerald-200 text-emerald-700";
-}
-
-function sumGross(entries: PayrollEntry[]): number {
-  return entries.reduce((sum, e) => sum + e.baseSalary + e.bonus + e.allowance, 0);
 }
 
 function sumNet(entries: PayrollEntry[]): number {
@@ -77,21 +62,6 @@ function n(value: string, fallback = 0): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) return fallback;
   return parsed;
-}
-
-function mockImport(period: PayrollDetailResponse): PayrollImportResponse {
-  const entries = MOCK_IMPORTED_ENTRIES.map((e) => ({ ...e, importStatus: "ok" as const, importError: null }));
-  return {
-    periodId: period.id,
-    periodCode: period.periodCode,
-    status: PayrollStatus.DRAFT,
-    totalRows: entries.length,
-    successCount: entries.length,
-    errorCount: 0,
-    entries,
-    errors: [],
-    totalNetPayroll: entries.reduce((s, e) => s + e.finalNetSalary, 0),
-  };
 }
 
 function applyNetting(entries: PayrollEntry[], netting: AutoNettingResponse): PayrollEntry[] {
@@ -142,13 +112,6 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       setLoading(true);
       setError(null);
       try {
-        if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
-          const safeId = Number(id);
-          setPeriod({ ...MOCK_PERIOD, id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_PERIOD.id, periodCode: `PR-2026-${String(id).padStart(2, "0")}` });
-          setActiveStep(1);
-          return;
-        }
-
         const res = await api.get<PayrollDetailResponse>(`/api/v1/accountant/payroll/${id}`);
         if (cancelled) return;
         setPeriod(res.data);
@@ -156,24 +119,22 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       } catch (err) {
         if (cancelled) return;
         const safeId = Number(id);
-        setPeriod({ ...MOCK_PERIOD, id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_PERIOD.id, periodCode: `PR-2026-${String(id).padStart(2, "0")}` });
+        setPeriod({ ...MOCK_PERIOD, id: Number.isFinite(safeId) && safeId > 0 ? safeId : 0 });
         setActiveStep(1);
-        setError(err instanceof ApiError ? err.apiMessage : "Khong the tai du lieu API, dang hien thi du lieu mau.");
+        setError(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu kỳ lương.");
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
     void load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id]);
 
   const hasEntries = (period?.entries.length ?? 0) > 0;
   const hasNetting = Boolean(nettingResult);
   const isCompleted = period?.status === PayrollStatus.COMPLETED;
-  const grossTotal = useMemo(() => sumGross(period?.entries ?? []), [period?.entries]);
   const netTotal = useMemo(() => sumNet(period?.entries ?? []), [period?.entries]);
+  const totalEmployees = period?.entries.length ?? 0;
 
   const canOpenStep = (step: 1 | 2 | 3 | 4): boolean => {
     if (step === 1) return true;
@@ -197,52 +158,73 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     setEntryError(null);
   };
 
-  const handleImport = () => {
-    if (!period || !selectedFile) return;
-    if (period.entries.length > 0) {
-      setConfirmState({
-        open: true,
-        message: "Kỳ lương đã có dữ liệu. Bạn có muốn ghi đè bằng file mới?",
-        onConfirm: () => {
-          setConfirmState((prev) => ({ ...prev, open: false }));
-          runImport();
-        },
-      });
-      return;
-    }
-    runImport();
-  };
-
-  const runImport = async () => {
+  const runImport = async (overwrite = false) => {
     if (!period || !selectedFile) return;
     setUploading(true);
     try {
-      // TODO: Wire to POST /api/v1/accountant/payroll/:periodId/import (multipart/form-data)
-      const result = mockImport(period);
+      if (overwrite) {
+        await api.post<string>(`/api/v1/accountant/payroll/${period.id}/confirm-overwrite`);
+      }
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      const res = await api.post<PayrollImportResponse>(
+        `/api/v1/accountant/payroll/${period.id}/import`,
+        formData,
+        { headers: {} }  // let browser set Content-Type with boundary
+      );
+      const result = res.data;
       setImportResult(result);
-      const entries = result.entries.map<PayrollEntry>((entry) => ({
-        id: entry.id,
-        payslipCode: entry.payslipCode,
-        userId: entry.userId,
-        fullName: entry.fullName,
-        avatar: entry.avatar,
-        employeeCode: entry.employeeCode,
-        jobTitle: entry.jobTitle,
-        baseSalary: entry.baseSalary,
-        bonus: entry.bonus,
-        allowance: entry.allowance,
-        deduction: entry.deduction,
-        advanceDeduct: entry.advanceDeduct,
-        finalNetSalary: entry.finalNetSalary,
-        status: entry.status,
-      }));
-      setPeriod((prev) => (prev ? { ...prev, status: PayrollStatus.DRAFT, employeeCount: entries.length, totalNetPayroll: sumNet(entries), entries, updatedAt: new Date().toISOString() } : prev));
+
+      const entries: PayrollEntry[] = result.entries
+        .filter((e) => e.importStatus === "ok" && e.id !== null)
+        .map((e) => ({
+          id: e.id as number,
+          payslipCode: e.payslipCode ?? "",
+          userId: e.userId as number,
+          fullName: e.fullName,
+          avatar: null,
+          employeeCode: e.employeeCode,
+          jobTitle: null,
+          baseSalary: e.baseSalary,
+          bonus: e.bonus,
+          allowance: e.allowance,
+          deduction: e.deduction,
+          advanceDeduct: e.advanceDeduct,
+          finalNetSalary: e.finalNetSalary,
+          status: (e.status as PayslipStatus) ?? PayslipStatus.DRAFT,
+        }));
+
+      setPeriod((prev) =>
+        prev
+          ? { ...prev, status: PayrollStatus.DRAFT, employeeCount: entries.length, totalNetPayroll: sumNet(entries), entries, updatedAt: new Date().toISOString() }
+          : prev
+      );
       setNettingResult(null);
       setRunResult(null);
       setActiveStep(2);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        // Period already has entries — ask for overwrite confirmation
+        setConfirmState({
+          open: true,
+          message: "Kỳ lương đã có dữ liệu. Bạn có muốn xóa và import lại từ file mới?",
+          onConfirm: () => {
+            setConfirmState((prev) => ({ ...prev, open: false }));
+            void runImport(true);
+          },
+        });
+      } else {
+        setError(err instanceof ApiError ? err.apiMessage : "Import thất bại.");
+      }
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleImport = () => {
+    if (!period || !selectedFile) return;
+    void runImport(false);
   };
 
   const handleSaveEntry = async () => {
@@ -254,7 +236,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     const nextAdvance = n(advanceDeduct, editingEntry.advanceDeduct);
 
     if (nextBase + nextBonus + nextAllowance < nextDeduction + nextAdvance) {
-      setEntryError("Tong luong khong the nho hon tong khau tru.");
+      setEntryError("Tổng lương không thể nhỏ hơn tổng khấu trừ.");
       return;
     }
 
@@ -269,35 +251,24 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       advanceDeduct: nextAdvance,
     };
 
-    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
-      setPeriod((prev) => {
-        if (!prev) return prev;
-        const entries = prev.entries.map((entry) =>
-          entry.id === editingEntry.id
-            ? { ...entry, baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance, finalNetSalary: recalcNet({ baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance }) }
-            : entry
-        );
-        return { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() };
-      });
-      setUploading(false);
-      closeEdit();
-      return;
-    }
-
     try {
-      const res = await api.put<PayrollEntry>(`/api/v1/accountant/payroll/${period.id}/entries/${editingEntry.id}`, body);
+      const res = await api.put<PayrollEntry>(
+        `/api/v1/accountant/payroll/${period.id}/entries/${editingEntry.id}`,
+        body
+      );
       setPeriod((prev) => {
         if (!prev) return prev;
-        const entries = prev.entries.map((entry) => (entry.id === editingEntry.id ? res.data : entry));
+        const entries = prev.entries.map((e) => (e.id === editingEntry.id ? res.data : e));
         return { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() };
       });
     } catch {
+      // Optimistic update on error
       setPeriod((prev) => {
         if (!prev) return prev;
-        const entries = prev.entries.map((entry) =>
-          entry.id === editingEntry.id
-            ? { ...entry, baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance, finalNetSalary: recalcNet({ baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance }) }
-            : entry
+        const entries = prev.entries.map((e) =>
+          e.id === editingEntry.id
+            ? { ...e, baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance, finalNetSalary: recalcNet({ baseSalary: nextBase, bonus: nextBonus, allowance: nextAllowance, deduction: nextDeduction, advanceDeduct: nextAdvance }) }
+            : e
         );
         return { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() };
       });
@@ -312,75 +283,16 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     setNetting(true);
     setError(null);
 
-    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
-      const debt: Record<number, number> = { 11: 2_500_000, 12: 0, 13: 1_200_000, 14: 0 };
-      const summary = period.entries.map((entry) => {
-        const outstandingDebt = debt[entry.userId] ?? 0;
-        const gross = entry.baseSalary + entry.bonus + entry.allowance;
-        const maxDeduct = Math.max(0, gross - entry.deduction);
-        const deductedAmount = Math.min(outstandingDebt, maxDeduct);
-        return {
-          userId: entry.userId,
-          employeeCode: entry.employeeCode,
-          fullName: entry.fullName,
-          outstandingDebt,
-          deductedAmount,
-          remainingDebt: Math.max(0, outstandingDebt - deductedAmount),
-          note: deductedAmount > 0 ? "Đã bù trừ từ kỳ lương" : "Không có dư nợ",
-        };
-      });
-
-      const simulated: AutoNettingResponse = {
-        periodId: period.id,
-        periodCode: period.periodCode,
-        totalAdvanceDeducted: summary.reduce((s, item) => s + item.deductedAmount, 0),
-        summary,
-      };
-
-      const entries = applyNetting(period.entries, simulated);
-      setPeriod((prev) => (prev ? { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() } : prev));
-      setNettingResult(simulated);
-      setNetting(false);
-      setActiveStep(3);
-      return;
-    }
-
     try {
       const res = await api.post<AutoNettingResponse>(`/api/v1/accountant/payroll/${period.id}/auto-netting`);
       const entries = applyNetting(period.entries, res.data);
       setPeriod((prev) => (prev ? { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() } : prev));
       setNettingResult(res.data);
-    } catch {
-      const debt: Record<number, number> = { 11: 2_500_000, 12: 0, 13: 1_200_000, 14: 0 };
-      const summary = period.entries.map((entry) => {
-        const outstandingDebt = debt[entry.userId] ?? 0;
-        const gross = entry.baseSalary + entry.bonus + entry.allowance;
-        const maxDeduct = Math.max(0, gross - entry.deduction);
-        const deductedAmount = Math.min(outstandingDebt, maxDeduct);
-        return {
-          userId: entry.userId,
-          employeeCode: entry.employeeCode,
-          fullName: entry.fullName,
-          outstandingDebt,
-          deductedAmount,
-          remainingDebt: Math.max(0, outstandingDebt - deductedAmount),
-          note: deductedAmount > 0 ? "Đã bù trừ từ kỳ lương" : "Không có dư nợ",
-        };
-      });
-
-      const simulated: AutoNettingResponse = {
-        periodId: period.id,
-        periodCode: period.periodCode,
-        totalAdvanceDeducted: summary.reduce((s, item) => s + item.deductedAmount, 0),
-        summary,
-      };
-
-      const entries = applyNetting(period.entries, simulated);
-      setPeriod((prev) => (prev ? { ...prev, entries, totalNetPayroll: sumNet(entries), updatedAt: new Date().toISOString() } : prev));
-      setNettingResult(simulated);
+      setActiveStep(3);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.apiMessage : "Auto-netting thất bại.");
     } finally {
       setNetting(false);
-      setActiveStep(3);
     }
   };
 
@@ -389,47 +301,25 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     setRunning(true);
     setError(null);
 
-    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
-      const simulated: PayrollRunResponse = {
-        periodId: period.id,
-        periodCode: period.periodCode,
-        status: PayrollStatus.COMPLETED,
-        payslipsGenerated: period.entries.length,
-        totalNetPayroll: period.entries.reduce((sum, e) => sum + e.finalNetSalary, 0),
-      };
-      setRunResult(simulated);
-      setPeriod((prev) => (prev ? { ...prev, status: PayrollStatus.COMPLETED, totalNetPayroll: simulated.totalNetPayroll, updatedAt: new Date().toISOString() } : prev));
-      setRunning(false);
-      setShowRunConfirm(false);
-      setActiveStep(4);
-      return;
-    }
-
     try {
       const res = await api.post<PayrollRunResponse>(`/api/v1/accountant/payroll/${period.id}/run`);
       setRunResult(res.data);
-      setPeriod((prev) => (prev ? { ...prev, status: PayrollStatus.COMPLETED, totalNetPayroll: res.data.totalNetPayroll, updatedAt: new Date().toISOString() } : prev));
-    } catch {
-      const simulated: PayrollRunResponse = {
-        periodId: period.id,
-        periodCode: period.periodCode,
-        status: PayrollStatus.COMPLETED,
-        payslipsGenerated: period.entries.length,
-        totalNetPayroll: period.entries.reduce((sum, e) => sum + e.finalNetSalary, 0),
-      };
-      setRunResult(simulated);
-      setPeriod((prev) => (prev ? { ...prev, status: PayrollStatus.COMPLETED, totalNetPayroll: simulated.totalNetPayroll, updatedAt: new Date().toISOString() } : prev));
+      setPeriod((prev) =>
+        prev ? { ...prev, status: PayrollStatus.COMPLETED, totalNetPayroll: res.data.totalNetPayroll, updatedAt: new Date().toISOString() } : prev
+      );
+      setActiveStep(4);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.apiMessage : "Chạy lương thất bại.");
     } finally {
       setRunning(false);
       setShowRunConfirm(false);
-      setActiveStep(4);
     }
   };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 rounded bg-white animate-pulse" />
+        <div className="h-8 w-64 rounded bg-slate-200 animate-pulse" />
         <div className="h-32 rounded-2xl bg-white animate-pulse" />
         <div className="h-96 rounded-2xl bg-white animate-pulse" />
       </div>
@@ -445,21 +335,23 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           </svg>
           Quay lại danh sách kỳ lương
         </Link>
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500">Không tìm thấy kỳ lương.</div>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500">
+          Không tìm thấy kỳ lương.
+        </div>
       </div>
     );
   }
 
-  const totalEmployees = period.entries.length;
-
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link href="/accountant/payroll" className="hover:text-slate-900 transition-colors">Bảng lương</Link>
         <span>/</span>
         <span className="text-slate-600 font-mono">{period.periodCode}</span>
       </div>
 
+      {/* Header */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
@@ -468,26 +360,43 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             <p className="text-sm text-slate-500 mt-1">Tháng {period.month}/{period.year}</p>
           </div>
           <div className="flex flex-col items-start lg:items-end gap-2">
-            <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getStatusClass(period.status)}`}>{getStatusLabel(period.status)}</span>
+            <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${getStatusClass(period.status)}`}>
+              {getStatusLabel(period.status)}
+            </span>
             <p className="text-sm text-slate-500">Cập nhật: {formatDateTime(period.updatedAt)}</p>
           </div>
         </div>
       </div>
 
+      {/* Step navigator */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {[
+          {([
             { step: 1 as const, title: "Upload Excel", done: hasEntries },
             { step: 2 as const, title: "Review entries", done: hasEntries },
             { step: 3 as const, title: "Auto-netting", done: hasNetting || isCompleted },
-            { step: 4 as const, title: "Run payroll", done: isCompleted },
-          ].map((item) => {
+            { step: 4 as const, title: "Chạy lương", done: isCompleted },
+          ] as const).map((item) => {
             const active = activeStep === item.step;
             const enabled = canOpenStep(item.step);
             return (
-              <button key={item.step} type="button" disabled={!enabled} onClick={() => setActiveStep(item.step)} className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? "border-blue-300 bg-blue-50" : enabled ? "border-slate-200 bg-white hover:border-slate-300" : "border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed"}`}>
+              <button
+                key={item.step}
+                type="button"
+                disabled={!enabled}
+                onClick={() => setActiveStep(item.step)}
+                className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                  active
+                    ? "border-blue-300 bg-blue-50"
+                    : enabled
+                    ? "border-slate-200 bg-white hover:border-slate-300"
+                    : "border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed"
+                }`}
+              >
                 <div className="flex items-center gap-2">
-                  <span className={`w-6 h-6 rounded-full border text-xs font-semibold flex items-center justify-center ${item.done ? "border-emerald-300 bg-emerald-50 text-emerald-700" : active ? "border-blue-300 bg-blue-50 text-blue-700" : "border-slate-500/40 bg-slate-100 text-slate-600"}`}>{item.done ? "✓" : item.step}</span>
+                  <span className={`w-6 h-6 rounded-full border text-xs font-semibold flex items-center justify-center ${item.done ? "border-emerald-300 bg-emerald-50 text-emerald-700" : active ? "border-blue-300 bg-blue-50 text-blue-700" : "border-slate-500/40 bg-slate-100 text-slate-600"}`}>
+                    {item.done ? "✓" : item.step}
+                  </span>
                   <span className="text-sm text-slate-900">{item.title}</span>
                 </div>
               </button>
@@ -496,21 +405,45 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* Step 1: Upload */}
       {activeStep === 1 && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h2 className="text-lg font-semibold text-slate-900">Bước 1: Upload Excel</h2>
-            <a href="/api/v1/accountant/payroll/template" className="inline-flex w-fit items-center gap-2 text-sm text-blue-700 hover:text-blue-600">Tải template Excel</a>
+            <a
+              href="/api/v1/accountant/payroll/template"
+              download="payroll_template.xlsx"
+              className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-600"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v13m0 0l-4-4m4 4l4-4M4 20h16" />
+              </svg>
+              Tải template Excel
+            </a>
           </div>
 
           <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-6 text-center cursor-pointer hover:border-blue-400/50 transition-colors">
-            <input type="file" accept=".xlsx,.xls" className="hidden" onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} />
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+            />
             <p className="text-sm text-slate-600">Kéo thả hoặc bấm để chọn file Excel (.xlsx, .xls)</p>
-            <p className="text-xs text-slate-500 mt-2">{selectedFile ? `Đã chọn: ${selectedFile.name}` : "Chưa có file nào được chọn"}</p>
+            <p className="text-xs text-slate-500 mt-2">
+              {selectedFile ? `Đã chọn: ${selectedFile.name}` : "Chưa có file nào được chọn"}
+            </p>
           </label>
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => void handleImport()} disabled={!selectedFile || uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Đang tải lên..." : "Tải lên"}</button>
+            <button
+              type="button"
+              onClick={handleImport}
+              disabled={!selectedFile || uploading}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+            >
+              {uploading ? "Đang tải lên..." : "Tải lên"}
+            </button>
           </div>
 
           {importResult && (
@@ -519,21 +452,38 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <SummaryStat label="Tổng dòng" value={String(importResult.totalRows)} />
                 <SummaryStat label="Thành công" value={String(importResult.successCount)} tone="text-emerald-700" />
-                <SummaryStat label="Lỗi" value={String(importResult.errorCount)} tone="text-rose-700" />
+                <SummaryStat label="Lỗi" value={String(importResult.errorCount)} tone={importResult.errorCount > 0 ? "text-rose-700" : undefined} />
                 <SummaryStat label="Tổng net" value={formatCurrency(importResult.totalNetPayroll)} />
               </div>
+              {importResult.errors.length > 0 && (
+                <div className="space-y-1">
+                  {importResult.errors.map((err, i) => (
+                    <p key={i} className="text-xs text-rose-700">
+                      Dòng {err.row} — {err.field}: {err.message}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => setActiveStep(2)} disabled={!hasEntries} className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Tiếp theo →</button>
+            <button
+              type="button"
+              onClick={() => setActiveStep(2)}
+              disabled={!hasEntries}
+              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+            >
+              Tiếp theo →
+            </button>
           </div>
         </div>
       )}
 
+      {/* Step 2: Review entries */}
       {activeStep === 2 && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-          <h2 className="text-lg font-semibold text-slate-900">Bước 2: Xem & Sửa danh sách</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Bước 2: Xem &amp; Sửa danh sách</h2>
 
           <div className="rounded-xl border border-slate-200 overflow-x-auto">
             <table className="w-full min-w-[980px]">
@@ -541,58 +491,71 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                 <tr className="bg-white/70 border-b border-slate-200">
                   <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
                   <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Họ tên</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương gross</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương cơ bản</th>
                   <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Phụ cấp</th>
                   <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Khấu trừ</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương net</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Thực lĩnh</th>
                   <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Hành động</th>
                 </tr>
               </thead>
               <tbody>
-                {period.entries.map((entry) => {
-                  const gross = entry.baseSalary + entry.bonus + entry.allowance;
-                  const deductionValue = entry.deduction + entry.advanceDeduct;
-
-                  return (
-                    <tr key={entry.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-slate-900 font-mono">{entry.employeeCode}</td>
-                      <td className="px-4 py-3 text-sm text-slate-900">{entry.fullName}</td>
-                      <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(gross)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(entry.allowance)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(deductionValue)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-emerald-700 font-semibold">{formatCurrency(entry.finalNetSalary)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button type="button" onClick={() => openEdit(entry)} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs">Sửa</button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {period.entries.map((entry) => (
+                  <tr key={entry.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-900 font-mono">{entry.employeeCode}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">{entry.fullName}</td>
+                    <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(entry.baseSalary)}</td>
+                    <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(entry.bonus + entry.allowance)}</td>
+                    <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(entry.deduction + entry.advanceDeduct)}</td>
+                    <td className="px-4 py-3 text-right text-sm text-emerald-700 font-semibold">{formatCurrency(entry.finalNetSalary)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(entry)}
+                        disabled={isCompleted}
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 text-xs"
+                      >
+                        Sửa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SummaryStat label="Tổng gross" value={formatCurrency(grossTotal)} />
-            <SummaryStat label="Tổng net" value={formatCurrency(netTotal)} tone="text-emerald-700" />
-          </div>
+          <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-700" />
 
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => setActiveStep(1)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">← Quay lại</button>
-            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold">Tính bù trừ →</button>
+            <button type="button" onClick={() => setActiveStep(1)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
+              ← Quay lại
+            </button>
+            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold">
+              Tính bù trừ →
+            </button>
           </div>
         </div>
       )}
 
+      {/* Step 3: Auto-netting */}
       {activeStep === 3 && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Bước 3: Auto-netting</h2>
 
           <div className="flex justify-end">
-            <button type="button" onClick={() => void handleNetting()} disabled={netting || period.entries.length === 0} className="px-4 py-2.5 rounded-xl bg-amber-500/80 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 text-sm font-semibold">{netting ? "Đang tính..." : "Tính bù trừ nợ tạm ứng"}</button>
+            <button
+              type="button"
+              onClick={() => void handleNetting()}
+              disabled={netting || isCompleted || period.entries.length === 0}
+              className="px-4 py-2.5 rounded-xl bg-amber-500/80 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 text-sm font-semibold"
+            >
+              {netting ? "Đang tính..." : "Tính bù trừ nợ tạm ứng"}
+            </button>
           </div>
 
           {!nettingResult ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-10 text-center text-slate-500 text-sm">Chưa có dữ liệu auto-netting. Bấm &quot;Tính bù trừ nợ tạm ứng&quot; để tiếp tục.</div>
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-10 text-center text-slate-500 text-sm">
+              Chưa có dữ liệu auto-netting. Bấm &quot;Tính bù trừ nợ tạm ứng&quot; để tiếp tục.
+            </div>
           ) : (
             <>
               <div className="rounded-xl border border-slate-200 overflow-x-auto">
@@ -601,28 +564,32 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                     <tr className="bg-white/70 border-b border-slate-200">
                       <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
                       <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Họ tên</th>
-                      <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Dư nợ</th>
+                      <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Dư nợ tạm ứng</th>
                       <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Khấu trừ</th>
-                      <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương thực lĩnh</th>
+                      <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Thực lĩnh</th>
+                      <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ghi chú</th>
                     </tr>
                   </thead>
                   <tbody>
                     {nettingResult.summary.map((item) => {
-                      const netSalary = period.entries.find((entry) => entry.userId === item.userId)?.finalNetSalary ?? 0;
+                      const netSalary = period.entries.find((e) => e.userId === item.userId)?.finalNetSalary ?? 0;
                       return (
-                        <tr key={item.userId} className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${item.deductedAmount > 0 ? "bg-amber-50" : ""}`}>
+                        <tr
+                          key={item.userId}
+                          className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${item.deductedAmount > 0 ? "bg-amber-50" : ""}`}
+                        >
                           <td className="px-4 py-3 text-sm text-slate-900 font-mono">{item.employeeCode}</td>
                           <td className="px-4 py-3 text-sm text-slate-900">{item.fullName}</td>
                           <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(item.outstandingDebt)}</td>
                           <td className="px-4 py-3 text-right text-sm text-amber-700">{formatCurrency(item.deductedAmount)}</td>
                           <td className="px-4 py-3 text-right text-sm text-emerald-700 font-semibold">{formatCurrency(netSalary)}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{item.note}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <SummaryStat label="Tổng khấu trừ tạm ứng" value={formatCurrency(nettingResult.totalAdvanceDeducted)} tone="text-amber-700" />
                 <SummaryStat label="Tổng thực lĩnh" value={formatCurrency(netTotal)} tone="text-emerald-700" />
@@ -631,12 +598,22 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           )}
 
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => setActiveStep(2)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">← Quay lại</button>
-            <button type="button" onClick={() => setActiveStep(4)} disabled={!nettingResult && !isCompleted} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">Xác nhận & Chạy lương →</button>
+            <button type="button" onClick={() => setActiveStep(2)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
+              ← Quay lại
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveStep(4)}
+              disabled={!nettingResult && !isCompleted}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+            >
+              Xác nhận &amp; Chạy lương →
+            </button>
           </div>
         </div>
       )}
 
+      {/* Step 4: Run */}
       {activeStep === 4 && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Bước 4: Chạy lương</h2>
@@ -649,29 +626,46 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           {isCompleted ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-2">
               <p className="text-emerald-700 font-semibold">✓ Payroll đã chạy thành công</p>
-              <p className="text-sm text-slate-900">Ky {period.periodCode} đã chuyển trạng thái COMPLETED.</p>
-              <p className="text-sm text-slate-600">{runResult ? `Đã tạo ${runResult.payslipsGenerated} phiếu lương • Tong chi ${formatCurrency(runResult.totalNetPayroll)}` : `Tổng chi: ${formatCurrency(period.totalNetPayroll)}`}</p>
+              <p className="text-sm text-slate-900">Kỳ {period.periodCode} đã chuyển trạng thái COMPLETED.</p>
+              <p className="text-sm text-slate-600">
+                {runResult
+                  ? `Đã tạo ${runResult.payslipsGenerated} phiếu lương · Tổng chi ${formatCurrency(runResult.totalNetPayroll)}`
+                  : `Tổng chi: ${formatCurrency(period.totalNetPayroll)}`}
+              </p>
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-200 text-sm">⚠ Thao tác này KHÔNG THỂ HOÀN TÁC. Hệ thống sẽ chi lương cho {totalEmployees} nhân viên.</div>
-              <button type="button" onClick={() => setShowRunConfirm(true)} className="px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">Chạy lương ngay</button>
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700 text-sm">
+                ⚠ Thao tác này KHÔNG THỂ HOÀN TÁC. Hệ thống sẽ chi lương cho {totalEmployees} nhân viên.
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRunConfirm(true)}
+                className="px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold"
+              >
+                Chạy lương ngay
+              </button>
             </>
           )}
 
-          <div>
-            <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">← Quay lại</button>
-          </div>
+          <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
+            ← Quay lại
+          </button>
         </div>
       )}
 
-      {error && <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">{error}</div>}
+      {error && (
+        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
+          {error}
+        </div>
+      )}
 
+      {/* Edit entry modal */}
       {editingEntry && (
         <div className="fixed inset-0 z-50">
-          <button type="button" className="absolute inset-0 bg-black/70" onClick={closeEdit} aria-label="Dong modal sua entry" />
+          <button type="button" className="absolute inset-0 bg-black/70" onClick={closeEdit} aria-label="Đóng" />
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Sửa dòng lương - {editingEntry.employeeCode}</h3>
+            <h3 className="text-xl font-bold text-slate-900">Sửa dòng lương — {editingEntry.employeeCode}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <NumberInput label="Lương cơ bản" value={baseSalary} onChange={setBaseSalary} />
               <NumberInput label="Thưởng" value={bonus} onChange={setBonus} />
@@ -679,29 +673,57 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               <NumberInput label="Khấu trừ" value={deduction} onChange={setDeduction} />
               <NumberInput label="Khấu trừ tạm ứng" value={advanceDeduct} onChange={setAdvanceDeduct} />
             </div>
-            {entryError && <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">{entryError}</div>}
+            {entryError && (
+              <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">
+                {entryError}
+              </div>
+            )}
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button type="button" onClick={closeEdit} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
-              <button type="button" onClick={() => void handleSaveEntry()} disabled={uploading} className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{uploading ? "Đang lưu..." : "Lưu"}</button>
+              <button type="button" onClick={closeEdit} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSaveEntry()}
+                disabled={uploading}
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+              >
+                {uploading ? "Đang lưu..." : "Lưu"}
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Run confirm modal */}
       {showRunConfirm && (
         <div className="fixed inset-0 z-50">
-          <button type="button" className="absolute inset-0 bg-black/70" onClick={() => setShowRunConfirm(false)} aria-label="Đóng xác nhận chạy lương" />
+          <button type="button" className="absolute inset-0 bg-black/70" onClick={() => setShowRunConfirm(false)} aria-label="Đóng" />
           <div className="absolute inset-x-0 top-20 mx-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
             <h3 className="text-xl font-bold text-slate-900">Xác nhận chạy lương</h3>
-            <p className="text-sm text-slate-600">Hệ thống sẽ chi lương cho <span className="font-semibold text-slate-900">{totalEmployees} nhân viên</span> với tổng số tiền <span className="font-semibold text-emerald-700">{formatCurrency(netTotal)}</span>.</p>
+            <p className="text-sm text-slate-600">
+              Hệ thống sẽ chi lương cho{" "}
+              <span className="font-semibold text-slate-900">{totalEmployees} nhân viên</span> với tổng số tiền{" "}
+              <span className="font-semibold text-emerald-700">{formatCurrency(netTotal)}</span>.
+            </p>
             <p className="text-sm text-rose-700">Thao tác này không thể hoàn tác.</p>
             <div className="flex items-center justify-end gap-3">
-              <button type="button" onClick={() => setShowRunConfirm(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">Hủy</button>
-              <button type="button" onClick={() => void handleRun()} disabled={running} className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold">{running ? "Đang chạy..." : "Xác nhận chạy lương"}</button>
+              <button type="button" onClick={() => setShowRunConfirm(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleRun()}
+                disabled={running}
+                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+              >
+                {running ? "Đang chạy..." : "Xác nhận chạy lương"}
+              </button>
             </div>
           </div>
         </div>
       )}
+
       <ConfirmModal
         open={confirmState.open}
         message={confirmState.message}
@@ -712,11 +734,17 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   );
 }
 
-function NumberInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function NumberInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="block text-sm text-slate-600 mb-2">{label}</label>
-      <input type="number" min={0} value={value} onChange={(event) => onChange(event.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40" />
+      <input
+        type="number"
+        min={0}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+      />
     </div>
   );
 }

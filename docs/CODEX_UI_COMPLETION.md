@@ -30,18 +30,18 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 
 ---
 
-## Trạng thái tổng quan (cập nhật 2026-04-30)
+## Trạng thái tổng quan (cập nhật 2026-05-01)
 
 | Nhóm | Tổng | ✅ Done | ⚠️ Mock/Partial | ❌ Còn lại |
 |------|------|---------|-----------------|-----------|
 | A — Backend ready → integrate | 7 | **7** | 0 | 0 |
-| B — Mock chờ backend | 21 | **17** | 4 | 0 |
+| B — Mock chờ backend | 21 | **21** | 0 | 0 |
 | C — Skeleton | 1 | **1** | 0 | 0 |
 | Auth pages | 3 | **3** | 0 | 0 |
 
-> **Nhóm A + C hoàn thành 100%.** Nhóm B: 17/21 wired.
-> Nhóm B còn mock: accountant/payroll (x2), accountant/ledger (x2) — blocked by backend.
+> **Nhóm A + B + C hoàn thành 100%.** Sprint 10 unblocked accountant/payroll (x2) + accountant/ledger (x2).
 > Auth pages: login, change-password, forgot-password đều LIVE.
+> Chỉ còn `dashboard/page.tsx` render tĩnh — chờ backend `/api/v1/dashboard/*`.
 
 ---
 
@@ -65,7 +65,7 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 
 ---
 
-### ✅ B-DONE — Đã hoàn chỉnh UI + API thật (2026-04-30)
+### ✅ B-DONE — Đã hoàn chỉnh UI + API thật (2026-05-01)
 
 | File | Endpoint | Ghi chú |
 |------|----------|---------|
@@ -85,6 +85,10 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 | `accountant/disbursements/page.tsx` | `GET /api/v1/accountant/disbursements` | Status filter APPROVED_BY_TEAM_LEADER |
 | `accountant/disbursements/[id]/page.tsx` | `POST disburse` (PIN) + `POST reject` | PIN modal, 423 Locked handling |
 | `accountant/withdrawals/page.tsx` | `GET/PUT /api/v1/wallet/withdraw` | Quản lý rút tiền user — có trong sidebar |
+| `accountant/payroll/page.tsx` | `GET/POST /api/v1/accountant/payroll` + template | List + tạo + tải template — Sprint 10 |
+| `accountant/payroll/[id]/page.tsx` | import/confirm-overwrite/auto-netting/run + PUT entries | 4-step workflow — Sprint 10 |
+| `accountant/ledger/page.tsx` | `GET /api/v1/accountant/ledger` + `/summary` | Filter type/status/refType, direction badge — Sprint 10 |
+| `accountant/ledger/[id]/page.tsx` | `GET /api/v1/accountant/ledger/{id}` | Detail + bút toán kép table — Sprint 10 |
 | `admin/users/page.tsx` | `GET/POST /api/v1/admin/users` | lock/unlock/reset-password wired |
 | `admin/users/[id]/page.tsx` | `GET/PUT /api/v1/admin/users/{id}` | Role + dept edit |
 | `admin/departments/page.tsx` | `GET/POST /api/v1/admin/departments` | CRUD |
@@ -101,83 +105,6 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 
 ---
 
-### ⚠️ B-BLOCKED — MOCK, chờ backend endpoint
-
-> **KHÔNG** xóa mock. Endpoint chưa có phía backend. Giữ block comment `ENDPOINT_BLOCKED = true`.
-
-#### B14. `accountant/payroll/page.tsx` — Quản lý bảng lương (ACCOUNTANT)
-
-```
-Endpoint cần:   GET  /api/v1/accountant/payroll?year=&status=&page=1&limit=10
-                POST /api/v1/accountant/payroll  body: CreatePayrollPeriodBody
-Types:          PayrollPeriodListItem, PayrollStatus, CreatePayrollPeriodBody
-Block reason:   Backend chưa có AccountantPayrollController
-```
-
-Checklist UI (hoàn chỉnh khi backend ready):
-- [ ] Bảng kỳ lương: `period` (Tháng X/YYYY), `status` badge, `totalAmount`, `employeeCount`
-- [ ] Status badge: DRAFT=xám / PROCESSING=vàng / COMPLETED=xanh
-- [ ] Nút **"Tạo kỳ lương mới"** → modal: chọn tháng, năm
-- [ ] Click → `/accountant/payroll/[id]`
-- [ ] Pagination theo năm
-
----
-
-#### B15. `accountant/payroll/[id]/page.tsx` — Chi tiết kỳ lương (ACCOUNTANT)
-
-```
-Endpoint cần:   GET  /api/v1/accountant/payroll/{id}
-                POST /api/v1/accountant/payroll/{id}/import         multipart Excel
-                POST /api/v1/accountant/payroll/{id}/auto-netting
-                POST /api/v1/accountant/payroll/{id}/run
-                PUT  /api/v1/accountant/payroll/{id}/entries/{userId}
-Types:          PayrollDetailResponse, PayrollEntry, PayrollImportResponse, PayrollRunResponse
-Block reason:   Backend chưa có endpoint
-```
-
-Checklist UI (hoàn chỉnh khi backend ready):
-- [ ] Bảng entries: `employee.fullName`, `baseSalary`, `bonuses`, `deductions`, `advanceBalance`, `netSalary`
-- [ ] Nút **"Import Excel"** → `<input type="file" accept=".xlsx,.xls">` → POST multipart
-  - Preview: `PayrollImportResponse` với `entries[]` và `errors[]`
-- [ ] Nút **"Auto Netting"** → confirm modal → trừ `advanceBalance` vào `netSalary`
-- [ ] Nút **"Chạy bảng lương"** (chỉ khi status=DRAFT) → confirm modal
-- [ ] Edit inline từng entry: click cell `baseSalary`/`bonuses`/`deductions`
-
----
-
-#### B16. `accountant/ledger/page.tsx` — Sổ cái (ACCOUNTANT)
-
-```
-Endpoint cần:   GET /api/v1/accountant/ledger?from=&to=&type=&page=0&size=20
-Types:          LedgerSummaryResponse
-Block reason:   Backend chưa có AccountantLedgerController
-```
-
-Checklist UI (hoàn chỉnh khi backend ready):
-- [ ] Summary cards: Tổng phát sinh Nợ, Tổng phát sinh Có, Số dư
-- [ ] Bảng double-entry: `date`, `description`, `debitAccount`, `creditAccount`, `amount`, `runningBalance`
-- [ ] Filter by date range (from/to)
-- [ ] Filter by transaction type dropdown
-- [ ] Click row → `/accountant/ledger/[id]`
-- [ ] Pagination
-
----
-
-#### B17. `accountant/ledger/[id]/page.tsx` — Chi tiết bút toán (ACCOUNTANT)
-
-```
-Endpoint cần:   GET /api/v1/accountant/ledger/{id}
-Types:          TransactionResponse
-Block reason:   Backend chưa có endpoint
-```
-
-Checklist UI (hoàn chỉnh khi backend ready):
-- [ ] Journal entry: debit account, credit account, amount, description, reference code
-- [ ] Link tới nguồn gốc: request hoặc payslip (clickable nếu có `referenceId`)
-- [ ] Timestamp, created by
-
----
-
 ## NHÓM C — ✅ Đã hoàn thành (Skeleton → Full UI)
 
 | File | Trạng thái | Ghi chú |
@@ -186,16 +113,14 @@ Checklist UI (hoàn chỉnh khi backend ready):
 
 ---
 
-## Còn lại — Chờ backend (2026-04-30)
+## Còn lại — (2026-05-01)
 
 | # | Task | Endpoint cần | Priority |
 |---|------|-------------|----------|
-| 1 | **B14-B15** Accountant Payroll | `/accountant/payroll/*` | 🔴 Blocked by backend |
-| 2 | **B16-B17** Accountant Ledger | `/accountant/ledger/*` | 🔴 Blocked by backend |
-| 3 | Dashboard live stats | `/api/v1/dashboard/*` | 🟡 Nice-to-have |
+| 1 | Dashboard live stats | `/api/v1/dashboard/*` | 🟡 Nice-to-have |
 
-> UI scaffolding cho tất cả items đã hoàn chỉnh. Chỉ cần xóa `ENDPOINT_BLOCKED = true`
-> và replace mock data bằng API thật khi backend implement xong.
+> **Tất cả pages đã wired với API thật.** Chỉ còn `dashboard/page.tsx` render tĩnh vì backend chưa có `/api/v1/dashboard/*`.
+> B14–B17 (accountant/payroll + accountant/ledger) đã wired Sprint 10 sau khi backend commit `d3b30aa` unblock 2 controllers.
 
 ---
 

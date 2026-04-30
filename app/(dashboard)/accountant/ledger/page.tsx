@@ -2,40 +2,23 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { api } from "@/lib/api-client";
+import { ApiError, api } from "@/lib/api-client";
 import {
+  AccountantLedgerFilterParams,
+  AccountantLedgerItemResponse,
   LedgerSummaryResponse,
   PaginatedResponse,
   ReferenceType,
-  TransactionResponse,
+  TransactionDirection,
   TransactionStatus,
   TransactionType,
+  WalletOwnerType,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
-interface LedgerTransactionView extends TransactionResponse {
-  referenceCode?: string | null;
-}
-
 const PAGE_LIMIT = 20;
-const ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED = true;
 
-interface SpringPage<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
-
-type LedgerListApi =
-  | SpringPage<TransactionResponse>
-  | PaginatedResponse<TransactionResponse>
-  | TransactionResponse[];
-
-// BLOCKED (backend chưa có):
-// - /api/v1/accountant/ledger/*
-// Giữ mock cho đến khi backend mở endpoint chính thức.
+// ─── MOCK fallback (dùng khi API lỗi) ──────────────────────────────────────
 const MOCK_SUMMARY: LedgerSummaryResponse = {
   currentBalance: 1_248_500_000,
   totalInflow: 2_500_000_000,
@@ -43,173 +26,66 @@ const MOCK_SUMMARY: LedgerSummaryResponse = {
   transactionCount: 6,
 };
 
-const MOCK_TRANSACTIONS: LedgerTransactionView[] = [
-  {
-    id: 1,
-    transactionCode: "TXN-2026-0001A",
-    type: TransactionType.REQUEST_PAYMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: -3_500_000,
-    referenceId: 1,
-    referenceType: ReferenceType.REQUEST,
-    referenceCode: "REQ-2026-0041",
-    description: "Giai ngan tam ung - Do Quoc Bao",
-    createdAt: "2026-04-03T11:00:00",
-  },
-  {
-    id: 2,
-    transactionCode: "TXN-2026-0002B",
-    type: TransactionType.PAYSLIP_PAYMENT,
-    status: TransactionStatus.SUCCESS,
-    amount: -13_500_000,
-    referenceId: 101,
-    referenceType: ReferenceType.PAYSLIP,
-    referenceCode: "PS-2026-03-001",
-    description: "Chi luong T03/2026 - Do Quoc Bao",
-    createdAt: "2026-04-02T17:05:00",
-  },
-  {
-    id: 3,
-    transactionCode: "TXN-2026-0003C",
-    type: TransactionType.SYSTEM_TOPUP,
-    status: TransactionStatus.SUCCESS,
-    amount: 500_000_000,
-    referenceId: 1,
-    referenceType: ReferenceType.SYSTEM,
-    referenceCode: null,
-    description: "Nap tien vao Quy he thong",
-    createdAt: "2026-04-01T09:00:00",
-  },
-  {
-    id: 4,
-    transactionCode: "TXN-2026-0004D",
-    type: TransactionType.DEPT_QUOTA_ALLOCATION,
-    status: TransactionStatus.SUCCESS,
-    amount: -200_000_000,
-    referenceId: 20,
-    referenceType: ReferenceType.DEPARTMENT,
-    referenceCode: "DEPT-Q2-2026",
-    description: "Cap quota Phong IT Q2/2026",
-    createdAt: "2026-04-01T10:30:00",
-  },
-  {
-    id: 5,
-    transactionCode: "TXN-2026-0005E",
-    type: TransactionType.PROJECT_QUOTA_ALLOCATION,
-    status: TransactionStatus.SUCCESS,
-    amount: -50_000_000,
-    referenceId: 10,
-    referenceType: ReferenceType.PROJECT,
-    referenceCode: "PRJ-IT-001",
-    description: "Cap von DA PRJ-IT-001 Phase 2",
-    createdAt: "2026-04-01T10:35:00",
-  },
-  {
-    id: 6,
-    transactionCode: "TXN-2026-0006F",
-    type: TransactionType.WITHDRAW,
-    status: TransactionStatus.SUCCESS,
-    amount: -2_000_000,
-    referenceId: 501,
-    referenceType: ReferenceType.WITHDRAWAL,
-    referenceCode: null,
-    description: "Rut tien vi nhan vien",
-    createdAt: "2026-03-30T14:00:00",
-  },
+const MOCK_ITEMS: AccountantLedgerItemResponse[] = [
+  { id: 1, transactionCode: "TXN-2026-0001A", type: TransactionType.REQUEST_PAYMENT,      status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT,  amount: 3_500_000,   balanceAfter: 1_248_500_000, walletOwnerType: WalletOwnerType.COMPANY_FUND, ownerId: 1, timestamp: "2026-04-03T11:00:00" },
+  { id: 2, transactionCode: "TXN-2026-0002B", type: TransactionType.PAYSLIP_PAYMENT,      status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT,  amount: 13_500_000,  balanceAfter: 1_252_000_000, walletOwnerType: WalletOwnerType.COMPANY_FUND, ownerId: 1, timestamp: "2026-04-02T17:05:00" },
+  { id: 3, transactionCode: "TXN-2026-0003C", type: TransactionType.SYSTEM_TOPUP,         status: TransactionStatus.SUCCESS, direction: TransactionDirection.CREDIT, amount: 500_000_000, balanceAfter: 1_265_500_000, walletOwnerType: WalletOwnerType.COMPANY_FUND, ownerId: 1, timestamp: "2026-04-01T09:00:00" },
+  { id: 4, transactionCode: "TXN-2026-0004D", type: TransactionType.DEPT_QUOTA_ALLOCATION, status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT, amount: 200_000_000, balanceAfter: 765_500_000,  walletOwnerType: WalletOwnerType.DEPARTMENT,   ownerId: 2, timestamp: "2026-04-01T10:30:00" },
+  { id: 5, transactionCode: "TXN-2026-0005E", type: TransactionType.PROJECT_QUOTA_ALLOCATION, status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT, amount: 50_000_000, balanceAfter: 565_500_000, walletOwnerType: WalletOwnerType.PROJECT, ownerId: 10, timestamp: "2026-04-01T10:35:00" },
+  { id: 6, transactionCode: "TXN-2026-0006F", type: TransactionType.WITHDRAW,             status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT,  amount: 2_000_000,   balanceAfter: 515_500_000,  walletOwnerType: WalletOwnerType.USER,         ownerId: 11, timestamp: "2026-03-30T14:00:00" },
 ];
-
-
+// ────────────────────────────────────────────────────────────────────────────
 
 function parsePage(value: string | null): number {
-  const page = Number(value ?? "1");
-  return Number.isFinite(page) && page > 0 ? page : 1;
+  const p = Number(value ?? "1");
+  return Number.isFinite(p) && p > 0 ? p : 1;
 }
 
-function parseType(value: string | null): TransactionType | undefined {
+function parseEnum<T extends string>(value: string | null, values: T[]): T | undefined {
   if (!value) return undefined;
-
-  const values = Object.values(TransactionType);
-  return values.includes(value as TransactionType) ? (value as TransactionType) : undefined;
+  return values.includes(value as T) ? (value as T) : undefined;
 }
 
-function normalizeList(payload: LedgerListApi, fallbackPage: number) {
+function pickPaginated<T>(payload: PaginatedResponse<T> | T[]): { items: T[]; total: number; totalPages: number } {
   if (Array.isArray(payload)) {
-    const total = payload.length;
-    return {
-      items: payload,
-      total,
-      totalPages: Math.max(1, Math.ceil(total / PAGE_LIMIT)),
-      page: fallbackPage,
-    };
+    return { items: payload, total: payload.length, totalPages: Math.max(1, Math.ceil(payload.length / PAGE_LIMIT)) };
   }
+  return { items: payload.items, total: payload.total, totalPages: Math.max(1, payload.totalPages) };
+}
 
-  if ("content" in payload) {
-    return {
-      items: payload.content,
-      total: payload.totalElements,
-      totalPages: Math.max(1, payload.totalPages),
-      page: Math.max(1, payload.number + 1),
-    };
-  }
-
-  return {
-    items: payload.items,
-    total: payload.total,
-    totalPages: Math.max(1, payload.totalPages),
-    page: Math.max(1, payload.page),
+function getTypeLabel(type: TransactionType): string {
+  const labels: Record<string, string> = {
+    REQUEST_PAYMENT:        "Giải ngân",
+    PAYSLIP_PAYMENT:        "Chi lương",
+    SYSTEM_TOPUP:           "Nạp quỹ",
+    DEPOSIT:                "Nạp ví",
+    WITHDRAW:               "Rút tiền",
+    DEPT_QUOTA_ALLOCATION:  "Cấp quota phòng ban",
+    PROJECT_QUOTA_ALLOCATION: "Cấp quota dự án",
+    ADVANCE_RETURN:         "Hoàn tạm ứng",
+    REVERSAL:               "Hoàn đảo",
+    SYSTEM_ADJUSTMENT:      "Điều chỉnh",
   };
+  return labels[type] ?? type;
 }
 
 function getTypeClass(type: TransactionType): string {
   switch (type) {
-    case TransactionType.REQUEST_PAYMENT:
-      return "bg-violet-100 border-violet-200 text-violet-700";
-    case TransactionType.PAYSLIP_PAYMENT:
-      return "bg-blue-50 border-blue-200 text-blue-700";
-    case TransactionType.DEPOSIT:
-      return "bg-emerald-100 border-emerald-200 text-emerald-700";
-    case TransactionType.WITHDRAW:
-      return "bg-rose-100 border-rose-200 text-rose-700";
-    case TransactionType.DEPT_QUOTA_ALLOCATION:
-      return "bg-amber-100 border-amber-200 text-amber-700";
-    case TransactionType.PROJECT_QUOTA_ALLOCATION:
-      return "bg-orange-100 border-orange-200 text-orange-700";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
+    case TransactionType.REQUEST_PAYMENT:         return "bg-violet-100 border-violet-200 text-violet-700";
+    case TransactionType.PAYSLIP_PAYMENT:         return "bg-blue-50 border-blue-200 text-blue-700";
+    case TransactionType.SYSTEM_TOPUP:            return "bg-emerald-100 border-emerald-200 text-emerald-700";
+    case TransactionType.DEPOSIT:                 return "bg-teal-100 border-teal-200 text-teal-700";
+    case TransactionType.WITHDRAW:                return "bg-rose-100 border-rose-200 text-rose-700";
+    case TransactionType.DEPT_QUOTA_ALLOCATION:   return "bg-amber-100 border-amber-200 text-amber-700";
+    case TransactionType.PROJECT_QUOTA_ALLOCATION: return "bg-orange-100 border-orange-200 text-orange-700";
+    default: return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
-function filterMock(
-  source: LedgerTransactionView[],
-  type?: TransactionType,
-  from?: string,
-  to?: string,
-  search?: string
-): LedgerTransactionView[] {
-  const q = search?.trim().toLowerCase() ?? "";
-  const start = from ? new Date(`${from}T00:00:00`).getTime() : null;
-  const end = to ? new Date(`${to}T23:59:59`).getTime() : null;
-
-  return source.filter((item) => {
-    if (type && item.type !== type) return false;
-
-    const created = new Date(item.createdAt).getTime();
-    if (start && created < start) return false;
-    if (end && created > end) return false;
-
-    if (!q) return true;
-
-    const haystack = [
-      item.transactionCode,
-      item.type,
-      item.description ?? "",
-      item.referenceCode ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(q);
-  });
+function getDirectionClass(direction: TransactionDirection): string {
+  return direction === TransactionDirection.CREDIT
+    ? "bg-emerald-100 border-emerald-200 text-emerald-700"
+    : "bg-rose-100 border-rose-200 text-rose-700";
 }
 
 export default function AccountantLedgerPage() {
@@ -218,30 +94,29 @@ export default function AccountantLedgerPage() {
   const searchParams = useSearchParams();
 
   const searchParamsString = searchParams.toString();
+
   const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
-  const type = useMemo(() => parseType(searchParams.get("type")), [searchParams]);
-  const from = useMemo(
-    () => searchParams.get("from") ?? searchParams.get("startDate") ?? "",
+  const type = useMemo(
+    () => parseEnum(searchParams.get("type"), Object.values(TransactionType)),
     [searchParams]
   );
-  const to = useMemo(
-    () => searchParams.get("to") ?? searchParams.get("endDate") ?? "",
+  const txStatus = useMemo(
+    () => parseEnum(searchParams.get("status"), Object.values(TransactionStatus)),
     [searchParams]
   );
-  const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
+  const refType = useMemo(
+    () => parseEnum(searchParams.get("referenceType"), Object.values(ReferenceType)),
+    [searchParams]
+  );
+  const from = useMemo(() => searchParams.get("from") ?? "", [searchParams]);
+  const to   = useMemo(() => searchParams.get("to")   ?? "", [searchParams]);
 
   const [summary, setSummary] = useState<LedgerSummaryResponse | null>(null);
-  const [items, setItems] = useState<LedgerTransactionView[]>([]);
-  const [total, setTotal] = useState(0);
+  const [items, setItems]     = useState<AccountantLedgerItemResponse[]>([]);
+  const [total, setTotal]     = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [searchInput, setSearchInput] = useState(search);
-
-  useEffect(() => {
-    setSearchInput(search);
-  }, [search]);
+  const [error, setError]     = useState<string | null>(null);
 
   const pushWithParams = useCallback(
     (params: URLSearchParams) => {
@@ -254,12 +129,8 @@ export default function AccountantLedgerPage() {
   const updateParam = useCallback(
     (key: string, value: string | undefined) => {
       const params = new URLSearchParams(searchParamsString);
-      if (value && value.trim()) {
-        params.set(key, value.trim());
-      } else {
-        params.delete(key);
-      }
-
+      if (value && value.trim()) params.set(key, value.trim());
+      else params.delete(key);
       if (key !== "page") params.delete("page");
       pushWithParams(params);
     },
@@ -277,98 +148,64 @@ export default function AccountantLedgerPage() {
   );
 
   useEffect(() => {
-    const legacyFrom = searchParams.get("startDate");
-    const legacyTo = searchParams.get("endDate");
-    if (!legacyFrom && !legacyTo) return;
-
-    const params = new URLSearchParams(searchParamsString);
-    if (legacyFrom && !params.get("from")) params.set("from", legacyFrom);
-    if (legacyTo && !params.get("to")) params.set("to", legacyTo);
-    params.delete("startDate");
-    params.delete("endDate");
-    pushWithParams(params);
-  }, [pushWithParams, searchParams, searchParamsString]);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const trimmed = searchInput.trim();
-      if (trimmed === search) return;
-      updateParam("search", trimmed || undefined);
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [searchInput, search, updateParam]);
-
-  useEffect(() => {
     let cancelled = false;
 
-    const loadLedger = async () => {
+    const load = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        if (ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED) {
-          const filtered = filterMock(MOCK_TRANSACTIONS, type, from, to, search);
-          const mockTotal = filtered.length;
-          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-          const safePage = Math.min(page, mockTotalPages);
-          const start = (safePage - 1) * PAGE_LIMIT;
-
-          setSummary(MOCK_SUMMARY);
-          setItems(filtered.slice(start, start + PAGE_LIMIT));
-          setTotal(mockTotal);
-          setTotalPages(mockTotalPages);
-
-          if (safePage !== page) {
-            goToPage(safePage);
-          }
-          return;
-        }
-
-        const filters = {
+        const filters: AccountantLedgerFilterParams = {
           type,
-          page,
-          size: PAGE_LIMIT,
-          search: search.trim() || undefined,
+          status: txStatus,
+          referenceType: refType,
           from: from || undefined,
           to: to || undefined,
+          page,
+          limit: PAGE_LIMIT,
         };
 
-        const query = new URLSearchParams();
-        if (filters.type) query.set("type", filters.type);
-        if (filters.search) query.set("search", filters.search);
-        if (filters.from) query.set("from", filters.from);
-        if (filters.to) query.set("to", filters.to);
-        query.set("page", String(filters.page ?? 1));
-        query.set("size", String(filters.size ?? PAGE_LIMIT));
-        query.set("limit", String(filters.size ?? PAGE_LIMIT));
+        const q = new URLSearchParams();
+        if (filters.type)          q.set("type", filters.type);
+        if (filters.status)        q.set("status", filters.status);
+        if (filters.referenceType) q.set("referenceType", filters.referenceType);
+        if (filters.from)          q.set("from", filters.from);
+        if (filters.to)            q.set("to", filters.to);
+        q.set("page",  String(page));
+        q.set("limit", String(PAGE_LIMIT));
+
+        const summaryQ = new URLSearchParams();
+        if (filters.from) summaryQ.set("from", filters.from);
+        if (filters.to)   summaryQ.set("to",   filters.to);
 
         const [summaryRes, listRes] = await Promise.all([
-          api.get<LedgerSummaryResponse>("/api/v1/accountant/ledger/summary"),
-          api.get<LedgerListApi>(
-            `/api/v1/accountant/ledger?${query.toString()}`
+          api.get<LedgerSummaryResponse>(`/api/v1/accountant/ledger/summary?${summaryQ.toString()}`),
+          api.get<PaginatedResponse<AccountantLedgerItemResponse> | AccountantLedgerItemResponse[]>(
+            `/api/v1/accountant/ledger?${q.toString()}`
           ),
         ]);
 
         if (cancelled) return;
 
-        const normalized = normalizeList(listRes.data, page);
-        const listItems = normalized.items.map((item) => ({ ...item }));
-
+        const { items: pageItems, total: apiTotal, totalPages: apiTotalPages } = pickPaginated(listRes.data);
         setSummary(summaryRes.data);
-        setItems(listItems);
-        setTotal(normalized.total);
-        setTotalPages(normalized.totalPages);
-        const safePage = Math.min(page, Math.max(1, normalized.totalPages));
-        if (safePage !== page) {
-          goToPage(safePage);
-        }
-      } catch {
+        setItems(pageItems);
+        setTotal(apiTotal);
+        setTotalPages(apiTotalPages);
+
+        const safePage = Math.min(page, Math.max(1, apiTotalPages));
+        if (safePage !== page) goToPage(safePage);
+      } catch (err) {
         if (cancelled) return;
 
-        const filtered = filterMock(MOCK_TRANSACTIONS, type, from, to, search);
+        // Defensive fallback: hiển thị mock khi API lỗi
+        const filtered = MOCK_ITEMS.filter((item) => {
+          if (type && item.type !== type) return false;
+          if (txStatus && item.status !== txStatus) return false;
+          if (from && item.timestamp < `${from}T00:00:00`) return false;
+          if (to   && item.timestamp > `${to}T23:59:59`)   return false;
+          return true;
+        });
         const mockTotal = filtered.length;
         const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
         const safePage = Math.min(page, mockTotalPages);
@@ -378,160 +215,149 @@ export default function AccountantLedgerPage() {
         setItems(filtered.slice(start, start + PAGE_LIMIT));
         setTotal(mockTotal);
         setTotalPages(mockTotalPages);
+        if (safePage !== page) goToPage(safePage);
 
-        if (safePage !== page) {
-          goToPage(safePage);
-        }
-
-        setError("Khong the tai du lieu API, dang hien thi du lieu mau.");
+        setError(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu sổ cái, đang hiển thị dữ liệu mẫu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
-    void loadLedger();
+    void load();
+    return () => { cancelled = true; };
+  }, [from, goToPage, page, refType, to, txStatus, type]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [from, goToPage, page, search, to, type]);
-
-  const handleExportCsv = () => {
-    const csvRows = [
-      ["transactionCode", "type", "amount", "description", "reference", "createdAt"],
-      ...items.map((item) => [
-        item.transactionCode,
-        item.type,
-        String(item.amount),
-        item.description ?? "",
-        item.referenceCode ?? (item.referenceId ? `${item.referenceType}#${item.referenceId}` : ""),
-        item.createdAt,
-      ]),
-    ];
-
-    const csv = csvRows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")).join("\n");
-    console.log(csv);
-  };
-
-  const typeOptions = [
-    TransactionType.REQUEST_PAYMENT,
-    TransactionType.PAYSLIP_PAYMENT,
-    TransactionType.SYSTEM_TOPUP,
-    TransactionType.DEPOSIT,
-    TransactionType.WITHDRAW,
-    TransactionType.DEPT_QUOTA_ALLOCATION,
-    TransactionType.PROJECT_QUOTA_ALLOCATION,
-    TransactionType.ADVANCE_RETURN,
-    TransactionType.REVERSAL,
-    TransactionType.SYSTEM_ADJUSTMENT,
-  ];
+  const typeOptions = Object.values(TransactionType);
+  const statusOptions = Object.values(TransactionStatus);
+  const refTypeOptions = Object.values(ReferenceType);
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">So cai</h1>
-          <p className="text-slate-500 mt-1">Tat ca giao dich he thong theo nguyen tac double-entry immutable.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Sổ cái</h1>
+          <p className="text-slate-500 mt-1">Tất cả giao dịch hệ thống — immutable, chỉ đọc.</p>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-500/40 bg-slate-100 text-slate-600 text-sm font-medium">
-          Immutable - Chi doc
+        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-slate-300 bg-slate-100 text-slate-600 text-sm font-medium">
+          Immutable · Chỉ đọc
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <SummaryCard label="Tong nap vao" value={formatCurrency(summary?.totalInflow ?? 0)} tone="text-emerald-700" />
-        <SummaryCard label="Tong chi ra" value={formatCurrency(summary?.totalOutflow ?? 0)} tone="text-rose-700" />
-        <SummaryCard label="So du rong" value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-slate-900" />
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <SummaryCard label="Số dư quỹ"       value={formatCurrency(summary?.currentBalance ?? 0)} tone="text-slate-900" />
+        <SummaryCard label="Tổng nạp vào"    value={formatCurrency(summary?.totalInflow ?? 0)}    tone="text-emerald-700" />
+        <SummaryCard label="Tổng chi ra"     value={formatCurrency(summary?.totalOutflow ?? 0)}   tone="text-rose-700" />
+        <SummaryCard label="Số giao dịch"    value={String(summary?.transactionCount ?? 0)}       tone="text-blue-700" />
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
           <select
             value={type ?? ""}
-            onChange={(event) => updateParam("type", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
+            onChange={(e) => updateParam("type", e.target.value || undefined)}
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
-            <option value="">Tat ca loai</option>
-            {typeOptions.map((value) => (
-              <option key={value} value={value}>{value}</option>
+            <option value="">Tất cả loại</option>
+            {typeOptions.map((v) => (
+              <option key={v} value={v}>{getTypeLabel(v)}</option>
+            ))}
+          </select>
+
+          <select
+            value={txStatus ?? ""}
+            onChange={(e) => updateParam("status", e.target.value || undefined)}
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+          >
+            <option value="">Tất cả trạng thái</option>
+            {statusOptions.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+          </select>
+
+          <select
+            value={refType ?? ""}
+            onChange={(e) => updateParam("referenceType", e.target.value || undefined)}
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+          >
+            <option value="">Tất cả nguồn</option>
+            {refTypeOptions.map((v) => (
+              <option key={v} value={v}>{v}</option>
             ))}
           </select>
 
           <input
             type="date"
             value={from}
-            onChange={(event) => updateParam("from", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
+            onChange={(e) => updateParam("from", e.target.value || undefined)}
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
 
           <input
             type="date"
             value={to}
-            onChange={(event) => updateParam("to", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
+            onChange={(e) => updateParam("to", e.target.value || undefined)}
+            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
-
-          <input
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Tim giao dich..."
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
-          />
-
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            className="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
-          >
-            Xuat CSV
-          </button>
         </div>
       </div>
 
+      {/* Table */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px]">
+          <table className="w-full min-w-[900px]">
             <thead>
               <tr className="bg-white/70 border-b border-slate-200">
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ma GD</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Loai</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mo ta</th>
-                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">So tien</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Tham chieu</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Thoi gian</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã GD</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Loại</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Chiều</th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số tiền</th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số dư sau</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ví chủ thể</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Thời gian</th>
               </tr>
             </thead>
-
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Dang tai du lieu so cai...</td>
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500 text-sm">
+                    Đang tải dữ liệu sổ cái...
+                  </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Khong co giao dich phu hop bo loc.</td>
+                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500 text-sm">
+                    Không có giao dịch phù hợp bộ lọc.
+                  </td>
                 </tr>
               ) : (
                 items.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                    className="border-b border-slate-200 last:border-b-0 hover:bg-slate-50/50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/accountant/ledger/${item.id}`)}
                   >
                     <td className="px-4 py-3 text-sm text-slate-900 font-mono">{item.transactionCode}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeClass(item.type)}`}>
-                        {item.type}
+                        {getTypeLabel(item.type)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-900">{item.description ?? "-"}</td>
-                    <td className={`px-4 py-3 text-right text-sm font-semibold ${item.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                      {formatCurrency(item.amount)}
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getDirectionClass(item.direction)}`}>
+                        {item.direction === TransactionDirection.CREDIT ? "Vào" : "Ra"}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-blue-700">
-                      {item.referenceCode ?? (item.referenceId ? `${item.referenceType}#${item.referenceId}` : "Giao dich truc tiep")}
+                    <td className={`px-4 py-3 text-right text-sm font-semibold ${item.direction === TransactionDirection.CREDIT ? "text-emerald-700" : "text-rose-700"}`}>
+                      {item.direction === TransactionDirection.CREDIT ? "+" : "-"}{formatCurrency(item.amount)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(item.createdAt)}</td>
+                    <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(item.balanceAfter)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {item.walletOwnerType} #{item.ownerId}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(item.timestamp)}</td>
                   </tr>
                 ))
               )}
@@ -539,11 +365,11 @@ export default function AccountantLedgerPage() {
           </table>
         </div>
 
+        {/* Pagination footer */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-white/30">
           <p className="text-sm text-slate-500">
-            Trang {page}/{totalPages} - Tong {total} giao dich
+            Trang {page}/{totalPages} · Tổng {total} giao dịch
           </p>
-
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -551,7 +377,7 @@ export default function AccountantLedgerPage() {
               disabled={page <= 1}
               className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm"
             >
-              Truoc
+              Trước
             </button>
             <button
               type="button"
@@ -574,15 +400,7 @@ export default function AccountantLedgerPage() {
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: string;
-}) {
+function SummaryCard({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>

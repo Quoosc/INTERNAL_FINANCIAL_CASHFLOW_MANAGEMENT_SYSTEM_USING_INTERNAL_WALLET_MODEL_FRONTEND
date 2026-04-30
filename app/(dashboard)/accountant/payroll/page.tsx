@@ -6,6 +6,7 @@ import { ApiError, api } from "@/lib/api-client";
 import {
   CreatePayrollPeriodBody,
   PaginatedResponse,
+  PayrollDetailResponse,
   PayrollPeriodListItem,
   PayrollStatus,
 } from "@/types";
@@ -13,11 +14,8 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 8;
-const ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED = true;
 
-// BLOCKED (backend chưa có):
-// - /api/v1/accountant/payroll/*
-// Giữ mock cho đến khi backend mở endpoint chính thức.
+// ─── MOCK (xóa khi backend sẵn sàng) ───────────────────────────────────────
 const MOCK_PERIODS: PayrollPeriodListItem[] = [
   {
     id: 6,
@@ -76,12 +74,18 @@ const MOCK_PERIODS: PayrollPeriodListItem[] = [
     updatedAt: "2026-02-02T15:00:00",
   },
 ];
-
-
+// TODO: Replace when backend ready (đã có — xóa mock sau khi xác nhận hoạt động)
+// ────────────────────────────────────────────────────────────────────────────
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
   return Number.isFinite(page) && page > 0 ? page : 1;
+}
+
+function parseYear(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const year = Number(value);
+  return Number.isFinite(year) && year >= 2000 ? year : undefined;
 }
 
 function parseStatus(value: string | null): PayrollStatus | undefined {
@@ -96,50 +100,32 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
 }
 
+function pickTotal<T>(payload: PaginatedResponse<T> | T[], fallbackSize: number): number {
+  return Array.isArray(payload) ? fallbackSize : payload.total;
+}
+
+function pickTotalPages<T>(payload: PaginatedResponse<T> | T[], fallbackSize: number): number {
+  return Array.isArray(payload)
+    ? Math.max(1, Math.ceil(fallbackSize / PAGE_LIMIT))
+    : payload.totalPages;
+}
+
 function getStatusLabel(status: PayrollStatus): string {
   switch (status) {
-    case PayrollStatus.DRAFT:
-      return "Nháp";
-    case PayrollStatus.PROCESSING:
-      return "Đang xử lý";
-    case PayrollStatus.COMPLETED:
-      return "Hoàn tất";
-    default:
-      return status;
+    case PayrollStatus.DRAFT:       return "Nháp";
+    case PayrollStatus.PROCESSING:  return "Đang xử lý";
+    case PayrollStatus.COMPLETED:   return "Hoàn tất";
+    default: return status;
   }
 }
 
 function getStatusClass(status: PayrollStatus): string {
   switch (status) {
-    case PayrollStatus.DRAFT:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-    case PayrollStatus.PROCESSING:
-      return "bg-amber-100 border-amber-200 text-amber-700";
-    case PayrollStatus.COMPLETED:
-      return "bg-emerald-100 border-emerald-200 text-emerald-700";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
+    case PayrollStatus.DRAFT:      return "bg-slate-100 border-slate-200 text-slate-600";
+    case PayrollStatus.PROCESSING: return "bg-amber-100 border-amber-200 text-amber-700";
+    case PayrollStatus.COMPLETED:  return "bg-emerald-100 border-emerald-200 text-emerald-700";
+    default: return "bg-slate-100 border-slate-200 text-slate-600";
   }
-}
-
-function filterMock(source: PayrollPeriodListItem[], status?: PayrollStatus, search?: string): PayrollPeriodListItem[] {
-  const q = search?.trim().toLowerCase() ?? "";
-
-  return source.filter((item) => {
-    if (status && item.status !== status) return false;
-
-    if (!q) return true;
-
-    const haystack = [
-      item.periodCode,
-      item.name,
-      `${item.month}/${item.year}`,
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(q);
-  });
 }
 
 function buildPeriodName(month: number, year: number): string {
@@ -160,17 +146,14 @@ export default function AccountantPayrollPage() {
 
   const searchParamsString = searchParams.toString();
   const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const year = useMemo(() => parseYear(searchParams.get("year")), [searchParams]);
   const status = useMemo(() => parseStatus(searchParams.get("status")), [searchParams]);
-  const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
 
   const [items, setItems] = useState<PayrollPeriodListItem[]>([]);
-  const [allItems, setAllItems] = useState<PayrollPeriodListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [searchInput, setSearchInput] = useState(search);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -181,10 +164,6 @@ export default function AccountantPayrollPage() {
   const [periodYear, setPeriodYear] = useState(currentDate.getFullYear());
   const [periodName, setPeriodName] = useState(buildPeriodName(currentDate.getMonth() + 1, currentDate.getFullYear()));
   const [nameTouched, setNameTouched] = useState(false);
-
-  useEffect(() => {
-    setSearchInput(search);
-  }, [search]);
 
   useEffect(() => {
     if (!nameTouched) {
@@ -208,7 +187,6 @@ export default function AccountantPayrollPage() {
       } else {
         params.delete(key);
       }
-
       if (key !== "page") params.delete("page");
       pushWithParams(params);
     },
@@ -226,18 +204,6 @@ export default function AccountantPayrollPage() {
   );
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const trimmed = searchInput.trim();
-      if (trimmed === search) return;
-      updateParam("search", trimmed || undefined);
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [searchInput, search, updateParam]);
-
-  useEffect(() => {
     let cancelled = false;
 
     const loadPeriods = async () => {
@@ -245,105 +211,66 @@ export default function AccountantPayrollPage() {
       setError(null);
 
       try {
-        if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
-          const filtered = filterMock(MOCK_PERIODS, status, search);
-          const mockTotal = filtered.length;
-          const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-          const safePage = Math.min(page, mockTotalPages);
-          const start = (safePage - 1) * PAGE_LIMIT;
-
-          setItems(filtered.slice(start, start + PAGE_LIMIT));
-          setAllItems(MOCK_PERIODS);
-          setTotal(mockTotal);
-          setTotalPages(mockTotalPages);
-
-          if (safePage !== page) {
-            goToPage(safePage);
-          }
-          return;
-        }
-
         const query = new URLSearchParams();
+        if (year) query.set("year", String(year));
         if (status) query.set("status", status);
-        if (search.trim()) query.set("search", search.trim());
         query.set("page", String(page));
         query.set("limit", String(PAGE_LIMIT));
 
-        const allQuery = new URLSearchParams();
-        allQuery.set("page", "1");
-        allQuery.set("limit", "200");
-
-        const [res, allRes] = await Promise.all([
-          api.get<PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]>(
-            `/api/v1/accountant/payroll?${query.toString()}`
-          ),
-          api.get<PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]>(
-            `/api/v1/accountant/payroll?${allQuery.toString()}`
-          ),
-        ]);
+        const res = await api.get<PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]>(
+          `/api/v1/accountant/payroll?${query.toString()}`
+        );
 
         if (cancelled) return;
 
         const pageItems = pickItems(res.data);
-        const fullItems = pickItems(allRes.data);
-
-        const apiTotal = Array.isArray(res.data) ? pageItems.length : res.data.total;
-        const apiTotalPages = Array.isArray(res.data)
-          ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
-          : res.data.totalPages;
+        const apiTotal = pickTotal(res.data, pageItems.length);
+        const apiTotalPages = pickTotalPages(res.data, pageItems.length);
 
         setItems(pageItems);
-        setAllItems(fullItems);
         setTotal(apiTotal);
         setTotalPages(apiTotalPages);
+
+        const safePage = Math.min(page, Math.max(1, apiTotalPages));
+        if (safePage !== page) goToPage(safePage);
       } catch (err) {
         if (cancelled) return;
 
-        const filtered = filterMock(MOCK_PERIODS, status, search);
+        // Defensive fallback: hiển thị mock khi API lỗi
+        const filtered = MOCK_PERIODS.filter((item) => {
+          if (status && item.status !== status) return false;
+          if (year && item.year !== year) return false;
+          return true;
+        });
         const mockTotal = filtered.length;
         const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
         const safePage = Math.min(page, mockTotalPages);
         const start = (safePage - 1) * PAGE_LIMIT;
 
         setItems(filtered.slice(start, start + PAGE_LIMIT));
-        setAllItems(MOCK_PERIODS);
         setTotal(mockTotal);
         setTotalPages(mockTotalPages);
+        if (safePage !== page) goToPage(safePage);
 
-        if (safePage !== page) {
-          goToPage(safePage);
-        }
-
-        if (err instanceof ApiError) {
-          setError(err.apiMessage);
-        } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
-        }
+        setError(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu, đang hiển thị dữ liệu mẫu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
     void loadPeriods();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [goToPage, page, search, status]);
-
-  const draftCount = allItems.filter((item) => item.status === PayrollStatus.DRAFT).length;
-  const processingCount = allItems.filter((item) => item.status === PayrollStatus.PROCESSING).length;
-  const completedCount = allItems.filter((item) => item.status === PayrollStatus.COMPLETED).length;
+    return () => { cancelled = true; };
+  }, [goToPage, page, year, status]);
 
   const openCreateModal = () => {
     const now = new Date();
     const nextMonth = now.getMonth() + 2;
     const month = nextMonth > 12 ? 1 : nextMonth;
-    const year = nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear();
+    const nextYear = nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear();
 
     setPeriodMonth(month);
-    setPeriodYear(year);
-    setPeriodName(buildPeriodName(month, year));
+    setPeriodYear(nextYear);
+    setPeriodName(buildPeriodName(month, nextYear));
     setNameTouched(false);
     setCreateError(null);
     setShowCreateModal(true);
@@ -351,26 +278,15 @@ export default function AccountantPayrollPage() {
 
   const handleCreatePeriod = async () => {
     if (periodMonth < 1 || periodMonth > 12) {
-      setCreateError("Tháng phải nằm trong khoảng 1-12.");
+      setCreateError("Tháng phải nằm trong khoảng 1–12.");
       return;
     }
-
-    if (periodYear < 2020 || periodYear > 2100) {
+    if (periodYear < 2000 || periodYear > 2100) {
       setCreateError("Năm không hợp lệ.");
       return;
     }
-
     if (!periodName.trim()) {
       setCreateError("Tên kỳ lương là bắt buộc.");
-      return;
-    }
-
-    const duplicated = allItems.some(
-      (item) => item.month === periodMonth && item.year === periodYear
-    );
-
-    if (duplicated) {
-      setCreateError(`Đã tồn tại kỳ lương ${String(periodMonth).padStart(2, "0")}/${periodYear}.`);
       return;
     }
 
@@ -378,7 +294,6 @@ export default function AccountantPayrollPage() {
     setCreateError(null);
 
     const { startDate, endDate } = getMonthRange(periodMonth, periodYear);
-
     const body: CreatePayrollPeriodBody = {
       name: periodName.trim(),
       month: periodMonth,
@@ -387,69 +302,23 @@ export default function AccountantPayrollPage() {
       endDate,
     };
 
-    if (ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED) {
-      const mockId = Date.now();
-      const periodCode = `PR-${periodYear}-${String(periodMonth).padStart(2, "0")}`;
-      const mockCreated: PayrollPeriodListItem = {
-        id: mockId,
-        periodCode,
-        name: body.name,
-        month: body.month,
-        year: body.year,
-        startDate: body.startDate,
-        endDate: body.endDate,
-        status: PayrollStatus.DRAFT,
-        employeeCount: 0,
-        totalNetPayroll: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setAllItems((prev) => [mockCreated, ...prev]);
-      setItems((prev) => [mockCreated, ...prev.slice(0, PAGE_LIMIT - 1)]);
-      setTotal((prev) => prev + 1);
-      setShowCreateModal(false);
-      setCreating(false);
-      router.push(`/accountant/payroll/${mockCreated.id}`);
-      return;
-    }
-
     try {
-      const res = await api.post<PayrollPeriodListItem>("/api/v1/accountant/payroll", body);
-      router.push(`/accountant/payroll/${res.data.id}`);
-    } catch {
-      const mockId = Date.now();
-      const periodCode = `PR-${periodYear}-${String(periodMonth).padStart(2, "0")}`;
-      const mockCreated: PayrollPeriodListItem = {
-        id: mockId,
-        periodCode,
-        name: body.name,
-        month: body.month,
-        year: body.year,
-        startDate: body.startDate,
-        endDate: body.endDate,
-        status: PayrollStatus.DRAFT,
-        employeeCount: 0,
-        totalNetPayroll: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setAllItems((prev) => [mockCreated, ...prev]);
-      setItems((prev) => [mockCreated, ...prev.slice(0, PAGE_LIMIT - 1)]);
-      setTotal((prev) => prev + 1);
+      // POST trả PayrollPeriodDetailResponse
+      const res = await api.post<PayrollDetailResponse>("/api/v1/accountant/payroll", body);
       setShowCreateModal(false);
-      router.push(`/accountant/payroll/${mockCreated.id}`);
+      router.push(`/accountant/payroll/${res.data.id}`);
+    } catch (err) {
+      setCreateError(err instanceof ApiError ? err.apiMessage : "Không thể tạo kỳ lương.");
     } finally {
       setCreating(false);
     }
   };
 
-  const statusTabs: Array<{ label: string; value?: PayrollStatus; count: number }> = [
-    { label: "Tất cả", count: allItems.length },
-    { label: "Nháp", value: PayrollStatus.DRAFT, count: draftCount },
-    { label: "Đang xử lý", value: PayrollStatus.PROCESSING, count: processingCount },
-    { label: "Hoàn tất", value: PayrollStatus.COMPLETED, count: completedCount },
+  const statusTabs: Array<{ label: string; value?: PayrollStatus }> = [
+    { label: "Tất cả" },
+    { label: "Nháp", value: PayrollStatus.DRAFT },
+    { label: "Đang xử lý", value: PayrollStatus.PROCESSING },
+    { label: "Hoàn tất", value: PayrollStatus.COMPLETED },
   ];
 
   return (
@@ -460,19 +329,32 @@ export default function AccountantPayrollPage() {
           <p className="text-slate-500 mt-1">Danh sách kỳ lương và quy trình xử lý payroll cho toàn bộ nhân viên.</p>
         </div>
 
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v14m7-7H5" />
-          </svg>
-          Tạo kỳ lương mới
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/v1/accountant/payroll/template"
+            download="payroll_template.xlsx"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v13m0 0l-4-4m4 4l4-4M4 20h16" />
+            </svg>
+            Tải template
+          </a>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v14m7-7H5" />
+            </svg>
+            Tạo kỳ lương
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
+        {/* Status filter tabs */}
         <div className="flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
             const active = status === tab.value || (!status && !tab.value);
@@ -487,32 +369,25 @@ export default function AccountantPayrollPage() {
                     : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
-                {tab.label} ({tab.count})
+                {tab.label}
               </button>
             );
           })}
         </div>
 
-        <div className="relative">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Year filter */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-600 shrink-0">Năm:</label>
+          <select
+            value={year ?? ""}
+            onChange={(e) => updateParam("year", e.target.value || undefined)}
+            className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M21 21l-4.35-4.35m1.6-5.65a7.25 7.25 0 11-14.5 0 7.25 7.25 0 0114.5 0z"
-            />
-          </svg>
-          <input
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Tìm theo mã kỳ, tên kỳ lương..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-          />
+            <option value="">Tất cả</option>
+            {[2025, 2026, 2027].map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -570,9 +445,8 @@ export default function AccountantPayrollPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          Trang {page}/{totalPages} • Tổng {total} kỳ lương
+          Trang {page}/{totalPages} · Tổng {total} kỳ lương
         </p>
-
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -599,15 +473,15 @@ export default function AccountantPayrollPage() {
         </div>
       )}
 
+      {/* Create modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50">
           <button
             type="button"
             className="absolute inset-0 bg-black/70"
             onClick={() => setShowCreateModal(false)}
-            aria-label="Đóng modal tạo kỳ lương"
+            aria-label="Đóng"
           />
-
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
             <h3 className="text-xl font-bold text-slate-900">Tạo kỳ lương mới</h3>
 
@@ -615,10 +489,7 @@ export default function AccountantPayrollPage() {
               <label className="block text-sm text-slate-600 mb-2">Tên kỳ lương</label>
               <input
                 value={periodName}
-                onChange={(event) => {
-                  setPeriodName(event.target.value);
-                  setNameTouched(true);
-                }}
+                onChange={(e) => { setPeriodName(e.target.value); setNameTouched(true); }}
                 className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
@@ -628,25 +499,22 @@ export default function AccountantPayrollPage() {
                 <label className="block text-sm text-slate-600 mb-2">Tháng</label>
                 <select
                   value={periodMonth}
-                  onChange={(event) => setPeriodMonth(Number(event.target.value))}
+                  onChange={(e) => setPeriodMonth(Number(e.target.value))}
                   className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 >
-                  {Array.from({ length: 12 }).map((_, index) => (
-                    <option key={index + 1} value={index + 1}>
-                      Tháng {index + 1}
-                    </option>
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm text-slate-600 mb-2">Năm</label>
                 <input
                   type="number"
-                  min={2020}
+                  min={2000}
                   max={2100}
                   value={periodYear}
-                  onChange={(event) => setPeriodYear(Number(event.target.value))}
+                  onChange={(e) => setPeriodYear(Number(e.target.value))}
                   className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
@@ -682,15 +550,7 @@ export default function AccountantPayrollPage() {
   );
 }
 
-function InfoCell({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: string;
-}) {
+function InfoCell({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
       <p className="text-xs text-slate-500">{label}</p>

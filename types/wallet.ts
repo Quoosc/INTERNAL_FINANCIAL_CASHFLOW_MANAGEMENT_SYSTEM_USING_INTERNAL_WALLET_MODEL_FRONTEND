@@ -262,6 +262,74 @@ export interface LedgerFilterParams {
   size?: number;
 }
 
+// --- Accountant Ledger DTOs (khớp AccountantLedgerController) ---
+
+/**
+ * GET /api/v1/accountant/ledger — list row
+ * khớp wallet.dto.response.AccountantLedgerItemResponse
+ * amount is signed from CompanyFund perspective (negative = outflow)
+ */
+export interface AccountantLedgerItemResponse {
+  id: number;
+  transactionCode: string;
+  type: TransactionType;
+  status: TransactionStatus;
+  direction: TransactionDirection;
+  amount: number;
+  balanceAfter: number;
+  walletOwnerType: WalletOwnerType;
+  ownerId: number;
+  timestamp: string;
+}
+
+/**
+ * Nested ledger entry in AccountantTransactionDetailResponse.ledgerEntries
+ * khớp wallet.dto.response.AccountantLedgerEntryResponse
+ */
+export interface AccountantLedgerEntryItem {
+  id: number;
+  transactionCode: string;
+  direction: TransactionDirection;
+  amount: number;
+  balanceAfter: number;
+  walletOwnerType: WalletOwnerType;
+  walletOwnerId: number;
+  createdAt: string;
+}
+
+/**
+ * GET /api/v1/accountant/ledger/{transactionId} — full detail
+ * khớp wallet.dto.response.AccountantTransactionDetailResponse
+ */
+export interface AccountantTransactionDetailResponse {
+  id: number;
+  transactionCode: string;
+  paymentRef: string | null;
+  gatewayProvider: PaymentProvider | null;
+  type: TransactionType;
+  status: TransactionStatus;
+  amount: number;
+  balanceAfter: number;
+  referenceType: ReferenceType | null;
+  referenceId: number | null;
+  walletOwnerType: WalletOwnerType;
+  walletOwnerId: number;
+  description: string;
+  ledgerEntries: AccountantLedgerEntryItem[];
+  createdAt: string;
+}
+
+/** GET /api/v1/accountant/ledger — filter params */
+export interface AccountantLedgerFilterParams {
+  type?: TransactionType;
+  status?: TransactionStatus;
+  referenceType?: ReferenceType;
+  from?: string;    // "YYYY-MM-DD"
+  to?: string;      // "YYYY-MM-DD"
+  page?: number;
+  limit?: number;
+}
+
 // --- SSE Event Payloads ---
 // Backend streams qua GET /api/v1/users/stream (text/event-stream).
 // Mỗi SSE event name đi kèm data JSON là DTO trực tiếp (không wrap).

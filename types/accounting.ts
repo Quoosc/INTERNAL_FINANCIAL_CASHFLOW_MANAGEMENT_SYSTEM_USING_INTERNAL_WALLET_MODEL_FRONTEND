@@ -118,7 +118,7 @@ export interface PayrollDetailResponse {
 export interface PayrollImportResponse {
   periodId: number;
   periodCode: string;
-  status: PayrollStatus;
+  status: string;           // backend returns String, not PayrollStatus enum
   totalRows: number;
   successCount: number;
   errorCount: number;
@@ -127,7 +127,20 @@ export interface PayrollImportResponse {
   totalNetPayroll: number;
 }
 
-export interface PayrollImportEntry extends PayrollEntry {
+/** Per-row result for the payroll import (khớp PayrollImportEntryResponse) */
+export interface PayrollImportEntry {
+  id: number | null;             // null for error rows
+  payslipCode: string | null;    // null for error rows
+  userId: number | null;         // null for error rows
+  fullName: string;
+  employeeCode: string;
+  baseSalary: number;
+  bonus: number;
+  allowance: number;
+  deduction: number;
+  advanceDeduct: number;
+  finalNetSalary: number;
+  status: string | null;         // PayslipStatus as string, null for error rows
   importStatus: "ok" | "error";
   importError: string | null;
 }

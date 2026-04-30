@@ -1,7 +1,7 @@
 # Tiến độ phát triển Frontend
 
 > File này được cập nhật sau **mỗi lần hoàn thành task**.
-> Cập nhật lần cuối: **2026-04-30**
+> Cập nhật lần cuối: **2026-05-01**
 
 ---
 
@@ -10,8 +10,7 @@
 | Hạng mục | Số lượng | Ghi chú |
 |---|---|---|
 | Auth pages LIVE | 3 | login, change-password, forgot-password |
-| Dashboard pages LIVE (API thật / hoàn chỉnh) | 41 | +accountant/withdrawals so với Sprint 7 |
-| Dashboard pages BLOCKED (chờ backend) | 4 | accountant payroll + ledger |
+| Dashboard pages LIVE (API thật / hoàn chỉnh) | 45 | +4 accountant payroll + ledger (Sprint 10) |
 | Dashboard pages mock (backend chưa có) | 1 | dashboard/page.tsx |
 | **Tổng pages** | **49** | không tính 2 orphaned đã xóa |
 
@@ -58,6 +57,10 @@
 | `accountant/disbursements/page.tsx` | `GET /api/v1/accountant/disbursements` | APPROVED_BY_TEAM_LEADER queue |
 | `accountant/disbursements/[id]/page.tsx` | `POST disburse` (PIN) + `POST reject` | 423 Locked handling |
 | `accountant/withdrawals/page.tsx` | `GET/PUT /api/v1/wallet/withdraw` | Quản lý rút tiền của user — Sprint 9 |
+| `accountant/payroll/page.tsx` | `GET /api/v1/accountant/payroll` + `POST` | List + tạo kỳ lương + tải template — Sprint 10 |
+| `accountant/payroll/[id]/page.tsx` | `GET/PUT/POST import/auto-netting/run` | 4-step workflow, FormData import, 409 overwrite — Sprint 10 |
+| `accountant/ledger/page.tsx` | `GET /api/v1/accountant/ledger` + `/summary` | Filter type/status/refType, summary cards — Sprint 10 |
+| `accountant/ledger/[id]/page.tsx` | `GET /api/v1/accountant/ledger/{id}` | Detail + bút toán kép table — Sprint 10 |
 | `admin/users/page.tsx` | `GET/POST /api/v1/admin/users` | Lock/unlock/reset-password |
 | `admin/users/[id]/page.tsx` | `GET/PUT /api/v1/admin/users/{id}` | Role + dept edit |
 | `admin/departments/page.tsx` | `GET /api/v1/admin/departments` | CRUD |
@@ -75,17 +78,6 @@
 
 ---
 
-## ❌ BLOCKED — Chờ backend implement
-
-| Page | Endpoint cần | Lý do block |
-|---|---|---|
-| `accountant/payroll/page.tsx` | `GET /api/v1/accountant/payroll` | `AccountantPayrollController` chưa có |
-| `accountant/payroll/[id]/page.tsx` | CRUD + import Excel + run | Backend chưa implement |
-| `accountant/ledger/page.tsx` | `GET /api/v1/accountant/ledger` | `AccountantLedgerController` chưa có |
-| `accountant/ledger/[id]/page.tsx` | `GET /api/v1/accountant/ledger/{id}` | Backend chưa implement |
-
----
-
 ## 🟡 TODO — Backend thiếu
 
 | Page | Tình trạng |
@@ -95,6 +87,30 @@
 ---
 
 ## Nhật ký thay đổi
+
+### Sprint 10 — 2026-05-01
+
+**Mục tiêu:** Unblock 4 accountant pages blocked từ Sprint 1 — backend commit `d3b30aa`
+
+| Task | Kết quả |
+|---|---|
+| Phân tích backend commit `d3b30aa` (87 files, 4665 lines) | `AccountantPayrollController` + `AccountantLedgerController` confirmed live |
+| Fix `types/accounting.ts` | `PayrollImportResponse.status: string`; redesign `PayrollImportEntry` standalone (bỏ `extends PayrollEntry`, nullable id/payslipCode/userId) |
+| Thêm types vào `types/wallet.ts` | `AccountantLedgerItemResponse`, `AccountantLedgerEntryItem`, `AccountantTransactionDetailResponse`, `AccountantLedgerFilterParams` |
+| Wire `accountant/payroll/page.tsx` | Xóa `ENDPOINT_BLOCKED`; filter: `year`+`status`+`page`+`limit`; POST type: `PayrollDetailResponse`; thêm "Tải template" button |
+| Wire `accountant/payroll/[id]/page.tsx` | Xóa 4 mock guards; import real với `FormData`, 409 → `POST /confirm-overwrite` → retry; auto-netting + run thật |
+| Wire `accountant/ledger/page.tsx` | Thay `TransactionResponse` → `AccountantLedgerItemResponse`; cột mới: direction, walletOwnerType, balanceAfter; filter: type+status+referenceType+from+to |
+| Wire `accountant/ledger/[id]/page.tsx` | Thay `TransactionResponse` → `AccountantTransactionDetailResponse`; thêm bảng bút toán kép; import `formatDateTime` từ lib |
+| `npm run lint` | ✅ 0 errors |
+
+**Lưu ý kỹ thuật Sprint 10:**
+- Ledger list không trả `description`/`referenceCode` → bỏ 2 cột đó, thêm `direction`+`walletOwnerType`
+- `POST /accountant/payroll` trả `PayrollPeriodDetailResponse` (không phải `PayrollPeriodListItem`)
+- Import 409 = period đã có payslip → gọi `POST /confirm-overwrite` rồi retry (không phải local check)
+- `PayrollImportEntryResponse` không có `avatar`/`jobTitle` — map thành `avatar: null, jobTitle: null`
+- Backend `PayrollImportResultResponse.status` là `String` (không phải `PayrollStatus` enum)
+
+---
 
 ### Sprint 9 — 2026-04-30
 

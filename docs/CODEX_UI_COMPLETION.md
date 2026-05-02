@@ -1,6 +1,6 @@
 # CODEX — UI Completion Plan (All Roles)
 
-> **Ngày tạo:** 2026-04-13  | **Cập nhật lần cuối:** 2026-04-30
+> **Ngày tạo:** 2026-04-13  | **Cập nhật lần cuối:** 2026-05-02
 > **Mục tiêu:** Hoàn thiện 100% UI + API wiring cho toàn bộ 6 roles.
 
 ---
@@ -30,7 +30,7 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 
 ---
 
-## Trạng thái tổng quan (cập nhật 2026-05-01)
+## Trạng thái tổng quan (cập nhật 2026-05-02)
 
 | Nhóm | Tổng | ✅ Done | ⚠️ Mock/Partial | ❌ Còn lại |
 |------|------|---------|-----------------|-----------|
@@ -55,7 +55,7 @@ CLAUDE.md                   → conventions: types, api-client, Tailwind v4, lan
 | A2 | `payroll/[id]/page.tsx` | `GET /api/v1/payslips/{id}` | ✅ Done |
 | A3 | `projects/page.tsx` | `GET /api/v1/projects` | ✅ Done |
 | A4 | `projects/[id]/page.tsx` | `GET /api/v1/projects/{id}/phases` | ✅ Done |
-| A5 | `wallet/deposit/page.tsx` | `POST /api/v1/payments` (VNPay via PaymentController) | ✅ Done |
+| A5 | `wallet/deposit/page.tsx` | `POST /api/v1/wallet/deposit` (VNPay via DepositController — Sprint 11) | ✅ Done |
 | A6 | `wallet/page.tsx` | `WalletContext` + `GET /api/v1/wallet/transactions?size=5` | ✅ Done |
 | A7 | `wallet/transactions/page.tsx` | `GET /api/v1/wallet/transactions` | ✅ Done |
 

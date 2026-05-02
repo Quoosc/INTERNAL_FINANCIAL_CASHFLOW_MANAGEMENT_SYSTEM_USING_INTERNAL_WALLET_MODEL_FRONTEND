@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
-import { createWithdrawRequest, createDeposit, getPaymentStatus } from "@/lib/api";
+import { createWithdrawRequest, createDeposit } from "@/lib/api";
 import { withdrawSchema, depositSchema } from "@/lib/schemas";
 import { formatCurrency, formatDateTime, formatInputAmount } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { useToast } from "@/contexts/toast-context";
 import {
+  DepositLogResponse,
   PaginatedResponse,
-  PaymentCreateResponse,
   TransactionResponse,
   TransactionStatus,
   TransactionType,
@@ -20,44 +20,20 @@ import {
 } from "@/types";
 
 
-function formatSecondsToClock(total: number): string {
-  const m = Math.floor(total / 60).toString().padStart(2, "0");
-  const s = (total % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
 function DepositModal({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const [amount, setAmount] = useState("");
-  const [qrData, setQrData] = useState<PaymentCreateResponse | null>(null);
-  const [createdAmount, setCreatedAmount] = useState<number | null>(null);
+  const [qrData, setQrData] = useState<DepositLogResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
-  const [checkingStatus, setCheckingStatus] = useState(false);
 
   const amountNum = useMemo(() => Number(amount || 0), [amount]);
   const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
-  const isExpired = qrData !== null && secondsLeft <= 0;
-
-  useEffect(() => {
-    if (!qrData) return;
-    const update = () => {
-      const remaining = Math.max(0, Math.floor((new Date(qrData.expiredAt).getTime() - Date.now()) / 1000));
-      setSecondsLeft(remaining);
-    };
-    update();
-    const id = window.setInterval(update, 1000);
-    return () => window.clearInterval(id);
-  }, [qrData]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setStatusMsg(null);
-    setCreatedAmount(null);
     const validation = depositSchema.safeParse({ amount: amountNum });
     if (!validation.success) {
       setError(validation.error.flatten().fieldErrors.amount?.[0] ?? "Số tiền không hợp lệ.");
@@ -67,26 +43,12 @@ function DepositModal({ onClose }: { onClose: () => void }) {
     try {
       const res = await createDeposit({ amount: amountNum });
       setQrData(res.data);
-      setCreatedAmount(amountNum);
       toast.success("Tạo liên kết thanh toán thành công!");
     } catch (err) {
       if (err instanceof ApiError) setError(err.apiMessage);
       else setError("Không thể tạo liên kết thanh toán VNPay.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCheckStatus = async () => {
-    if (!qrData) return;
-    setCheckingStatus(true);
-    try {
-      const res = await getPaymentStatus(qrData.transactionRef);
-      setStatusMsg(res.data.message ? `${res.data.status}: ${res.data.message}` : `Trạng thái: ${res.data.status}`);
-    } catch {
-      setStatusMsg("Không thể kiểm tra trạng thái.");
-    } finally {
-      setCheckingStatus(false);
     }
   };
 
@@ -121,34 +83,38 @@ function DepositModal({ onClose }: { onClose: () => void }) {
             </form>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className={`text-sm font-semibold px-3 py-1 rounded-full border ${isExpired ? "text-rose-700 bg-rose-50 border-rose-200" : "text-amber-700 bg-amber-50 border-amber-200"}`}>
-                  {isExpired ? "Hết hạn" : `Hết hạn sau ${formatSecondsToClock(secondsLeft)}`}
-                </span>
-                <button type="button" onClick={() => { setQrData(null); setCreatedAmount(null); setAmount(""); setError(null); setStatusMsg(null); }} className="text-xs text-blue-700 hover:text-blue-600">
+              <div className="flex justify-end">
+                <button type="button" onClick={() => { setQrData(null); setAmount(""); setError(null); }} className="text-xs text-blue-700 hover:text-blue-600">
                   Tạo mới
                 </button>
               </div>
 
               <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-slate-500">Mã TK</span><span className="font-mono text-slate-900 text-xs">{qrData.transactionRef}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(createdAmount ?? amountNum)}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Mã nạp tiền</span><span className="font-mono text-slate-900 text-xs">{qrData.depositCode}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(qrData.amount)}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Trạng thái</span><span className="text-slate-900">{qrData.status}</span></div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <button type="button" disabled={isExpired} onClick={() => window.open(qrData.paymentUrl, "_blank", "noopener,noreferrer")} className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
-                  Thanh toán VNPay
-                </button>
-                <button type="button" disabled={checkingStatus} onClick={() => void handleCheckStatus()} className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm font-medium transition-colors">
-                  {checkingStatus ? "Đang kiểm tra..." : "Kiểm tra"}
-                </button>
-              </div>
+              {qrData.paymentUrl && (
+                <p className="text-xs text-blue-600">Số dư ví sẽ tự động cập nhật sau khi giao dịch thành công.</p>
+              )}
 
-              <button type="button" onClick={async () => { await navigator.clipboard.writeText(qrData.transactionRef); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
-                {copied ? "Đã sao chép mã" : "Sao chép mã tham chiếu"}
+              <button
+                type="button"
+                disabled={!qrData.paymentUrl}
+                onClick={() => { if (qrData.paymentUrl) window.open(qrData.paymentUrl, "_blank", "noopener,noreferrer"); }}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+              >
+                Thanh toán VNPay
               </button>
 
-              {statusMsg && <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">{statusMsg}</div>}
+              <button
+                type="button"
+                onClick={async () => { await navigator.clipboard.writeText(qrData.depositCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+              >
+                {copied ? "Đã sao chép mã" : "Sao chép mã nạp tiền"}
+              </button>
             </div>
           )}
         </div>

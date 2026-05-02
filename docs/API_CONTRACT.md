@@ -1,6 +1,6 @@
 # API_CONTRACT.md - Frontend/Backend Contract
 
-> Version: 3.3 (2026-04-25)
+> Version: 3.4 (2026-05-02)
 > Source priority: backend runtime source code > backend docs > frontend docs
 > Roles: EMPLOYEE, TEAM_LEADER, MANAGER, ACCOUNTANT, CFO, ADMIN
 >
@@ -103,8 +103,6 @@ Client-direct upload flow:
 | GET    | `/wallet/transactions`                 | `?from=&to=&page=0&size=20` | `PageResponse<LedgerEntryResponse>` |
 | GET    | `/wallet/transactions/{transactionId}` | -                           | `TransactionResponse`               |
 
-> ⚠ Backend KHÔNG có `POST /wallet/deposit`. Nạp tiền dùng `POST /payments` (xem dưới).
-
 **WalletResponse:**
 
 ```json
@@ -151,65 +149,52 @@ Client-direct upload flow:
 }
 ```
 
-### Payments — Deposit & VNPay flow (`/payments`)
+### Deposit (`/wallet/deposit`) — DepositController
 
-| Method | Endpoint                                      | Body / Params                       | Response                  | Auth |
-| ------ | --------------------------------------------- | ----------------------------------- | ------------------------- | :--: |
-| POST   | `/payments`                                   | `PaymentRequest`                    | `PaymentResponse`         |  No  |
-| GET    | `/payments/status`                            | `?gateway=&transactionRef=`         | `PaymentStatusResponse`   |  No  |
-| POST   | `/payments/cancel`                            | `PaymentCancelRequest`              | `PaymentCancelResponse`   |  No  |
-| GET    | `/payments/{gateway}/return`                  | gateway callback                    | `PaymentCallbackResult`   |  No  |
-| GET    | `/payments/{gateway}/ipn`                     | gateway IPN callback                | `PaymentCallbackResult`   |  No  |
+> **Breaking change v3.4 (2026-05-02):** Endpoint nạp tiền chuyển từ `POST /payments` (PaymentController) sang `POST /wallet/deposit` (DepositController). Backend giờ tự sinh `depositCode` — FE không gửi.
 
-**PaymentRequest body:**
+| Method | Endpoint                            | Body / Params                    | Response                           | Auth |
+| ------ | ----------------------------------- | -------------------------------- | ---------------------------------- | :--: |
+| POST   | `/wallet/deposit`                   | `CreateDepositRequest`           | `DepositLogResponse`               | Yes  |
+| GET    | `/wallet/deposit/my?page=0&size=10` | -                                | `PageResponse<DepositLogResponse>` | Yes  |
+
+**CreateDepositRequest body:**
 
 ```json
 {
-  "gateway": "VNPAY",
-  "depositCode": "DEP-20260428-AB12CD",
-  "depositInfo": "Nap tien vao vi noi bo",
   "amount": 500000,
-  "ipAddress": "1.2.3.4",
-  "returnUrl": "https://app/wallet/deposit/return",
-  "bankCode": "VCB",
-  "locale": "vn",
-  "expireMinutes": 15
+  "bankCode": "NCB",
+  "locale": "vn"
 }
 ```
 
-> `gateway`, `depositCode`, `depositInfo`, `amount` bắt buộc. `amount` ≥ 1.000 VND.
+> `amount` bắt buộc, min 10.000 VND. `bankCode` và `locale` optional. Backend tự sinh `depositCode`.
 
-**PaymentResponse:**
+**DepositLogResponse:**
 
 ```json
 {
-  "gateway": "VNPAY",
-  "depositCode": "DEP-20260428-AB12CD",
-  "transactionRef": "DEP-20260428-AB12CD",
-  "paymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?...",
-  "qrCode": null,
+  "id": 1,
+  "depositCode": "DEP-20260502-XXXX",
+  "amount": 500000,
   "status": "PENDING",
-  "message": "Payment URL generated",
-  "expiredAt": "2026-02-22T11:30:00"
+  "paymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?...",
+  "vnpTransactionNo": null,
+  "paidAt": null,
+  "createdAt": "2026-05-02T10:00:00"
 }
 ```
 
-> FE redirect user đến `paymentUrl` để thanh toán. `qrCode` (nullable) là raw QR text — FE
-> tự render khi cần (chưa dùng trong UI hiện tại).
+> `DepositStatus`: `PENDING | COMPLETED | FAILED`
+> `paymentUrl`: non-null khi vừa tạo — FE mở URL này để user thanh toán.
+> Khi VNPay IPN callback về, backend cập nhật `status → COMPLETED` + credit wallet. SSE `wallet.updated` tự push về FE.
 
-**PaymentStatusResponse:**
+**IPN / Return callbacks (server-to-server, FE không gọi trực tiếp):**
 
-```json
-{
-  "gateway": "VNPAY",
-  "transactionRef": "DEP-20260428-AB12CD",
-  "status": "SUCCESS",
-  "successful": true,
-  "message": "Payment completed"
-}
-```
-
-> ⚠ `gateway` là **bắt buộc** ở `GET /payments/status`. Bỏ sẽ trả 400.
+| Method | Endpoint                     | Auth |
+| ------ | ---------------------------- | :--: |
+| GET    | `/payments/{gateway}/ipn`    |  No  |
+| GET    | `/payments/{gateway}/return` |  No  |
 
 ---
 

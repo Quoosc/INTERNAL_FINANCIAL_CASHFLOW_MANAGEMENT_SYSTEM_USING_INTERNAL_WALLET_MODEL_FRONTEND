@@ -1,7 +1,7 @@
 # Tiến độ phát triển Frontend
 
 > File này được cập nhật sau **mỗi lần hoàn thành task**.
-> Cập nhật lần cuối: **2026-05-01**
+> Cập nhật lần cuối: **2026-05-02**
 
 ---
 
@@ -10,7 +10,7 @@
 | Hạng mục | Số lượng | Ghi chú |
 |---|---|---|
 | Auth pages LIVE | 3 | login, change-password, forgot-password |
-| Dashboard pages LIVE (API thật / hoàn chỉnh) | 45 | +4 accountant payroll + ledger (Sprint 10) |
+| Dashboard pages LIVE (API thật / hoàn chỉnh) | 45 | Sprint 11: fix deposit endpoint breaking change |
 | Dashboard pages mock (backend chưa có) | 1 | dashboard/page.tsx |
 | **Tổng pages** | **49** | không tính 2 orphaned đã xóa |
 
@@ -33,7 +33,7 @@
 | `wallet/page.tsx` | `GET /api/v1/wallet` + transactions | WalletContext |
 | `wallet/transactions/page.tsx` | `GET /api/v1/wallet/transactions` | Filter, pagination |
 | `wallet/transactions/[id]/page.tsx` | `GET /api/v1/wallet/transactions/{id}` | — |
-| `wallet/deposit/page.tsx` | `POST /api/v1/payments` | VNPay flow |
+| `wallet/deposit/page.tsx` | `POST /api/v1/wallet/deposit` | VNPay flow — DepositController (Sprint 11) |
 | `wallet/withdraw/page.tsx` | `POST /api/v1/wallet/withdraw` + lịch sử | Form + cancel |
 | `profile/page.tsx` | `GET/PUT /api/v1/users/me` | Avatar upload Cloudinary |
 | `projects/page.tsx` | `GET /api/v1/projects` | Read-only, all roles |
@@ -87,6 +87,27 @@
 ---
 
 ## Nhật ký thay đổi
+
+### Sprint 11 — 2026-05-02
+
+**Mục tiêu:** Sync với backend commit `2a1d198` — DepositController redesign (breaking API change)
+
+| Task | Kết quả |
+|---|---|
+| Phân tích backend commit `2a1d198` | `DepositController` mới tại `/wallet/deposit`; `POST /payments` không còn là endpoint nạp tiền |
+| Thêm types vào `types/wallet.ts` | `DepositStatus` enum, `DepositLogResponse` interface, `CreateDepositRequest` interface |
+| Rewrite `lib/api/payment.ts` | Đổi endpoint `POST /payments` → `POST /wallet/deposit`; xóa `generateDepositCode()`, `getPaymentStatus()`; thêm `getMyDeposits()` |
+| Rewrite `app/(dashboard)/wallet/deposit/page.tsx` | Đổi type `PaymentCreateResponse` → `DepositLogResponse`; xóa countdown timer (không còn `expiredAt`); xóa check-status (không còn `transactionRef`); copy `depositCode` thay vì `transactionRef` |
+| Fix `DepositModal` trong `wallet/page.tsx` | Tương tự — xóa `formatSecondsToClock`, countdown, check-status; cập nhật type và field |
+| `npm run lint` | ✅ 0 errors |
+
+**Lưu ý kỹ thuật Sprint 11:**
+- Backend tự sinh `depositCode` — FE không gửi lên nữa
+- `DepositLogResponse` không có `expiredAt`, `transactionRef`, `qrCode`, `message` — các field này bị xóa khỏi UI
+- Wallet tự cập nhật qua SSE `wallet.updated` khi VNPay IPN callback thành công — không cần FE poll
+- `GET /wallet/deposit/my` endpoint mới (lịch sử nạp) — API function `getMyDeposits()` đã thêm, chưa có UI page
+
+---
 
 ### Sprint 10 — 2026-05-01
 

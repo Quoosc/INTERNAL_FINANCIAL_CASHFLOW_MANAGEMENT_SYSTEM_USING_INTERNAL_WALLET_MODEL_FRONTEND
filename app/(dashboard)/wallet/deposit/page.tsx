@@ -1,56 +1,25 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
-import { createDeposit, getPaymentStatus } from "@/lib/api";
+import { createDeposit } from "@/lib/api";
 import { formatCurrency, formatInputAmount } from "@/lib/format";
-import { PaymentCreateResponse } from "@/types";
+import { DepositLogResponse } from "@/types";
 
 const MIN_AMOUNT = 10_000;
-
-function formatSecondsToClock(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-  return `${minutes}:${seconds}`;
-}
 
 export default function DepositPage() {
   const router = useRouter();
 
   const [amount, setAmount] = useState("");
-  const [paymentData, setPaymentData] = useState<PaymentCreateResponse | null>(null);
-  const [createdAmount, setCreatedAmount] = useState<number | null>(null);
+  const [paymentData, setPaymentData] = useState<DepositLogResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [checkingStatus, setCheckingStatus] = useState(false);
-  const [paymentStatusMessage, setPaymentStatusMessage] = useState<string | null>(null);
 
   const amountNumber = useMemo(() => Number(amount || 0), [amount]);
   const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
-
-  useEffect(() => {
-    if (!paymentData) {
-      setSecondsLeft(0);
-      return;
-    }
-
-    const updateRemaining = () => {
-      const expireMs = new Date(paymentData.expiredAt).getTime();
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((expireMs - now) / 1000));
-      setSecondsLeft(remaining);
-    };
-
-    updateRemaining();
-    const intervalId = window.setInterval(updateRemaining, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [paymentData]);
 
   const handleAmountChange = (value: string) => {
     const digitsOnly = value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
@@ -61,8 +30,6 @@ export default function DepositPage() {
     e.preventDefault();
     setError(null);
     setCopied(false);
-    setPaymentStatusMessage(null);
-    setCreatedAmount(null);
 
     if (amountNumber < MIN_AMOUNT) {
       setError("Số tiền nạp tối thiểu là 10.000 ₫.");
@@ -74,10 +41,8 @@ export default function DepositPage() {
     try {
       const res = await createDeposit({ amount: amountNumber });
       setPaymentData(res.data);
-      setCreatedAmount(amountNumber);
     } catch (err) {
       setPaymentData(null);
-      setCreatedAmount(null);
       if (err instanceof ApiError) {
         setError(err.apiMessage);
       } else {
@@ -88,15 +53,14 @@ export default function DepositPage() {
     }
   };
 
-  const handleCopyReference = async () => {
+  const handleCopyCode = async () => {
     if (!paymentData) return;
-
     try {
-      await navigator.clipboard.writeText(paymentData.transactionRef);
+      await navigator.clipboard.writeText(paymentData.depositCode);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Không thể sao chép mã tham chiếu giao dịch.");
+      setError("Không thể sao chép mã nạp tiền.");
     }
   };
 
@@ -104,32 +68,6 @@ export default function DepositPage() {
     if (!paymentData?.paymentUrl) return;
     window.open(paymentData.paymentUrl, "_blank", "noopener,noreferrer");
   };
-
-  const handleCheckStatus = async () => {
-    if (!paymentData?.transactionRef) return;
-
-    setCheckingStatus(true);
-    setPaymentStatusMessage(null);
-
-    try {
-      const res = await getPaymentStatus(paymentData.transactionRef);
-      setPaymentStatusMessage(
-        res.data.message
-          ? `${res.data.status}: ${res.data.message}`
-          : `Trạng thái hiện tại: ${res.data.status}`
-      );
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setPaymentStatusMessage(`Không thể kiểm tra trạng thái: ${err.apiMessage}`);
-      } else {
-        setPaymentStatusMessage("Không thể kiểm tra trạng thái thanh toán.");
-      }
-    } finally {
-      setCheckingStatus(false);
-    }
-  };
-
-  const isExpired = paymentData !== null && secondsLeft <= 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -195,34 +133,25 @@ export default function DepositPage() {
 
       {paymentData && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Thông tin thanh toán</h2>
-            <span
-              className={`text-sm font-semibold px-3 py-1 rounded-full border ${
-                isExpired
-                  ? "text-rose-700 bg-rose-50 border-rose-200"
-                  : "text-amber-700 bg-amber-50 border-amber-200"
-              }`}
-            >
-              {isExpired ? "Liên kết đã hết hạn" : `Hết hạn sau ${formatSecondsToClock(secondsLeft)}`}
-            </span>
-          </div>
+          <h2 className="text-lg font-semibold text-slate-900">Thông tin thanh toán</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <InfoRow label="Mã tham chiếu" value={paymentData.transactionRef} mono />
-            <InfoRow
-              label="Số tiền"
-              value={formatCurrency(createdAmount ?? amountNumber)}
-            />
-            <InfoRow label="Trạng thái" value={paymentData.status ?? "PENDING"} />
-            <InfoRow label="Thông báo" value={paymentData.message ?? "Đã tạo liên kết thanh toán"} />
+            <InfoRow label="Mã nạp tiền" value={paymentData.depositCode} mono />
+            <InfoRow label="Số tiền" value={formatCurrency(paymentData.amount)} />
+            <InfoRow label="Trạng thái" value={paymentData.status} />
           </div>
+
+          {paymentData.paymentUrl && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
+              Nhấn nút bên dưới để thanh toán qua VNPay. Số dư ví sẽ tự động cập nhật sau khi giao dịch thành công.
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={handleOpenVnpay}
-              disabled={isExpired}
+              disabled={!paymentData.paymentUrl}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
               Thanh toán qua VNPay
@@ -230,27 +159,12 @@ export default function DepositPage() {
 
             <button
               type="button"
-              onClick={handleCopyReference}
+              onClick={() => void handleCopyCode()}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
             >
-              {copied ? "Đã sao chép mã" : "Sao chép mã tham chiếu"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void handleCheckStatus()}
-              disabled={checkingStatus}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
-            >
-              {checkingStatus ? "Đang kiểm tra..." : "Kiểm tra trạng thái"}
+              {copied ? "Đã sao chép mã" : "Sao chép mã nạp tiền"}
             </button>
           </div>
-
-          {paymentStatusMessage && (
-            <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-              {paymentStatusMessage}
-            </div>
-          )}
         </div>
       )}
     </div>

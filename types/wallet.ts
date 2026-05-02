@@ -100,6 +100,13 @@ export enum WithdrawStatus {
   CANCELLED = "CANCELLED",
 }
 
+/** khớp với wallet.entity.DepositStatus */
+export enum DepositStatus {
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+}
+
 // --- Response DTOs (khớp backend DTO v3.0) ---
 
 /**
@@ -199,6 +206,32 @@ export interface CreateWithdrawRequest {
  */
 export interface ProcessWithdrawRequest {
   note?: string;
+}
+
+/**
+ * POST /api/v1/wallet/deposit — request body
+ * Backend tự sinh depositCode — FE không cần truyền.
+ */
+export interface CreateDepositRequest {
+  amount: number;    // min 10000 VND
+  bankCode?: string; // e.g. "NCB" — optional VNPay bank shortcut
+  locale?: string;   // "vn" | "en" — default "vn"
+}
+
+/**
+ * POST /api/v1/wallet/deposit — response
+ * GET  /api/v1/wallet/deposit/my — list item
+ * khớp wallet.dto.response.DepositLogResponse
+ */
+export interface DepositLogResponse {
+  id: number;
+  depositCode: string;
+  amount: number;
+  status: DepositStatus;
+  paymentUrl: string | null;   // VNPay URL — non-null khi vừa tạo
+  vnpTransactionNo: string | null;
+  paidAt: string | null;
+  createdAt: string;
 }
 
 /**

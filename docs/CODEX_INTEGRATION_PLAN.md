@@ -1,6 +1,6 @@
 # CODEX Integration Plan — Frontend ↔ Backend, Role-by-Role
 
-> Version: 2.0 (2026-04-30)
+> Version: 2.1 (2026-05-11)
 > Scope: Wire each frontend page hiện đang dùng MOCK data sang gọi API thật của backend.
 > Prerequisite: đã đọc `docs/API_CONTRACT.md`, `docs/FLOW.md`, `CLAUDE.md`.
 > Backend chạy ở `localhost:8080`, proxy qua `next.config.ts` (`/api/:path*`).
@@ -39,7 +39,7 @@
 
 ---
 
-## 1. Backend coverage matrix (snapshot 2026-04-30)
+## 1. Backend coverage matrix (snapshot 2026-05-11)
 
 Đối chiếu thực tế `*Controller.java` với trạng thái FE hiện tại.
 
@@ -52,7 +52,7 @@
 | `/uploads/signature`         | ✅ Đã có       | ✅ Wired  | FileStorageController |
 | `/wallet`                    | ✅ Đã có       | ✅ Wired  | WalletController |
 | `/wallet/withdraw*`          | ✅ Đã có       | ✅ Wired  | WithdrawController — user + accountant endpoints |
-| `/payments*`                 | ✅ Đã có       | ✅ Wired  | PaymentController (VNPay) |
+| `/wallet/deposit*`           | ✅ Đã có       | ✅ Wired  | DepositController (VNPay) — Sprint 11: breaking change từ `/payments*` |
 | `/company-fund*`             | ✅ Đã có       | ✅ Wired  | CompanyFundController — CFO + Admin |
 | `/system-configs*`           | ✅ Đã có       | ✅ Wired  | SystemConfigController — dùng path `/system-configs` không phải `/admin/settings` |
 | `/notifications*`            | ✅ Đã có       | ✅ Wired  | NotificationController |
@@ -67,15 +67,18 @@
 | `/manager/projects*`         | ✅ Đã có       | ✅ Wired  | ManagerProjectController — Sprint 6 |
 | `/manager/department/*`      | ✅ Đã có       | ✅ Wired  | ManagerProjectController — Sprint 6 |
 | `/accountant/disbursements*` | ✅ Đã có       | ✅ Wired  | AccountantDisbursementController |
+| `/accountant/payroll/*`      | ✅ Đã có       | ✅ Wired  | AccountantPayrollController — Sprint 10 |
+| `/accountant/ledger/*`       | ✅ Đã có       | ✅ Wired  | AccountantLedgerController — Sprint 10 |
 | `/cfo/approvals*`            | ✅ Đã có       | ✅ Wired  | Sprint 5 — DEPARTMENT_TOPUP queue |
+| `/cfo/dashboard`             | ✅ Đã có       | ✅ Wired  | CfoDashboardController — Sprint 12 |
 | `/admin/users*`              | ✅ Đã có       | ✅ Wired  | UserController — CRUD, lock/unlock, reset-password |
 | `/admin/departments*`        | ✅ Đã có       | ✅ Wired  | AdminDepartmentController |
 | `/admin/audit*`              | ✅ Đã có       | ✅ Wired  | AuditController |
-| `/accountant/payroll/*`      | ❌ Chưa có     | ⛔ MOCK   | `AccountantPayrollController` chưa implement |
-| `/accountant/ledger/*`       | ❌ Chưa có     | ⛔ MOCK   | `AccountantLedgerController` chưa implement |
-| `/dashboard/*`               | ❌ Chưa có     | ⛔ MOCK   | 6 role dashboards dùng mock data |
+| `/admin/dashboard`           | ✅ Đã có       | ✅ Wired  | AdminDashboardController — Sprint 12 |
+| `/dashboard/manager`         | ✅ Đã có       | ✅ Wired  | DashboardController — Sprint 12 |
+| `/dashboard/accountant`      | ✅ Đã có       | ✅ Wired  | DashboardController — Sprint 12 |
 
-**Tổng kết (2026-04-30)**: 26/29 modules đã wire API thật. 3 modules còn MOCK do backend chưa implement.
+**Tổng kết (2026-05-11)**: 32/32 modules đã wire API thật. Không còn module nào dùng MOCK do backend chưa implement.
 
 > **Pagination convention:**
 > - TL/Manager/Notifications/Payslips: `page` **1-indexed** + `limit` — không dùng `toApiPage()`
@@ -87,18 +90,20 @@
 
 Theo dependency từ thấp lên cao của business graph:
 
-| # | Sprint                              | Roles ảnh hưởng                 | Estimate | Trạng thái |
-| - | ----------------------------------- | -------------------------------- | -------- | ---------- |
-| 1 | EMPLOYEE — Wallet/Requests/Payslip  | EMPLOYEE                         | 1 ngày   | ✅ Done     |
-| 2 | TEAM_LEADER — Approvals + Projects  | TEAM_LEADER                      | 2 ngày   | ✅ Done     |
-| 3 | MANAGER — Approvals (PROJECT_TOPUP) | MANAGER                          | 1 ngày   | ✅ Done     |
-| 4 | ACCOUNTANT — Disbursements only     | ACCOUNTANT                       | 1 ngày   | ✅ Done     |
-| 5 | Cross-cutting — SSE realtime        | All                              | 1 ngày   | ✅ Done     |
-| 6 | TL Team + Manager Projects + Dept   | TL/Manager                       | 1 ngày   | ✅ Done     |
-| 7 | CFO/Admin/Quality fixes             | CFO/Admin/All                    | 1 ngày   | ✅ Done     |
-| 8 | Auth flows — forgot-password        | All                              | 0.5 ngày | ✅ Done     |
-| 9 | Cleanup + docs                      | —                                | 0.5 ngày | ✅ Done     |
-| — | BLOCKED — đợi backend               | Accountant                       | TBD      | ⏳ Blocked  |
+| # | Sprint                                      | Roles ảnh hưởng    | Estimate | Trạng thái |
+| - | ------------------------------------------- | ------------------- | -------- | ---------- |
+| 1 | EMPLOYEE — Wallet/Requests/Payslip          | EMPLOYEE            | 1 ngày   | ✅ Done     |
+| 2 | TEAM_LEADER — Approvals + Projects          | TEAM_LEADER         | 2 ngày   | ✅ Done     |
+| 3 | MANAGER — Approvals (PROJECT_TOPUP)         | MANAGER             | 1 ngày   | ✅ Done     |
+| 4 | ACCOUNTANT — Disbursements only             | ACCOUNTANT          | 1 ngày   | ✅ Done     |
+| 5 | Cross-cutting — SSE realtime                | All                 | 1 ngày   | ✅ Done     |
+| 6 | TL Team + Manager Projects + Dept           | TL/Manager          | 1 ngày   | ✅ Done     |
+| 7 | CFO/Admin/Quality fixes                     | CFO/Admin/All       | 1 ngày   | ✅ Done     |
+| 8 | Auth flows — forgot-password                | All                 | 0.5 ngày | ✅ Done     |
+| 9 | Cleanup + docs                              | —                   | 0.5 ngày | ✅ Done     |
+| 10 | ACCOUNTANT — Payroll + Ledger (Sprint 10)  | ACCOUNTANT          | 1 ngày   | ✅ Done     |
+| 11 | Deposit breaking change (Sprint 11)         | All                 | 0.5 ngày | ✅ Done     |
+| 12 | Dashboard API — 4 dedicated endpoints (Sprint 12) | All          | 0.5 ngày | ✅ Done     |
 
 > Mỗi sprint là 1 PR. Lint xanh trước khi merge.
 
@@ -404,20 +409,11 @@ Events backend đẩy:
 
 ---
 
-## 9. BLOCKED Sprint — đợi backend ⏳
+## 9. Status — Tất cả module đã wire ✅
 
-Chỉ còn 2 module thực sự bị block. Tất cả module khác đã wire xong.
+Không còn module nào bị blocked. Toàn bộ 32 module đã wire API thật tính đến Sprint 12.
 
-| Trang                  | Endpoint cần                   | Notes                                                 |
-| ---------------------- | ------------------------------ | ----------------------------------------------------- |
-| `accountant/payroll/*` | toàn bộ `/accountant/payroll/*`| import Excel → auto-netting → run. UI sẵn sàng.       |
-| `accountant/ledger/*`  | `/accountant/ledger/*`         | Sổ cái double-entry + summary. UI sẵn sàng.           |
-| `dashboard/page.tsx`   | `/api/v1/dashboard/<role>`     | 6 role components đang dùng mock — không block flow.  |
-
-Khi backend implement `AccountantPayrollController` + `AccountantLedgerController`:
-1. Xóa `ACCOUNTANT_PAYROLL_ENDPOINT_BLOCKED = true` và `ACCOUNTANT_LEDGER_ENDPOINT_BLOCKED = true`
-2. Thay mock data bằng API calls thật
-3. Verify types khớp với response thực tế của backend
+Nếu backend có thêm controller mới trong tương lai, cập nhật bảng coverage matrix ở §1 và thêm sprint entry vào §2.
 
 ---
 

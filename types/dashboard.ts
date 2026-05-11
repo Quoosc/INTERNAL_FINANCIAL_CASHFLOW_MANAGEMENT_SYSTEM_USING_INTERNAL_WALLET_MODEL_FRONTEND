@@ -66,7 +66,7 @@ export interface AccountantDashboardResponse {
   payrollStatus: {
     latestPeriod: string | null;
     status: string | null;
-  };
+  } | null;
 }
 
 // --- CFO Dashboard ---

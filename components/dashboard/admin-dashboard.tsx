@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency, formatDateTime, formatRelativeTime } from "@/lib/format";
 import {
   AdminDashboardResponse,
   AdminUserListItem,
@@ -26,7 +27,6 @@ interface TopDebtor     { id: number; name: string; initials: string; dept: stri
 
 // ─── Mock chart data (not available from AdminDashboardResponse API) ─────────
 
-// TODO: Replace when Sprint 6 is complete
 const MOCK_DASHBOARD: AdminDashboardResponse = {
   totalUsers: 64,
   totalDepartments: 8,
@@ -94,14 +94,6 @@ const TOP_DEBTORS: TopDebtor[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
 function fmtM(v: number): string {
   const a = Math.abs(v);
   if (a >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
@@ -109,22 +101,6 @@ function fmtM(v: number): string {
   return `${(v / 1_000).toFixed(0)}K`;
 }
 
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  }).format(new Date(iso));
-}
-
-function formatRelativeTime(iso: string): string {
-  const diffMs  = Date.now() - new Date(iso).getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1)  return "Vừa xong";
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour} giờ trước`;
-  return `${Math.floor(diffHour / 24)} ngày trước`;
-}
 
 function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;

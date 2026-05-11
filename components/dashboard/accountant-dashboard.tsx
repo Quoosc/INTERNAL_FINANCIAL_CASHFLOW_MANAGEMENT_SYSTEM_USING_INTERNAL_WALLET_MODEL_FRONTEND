@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import {
   AccountantDashboardResponse,
   DisbursementListItem,
@@ -26,27 +27,6 @@ import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
 
 type FundHealth = "HEALTHY" | "LOW" | "CRITICAL";
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatRelativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-  if (diffMinutes < 1) return "Vừa xong";
-  if (diffMinutes < 60) return `${diffMinutes} phút trước`;
-
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} giờ trước`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} ngày trước`;
-}
 
 function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
@@ -213,7 +193,6 @@ const MOCK_DASHBOARD: AccountantDashboardResponse = {
   },
 };
 
-// TODO: Replace when Sprint 6-7 is complete
 const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
   {
     id: 1,
@@ -313,7 +292,6 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
   },
 ];
 
-// TODO: Replace when Sprint 7 is complete
 const MOCK_PAYROLL_PERIODS: PayrollPeriodListItem[] = [
   {
     id: 5,
@@ -425,12 +403,12 @@ export function AccountantDashboard() {
 
   const payrollStatus = useMemo(() => {
     if (latestPayroll) return latestPayroll.status;
-    return parsePayrollStatus(dashboard?.payrollStatus.status ?? null);
-  }, [dashboard?.payrollStatus.status, latestPayroll]);
+    return parsePayrollStatus(dashboard?.payrollStatus?.status ?? null);
+  }, [dashboard?.payrollStatus?.status, latestPayroll]);
 
   const payrollPeriodLabel = latestPayroll
     ? `${String(latestPayroll.month).padStart(2, "0")}/${latestPayroll.year}`
-    : (dashboard?.payrollStatus.latestPeriod ?? "Chưa có dữ liệu");
+    : (dashboard?.payrollStatus?.latestPeriod ?? "Chưa có dữ liệu");
 
   const monthlyNetFlow =
     (dashboard?.monthlyInflow ?? 0) - (dashboard?.monthlyOutflow ?? 0);

@@ -1,9 +1,11 @@
 # API_CONTRACT.md - Frontend/Backend Contract
 
-> Version: 3.4 (2026-05-02)
+> Version: 3.6 (2026-05-11)
 > Source priority: backend runtime source code > backend docs > frontend docs
 > Roles: EMPLOYEE, TEAM_LEADER, MANAGER, ACCOUNTANT, CFO, ADMIN
 >
+> **Thay đổi so với 3.5:** `GET /wallet/deposit/my` — FE page `wallet/deposit/my` implemented (Sprint 13). MVP 100% complete.
+> **Thay đổi so với 3.4:** Thêm §16 Dashboard endpoints (Manager, Accountant, CFO, Admin) — backend commit `bf67900`. Type fix: `AccountantDashboardResponse.payrollStatus` nullable.
 > **Thay đổi so với 3.2:** Realtime transport STOMP/WebSocket → **SSE** (1 endpoint `GET /users/stream`, 4 event: `connected`, `wallet.updated`, `transaction.created`, `notification`). Xem §15.
 
 ## Base URL
@@ -156,7 +158,7 @@ Client-direct upload flow:
 | Method | Endpoint                            | Body / Params                    | Response                           | Auth |
 | ------ | ----------------------------------- | -------------------------------- | ---------------------------------- | :--: |
 | POST   | `/wallet/deposit`                   | `CreateDepositRequest`           | `DepositLogResponse`               | Yes  |
-| GET    | `/wallet/deposit/my?page=0&size=10` | -                                | `PageResponse<DepositLogResponse>` | Yes  |
+| GET    | `/wallet/deposit/my?page=0&size=10` | -                                | `SpringPage<DepositLogResponse>`   | Yes  |
 
 **CreateDepositRequest body:**
 
@@ -187,7 +189,9 @@ Client-direct upload flow:
 
 > `DepositStatus`: `PENDING | COMPLETED | FAILED`
 > `paymentUrl`: non-null khi vừa tạo — FE mở URL này để user thanh toán.
+> `vnpTransactionNo`, `paidAt`: `null` khi chưa hoàn thành.
 > Khi VNPay IPN callback về, backend cập nhật `status → COMPLETED` + credit wallet. SSE `wallet.updated` tự push về FE.
+> `GET /wallet/deposit/my` trả Spring Page (0-indexed): `{ content[], totalElements, totalPages, number, size }` — khác với custom `PageResponse` 1-indexed. FE page: `wallet/deposit/my`.
 
 **IPN / Return callbacks (server-to-server, FE không gọi trực tiếp):**
 
@@ -687,3 +691,109 @@ await fetchEventSource("/api/v1/users/stream", {
 - `@microsoft/fetch-event-source` **tự reconnect** khi connection drop.
 - Khi reconnect thành công → gọi lại `GET /wallet` + `GET /notifications` (1 lần) để phòng lỡ event trong lúc mất kết nối.
 - Không còn channel dành riêng cho request status (`REQUEST_STATUS_CHANGED` đã bỏ) — sau mọi action approve/reject/disburse trên UI, caller tự `refetch` list/detail.
+
+---
+
+## 16. Dashboard (`/dashboard`, `/cfo/dashboard`, `/admin/dashboard`)
+
+> Implemented tại backend commit `bf67900` (2026-05-11). FE: `components/dashboard/`.
+> Employee + Team Leader dùng chiến lược **Composition** — không có dedicated endpoint.
+
+### Manager
+
+| Method | Endpoint | Response |
+| ------ | -------- | -------- |
+| GET | `/dashboard/manager` | `ManagerDashboardResponse` |
+
+```json
+{
+  "departmentBudget": {
+    "totalProjectQuota": 800000000,
+    "totalAvailableBalance": 524500000,
+    "totalSpent": 275500000
+  },
+  "projectStatusSummary": { "active": 3, "planning": 2, "paused": 1, "closed": 0 },
+  "pendingApprovalsCount": 2,
+  "teamDebtSummary": { "totalDebt": 5200000, "employeesWithDebt": 3 }
+}
+```
+
+### Accountant
+
+| Method | Endpoint | Response |
+| ------ | -------- | -------- |
+| GET | `/dashboard/accountant` | `AccountantDashboardResponse` |
+
+```json
+{
+  "systemFundBalance": 1248500000,
+  "pendingDisbursementsCount": 4,
+  "monthlyInflow": 320000000,
+  "monthlyOutflow": 187500000,
+  "payrollStatus": {
+    "latestPeriod": "Tháng 03/2026",
+    "status": "COMPLETED"
+  }
+}
+```
+
+> ⚠ `payrollStatus` có thể là `null` khi chưa có kỳ lương nào trong hệ thống.
+
+### CFO
+
+| Method | Endpoint | Response |
+| ------ | -------- | -------- |
+| GET | `/cfo/dashboard` | `CfoDashboardResponse` |
+
+```json
+{
+  "companyFundBalance": 1248500000,
+  "pendingApprovalsCount": 2,
+  "monthlyApprovedAmount": 500000000,
+  "monthlyRejectedCount": 1,
+  "recentApprovals": [
+    {
+      "id": 20,
+      "requestCode": "REQ-2026-0060",
+      "departmentName": "Phòng Công nghệ thông tin",
+      "amount": 200000000,
+      "status": "PENDING",
+      "createdAt": "2026-04-02T09:00:00"
+    }
+  ]
+}
+```
+
+### Admin
+
+| Method | Endpoint | Response |
+| ------ | -------- | -------- |
+| GET | `/admin/dashboard` | `AdminDashboardResponse` |
+
+```json
+{
+  "totalUsers": 64,
+  "totalDepartments": 8,
+  "totalWalletBalance": 2450000000,
+  "recentAuditEvents": [
+    {
+      "id": 1,
+      "actorName": "Admin System",
+      "action": "USER_CREATED",
+      "entityName": "users",
+      "createdAt": "2026-04-09T08:15:00"
+    }
+  ]
+}
+```
+
+### FE strategy
+
+| Role | Strategy | Endpoint(s) |
+|---|---|---|
+| EMPLOYEE | Composition | `GET /wallet` + `GET /requests/summary` + `GET /requests?status=PENDING` + `GET /payslips?page=1&limit=1` + `GET /wallet/transactions?page=0&size=5` |
+| TEAM_LEADER | Composition | `GET /team-leader/approvals?page=0&size=3&status=PENDING` + `GET /team-leader/projects?page=0&size=3` |
+| MANAGER | Dedicated | `GET /dashboard/manager` + sub-lists |
+| ACCOUNTANT | Dedicated | `GET /dashboard/accountant` + sub-lists |
+| CFO | Dedicated | `GET /cfo/dashboard` |
+| ADMIN | Dedicated | `GET /admin/dashboard` |

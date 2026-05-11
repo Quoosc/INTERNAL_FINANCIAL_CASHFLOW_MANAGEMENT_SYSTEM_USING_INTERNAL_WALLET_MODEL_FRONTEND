@@ -1,7 +1,7 @@
 # Tiến độ phát triển Frontend
 
 > File này được cập nhật sau **mỗi lần hoàn thành task**.
-> Cập nhật lần cuối: **2026-05-02**
+> Cập nhật lần cuối: **2026-05-11** (Sprint 14)
 
 ---
 
@@ -10,9 +10,9 @@
 | Hạng mục | Số lượng | Ghi chú |
 |---|---|---|
 | Auth pages LIVE | 3 | login, change-password, forgot-password |
-| Dashboard pages LIVE (API thật / hoàn chỉnh) | 45 | Sprint 11: fix deposit endpoint breaking change |
-| Dashboard pages mock (backend chưa có) | 1 | dashboard/page.tsx |
-| **Tổng pages** | **49** | không tính 2 orphaned đã xóa |
+| Dashboard pages LIVE (API thật / hoàn chỉnh) | 47 | Sprint 13: thêm `wallet/deposit/my` — lịch sử nạp tiền VNPay |
+| Dashboard pages mock (backend chưa có) | 0 | — tất cả đã wired |
+| **Tổng pages** | **50** | không tính 2 orphaned đã xóa |
 
 ---
 
@@ -33,7 +33,8 @@
 | `wallet/page.tsx` | `GET /api/v1/wallet` + transactions | WalletContext |
 | `wallet/transactions/page.tsx` | `GET /api/v1/wallet/transactions` | Filter, pagination |
 | `wallet/transactions/[id]/page.tsx` | `GET /api/v1/wallet/transactions/{id}` | — |
-| `wallet/deposit/page.tsx` | `POST /api/v1/wallet/deposit` | VNPay flow — DepositController (Sprint 11) |
+| `wallet/deposit/page.tsx` | `POST /api/v1/wallet/deposit` | VNPay flow — DepositController (Sprint 11); link → lịch sử |
+| `wallet/deposit/my/page.tsx` | `GET /api/v1/wallet/deposit/my` | Lịch sử nạp tiền — Spring Page 0-indexed, pagination, status badge — Sprint 13 |
 | `wallet/withdraw/page.tsx` | `POST /api/v1/wallet/withdraw` + lịch sử | Form + cancel |
 | `profile/page.tsx` | `GET/PUT /api/v1/users/me` | Avatar upload Cloudinary |
 | `projects/page.tsx` | `GET /api/v1/projects` | Read-only, all roles |
@@ -75,18 +76,68 @@
 | `cfo/system-fund/page.tsx` | `GET /api/v1/company-fund` + topup | Fixed diacritics Sprint 7 |
 | `cfo/audit-logs/page.tsx` | — | Re-export từ `admin/audit-logs/page` |
 | `cfo/settings/page.tsx` | — | Re-export từ `admin/settings/page` |
-
----
-
-## 🟡 TODO — Backend thiếu
-
-| Page | Tình trạng |
-|---|---|
-| `dashboard/page.tsx` | Dashboard API (`/api/v1/dashboard/*`) chưa có backend — render tĩnh |
+| `dashboard/page.tsx` | Composite + dedicated endpoints — Sprint 12 | Employee/TL: compose từ API có sẵn. Manager: `/api/v1/dashboard/manager`. Accountant: `/api/v1/dashboard/accountant`. CFO: `/api/v1/cfo/dashboard`. Admin: `/api/v1/admin/dashboard` |
 
 ---
 
 ## Nhật ký thay đổi
+
+### Sprint 14 — 2026-05-11
+
+**Mục tiêu:** Code quality & UX improvements — xóa duplicate, thêm tính năng nhỏ
+
+| Task | Kết quả |
+|---|---|
+| Xóa stale TODO comment `accountant/payroll/page.tsx:77` | 1 comment stale xóa |
+| Dedup `formatCurrency` + `formatRelativeTime` | Xóa 11 local function defs trong 5 dashboard components — import từ `@/lib/format` |
+| Dedup `formatDateTime` trong `admin-dashboard.tsx` | Xóa local def, import từ `@/lib/format` |
+| Rename `formatDate→formatDateTime` trong `employee-dashboard.tsx` | Local `formatDate` (behavior của `formatDateTime`) → import thật |
+| Link "Lịch sử nạp" từ `wallet/page.tsx` | Thêm button cạnh nút "Nạp tiền" trong hero card |
+| Re-open VNPay cho PENDING deposits | `wallet/deposit/my`: row PENDING + `paymentUrl` non-null hiện nút "Thanh toán" |
+| Tạo `docs/TODO_IMPROVEMENTS.md` | Ghi nhận 4 feature cần backend: charts analytics, export CSV/PDF, date filter deposit, PIN attempt count |
+| `npm run lint` | ✅ 0 errors |
+
+---
+
+### Sprint 13 — 2026-05-11
+
+**Mục tiêu:** Implement trang lịch sử nạp tiền VNPay — lỗ hổng cuối cùng của MVP
+
+| Task | Kết quả |
+|---|---|
+| Tạo `app/(dashboard)/wallet/deposit/my/page.tsx` | `GET /api/v1/wallet/deposit/my` — Spring Page 0-indexed, bảng 6 cột, pagination, status badge |
+| Thêm import `Link` vào `wallet/deposit/page.tsx` | Link "Lịch sử nạp tiền" → `/wallet/deposit/my` trong header của trang deposit |
+| Cập nhật docs (PROGRESS.md, API_CONTRACT.md) | Tổng pages: 49→50; LIVE: 46→47; completion 96%→100% |
+| `npm run lint` | ✅ 0 errors |
+
+**Lưu ý kỹ thuật Sprint 13:**
+- Endpoint trả Spring Page (0-indexed): `content[]`, `totalElements`, `totalPages`, `number`, `size`
+- `DepositStatus`: `PENDING` (amber), `COMPLETED` (emerald), `FAILED` (rose)
+- `paidAt` có thể `null` khi giao dịch chưa hoàn thành — dùng `formatDateTime(null)` → "—"
+- `vnpTransactionNo` có thể `null` — hiển thị "—" khi trống
+
+---
+
+### Sprint 12 — 2026-05-11
+
+**Mục tiêu:** Sync với backend commit `bf67900` — Dashboard API cho Manager, Accountant, CFO, Admin
+
+| Task | Kết quả |
+|---|---|
+| Phân tích backend commit `bf67900` | `DashboardController` + `CfoDashboardController` + `AdminDashboardController` confirmed live — 4 dedicated endpoints |
+| Fix type `types/dashboard.ts` | `AccountantDashboardResponse.payrollStatus` → nullable (`\| null`) — backend trả `null` khi chưa có kỳ lương nào |
+| Fix optional chaining `accountant-dashboard.tsx` | 2 chỗ `payrollStatus.status`/`payrollStatus.latestPeriod` → `payrollStatus?.status`/`payrollStatus?.latestPeriod` |
+| Xóa TODO sprint comments | Xóa 7 comment `// TODO: Replace when Sprint X is complete` trong 4 dashboard components |
+| `npm run lint` | ✅ 0 errors |
+
+**Lưu ý kỹ thuật Sprint 12:**
+- Tất cả 4 component dashboard đã gọi đúng endpoint từ trước — mock chỉ là fallback khi API down. Không cần thay đổi logic gọi API.
+- Backend `getAccountantDashboard()` có thể trả `payrollStatus: null` khi chưa có kỳ lương nào (`.orElse(null)` trong Java)
+- Manager dashboard dùng `Promise.all` — nếu bất kỳ 1 trong 3 API fail thì toàn bộ fallback mock
+- CFO/Admin dùng: dedicated endpoint → fallback compose từ endpoints có sẵn → fallback mock
+- Employee/TL không có dedicated endpoint, compose từ nhiều API song song (`Promise.allSettled`)
+
+---
 
 ### Sprint 11 — 2026-05-02
 
@@ -210,11 +261,7 @@ Wire `notifications`, `cfo/system-fund`, `admin/settings`, `cfo/approvals/[id]`,
 
 ## Backend còn thiếu (blocker cho FE)
 
-| Controller | Endpoints | Ảnh hưởng |
-|---|---|---|
-| `AccountantPayrollController` | `/api/v1/accountant/payroll/*` | 2 pages BLOCKED |
-| `AccountantLedgerController` | `/api/v1/accountant/ledger/*` | 2 pages BLOCKED |
-| Dashboard API | `/api/v1/dashboard/*` | `dashboard/page.tsx` render tĩnh |
+Không còn blocker — tất cả module backend đã implement. 47/50 dashboard pages đang dùng API thật (3 pages còn lại là static: `admin/roles`, `admin/approvals` redirect, `cfo/audit-logs` + `cfo/settings` re-export từ admin).
 
 ---
 

@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/auth-context";
 import { api } from "@/lib/api-client";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   PaginatedResponse,
   EmployeeDashboardResponse,
@@ -216,23 +217,6 @@ const MOCK_MONTHLY: { month: string; chiTieu: number; tamUng: number }[] = [
 
 // ─── Helpers ─────────────────────────────────────────────────
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
 
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -881,7 +865,7 @@ export function EmployeeDashboard() {
                             {req.description ?? req.requestCode}
                           </p>
                           <p className="text-xs text-slate-500 mt-0.5">
-                            {req.projectName} • {formatDate(req.createdAt)}
+                            {req.projectName} • {formatDateTime(req.createdAt)}
                           </p>
                         </div>
                       </div>

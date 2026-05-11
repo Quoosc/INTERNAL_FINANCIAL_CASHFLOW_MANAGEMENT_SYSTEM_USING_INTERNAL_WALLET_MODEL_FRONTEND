@@ -3,6 +3,8 @@
 > Source of truth cho backend khi thiết kế API dashboard.
 > Derived trực tiếp từ mock data và `api.get(...)` calls trong các component FE.
 > File types tham chiếu: `types/dashboard.ts`, `types/request.ts`, `types/wallet.ts`, `types/accounting.ts`.
+>
+> **Trạng thái (2026-05-11):** Tất cả 4 dedicated endpoint đã implement — backend commit `bf67900`.
 
 ---
 
@@ -252,7 +254,7 @@ Frontend gọi 2 endpoint song song + lấy wallet từ `WalletContext` (đã fe
 
 Frontend gọi 3 endpoint song song. `GET /api/v1/dashboard/manager` là endpoint **mới cần implement**.
 
-### `GET /api/v1/dashboard/manager` ← **CẦN IMPLEMENT**
+### `GET /api/v1/dashboard/manager` ✅ DONE (Sprint 12)
 
 Trả snapshot tổng hợp phòng ban của Manager (filter theo `departmentId` từ JWT).
 
@@ -360,7 +362,7 @@ Response: `ManagerDashboardResponse`
 
 Frontend gọi 3 endpoint song song. `GET /api/v1/dashboard/accountant` là endpoint **mới cần implement**.
 
-### `GET /api/v1/dashboard/accountant` ← **CẦN IMPLEMENT**
+### `GET /api/v1/dashboard/accountant` ✅ DONE (Sprint 12)
 
 Response: `AccountantDashboardResponse`
 
@@ -461,7 +463,7 @@ Kỳ lương gần nhất (0-indexed). Response: `PaginatedResponse<PayrollPerio
 
 Frontend thử `GET /api/v1/cfo/dashboard` trước. Nếu lỗi (404/500), fallback tự compose từ 2 endpoint có sẵn.
 
-### `GET /api/v1/cfo/dashboard` ← **CẦN IMPLEMENT** (primary)
+### `GET /api/v1/cfo/dashboard` ✅ DONE (Sprint 12)
 
 Response: `CfoDashboardResponse`
 
@@ -513,7 +515,7 @@ GET /api/v1/cfo/approvals?status=PENDING&page=1&limit=5  → PaginatedResponse<A
 
 Frontend thử `GET /api/v1/admin/dashboard` trước. Nếu lỗi, fallback tự compose từ 4 endpoint có sẵn.
 
-### `GET /api/v1/admin/dashboard` ← **CẦN IMPLEMENT** (primary)
+### `GET /api/v1/admin/dashboard` ✅ DONE (Sprint 12)
 
 Response: `AdminDashboardResponse`
 
@@ -601,10 +603,10 @@ FE đọc `response.data` trực tiếp qua `api-client.ts` (đã unwrap sẵn).
 
 ## Priority implement
 
-| Ưu tiên | Endpoint | Role |
+| Trạng thái | Endpoint | Role |
 |---|---|---|
-| 🔴 P1 | `GET /api/v1/dashboard/manager` | Manager |
-| 🔴 P1 | `GET /api/v1/dashboard/accountant` | Accountant |
-| 🟡 P2 | `GET /api/v1/cfo/dashboard` | CFO |
-| 🟡 P2 | `GET /api/v1/admin/dashboard` | Admin |
-| ✅ Không cần | — | Employee, Team Leader (dùng endpoint có sẵn) |
+| ✅ Done (Sprint 12) | `GET /api/v1/dashboard/manager` | Manager |
+| ✅ Done (Sprint 12) | `GET /api/v1/dashboard/accountant` | Accountant |
+| ✅ Done (Sprint 12) | `GET /api/v1/cfo/dashboard` | CFO |
+| ✅ Done (Sprint 12) | `GET /api/v1/admin/dashboard` | Admin |
+| ✅ Không cần endpoint riêng | — | Employee, Team Leader (dùng endpoint có sẵn) |

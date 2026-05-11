@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
+import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import {
   AdminApprovalListItem,
   CfoDashboardResponse,
@@ -12,7 +13,6 @@ import {
   RequestStatus,
 } from "@/types";
 
-// TODO: Replace when Sprint 6 is complete
 const MOCK_DASHBOARD: CfoDashboardResponse = {
   companyFundBalance: 1_248_500_000,
   pendingApprovalsCount: 2,
@@ -38,27 +38,6 @@ const MOCK_DASHBOARD: CfoDashboardResponse = {
   ],
 };
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatRelativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const diffMin = Math.floor(diffMs / (1000 * 60));
-
-  if (diffMin < 1) return "Vừa xong";
-  if (diffMin < 60) return `${diffMin} phút trước`;
-
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour} giờ trước`;
-
-  const diffDay = Math.floor(diffHour / 24);
-  return `${diffDay} ngày trước`;
-}
 
 function getFundHealth(balance: number): {
   label: string;
@@ -150,7 +129,6 @@ export function CfoDashboard() {
       setError(null);
 
       try {
-        // TODO: Replace when Sprint 6 is complete — GET /api/v1/cfo/dashboard
         const res = await api.get<CfoDashboardResponse>("/api/v1/cfo/dashboard");
         if (cancelled) return;
         setDashboard(res.data);

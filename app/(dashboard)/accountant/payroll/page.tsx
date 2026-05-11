@@ -74,7 +74,6 @@ const MOCK_PERIODS: PayrollPeriodListItem[] = [
     updatedAt: "2026-02-02T15:00:00",
   },
 ];
-// TODO: Replace when backend ready (đã có — xóa mock sau khi xác nhận hoạt động)
 // ────────────────────────────────────────────────────────────────────────────
 
 function parsePage(value: string | null): number {

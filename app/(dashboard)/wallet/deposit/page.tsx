@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { createDeposit } from "@/lib/api";
@@ -82,11 +83,22 @@ export default function DepositPage() {
         Quay lại
       </button>
 
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Nạp tiền qua VNPay</h1>
-        <p className="text-slate-500 mt-1">
-          Nhập số tiền để tạo liên kết thanh toán. Hệ thống sẽ chuyển hướng đến VNPay để hoàn tất giao dịch.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Nạp tiền qua VNPay</h1>
+          <p className="text-slate-500 mt-1">
+            Nhập số tiền để tạo liên kết thanh toán. Hệ thống sẽ chuyển hướng đến VNPay để hoàn tất giao dịch.
+          </p>
+        </div>
+        <Link
+          href="/wallet/deposit/my"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors shrink-0"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Lịch sử nạp tiền
+        </Link>
       </div>
 
       <form onSubmit={handleGeneratePayment} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">

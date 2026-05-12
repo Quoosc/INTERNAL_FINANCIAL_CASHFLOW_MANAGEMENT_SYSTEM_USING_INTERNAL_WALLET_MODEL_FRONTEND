@@ -151,6 +151,7 @@ export interface TransactionResponse {
  */
 export interface LedgerEntryResponse {
   id: number;
+  transactionId: number;
   transactionCode: string;
   direction: TransactionDirection;
   amount: number;

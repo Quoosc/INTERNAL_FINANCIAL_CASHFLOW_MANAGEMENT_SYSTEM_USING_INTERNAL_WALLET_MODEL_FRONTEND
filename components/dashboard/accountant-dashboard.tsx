@@ -340,7 +340,7 @@ export function AccountantDashboard() {
       );
       const payrollReq = api.get<
         PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]
-      >("/api/v1/accountant/payroll?page=0&size=1");
+      >("/api/v1/accountant/payroll?page=1&limit=1");
 
       const [dashboardResult, disbursementsResult, payrollResult] =
         await Promise.allSettled([dashboardReq, disbursementsReq, payrollReq]);

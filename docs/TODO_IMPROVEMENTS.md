@@ -82,6 +82,71 @@ Hoặc thêm header `X-Pin-Attempts-Remaining: 3`.
 
 ---
 
+---
+
+## 5. Missing Frontend Integrations — Backend API Exists, FE Chưa Gọi
+
+> Các endpoint backend đã có nhưng frontend chưa tích hợp. Không phải lỗi — chỉ là tính năng chưa implement.
+> Phát hiện qua audit ngày 2026-05-12.
+
+### 5.1 `GET /api/v1/admin/settings` và `PUT /api/v1/admin/settings`
+
+**Controller:** `AdminSettingsController` (`/admin/settings`)
+
+**Vấn đề:** Frontend hoàn toàn bỏ qua `AdminSettingsController`. Trang `/admin/settings` và `/cfo/settings` đang dùng trực tiếp `SystemConfigController` (`/system-configs`). Hai endpoint này là một lớp abstraction phía admin (nhóm key theo category, thêm RBAC riêng).
+
+**File cần tích hợp khi cần:**
+- `app/(dashboard)/admin/settings/page.tsx` — thay `getAllConfigs()` / `updateConfig()` bằng `GET/PUT /admin/settings`
+- `lib/api/system-config.ts` — thêm `getAdminSettings()` và `updateAdminSettings()`
+
+---
+
+### 5.2 `GET /api/v1/accountant/payslips/{payslipId}`
+
+**Controller:** `AccountantPayslipController` (`/accountant/payslips/{payslipId}`)
+
+**Vấn đề:** Không có trang chi tiết phiếu lương dành cho kế toán. Hiện tại trang `/accountant/payroll/{id}` liệt kê các payslip entry nhưng không drill-down vào từng payslip.
+
+**File cần tạo khi implement:**
+- `app/(dashboard)/accountant/payroll/[id]/page.tsx` — thêm link click từng entry → gọi `GET /accountant/payslips/{payslipId}`
+- Hoặc tạo `app/(dashboard)/accountant/payslips/[id]/page.tsx` riêng
+
+---
+
+### 5.3 `POST /api/v1/users/me/pin/verify`
+
+**Controller:** `ProfileController` (`/users/me/pin/verify`)
+
+**Vấn đề:** Endpoint xác thực PIN (`{ pin } → { valid: boolean }`) chưa được gọi từ UI. Hiện tại Accountant nhập PIN thẳng vào form giải ngân (PIN được validate ở backend khi disburse). Endpoint này hữu ích cho luồng xác nhận trước khi thực hiện thao tác nhạy cảm (pre-check PIN trước khi submit).
+
+**File cần update khi implement:**
+- `app/(dashboard)/accountant/disbursements/[id]/page.tsx` — thêm bước pre-verify PIN trước khi gọi `/disburse`
+- `lib/api/` — thêm `verifyPin(pin: string): Promise<{ valid: boolean }>`
+
+---
+
+### 5.4 `DELETE /api/v1/team-leader/projects/{id}/categories`
+
+**Controller:** `TeamLeaderCategoryController` (`/team-leader/projects/{id}/categories` DELETE)
+
+**Vấn đề:** Frontend chỉ gọi `GET` (lấy danh sách) và `PUT` (cập nhật budget) trên categories. Không có nút xóa danh mục trong trang `/team-leader/projects/{id}`.
+
+**File cần update khi implement:**
+- `app/(dashboard)/team-leader/projects/[id]/page.tsx` — thêm nút xóa danh mục trong phần category management
+
+---
+
+### 5.5 `POST /api/v1/team-leader/projects/{id}/expense-categories`
+
+**Controller:** `TeamLeaderCategoryController` (`/team-leader/projects/{id}/expense-categories` POST)
+
+**Vấn đề:** Frontend chỉ `GET /team-leader/expense-categories?projectId=...` để lấy danh sách template categories. Không có UI để Team Leader tạo expense category tùy chỉnh cho một project cụ thể.
+
+**File cần update khi implement:**
+- `app/(dashboard)/team-leader/projects/[id]/page.tsx` — thêm form tạo custom expense category
+
+---
+
 ## Ghi chú
 
 - Các item trên **không ảnh hưởng đến luồng nghiệp vụ** (3 flows đều hoạt động đầy đủ).

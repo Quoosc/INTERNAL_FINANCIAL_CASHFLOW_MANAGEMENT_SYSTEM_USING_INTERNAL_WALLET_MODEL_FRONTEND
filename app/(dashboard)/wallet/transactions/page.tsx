@@ -481,7 +481,7 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
-                        href={`/wallet/transactions/${tx.id}`}
+                        href={`/wallet/transactions/${tx.transactionId}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium hover:bg-blue-100 transition-colors"
                       >
                         Xem chi tiết

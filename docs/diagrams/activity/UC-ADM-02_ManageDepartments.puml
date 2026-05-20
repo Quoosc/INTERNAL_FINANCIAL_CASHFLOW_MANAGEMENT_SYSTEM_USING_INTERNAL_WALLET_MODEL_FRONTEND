@@ -46,8 +46,7 @@ else (Cập nhật PB)
   :Chọn PB → Sửa name / managerId / totalProjectQuota;
 
   |He thong|
-  :PUT /admin/departments/{id}
-  { name?, managerId?, totalProjectQuota? };
+  :PUT /admin/departments/{id} - body: name, managerId, totalProjectQuota;
 
   |Co so du lieu|
   :Cập nhật Department;

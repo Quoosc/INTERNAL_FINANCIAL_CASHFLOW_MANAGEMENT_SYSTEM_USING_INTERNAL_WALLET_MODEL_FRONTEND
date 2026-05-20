@@ -23,7 +23,7 @@ if (Chỉnh sửa thông tin gì?) then (Hồ sơ cá nhân)
   :Nhấn "Lưu";
 
   |He thong|
-  :PUT /users/me/profile { ...UpdateProfileRequest };
+  :PUT /users/me/profile;
 
   |Co so du lieu|
   :Lưu UserProfile vào DB;
@@ -33,7 +33,7 @@ if (Chỉnh sửa thông tin gì?) then (Hồ sơ cá nhân)
   |Nguoi dung|
   :Thông báo cập nhật thành công;
 
-else (Ảnh đại diện)
+elseif (Chỉnh sửa?) then (Ảnh đại diện)
   :Chọn ảnh mới;
 
   |He thong|

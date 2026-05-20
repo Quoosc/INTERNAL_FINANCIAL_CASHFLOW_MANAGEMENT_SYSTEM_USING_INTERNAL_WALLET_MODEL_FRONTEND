@@ -34,8 +34,7 @@ elseif (Thao tác = Cập nhật Phase?) then (Có)
   :Chọn Phase → Sửa name / budgetLimit / endDate / status;
 
   |He thong|
-  :PUT /team-leader/projects/{id}/phases/{phaseId}
-  { name?, budgetLimit?, endDate?, status? };
+  :PUT /team-leader/projects/{id}/phases/{phaseId} - body: name, budgetLimit, endDate, status;
 
   |Co so du lieu|
   :Cập nhật ProjectPhase;

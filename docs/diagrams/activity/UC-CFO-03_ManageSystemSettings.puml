@@ -1,0 +1,53 @@
+@startuml
+
+title UC-CFO-03: Cấu hình Hệ thống (CFO)
+
+|CFO|
+start
+:Chọn "Cấu hình hệ thống";
+
+|He thong|
+:GET /admin/settings;
+note right
+  Endpoint dùng chung với Admin: /admin/settings
+  Trả về { items: [{key, value, description}] }
+end note
+
+|Co so du lieu|
+:Truy vấn SystemSettingsResponse;
+
+|He thong|
+:Hiển thị DS cấu hình (key, value, description);
+
+|CFO|
+:Chọn config cần sửa;
+:Sửa value → Nhấn "Lưu";
+
+|He thong|
+:Validate giá trị mới;
+
+if (Giá trị hợp lệ?) then (Không)
+  |CFO|
+  :Hiển thị lỗi validation;
+  stop
+else (Có)
+endif
+
+|He thong|
+:PUT /admin/settings { configs: [{key, value}] };
+note right
+  Config keys: WITHDRAWAL_LIMIT, MINIMUM_WITHDRAWAL,
+  MAX_FILE_SIZE_MB, MAX_FILES_PER_REQUEST,
+  MINIMUM_REQUEST_AMOUNT, PIN_MAX_RETRY,
+  PIN_LOCK_DURATION_MINUTES, REQUIRE_PIN_FOR_WITHDRAWAL
+end note
+
+|Co so du lieu|
+:Cập nhật config values;
+:Ghi Audit Log CONFIG_UPDATED;
+
+|CFO|
+:Cập nhật thành công;
+stop
+
+@enduml

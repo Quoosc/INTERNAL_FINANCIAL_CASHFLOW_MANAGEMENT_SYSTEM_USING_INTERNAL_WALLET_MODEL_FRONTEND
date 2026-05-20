@@ -1,0 +1,43 @@
+@startuml
+
+actor "CFO" as CFO
+participant "Frontend\n(Next.js)" as FE
+participant "CompanyFundController" as API
+database "company_fund / wallets" as DB
+
+== Xem trạng thái quỹ công ty ==
+
+CFO -> FE: Chọn "Quỹ hệ thống"
+FE -> API: GET /api/v1/company-fund
+API -> DB: findCompanyFund() + Wallet(COMPANY_FUND, ownerId=1)
+DB --> API: CompanyFundResponse\n{ balance, lockedBalance, availableBalance,\n  bankName, bankAccount }
+API --> FE: 200 CompanyFundResponse
+FE --> CFO: Hiển thị số dư quỹ công ty
+
+note right of DB
+  Balance thực tế lưu trong Wallet(COMPANY_FUND, ownerId=1)
+  Invariant: FLOAT_MAIN.balance = SUM(tất cả wallet khác)
+end note
+
+== Nạp tiền vào quỹ (từ ngân hàng thực tế) ==
+
+CFO -> FE: Nhấn "Nạp vốn từ ngân hàng"\nNhập: amount, paymentRef, description
+FE -> API: POST /api/v1/company-fund/topup\n{ amount, paymentRef, description }
+API -> DB: Company Fund Wallet.credit(amount)
+API -> DB: FLOAT_MAIN.credit(amount)
+API -> DB: createTransaction(SYSTEM_TOPUP)
+API -> API: auditEvent(SYSTEM_FUND_ADJUSTED)
+API --> FE: 200 TransactionResponse
+FE --> CFO: Nạp quỹ thành công
+
+== Kiểm tra đối chiếu (Reconciliation) ==
+
+opt Kiểm tra tính nhất quán quỹ
+    CFO -> FE: Nhấn "Đối chiếu quỹ"
+    FE -> API: GET /api/v1/company-fund/reconciliation
+    API -> DB: Tính FLOAT_MAIN.balance vs SUM(all wallets)
+    API --> FE: 200 ReconciliationReportResponse\n{ discrepancy }
+    FE --> CFO: Báo cáo đối chiếu\n(discrepancy = 0 → OK)
+end
+
+@enduml

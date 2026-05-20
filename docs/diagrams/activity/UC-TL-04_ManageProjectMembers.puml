@@ -43,8 +43,7 @@ elseif (Thao tác = Cập nhật position?) then (Có)
   :Chọn Member → Sửa position;
 
   |He thong|
-  :PUT /team-leader/projects/{id}/members/{userId}
-  { position };
+  :PUT /team-leader/projects/{id}/members/{userId} - body: position;
 
   |Co so du lieu|
   :Cập nhật ProjectMember;

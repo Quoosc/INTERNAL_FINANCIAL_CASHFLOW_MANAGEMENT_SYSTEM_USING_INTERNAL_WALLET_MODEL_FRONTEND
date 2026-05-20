@@ -1,0 +1,58 @@
+@startuml
+
+title UC-CFO-02: Quản lý Quỹ Công ty (CFO)
+
+|CFO|
+start
+:Chọn "Quỹ hệ thống";
+
+|He thong|
+:GET /company-fund;
+note right
+  Balance thực tế trong Wallet(COMPANY_FUND, ownerId=1)
+  Invariant: FLOAT_MAIN.balance = SUM(all wallets)
+end note
+
+|Co so du lieu|
+:Truy vấn CompanyFund + Wallet(COMPANY_FUND);
+
+|He thong|
+:Hiển thị: Số dư quỹ (balance, lockedBalance, availableBalance), Thông tin ngân hàng;
+
+|CFO|
+:Nhấn "Nạp vốn từ ngân hàng thực tế";
+:Nhập số tiền, mã tham chiếu (paymentRef), mô tả;
+
+|He thong|
+:POST /company-fund/topup { amount, paymentRef, description };
+
+|Co so du lieu|
+:Company Fund Wallet.credit(amount);
+:FLOAT_MAIN.credit(amount);
+:createTransaction(SYSTEM_TOPUP);
+:Ghi Audit Log SYSTEM_FUND_ADJUSTED;
+
+|CFO|
+:Nạp vốn thành công;
+
+if (Cần đối chiếu quỹ?) then (Có)
+  |He thong|
+  :GET /company-fund/reconciliation;
+
+  |Co so du lieu|
+  :Tính FLOAT_MAIN.balance vs SUM(all wallets);
+
+  |He thong|
+  if (Discrepancy = 0?) then (Có — OK)
+    |CFO|
+    :Quỹ cân đối — Bình thường;
+    stop
+  else (Không — Có sai sót)
+    :Cảnh báo discrepancy;
+    stop
+  endif
+else (Không)
+  stop
+endif
+
+@enduml

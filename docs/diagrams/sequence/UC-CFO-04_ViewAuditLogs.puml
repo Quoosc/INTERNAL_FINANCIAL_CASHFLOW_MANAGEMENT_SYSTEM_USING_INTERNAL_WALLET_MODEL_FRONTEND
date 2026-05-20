@@ -1,0 +1,47 @@
+@startuml
+
+actor "CFO" as CFO
+participant "Frontend\n(Next.js)" as FE
+participant "AdminAuditController" as API
+database "audit_logs" as DB
+
+CFO -> FE: Chọn "Nhật ký hệ thống"
+FE -> API: GET /api/v1/admin/audit\n?actorId=&action=&entityName=&from=&to=&page=1&limit=50
+note right of FE
+  Endpoint dùng chung với Admin: /admin/audit
+  page là 1-indexed
+end note
+API -> DB: findAll(filters, pageable, sort=createdAt DESC)
+DB --> API: PaginatedResponse<AuditLogResponse>
+API --> FE: 200 PaginatedResponse<AuditLogResponse>
+FE --> CFO: Danh sách audit logs\n(actorName, action, entityName, createdAt)
+
+opt Lọc theo Action
+    CFO -> FE: Chọn AuditAction từ dropdown
+    FE -> API: GET /api/v1/admin/audit?action={action}&page=1&limit=50
+    API --> FE: Filtered logs
+end
+
+opt Lọc theo diễn viên (actor)
+    CFO -> FE: Nhập actorId (userId)
+    FE -> API: GET /api/v1/admin/audit?actorId={actorId}&page=1&limit=50
+    API --> FE: Filtered logs
+end
+
+opt Lọc theo khoảng thời gian
+    CFO -> FE: Chọn from → to
+    FE -> API: GET /api/v1/admin/audit?from={from}&to={to}&page=1&limit=50
+    API --> FE: Filtered logs
+end
+
+note right of API
+  AuditAction values:
+  USER_CREATED, USER_UPDATED, USER_LOCKED, USER_UNLOCKED,
+  BANK_INFO_UPDATED, ROLE_ASSIGNED, ROLE_REVOKED,
+  DEPARTMENT_CREATED, DEPARTMENT_UPDATED,
+  QUOTA_TOPUP, CONFIG_UPDATED, SYSTEM_FUND_ADJUSTED,
+  PROJECT_TOPUP, PIN_RESET, PIN_LOCKED,
+  USER_LOGIN_SUCCESS, USER_LOGIN_FAILED, DATA_EXPORTED
+end note
+
+@enduml

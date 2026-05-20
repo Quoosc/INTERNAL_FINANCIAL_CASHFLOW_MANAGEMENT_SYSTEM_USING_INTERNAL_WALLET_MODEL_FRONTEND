@@ -32,8 +32,7 @@ elseif (Thao tác = Cập nhật?) then (Có)
   :Chọn DA → Sửa name / description / totalBudget / teamLeaderId / status;
 
   |He thong|
-  :PUT /manager/projects/{id}
-  { name?, description?, totalBudget?, status?, teamLeaderId? };
+  :PUT /manager/projects/{id} - body: name, description, totalBudget, status, teamLeaderId;
 
   |Co so du lieu|
   :Cập nhật Project;

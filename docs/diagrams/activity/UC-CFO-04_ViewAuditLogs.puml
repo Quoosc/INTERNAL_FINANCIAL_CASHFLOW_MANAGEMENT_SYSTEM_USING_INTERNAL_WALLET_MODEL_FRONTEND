@@ -1,16 +1,15 @@
-﻿@startuml
+@startuml
 
-title UC-ADM-06: Xem Audit Logs (Admin)
+title UC-CFO-04: Xem Nhật ký Hệ thống (CFO)
 
-|Admin|
+|CFO|
 start
 :Chọn "Nhật ký hệ thống" trên menu;
 
 |He thong|
-:GET /admin/audit
-?actorId=&action=&entityName=&from=&to=&page=1&limit=50;
+:GET /admin/audit?actorId=&action=&entityName=&from=&to=&page=1&limit=50;
 note right
-  Endpoint đổi từ /audit/logs → /admin/audit
+  Endpoint dùng chung với Admin: /admin/audit
   page là 1-indexed
   Bộ lọc: actorId, action, entityName, from, to
 end note
@@ -19,38 +18,26 @@ end note
 :Truy vấn PaginatedResponse AuditLogResponse (sort createdAt DESC);
 
 |He thong|
-:Hiển thị DS audit log
-(actorName, action, entityName, createdAt);
+:Hiển thị DS audit log (actorName, action, entityName, createdAt);
 
-|Admin|
+|CFO|
 if (Áp dụng bộ lọc?) then (Theo Action)
   :Chọn AuditAction từ dropdown;
-  note right
-    AuditAction values:
-    USER_CREATED, USER_UPDATED, USER_LOCKED,
-    USER_UNLOCKED, BANK_INFO_UPDATED,
-    ROLE_ASSIGNED, ROLE_REVOKED,
-    DEPARTMENT_CREATED, DEPARTMENT_UPDATED,
-    QUOTA_TOPUP, CONFIG_UPDATED,
-    SYSTEM_FUND_ADJUSTED, PROJECT_TOPUP,
-    PIN_RESET, PIN_LOCKED,
-    USER_LOGIN_SUCCESS, USER_LOGIN_FAILED, ...
-  end note
 
   |He thong|
   :GET /admin/audit?action={action}&page=1&limit=50;
 
-  |Admin|
+  |CFO|
   :Xem DS lọc theo action;
   stop
 
-elseif (Lọc = Theo diễn viên?) then (Có)
+elseif (Lọc theo diễn viên?) then (Có)
   :Nhập actorId (userId của người thực hiện);
 
   |He thong|
   :GET /admin/audit?actorId={actorId}&page=1&limit=50;
 
-  |Admin|
+  |CFO|
   :Xem lịch sử hành động của 1 người;
   stop
 
@@ -60,7 +47,7 @@ else (Theo khoảng thời gian)
   |He thong|
   :GET /admin/audit?from={from}&to={to}&page=1&limit=50;
 
-  |Admin|
+  |CFO|
   :Xem audit trong khoảng thời gian;
   stop
 endif

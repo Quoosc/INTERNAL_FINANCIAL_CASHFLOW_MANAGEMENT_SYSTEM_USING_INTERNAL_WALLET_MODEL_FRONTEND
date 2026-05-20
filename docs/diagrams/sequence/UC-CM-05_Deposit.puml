@@ -1,37 +1,50 @@
-@startuml UC-CM-05: Deposit
+﻿@startuml
 
 actor "Người dùng" as User
-participant "Frontend" as FE
-participant "WalletController" as API
-participant "WalletService" as Svc
-participant "Payment Gateway" as GW
-database "wallets / transactions" as DB
+participant "Frontend\n(Next.js)" as FE
+participant "DepositController" as API
+participant "VNPay Gateway" as VNPay
+participant "SSE Stream" as SSE
+database "deposit_logs / wallets" as DB
 
-User -> FE: Nhấn "Nạp tiền", nhập số tiền
-FE --> User: Yêu cầu nhập PIN
-User -> FE: Nhập PIN
-FE -> API: POST /api/v1/wallet/deposit {amount, pin}
-API -> Svc: deposit(userId, amount, pin)
-Svc -> Svc: verifyPin(userId, pin)
+== Tạo lệnh nạp tiền ==
 
-alt PIN sai
-    Svc --> API: throw PinInvalid
-    API --> FE: 401 "Invalid PIN"
-    FE --> User: Sai PIN
-else PIN đúng
-    Svc -> DB: createTransaction(DEPOSIT, PENDING)
-    Svc -> GW: createPaymentLink(amount, txCode)
-    GW --> Svc: paymentUrl + QR code
-    Svc --> API: {qrCode, paymentUrl, transactionId}
-    API --> FE: 200
-    FE --> User: Hiển thị QR code
+User -> FE: Nhấn "Nạp tiền"\nNhập số tiền (tối thiểu 10.000 VND)
+note right of FE
+  Không yêu cầu PIN để nạp tiền
+  PIN chỉ cần cho rút tiền / giải ngân
+end note
+FE -> API: POST /api/v1/wallet/deposit\n{ amount, bankCode?: "NCB"|..., locale?: "vn" }
+API -> DB: save(DepositLog, status=PENDING,\n  depositCode = "DEP-YYYYMMDD-XXXX" [auto-gen])
+API -> VNPay: Tạo payment link (amount, depositCode)
+VNPay --> API: paymentUrl
+API --> FE: 201 DepositLogResponse\n{ id, depositCode, amount,\n  status: PENDING, paymentUrl, ... }
+FE --> User: Mở paymentUrl\n(Redirect sang trang thanh toán VNPay)
 
-    User -> GW: Quét QR thanh toán qua app NH
-    GW -> API: Webhook IPN (txCode, status=SUCCESS)
-    API -> Svc: handleWebhook(txCode, SUCCESS)
-    Svc -> DB: wallet.credit(amount)
-    Svc -> DB: transaction.status = COMPLETED
-    Svc -> Svc: sendNotification(BALANCE_CHANGED)
+== Người dùng thực hiện thanh toán ==
+
+User -> VNPay: Thanh toán qua ứng dụng NH / ATM / QR
+
+alt Thanh toán thành công
+    VNPay -> API: GET /api/v1/payments/{gateway}/ipn\n(Callback server-to-server — FE không gọi)
+    API -> DB: depositLog.status = COMPLETED\nwallet.balance += amount
+    API -> SSE: push event "wallet.updated"\n(WalletResponse mới)
+    API -> SSE: push event "transaction.created"\n(LedgerEntryResponse)
+    SSE -> FE: event: wallet.updated → WalletContext.updateFromSse()
+    FE --> User: Số dư cập nhật tự động
+else Thanh toán thất bại / hết hạn
+    VNPay -> API: IPN (status = FAILED)
+    API -> DB: depositLog.status = FAILED
+    FE --> User: (Không nhận SSE — kiểm tra lịch sử nếu cần)
 end
+
+VNPay -> FE: GET /api/v1/payments/{gateway}/return\n(Redirect về FE sau thanh toán — FE hiển thị kết quả)
+
+== Xem lịch sử nạp tiền ==
+
+User -> FE: Nhấn "Lịch sử nạp tiền"
+FE -> API: GET /api/v1/wallet/deposit/my?page=0&size=10
+API --> FE: SpringPage<DepositLogResponse>\n{ content[], totalElements, totalPages, number, size }
+FE --> User: Danh sách lệnh nạp tiền\n(PENDING / COMPLETED / FAILED)
 
 @enduml

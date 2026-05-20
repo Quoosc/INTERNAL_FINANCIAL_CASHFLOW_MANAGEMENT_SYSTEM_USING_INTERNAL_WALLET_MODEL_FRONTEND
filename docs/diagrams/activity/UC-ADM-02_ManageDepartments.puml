@@ -1,67 +1,60 @@
-@startuml UC-ADM-02: Quan ly Phong ban
+﻿@startuml
 
-title UC-ADM-02: Quản lý Phòng ban
+title UC-ADM-02: Quản lý Phòng ban (Admin)
+
+note right
+  ⚠ Admin chỉ CRUD phòng ban (metadata).
+  Việc cấp ngân sách cho phòng ban (DEPARTMENT_TOPUP)
+  là luồng tài chính Flow 3 do Manager tạo → CFO duyệt.
+  Admin KHÔNG trực tiếp cấp vốn.
+end note
 
 |Admin|
 start
 :Chọn "Quản lý phòng ban";
 
 |He thong|
-:GET /api/v1/departments;
+:GET /admin/departments?search=&page=1&limit=20;
+note right
+  Endpoint dùng /admin/departments
+  page là 1-indexed
+end note
 
 |Co so du lieu|
-:Truy vấn List<Department>;
+:Truy vấn PaginatedResponse<DepartmentListItem>;
 
 |He thong|
 :Hiển thị DS phòng ban;
 
 |Admin|
-if (Thao tác?) then (Tạo PB)
-  :Nhập: tên, mã, gán Manager;
-
-  |Co so du lieu|
-  :Kiểm tra existsByCode;
-
-  if (Mã đã tồn tại?) then (Có)
-    |Admin|
-    :Thông báo "Mã trùng";
-    stop
-  else (Không)
-  endif
-
-  |Co so du lieu|
-  :Lưu Department;
+if (Thao tác?) then (Tạo PB mới)
+  :Nhập: name, code (optional), managerId (optional), totalProjectQuota (optional);
 
   |He thong|
+  :POST /admin/departments
+  { name, code?, managerId?, totalProjectQuota? };
+
+  |Co so du lieu|
+  :save(Department);
   :Ghi Audit Log DEPARTMENT_CREATED;
 
   |Admin|
+  :Tạo phòng ban thành công;
   stop
 
-else (Cấp vốn)
-  :Chọn PB → "Cấp vốn";
-  :Nhập số tiền;
-
-  |Co so du lieu|
-  :Đọc SystemFund.totalBalance;
+else (Cập nhật PB)
+  :Chọn PB → Sửa name / managerId / totalProjectQuota;
 
   |He thong|
-  if (Quỹ đủ?) then (Không)
-    |Admin|
-    :Thông báo "Quỹ không đủ";
-    stop
-  else (Có)
-  endif
+  :PUT /admin/departments/{id}
+  { name?, managerId?, totalProjectQuota? };
 
   |Co so du lieu|
-  :fund.totalBalance -= amount;
-  :dept.receiveQuota(amount);
-
-  |He thong|
-  :Ghi Audit Log QUOTA_TOPUP;
+  :Cập nhật Department;
+  :Ghi Audit Log DEPARTMENT_UPDATED;
 
   |Admin|
-  :Cấp vốn thành công;
+  :Cập nhật thành công;
   stop
 endif
 

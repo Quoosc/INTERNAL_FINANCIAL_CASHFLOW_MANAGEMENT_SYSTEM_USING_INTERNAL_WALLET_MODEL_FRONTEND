@@ -1,48 +1,45 @@
-@startuml UC-MGR-01: Manage Projects
+﻿@startuml
 
 actor "Manager" as Mgr
-participant "Frontend" as FE
-participant "ProjectController" as API
-participant "ProjectService" as Svc
+participant "Frontend\n(Next.js)" as FE
+participant "ManagerProjectController" as API
 database "projects / project_members" as DB
 
 == Tạo Dự án ==
 
-Mgr -> FE: Nhấn "Tạo dự án", nhập tên, mô tả
-FE -> API: POST /api/v1/projects {name, description}
-API -> Svc: createProject(dto, currentManager)
-Svc -> Svc: generateProjectCode(PRJ-{DEPT}-{YEAR})
-Svc -> DB: save(Project, dept=manager.dept, status=PLANNING)
-Svc --> API: Project
-API --> FE: 201 Project
+Mgr -> FE: Nhấn "Tạo dự án"
+FE -> API: GET /api/v1/manager/department/team-leaders
+API --> FE: List<TeamLeaderOptionResponse>
+FE --> Mgr: Dropdown chọn Team Leader
+
+Mgr -> FE: Nhập name, description, totalBudget\nChọn teamLeaderId
+FE -> API: POST /api/v1/manager/projects\n{ name, description?, totalBudget, teamLeaderId }
+API -> DB: save(Project, dept=manager.dept, status=PLANNING)
+API -> DB: save(ProjectMember, role=LEADER, userId=teamLeaderId)
+API --> FE: 201 ManagerProjectListItem
 FE --> Mgr: Tạo DA thành công
-
-== Chỉ định Team Leader ==
-
-Mgr -> FE: Chọn DA → "Chỉ định TL"
-Mgr -> FE: Chọn NV trong phòng ban
-FE -> API: POST /api/v1/projects/{id}/assign-leader {userId}
-API -> Svc: assignLeader(projectId, userId)
-Svc -> DB: save(ProjectMember, role=LEADER)
-Svc --> API: success
-API --> FE: 200
 
 == Cập nhật thông tin ==
 
-Mgr -> FE: Sửa tên, mô tả
-FE -> API: PUT /api/v1/projects/{id} (UpdateProjectDTO)
-API -> Svc: updateProject(projectId, dto)
-Svc -> DB: save(updatedProject)
-Svc --> FE: 200
+Mgr -> FE: Chọn DA → Sửa thông tin
+FE -> API: PUT /api/v1/manager/projects/{id}\n{ name?, description?, totalBudget?,\n  status?, teamLeaderId? }
+API -> DB: update(Project)
+API --> FE: 200 ManagerProjectListItem
+FE --> Mgr: Cập nhật thành công
 
-== Đổi trạng thái ==
+== Xem danh sách dự án ==
 
-opt Pause / Close
-    Mgr -> FE: Nhấn "Tạm dừng" hoặc "Đóng DA"
-    FE -> API: PATCH /api/v1/projects/{id}/status {status: PAUSED/CLOSED}
-    API -> Svc: updateProjectStatus(projectId, status)
-    Svc -> DB: project.status = PAUSED / CLOSED
-    Svc --> FE: 200
-end
+Mgr -> FE: Chọn "Dự án"
+FE -> API: GET /api/v1/manager/projects\n?status=&search=&page=0&size=20
+API --> FE: PageResponse<ManagerProjectListItem>
+FE --> Mgr: Danh sách dự án phòng ban
+
+note over Mgr, DB
+  Manager quản lý projects trong department của mình.
+  Không dùng /api/v1/projects (shared endpoint)
+  — dùng /manager/projects (role-specific endpoint).
+  Đổi trạng thái: PLANNING → ACTIVE → PAUSED → CLOSED
+  thực hiện qua PUT /manager/projects/{id} { status }
+end note
 
 @enduml

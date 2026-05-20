@@ -1,4 +1,4 @@
-@startuml UC-EMP-02: Xem Du an dang tham gia
+﻿@startuml
 
 title UC-EMP-02: Xem Dự án đang tham gia
 
@@ -7,26 +7,34 @@ start
 :Chọn "Dự án" trên menu;
 
 |He thong|
-:GET /api/v1/projects?status=ACTIVE&member=me;
+:GET /projects?status=ACTIVE;
+note right
+  Không có param &member=me
+  Backend tự lọc theo userId hiện tại
+end note
 
 |Co so du lieu|
-:Truy vấn projects theo\nProjectMember(userId) + status=ACTIVE;
-:Trả về List<Project>;
+:Truy vấn projects thuộc phòng ban / là thành viên
+theo status = ACTIVE;
+:Trả về { items: [{id, projectCode, name}] };
 
 |He thong|
-:Hiển thị DS dự án\n(tên, mã DA, Phase, NS khả dụng);
+:Hiển thị DS dự án (tên, mã DA, status);
 
 |Employee|
 :Chọn 1 DA → Xem chi tiết;
 
 |He thong|
-:GET /api/v1/projects/{id};
+:GET /projects/{id}/phases?status=ACTIVE;
 
 |Co so du lieu|
-:Truy vấn Project + phases + members;
+:Truy vấn Project + phases + categories;
+:Trả về ProjectPhasesResponse;
 
 |He thong|
-:Hiển thị chi tiết:\nPhase, Thành viên, Category budget;
+:Hiển thị chi tiết DA:
+- DS Phase (ACTIVE / CLOSED)
+- Category budget theo phase;
 
 |Employee|
 stop

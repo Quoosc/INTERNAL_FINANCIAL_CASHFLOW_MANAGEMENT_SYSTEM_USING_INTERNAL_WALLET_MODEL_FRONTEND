@@ -1,32 +1,65 @@
-@startuml UC-ACC-03: Quan ly Quy He thong
+﻿@startuml
 
-title UC-ACC-03: Quản lý Quỹ Hệ thống
+title UC-ACC-03: Quản lý Quỹ Công ty (Company Fund)
 
 |Accountant|
 start
 :Chọn "Quỹ hệ thống";
 
 |He thong|
-:GET /api/v1/system-fund;
+:GET /company-fund;
+note right
+  Endpoint đổi từ /system-fund → /company-fund
+  Balance thực tế trong Wallet(COMPANY_FUND, ownerId=1)
+  CompanyFund entity chỉ lưu metadata ngân hàng
+end note
 
 |Co so du lieu|
-:Truy vấn SystemFund;
+:Truy vấn CompanyFund + Wallet(COMPANY_FUND);
 
 |He thong|
-:Hiển thị: Số dư quỹ,\nTK ngân hàng, Tên NH;
+:Hiển thị: Số dư quỹ
+(balance, lockedBalance, availableBalance),
+Thông tin ngân hàng;
 
 |Accountant|
-:Nhấn "Nạp vốn";
-:Nhập số tiền;
-
-|Co so du lieu|
-:fund.totalBalance += amount;
+:Nhấn "Nạp vốn từ ngân hàng thực tế";
+:Nhập số tiền, mã tham chiếu (paymentRef), mô tả;
 
 |He thong|
-:Ghi Audit Log\nSYSTEM_FUND_ADJUSTED;
+:POST /company-fund/topup
+{ amount, paymentRef, description };
+
+|Co so du lieu|
+:Company Fund Wallet.credit(amount);
+:FLOAT_MAIN.credit(amount);
+:createTransaction(SYSTEM_TOPUP, 1 LedgerEntry);
+
+|He thong|
+:Ghi Audit Log (SYSTEM_FUND_ADJUSTED);
 
 |Accountant|
 :Nạp vốn thành công;
-stop
+
+if (Cần đối chiếu quỹ?) then (Có)
+  |He thong|
+  :GET /company-fund/reconciliation;
+
+  |Co so du lieu|
+  :Tính FLOAT_MAIN.balance vs SUM(all wallets);
+
+  |He thong|
+  if (Discrepancy = 0?) then (Có — OK)
+    |Accountant|
+    :Quỹ cân đối — Bình thường;
+    stop
+  else (Không — Có sai sót)
+    :Cảnh báo discrepancy ≠ 0;
+    :Cần điều tra giao dịch bất thường;
+    stop
+  endif
+else (Không)
+  stop
+endif
 
 @enduml

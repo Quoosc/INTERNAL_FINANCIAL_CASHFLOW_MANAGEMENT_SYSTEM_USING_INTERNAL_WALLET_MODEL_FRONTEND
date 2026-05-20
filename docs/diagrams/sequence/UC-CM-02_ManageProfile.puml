@@ -1,4 +1,4 @@
-@startuml UC-CM-02: Manage Profile
+﻿@startuml
 
 actor "Người dùng" as User
 participant "Frontend" as FE

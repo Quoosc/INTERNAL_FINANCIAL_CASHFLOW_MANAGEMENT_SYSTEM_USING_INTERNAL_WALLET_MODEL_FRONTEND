@@ -1,63 +1,81 @@
-@startuml UC-ADM-01: Manage Users
+﻿@startuml
 
 actor "Admin" as Adm
-participant "Frontend" as FE
-participant "UserController" as API
-participant "UserService" as Svc
-database "users / user_profiles" as DB
-database "wallets" as WDB
-participant "EmailRedisProducer" as Mail
+participant "Frontend\n(Next.js)" as FE
+participant "AdminUserController" as API
+database "users" as DB
+participant "Email Service" as Mail
+
+== Xem danh sách nhân sự ==
 
 Adm -> FE: Chọn "Quản lý nhân sự"
-FE -> API: GET /api/v1/users
-API --> FE: Page<User>
+FE -> API: GET /api/v1/admin/users\n?role=&departmentId=&status=&search=&page=1&limit=20
+note right of FE
+  page là 1-indexed
+  Bộ lọc: role, departmentId, status, search (tên/email)
+end note
+API --> FE: PaginatedResponse<AdminUserListItem>
+FE --> Adm: Danh sách nhân sự
 
-== Onboard (Tạo tài khoản mới) ==
+== Onboard — Tạo tài khoản mới ==
 
 Adm -> FE: Nhấn "Thêm nhân viên"
-Adm -> FE: Nhập: email, họ tên, PB, chức vụ, role
-FE -> API: POST /api/v1/users (CreateUserDTO)
-API -> Svc: createUser(dto)
-Svc -> DB: check existsByEmail
-
-alt Email trùng
-    Svc --> API: throw EmailExists
-    API --> FE: 400
+Adm -> FE: Nhập: fullName, email, roleId, departmentId (optional)
+FE -> API: POST /api/v1/admin/users\n{ fullName, email, roleId, departmentId? }
+API -> DB: Kiểm tra email trùng lặp
+alt Email đã tồn tại
+    API --> FE: 400 "Email already exists"
     FE --> Adm: Email đã tồn tại
 else OK
-    Svc -> Svc: generateRandomPassword()
-    Svc -> DB: save(User, isFirstLogin=true)
-    Svc -> DB: save(UserProfile)
-    Svc -> WDB: save(Wallet, balance=0)
-    Svc -> Mail: sendEmail(email, password)
-    Svc -> Svc: auditEvent(USER_CREATED)
-    Svc --> API: User
-    API --> FE: 201 User
-    FE --> Adm: Tạo thành công
+    API -> DB: save(User, isFirstLogin=true,\n  requiresSetup=true)
+    API -> DB: save(Wallet, balance=0) — Tự tạo User Wallet
+    API -> Mail: Gửi email ONBOARD (email, mật khẩu tạm thời)
+    API -> API: auditEvent(USER_CREATED)
+    API --> FE: 201 AdminUserDetailResponse
+    FE --> Adm: Tạo thành công\n(Nhân viên đăng nhập lần đầu → đổi MK + PIN)
 end
+
+== Xem chi tiết nhân viên ==
+
+Adm -> FE: Nhấn vào 1 nhân viên
+FE -> API: GET /api/v1/admin/users/{id}
+API --> FE: AdminUserDetailResponse\n{ ...user, wallet, securitySettings }
+FE --> Adm: Chi tiết nhân viên + thông tin ví
+
+== Cập nhật thông tin ==
+
+Adm -> FE: Chỉnh sửa fullName / roleId / departmentId
+FE -> API: PUT /api/v1/admin/users/{id}\n{ fullName?, roleId?, departmentId? }
+API -> DB: update(User)
+API -> API: auditEvent(USER_UPDATED / ROLE_ASSIGNED)
+API --> FE: 200 AdminUserDetailResponse
+FE --> Adm: Cập nhật thành công
 
 == Khóa / Mở khóa ==
 
 Adm -> FE: Nhấn "Khóa" trên user
-FE -> API: PATCH /api/v1/users/{id}/lock
-API -> Svc: toggleLock(userId)
-Svc -> DB: user.status = LOCKED / ACTIVE
-Svc -> Svc: auditEvent(USER_LOCKED / USER_UNLOCKED)
-Svc --> API: User
-API --> FE: 200
+FE -> API: POST /api/v1/admin/users/{id}/lock
+API -> DB: user.status = LOCKED
+API -> API: auditEvent(USER_LOCKED)
+API --> FE: 200 LockUserResponse
+FE --> Adm: Tài khoản đã khóa
+
+Adm -> FE: Nhấn "Mở khóa"
+FE -> API: POST /api/v1/admin/users/{id}/unlock
+API -> DB: user.status = ACTIVE
+API -> API: auditEvent(USER_UNLOCKED)
+API --> FE: 200 UnlockUserResponse
 
 == Reset Mật khẩu ==
 
-opt Reset MK
-    Adm -> FE: Nhấn "Reset MK"
-    FE -> API: POST /api/v1/users/{id}/reset-password
-    API -> Svc: resetPassword(userId)
-    Svc -> Svc: generateRandomPassword()
-    Svc -> DB: user.password = BCrypt(newPassword)
-    Svc -> DB: user.isFirstLogin = true
-    Svc -> Mail: sendEmail(email, newPassword)
-    Svc -> Svc: auditEvent(PASSWORD_RESET)
-    Svc --> FE: 200
+opt Reset MK (buộc đổi MK lần đầu lại)
+    Adm -> FE: Nhấn "Reset mật khẩu"
+    FE -> API: POST /api/v1/admin/users/{id}/reset-password
+    API -> DB: user.isFirstLogin = true
+    API -> Mail: Gửi email mật khẩu tạm mới
+    API -> API: auditEvent(PIN_RESET)
+    API --> FE: 200 { message }
+    FE --> Adm: Đã reset — nhân viên sẽ nhận email
 end
 
 @enduml

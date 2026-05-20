@@ -1,37 +1,53 @@
-@startuml UC-TL-01: Approve/Reject Personal Expense (Flow 1)
+﻿@startuml
 
 actor "Team Leader" as TL
-participant "Frontend" as FE
-participant "RequestController" as API
-participant "RequestService" as Svc
+participant "Frontend\n(Next.js)" as FE
+participant "TLApprovalController" as API
 database "requests" as RDB
 
-TL -> FE: Chọn "Danh sách chờ duyệt"
-FE -> API: GET /api/v1/requests?status=PENDING_APPROVAL&projectRole=LEADER
-API --> FE: Danh sách YC PENDING_APPROVAL
+== Xem danh sách chờ duyệt ==
 
-TL -> FE: Chọn YC → Xem chi tiết + chứng từ
+TL -> FE: Chọn "Duyệt yêu cầu"
+FE -> API: GET /api/v1/team-leader/approvals\n?type=ADVANCE|EXPENSE|REIMBURSE\n&projectId=&search=&page=0&size=20
+note right of FE
+  Chỉ thấy requests thuộc project mình là LEADER
+  Status filter ngầm: PENDING
+  page là 0-indexed
+end note
+API --> FE: PageResponse<TLApprovalListItem>
+FE --> TL: Danh sách yêu cầu chờ duyệt
+
+== Xem chi tiết yêu cầu ==
+
+TL -> FE: Chọn 1 yêu cầu
+FE -> API: GET /api/v1/team-leader/approvals/{id}
+API --> FE: TLApprovalDetailResponse\n(thông tin requester, project, phase, category,\n amount, attachments, timeline)
+FE --> TL: Chi tiết yêu cầu + chứng từ đính kèm
 
 alt Duyệt
-    TL -> FE: Nhấn "Duyệt"
-    FE -> API: POST /api/v1/requests/{id}/approve
-    API -> Svc: approveByTeamLeader(requestId, TL)
-    Svc -> RDB: request.status = PENDING_ACCOUNTANT
-    Svc -> RDB: saveRequestHistory(TL, APPROVE)
-    Svc -> Svc: notifyAccountant(request)
-    Svc --> API: Request(PENDING_ACCOUNTANT)
-    API --> FE: 200
-    FE --> TL: Đã duyệt → chờ KT giải ngân
+    TL -> FE: Nhấn "Duyệt"\nNhập approvedAmount + comment (optional)
+    FE -> API: POST /api/v1/team-leader/approvals/{id}/approve\n{ approvedAmount, comment? }
+    API -> RDB: request.status = APPROVED_BY_TEAM_LEADER
+    API -> RDB: Lưu approval history (TL, APPROVE, comment)
+    API -> API: Gửi notification cho Accountant (REQUEST_APPROVED_BY_TL)
+    API -> API: Gửi notification cho Employee
+    API --> FE: 200 TLApproveResponse
+    FE --> TL: Đã duyệt\n→ Chờ Accountant giải ngân
 else Từ chối
-    TL -> FE: Nhấn "Từ chối" + nhập lý do
-    FE -> API: POST /api/v1/requests/{id}/reject {reason}
-    API -> Svc: reject(requestId, reason)
-    Svc -> RDB: request.status = REJECTED, rejectReason = reason
-    Svc -> RDB: saveRequestHistory(TL, REJECT)
-    Svc -> Svc: notifyEmployee(request)
-    Svc --> API: Request(REJECTED)
-    API --> FE: 200
+    TL -> FE: Nhấn "Từ chối"\nNhập lý do (bắt buộc)
+    FE -> API: POST /api/v1/team-leader/approvals/{id}/reject\n{ reason }
+    API -> RDB: request.status = REJECTED\nrequest.rejectReason = reason
+    API -> API: Gửi notification cho Employee (REQUEST_REJECTED)
+    API --> FE: 200 TLRejectResponse
     FE --> TL: Đã từ chối
 end
+
+note over TL, RDB
+  Luồng sau khi TL duyệt (APPROVED_BY_TEAM_LEADER):
+  → Accountant thấy trong /accountant/disbursements
+  → Accountant nhập PIN để giải ngân → status = PAID
+  → Project Wallet → User Wallet (REQUEST_PAYMENT)
+  Accountant CÓ THỂ reject ngay cả sau khi TL đã duyệt
+end note
 
 @enduml

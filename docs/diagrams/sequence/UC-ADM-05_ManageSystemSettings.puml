@@ -1,28 +1,36 @@
-@startuml UC-ADM-05: Manage System Settings
+﻿@startuml
 
 actor "Admin" as Adm
-participant "Frontend" as FE
-participant "SystemConfigController" as API
-participant "SystemConfigService" as Svc
+participant "Frontend\n(Next.js)" as FE
+participant "AdminSettingsController" as API
 database "system_configs" as DB
 
 Adm -> FE: Chọn "Cấu hình hệ thống"
-FE -> API: GET /api/v1/system-config
-API -> Svc: getAllConfigs()
-Svc -> DB: findAll()
-DB --> Svc: List<SystemConfig>
-Svc --> API: List<SystemConfig>
-API --> FE: 200
-FE --> Adm: Hiển thị DS config\n(key, value, description)
+FE -> API: GET /api/v1/admin/settings
+note right of FE
+  Endpoint đổi từ /system-config → /admin/settings
+  Trả về { items: [{key, value, description}] }
+end note
+API -> DB: findAll(SystemConfig)
+DB --> API: SystemSettingsResponse\n{ items: [{key, value, description}] }
+API --> FE: 200 SystemSettingsResponse
+FE --> Adm: Danh sách config (key, value, description)
 
-Adm -> FE: Chọn config → Sửa value → Nhấn "Lưu"
-FE -> API: PUT /api/v1/system-config/{key} {value}
-API -> Svc: updateConfig(key, value)
-Svc -> DB: config.setValue(value)
-Svc -> DB: save(config)
-Svc -> Svc: auditEvent(CONFIG_UPDATED)
-Svc --> API: SystemConfig
-API --> FE: 200
-FE --> Adm: Cập nhật thành công
+Adm -> FE: Chỉnh sửa values → Nhấn "Lưu"
+FE -> API: PUT /api/v1/admin/settings\n{ configs: [{key, value}, ...] }
+note right of FE
+  Config keys hiện tại:
+  WITHDRAWAL_LIMIT, MINIMUM_WITHDRAWAL,
+  MAX_FILE_SIZE_MB, MAX_FILES_PER_REQUEST,
+  MINIMUM_REQUEST_AMOUNT,
+  PIN_MAX_RETRY, PIN_LOCK_DURATION_MINUTES,
+  REQUIRE_PIN_FOR_WITHDRAWAL
+  ⚠ WITHDRAW_AUTO_APPROVE_LIMIT → không còn tồn tại
+  ⚠ MANAGER_APPROVAL_LIMIT → không còn tồn tại
+end note
+API -> DB: Cập nhật các config được gửi lên
+API -> API: auditEvent(CONFIG_UPDATED)
+API --> FE: 200 SystemSettingsResponse (updated)
+FE --> Adm: Cập nhật cấu hình thành công
 
 @enduml

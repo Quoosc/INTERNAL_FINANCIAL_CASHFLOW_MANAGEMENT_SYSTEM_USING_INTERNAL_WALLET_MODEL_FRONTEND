@@ -1,48 +1,72 @@
-@startuml UC-ACC-04: Duyet Rut tien
+﻿@startuml
 
-title UC-ACC-04: Duyệt Rút tiền
+title UC-ACC-04: Vòng đời Yêu cầu Rút tiền (Withdraw Request Lifecycle)
 
-|Accountant|
+note right
+  ⚠ THAY ĐỔI: Luồng duyệt rút tiền bởi Accountant ĐÃ BỊ LOẠI BỎ.
+  Rút tiền hiện tại là hành động trực tiếp của người dùng (tự phục vụ).
+  Accountant KHÔNG có màn hình duyệt rút tiền.
+end note
+
+|Nguoi dung|
 start
-:Chọn "Duyệt rút tiền";
+:Nhấn "Rút tiền";
+:Nhập số tiền + ghi chú (userNote);
+:Nhập PIN (5 số);
 
 |He thong|
-:GET /api/v1/wallet/pending-withdrawals;
+:POST /wallet/withdraw { amount, userNote, pin };
+:Xác thực PIN;
+
+if (PIN / Số dư hợp lệ?) then (Không)
+  |Nguoi dung|
+  :Thông báo lỗi (Sai PIN / Không đủ số dư);
+  stop
+else (Có)
+endif
 
 |Co so du lieu|
-:Truy vấn Transaction\n(WITHDRAW, PENDING);
+:wallet.lockedBalance += amount;
+:save(WithdrawRequest, status = PENDING);
+
+|Nguoi dung|
+:Xem trạng thái tại /wallet/withdraw/my;
+
+if (Muốn hủy?) then (Có — khi PENDING)
+  :Nhấn "Hủy";
+
+  |He thong|
+  :DELETE /wallet/withdraw/{id};
+
+  |Co so du lieu|
+  :status = CANCELLED;
+  :wallet.lockedBalance -= amount;
+
+  |Nguoi dung|
+  :Đã hủy;
+  stop
+else (Không)
+endif
 
 |He thong|
-:Hiển thị DS lệnh rút chờ duyệt;
+:Backend xử lý yêu cầu;
 
-|Accountant|
-:Chọn lệnh rút → Xem chi tiết\n(NV, số tiền, TK NH);
-
-if (Quyết định?) then (Duyệt)
-  :Nhấn "Duyệt";
-
+if (Kết quả?) then (COMPLETED)
   |Co so du lieu|
-  :wallet.pendingBalance -= amount;
+  :wallet.lockedBalance -= amount;
   :wallet.balance -= amount;
-  :fund.totalBalance -= amount;
-  :transaction.status = COMPLETED;
+  :status = COMPLETED;
 
-  |He thong|
-  :Thông báo Employee\n"Rút tiền thành công";
-
-  |Accountant|
+  |Nguoi dung|
+  :Rút tiền thành công;
   stop
-else (Từ chối)
-  :Nhấn "Từ chối";
-
+else (FAILED / REJECTED)
   |Co so du lieu|
-  :wallet.pendingBalance -= amount;
-  :transaction.status = FAILED;
+  :wallet.lockedBalance -= amount;
+  :status = FAILED / REJECTED;
 
-  |He thong|
-  :Thông báo Employee\n"Rút tiền bị từ chối";
-
-  |Accountant|
+  |Nguoi dung|
+  :Rút tiền thất bại / bị từ chối;
   stop
 endif
 

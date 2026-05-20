@@ -1,50 +1,50 @@
-@startuml UC-ADM-06: View Audit Logs
+﻿@startuml
 
 actor "Admin" as Adm
-participant "Frontend" as FE
-participant "AuditController" as API
-participant "AuditService" as Svc
+participant "Frontend\n(Next.js)" as FE
+participant "AdminAuditController" as API
 database "audit_logs" as DB
 
-Adm -> FE: Chọn "Audit Log"
-FE -> API: GET /api/v1/audit/logs?page=0&size=20
-API -> Svc: getAllLogs(pageable)
-Svc -> DB: findAll(pageable, sort=createdAt DESC)
-DB --> Svc: Page<AuditLog>
-Svc --> API: Page<AuditLogResponse>
-API --> FE: 200 Page<AuditLogResponse>
-FE --> Adm: Hiển thị DS audit log
+Adm -> FE: Chọn "Nhật ký hệ thống"
+FE -> API: GET /api/v1/admin/audit\n?actorId=&action=&entityName=&from=&to=&page=1&limit=50
+note right of FE
+  Endpoint đổi từ /audit/logs → /admin/audit
+  Tất cả filter trong 1 endpoint (không tách endpoint riêng)
+  page là 1-indexed
+end note
+API -> DB: findAll(filters, pageable, sort=createdAt DESC)
+DB --> API: PaginatedResponse<AuditLogResponse>
+API --> FE: 200 PaginatedResponse<AuditLogResponse>
+FE --> Adm: Danh sách audit logs\n(actorName, action, entityName, createdAt)
 
 opt Lọc theo Action
-    FE -> API: GET /api/v1/audit/logs/action/{action}
-    API -> Svc: getLogsByAction(action, pageable)
-    Svc -> DB: findByAction(action, pageable)
-    DB --> Svc: Page<AuditLog>
-    Svc --> FE: Page<AuditLogResponse>
+    Adm -> FE: Chọn AuditAction từ dropdown
+    FE -> API: GET /api/v1/admin/audit?action={action}&page=1&limit=50
+    API --> FE: Filtered logs
 end
 
-opt Lọc theo Entity
-    FE -> API: GET /api/v1/audit/logs/entity?name=users
-    API -> Svc: getLogsByEntity(name, pageable)
-    Svc -> DB: findByEntityName(name, pageable)
-    DB --> Svc: Page<AuditLog>
-    Svc --> FE: Page<AuditLogResponse>
+opt Lọc theo diễn viên (actor)
+    Adm -> FE: Nhập actorId (userId)
+    FE -> API: GET /api/v1/admin/audit?actorId={actorId}&page=1&limit=50
+    API --> FE: Filtered logs
 end
 
-opt Lọc theo Time Range
-    FE -> API: GET /api/v1/audit/logs/range?from=...&to=...
-    API -> Svc: getLogsByTimeRange(from, to, pageable)
-    Svc -> DB: findByTimeRange(from, to, pageable)
-    DB --> Svc: Page<AuditLog>
-    Svc --> FE: Page<AuditLogResponse>
+opt Lọc theo khoảng thời gian
+    Adm -> FE: Chọn from → to
+    FE -> API: GET /api/v1/admin/audit?from={from}&to={to}&page=1&limit=50
+    API --> FE: Filtered logs
 end
 
-opt Xem lịch sử 1 entity
-    FE -> API: GET /api/v1/audit/logs/entity/{name}/{id}
-    API -> Svc: getEntityHistory(name, id)
-    Svc -> DB: findByEntityNameAndId(name, id)
-    DB --> Svc: List<AuditLog>
-    Svc --> FE: List<AuditLogResponse>
-end
+note right of API
+  AuditAction values:
+  USER_CREATED, USER_UPDATED, USER_LOCKED, USER_UNLOCKED,
+  BANK_INFO_UPDATED, ROLE_ASSIGNED, ROLE_REVOKED,
+  DEPARTMENT_CREATED, DEPARTMENT_UPDATED,
+  QUOTA_TOPUP, QUOTA_ADJUSTED, CONFIG_UPDATED,
+  SYSTEM_FUND_ADJUSTED, PROJECT_TOPUP,
+  CATEGORY_BUDGET_UPDATED, PIN_RESET, PIN_LOCKED,
+  USER_LOGIN_SUCCESS, USER_LOGIN_FAILED,
+  DATA_EXPORTED, MANUAL_ADJUSTMENT
+end note
 
 @enduml

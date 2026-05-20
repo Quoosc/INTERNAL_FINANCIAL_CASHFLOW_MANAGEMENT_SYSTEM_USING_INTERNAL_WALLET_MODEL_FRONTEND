@@ -1,4 +1,4 @@
-@startuml UC-CM-02: Quan ly Ho so
+﻿@startuml
 
 title UC-CM-02: Quản lý Hồ sơ cá nhân
 
@@ -7,42 +7,67 @@ start
 :Chọn "Hồ sơ cá nhân" trên menu;
 
 |He thong|
-:GET /api/v1/users/me/profile;
+:GET /users/me/profile;
 
 |Co so du lieu|
 :Truy vấn UserProfile theo userId;
-:Trả về UserProfile;
+:Trả về UserProfileResponse;
 
 |He thong|
-:Hiển thị thông tin: Tên, SĐT,\nĐịa chỉ, Ảnh, TT Ngân hàng;
+:Hiển thị thông tin: Tên, SĐT,
+Địa chỉ, Ảnh đại diện, TT Ngân hàng;
 
 |Nguoi dung|
-:Chỉnh sửa thông tin;
-:Nhấn "Lưu";
+if (Chỉnh sửa thông tin gì?) then (Hồ sơ cá nhân)
+  :Sửa fullName, phone, address, ...;
+  :Nhấn "Lưu";
 
-|He thong|
-:Validate dữ liệu;
+  |He thong|
+  :PUT /users/me/profile { ...UpdateProfileRequest };
 
-if (Dữ liệu hợp lệ?) then (Không)
+  |Co so du lieu|
+  :Lưu UserProfile vào DB;
+
+  |He thong|
+  :Trả về UserProfileResponse;
   |Nguoi dung|
-  :Hiển thị lỗi validation;
-  stop
-else (Có)
+  :Thông báo cập nhật thành công;
+
+else (Ảnh đại diện)
+  :Chọn ảnh mới;
+
+  |He thong|
+  :GET /uploads/signature?folder=AVATAR → Lấy signature;
+  :Upload ảnh lên Cloudinary (signed URL);
+  :PUT /users/me/avatar { avatar: cloudinaryUrl };
+  note right
+    Avatar là Signed URL Cloudinary
+    Hết hạn sau 15 phút — cần refresh khi hiển thị
+  end note
+
+  |Nguoi dung|
+  :Ảnh đại diện đã cập nhật;
+
+else (Thông tin ngân hàng)
+  :Nhập thông tin TK ngân hàng;
+
+  |He thong|
+  :PUT /users/me/bank-info { ...UpdateBankInfoRequest };
+  note right
+    Cập nhật bank info dùng endpoint riêng
+    Backend ghi Audit Log: BANK_INFO_UPDATED
+  end note
+
+  |Co so du lieu|
+  :Lưu BankInfo vào DB;
+  :Ghi Audit Log BANK_INFO_UPDATED;
+
+  |He thong|
+  :Trả về BankInfo;
+  |Nguoi dung|
+  :Thông báo cập nhật thành công;
 endif
 
-|He thong|
-if (Có thay đổi TT ngân hàng?) then (Có)
-  :Ghi Audit Log\nBANK_INFO_UPDATED;
-else (Không)
-endif
-
-|Co so du lieu|
-:Lưu UserProfile vào DB;
-
-|He thong|
-:Thông báo cập nhật thành công;
-
-|Nguoi dung|
 stop
 
 @enduml

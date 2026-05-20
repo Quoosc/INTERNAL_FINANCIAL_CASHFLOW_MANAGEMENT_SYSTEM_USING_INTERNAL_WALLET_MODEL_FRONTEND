@@ -1,4 +1,4 @@
-@startuml UC-CM-01: Quy trinh Dang nhap
+﻿@startuml
 
 title UC-CM-01: Quy trình Đăng nhập
 
@@ -17,7 +17,7 @@ end note
 
 if (Dữ liệu hợp lệ?) then (Không)
   |Nguoi dung|
-  :Hiển thị lỗi nhập liệu\n(VD: Email không hợp lệ);
+  :Hiển thị lỗi nhập liệu;
   stop
 else (Có)
 endif
@@ -27,7 +27,7 @@ endif
 
 if (Email tồn tại?) then (Không)
   |He thong|
-  :Hiển thị thông báo\n"Email or password is incorrect";
+  :Hiển thị "Email hoặc mật khẩu không đúng";
   |Nguoi dung|
   stop
 else (Có)
@@ -38,7 +38,7 @@ endif
 
 if (Tài khoản bị khóa?) then (Có)
   |He thong|
-  :Hiển thị thông báo\n"Account is locked";
+  :Hiển thị "Tài khoản bị khóa";
   |Nguoi dung|
   stop
 else (Không)
@@ -48,30 +48,48 @@ endif
 :Xác thực mật khẩu (BCrypt);
 
 if (Mật khẩu đúng?) then (Không)
-  :Hiển thị thông báo\n"Email or password is incorrect";
+  :Hiển thị "Email hoặc mật khẩu không đúng";
   |Nguoi dung|
   stop
 else (Có)
 endif
 
 |He thong|
-:Revoke ALL refresh tokens cũ\n(Token Rotation);
-:Tạo Access Token (JWT);
-:Tạo Refresh Token (JWT);
+:Backend trả về LoginResponse
+{ requiresSetup, setupToken|null,
+  accessToken|null, refreshToken|null, user };
 
-|Co so du lieu|
-:Lưu Refresh Token vào DB;
+if (requiresSetup = true?) then (Có — Lần đầu đăng nhập)
+  |He thong|
+  :Lưu setupToken vào sessionStorage;
+  :Chuyển hướng → /change-password;
 
-|He thong|
-:Ghi nhận đăng nhập thành công\n(Audit Log);
-
-if (isFirstLogin?) then (Có)
   |Nguoi dung|
-  :Chuyển hướng đến\ntrang Đổi mật khẩu lần đầu;
+  :Nhập newPassword + confirmPassword + PIN (5 số);
+
+  |He thong|
+  :POST /auth/first-login/complete
+  { setupToken, newPassword, confirmPassword, pin };
+
+  |Co so du lieu|
+  :Tạo PIN + đổi mật khẩu mới;
+  :Cấp accessToken + refreshToken;
+
+  |He thong|
+  :Lưu tokens vào localStorage + Cookie;
+  :Ghi nhận audit (USER_CREATED_PIN);
+
+  |Nguoi dung|
+  :Chuyển hướng → Dashboard theo Role;
   stop
-else (Không)
+else (Không — Đăng nhập bình thường)
+  |He thong|
+  :Lưu accessToken + refreshToken vào localStorage;
+  :Set cookie "access_token" (max-age 24h);
+  :Lưu user_info vào localStorage;
+
   |Nguoi dung|
-  :Chuyển hướng đến\nDashboard theo Role;
+  :Chuyển hướng → Dashboard theo Role;
   stop
 endif
 

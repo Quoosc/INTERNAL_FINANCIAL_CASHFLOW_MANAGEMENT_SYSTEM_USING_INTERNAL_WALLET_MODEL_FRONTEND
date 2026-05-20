@@ -1,51 +1,67 @@
-@startuml UC-CM-05: Nap tien
+﻿@startuml
 
-title UC-CM-05: Nạp tiền vào Ví
+title UC-CM-05: Nạp tiền vào Ví (VNPay)
 
 |Nguoi dung|
 start
 :Nhấn "Nạp tiền";
-:Nhập số tiền;
-:Nhập mã PIN;
+:Nhập số tiền (tối thiểu 10.000 VND);
+note right
+  Không cần nhập PIN để nạp tiền
+  PIN chỉ cần cho rút tiền / giải ngân
+end note
 
 |He thong|
-:Xác thực PIN;
-
-if (PIN đúng?) then (Sai)
+if (Số tiền hợp lệ?) then (Không)
   |Nguoi dung|
-  :Thông báo "Sai PIN";
+  :Thông báo "Số tiền không hợp lệ";
   stop
-else (Đúng)
+else (Có)
 endif
 
+|He thong|
+:POST /wallet/deposit
+{ amount, bankCode?, locale? };
+:Backend tự sinh depositCode = "DEP-YYYYMMDD-XXXX";
+
 |Co so du lieu|
-:Tạo Transaction\n(DEPOSIT, status=PENDING);
+:Tạo DepositLog (status = PENDING);
 
 |He thong|
-:Gọi Payment Gateway\n→ Sinh mã QR thanh toán;
+:Tạo paymentUrl với VNPay;
+:Trả về DepositLogResponse { paymentUrl };
 
 |Nguoi dung|
-:Hiển thị QR code;
-:Quét QR thanh toán\nqua app Ngân hàng;
+:Mở trang thanh toán VNPay;
+:Thực hiện thanh toán
+(QR / ATM / Internet Banking);
 
 |He thong|
-:Nhận Webhook IPN từ Gateway;
+:VNPay gọi IPN callback server-to-server
+(FE không tham gia bước này);
 
 if (Thanh toán thành công?) then (Có)
   |Co so du lieu|
-  :wallet.credit(amount)\n→ Cộng số dư;
-  :transaction.status = COMPLETED;
+  :depositLog.status = COMPLETED;
+  :Company Fund Wallet.credit(amount);
+  :Tạo LedgerEntry (CREDIT, DEPOSIT);
 
   |He thong|
-  :Gửi thông báo biến động số dư;
+  :Push SSE event "wallet.updated"
+  → WalletContext.updateFromSse();
+  :Push SSE event "transaction.created";
+
   |Nguoi dung|
-  :Nhận thông báo\n"Nạp tiền thành công";
+  :Số dư ví tự động cập nhật;
+  :Trang VNPay redirect về /wallet/deposit/my;
   stop
-else (Không)
+else (Không — Hết hạn / Lỗi)
   |Co so du lieu|
-  :transaction.status = FAILED;
+  :depositLog.status = FAILED;
+
   |Nguoi dung|
-  :Nạp tiền thất bại;
+  :Trang VNPay hiển thị thất bại;
+  :Kiểm tra lịch sử tại /wallet/deposit/my;
   stop
 endif
 

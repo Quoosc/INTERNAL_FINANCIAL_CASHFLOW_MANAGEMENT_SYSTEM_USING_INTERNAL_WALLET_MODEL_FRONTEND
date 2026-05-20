@@ -1,41 +1,38 @@
-@startuml UC-CM-03: Manage Transaction PIN
+﻿@startuml
 
 actor "Người dùng" as User
-participant "Frontend" as FE
+participant "Frontend\n(Next.js)" as FE
 participant "UserController" as API
-participant "UserService" as Svc
 database "user_security_settings" as DB
-database "system_configs" as Cfg
 
-User -> FE: Chọn "Cài đặt PIN"
-FE --> User: Yêu cầu nhập mật khẩu hiện tại
-User -> FE: Nhập mật khẩu
-FE -> API: PUT /api/v1/users/me/pin {currentPassword, newPin}
-API -> Svc: updatePin(currentPassword, newPin)
-Svc -> Svc: verifyPassword(currentPassword)
+== Đổi PIN (đã có PIN) ==
 
-alt Sai mật khẩu
-    Svc --> API: throw Unauthorized
-    API --> FE: 401
-    FE --> User: Sai mật khẩu
-else Đúng mật khẩu
-    Svc -> Cfg: getConfig(PIN_MAX_RETRY)
-    alt Đã có PIN — cần xác thực PIN cũ
-        Svc -> DB: checkOldPin()
-        alt Sai PIN quá N lần
-            Svc -> DB: lockPin(PIN_LOCK_MINUTES)
-            Svc -> Svc: auditEvent(PIN_LOCKED)
-            Svc --> API: throw PinLocked
-            API --> FE: 423 "PIN locked"
-            FE --> User: PIN bị khóa
-        end
-    end
-    Svc -> Svc: BCrypt.encode(newPin)
-    Svc -> DB: save(encodedPin)
-    Svc -> Svc: auditEvent(PIN_RESET)
-    Svc --> API: success
-    API --> FE: 200
+User -> FE: Chọn "Đổi PIN giao dịch"
+User -> FE: Nhập currentPin + newPin (5 số)
+FE -> API: PUT /api/v1/users/me/pin\n{ currentPin, newPin }
+API -> DB: xác thực currentPin (BCrypt)
+
+alt Sai PIN
+    API --> FE: 401 "Invalid PIN"
+    FE --> User: Sai PIN hiện tại
+else PIN bị khóa (sai > 5 lần)
+    API --> FE: 423 "PIN locked for 30 minutes"
+    FE --> User: PIN bị khóa — thử lại sau 30 phút
+else PIN đúng
+    API -> DB: save(BCrypt(newPin))
+    API --> FE: 200 { message: "PIN updated" }
     FE --> User: Cập nhật PIN thành công
 end
+
+== Xác thực PIN (trước khi thực hiện giao dịch) ==
+
+note over FE, API
+  Giao dịch cần PIN: Rút tiền, Giải ngân (Accountant)
+  PIN 5 chữ số — nhập sai > 5 lần → khóa 30 phút (423 Locked)
+end note
+
+User -> FE: Nhập PIN (popup modal)
+FE -> API: POST /api/v1/users/me/pin/verify\n{ pin }
+API --> FE: 200 { valid: true }
 
 @enduml

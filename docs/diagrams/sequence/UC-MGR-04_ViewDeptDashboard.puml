@@ -1,20 +1,45 @@
-@startuml UC-MGR-04: View Department Dashboard
+﻿@startuml
 
 actor "Manager" as Mgr
-participant "Frontend" as FE
-participant "DepartmentController" as API
-participant "DepartmentService" as Svc
+participant "Frontend\n(Next.js)" as FE
+participant "DashboardController" as API
 database "departments / projects / requests" as DB
 
-Mgr -> FE: Chọn "Dashboard phòng ban"
-FE -> API: GET /api/v1/departments/me/dashboard
-API -> Svc: getDeptDashboard(currentManager)
-Svc -> DB: findDeptById(manager.departmentId)
-Svc -> DB: findProjectsByDeptId(deptId)
-Svc -> DB: findRequestsByDeptId(deptId)
-DB --> Svc: Department + projects + requests
-Svc --> API: DashboardDTO
-API --> FE: 200 DashboardDTO
-FE --> Mgr: Hiển thị:\ntotalProjectQuota, totalAvailableBalance,\nDS DA, DS YC phòng ban
+Mgr -> FE: Chọn "Dashboard"
+FE -> API: GET /api/v1/dashboard/manager
+note right of FE
+  Endpoint đổi từ /departments/me/dashboard
+  → /dashboard/manager
+end note
+API -> DB: Tổng hợp dữ liệu phòng ban của Manager
+DB --> API: ManagerDashboardResponse
+API --> FE: 200 ManagerDashboardResponse
+
+FE --> Mgr: Hiển thị Dashboard:
+note right of FE
+  ManagerDashboardResponse:
+  {
+    departmentBudget: {
+      totalProjectQuota,
+      totalAvailableBalance,
+      totalSpent
+    },
+    projectStatusSummary: { active, planning, paused, closed },
+    pendingApprovalsCount,
+    teamDebtSummary: { totalDebt, employeesWithDebt }
+  }
+end note
+
+opt Xem chi tiết danh sách dự án
+    Mgr -> FE: Nhấn "Xem tất cả dự án"
+    FE -> API: GET /api/v1/manager/projects?page=0&size=20
+    API --> FE: PageResponse<ManagerProjectListItem>
+end
+
+opt Xem danh sách YC chờ duyệt
+    Mgr -> FE: Nhấn "Xem tất cả yêu cầu"
+    FE -> API: GET /api/v1/manager/approvals?page=0&size=20
+    API --> FE: PageResponse<ManagerApprovalListItem>
+end
 
 @enduml

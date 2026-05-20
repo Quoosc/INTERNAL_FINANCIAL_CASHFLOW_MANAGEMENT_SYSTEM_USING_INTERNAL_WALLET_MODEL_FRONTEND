@@ -1,75 +1,99 @@
-@startuml UC-ADM-01: Quan ly Nhan su
+﻿@startuml
 
-title UC-ADM-01: Quản lý Nhân sự
+title UC-ADM-01: Quản lý Nhân sự (Admin)
 
 |Admin|
 start
 :Chọn "Quản lý nhân sự";
 
 |He thong|
-:GET /api/v1/users;
+:GET /admin/users?role=&departmentId=&status=&search=&page=1&limit=20;
+note right
+  Endpoint dùng /admin/users (không phải /users)
+  page là 1-indexed
+end note
 
 |Co so du lieu|
-:Truy vấn Page<User>;
+:Truy vấn PaginatedResponse<AdminUserListItem>;
 
 |He thong|
-:Hiển thị DS nhân viên;
+:Hiển thị DS nhân viên với bộ lọc;
 
 |Admin|
 if (Thao tác?) then (Tạo mới)
-  :Nhập: email, họ tên, PB, chức vụ, role;
+  :Nhập: fullName, email, roleId, departmentId (optional);
 
   |Co so du lieu|
   :Kiểm tra existsByEmail;
 
   if (Email đã tồn tại?) then (Có)
     |Admin|
-    :Thông báo "Email trùng";
+    :Thông báo "Email đã tồn tại";
     stop
   else (Không)
   endif
 
   |He thong|
-  :Sinh mật khẩu ngẫu nhiên;
+  :POST /admin/users { fullName, email, roleId, departmentId? };
+  :Backend sinh mật khẩu tạm thời;
 
   |Co so du lieu|
-  :Tạo User (isFirstLogin=true);
-  :Tạo UserProfile;
-  :Tạo Wallet (balance=0);
+  :save(User, isFirstLogin = true, requiresSetup = true);
+  :save(Wallet, balance = 0);
 
   |He thong|
-  :Gửi email thông báo TK + MK;
+  :Gửi email ONBOARD (email + mật khẩu tạm);
   :Ghi Audit Log USER_CREATED;
 
   |Admin|
   :Tạo thành công;
   stop
 
-else (Khóa / Mở khóa)
-  :Nhấn "Khóa/Mở";
-
-  |Co so du lieu|
-  :user.status = LOCKED / ACTIVE;
+elseif (Thao tác = Sửa thông tin?) then (Có)
+  :Chọn NV → Sửa fullName / roleId / departmentId;
 
   |He thong|
-  :Ghi Audit Log\nUSER_LOCKED / USER_UNLOCKED;
+  :PUT /admin/users/{id} { fullName?, roleId?, departmentId? };
+
+  |Co so du lieu|
+  :Cập nhật User;
+  :Ghi Audit Log USER_UPDATED / ROLE_ASSIGNED;
 
   |Admin|
   stop
 
-else (Reset MK)
-  :Nhấn "Reset MK";
+elseif (Thao tác = Khóa / Mở khóa?) then (Có)
+  :Nhấn "Khóa" hoặc "Mở khóa";
 
   |He thong|
-  :Sinh MK mới ngẫu nhiên;
+  if (Khóa?) then (Có)
+    :POST /admin/users/{id}/lock;
+    |Co so du lieu|
+    :user.status = LOCKED;
+    :Ghi Audit Log USER_LOCKED;
+  else (Mở khóa)
+    :POST /admin/users/{id}/unlock;
+    |Co so du lieu|
+    :user.status = ACTIVE;
+    :Ghi Audit Log USER_UNLOCKED;
+  endif
+
+  |Admin|
+  stop
+
+else (Reset Mật khẩu)
+  :Nhấn "Reset mật khẩu";
+
+  |He thong|
+  :POST /admin/users/{id}/reset-password;
+  :Backend sinh MK tạm mới;
 
   |Co so du lieu|
-  :user.password = BCrypt(newPW);
   :user.isFirstLogin = true;
 
   |He thong|
   :Gửi email MK mới;
-  :Ghi Audit Log PASSWORD_RESET;
+  :Ghi Audit Log PIN_RESET;
 
   |Admin|
   stop

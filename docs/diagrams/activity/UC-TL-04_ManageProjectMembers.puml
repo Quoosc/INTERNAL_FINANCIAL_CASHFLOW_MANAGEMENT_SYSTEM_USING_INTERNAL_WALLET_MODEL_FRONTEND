@@ -1,4 +1,4 @@
-@startuml UC-TL-04: Quan ly Thanh vien DA
+﻿@startuml
 
 title UC-TL-04: Quản lý Thành viên Dự án
 
@@ -7,35 +7,65 @@ start
 :Chọn DA → "Quản lý thành viên";
 
 |He thong|
-:GET /api/v1/projects/{id};
+:GET /team-leader/projects/{id};
 
 |Co so du lieu|
-:Truy vấn Project + members;
+:Truy vấn TLProjectDetailResponse + members;
 
 |He thong|
-:Hiển thị DS thành viên\n(User, ProjectRole, position);
+:Hiển thị DS thành viên (userId, fullName, position, role);
 
 |Team Leader|
-if (Thao tác?) then (Thêm)
-  :Tìm NV cùng phòng ban;
-  :Nhấn "Thêm";
+if (Thao tác?) then (Thêm thành viên)
+  :Tìm NV khả dụng trong phòng ban;
+
+  |He thong|
+  :GET /team-leader/projects/{id}/available-members?search=;
 
   |Co so du lieu|
-  :Lưu ProjectMember(role=MEMBER);
+  :Truy vấn NV cùng phòng ban chưa là thành viên DA;
+
+  |Team Leader|
+  :Chọn NV → Nhập position;
+
+  |He thong|
+  :POST /team-leader/projects/{id}/members
+  { userId, position };
+
+  |Co so du lieu|
+  :save(ProjectMember, role = MEMBER);
 
   |Team Leader|
   :Thêm thành viên thành công;
   stop
-else (Xóa)
+
+elseif (Thao tác = Cập nhật position?) then (Có)
+  :Chọn Member → Sửa position;
+
+  |He thong|
+  :PUT /team-leader/projects/{id}/members/{userId}
+  { position };
+
+  |Co so du lieu|
+  :Cập nhật ProjectMember;
+
+  |Team Leader|
+  :Cập nhật thành công;
+  stop
+
+else (Xóa thành viên)
   :Chọn Member → Nhấn "Xóa";
 
   |He thong|
-  if (userId = leaderId?) then (Có)
+  if (userId = LEADER?) then (Có)
     |Team Leader|
-    :Thông báo "Không thể xóa Leader";
+    :Thông báo "Không thể xóa LEADER";
     stop
   else (Không)
   endif
+
+  |He thong|
+  :DELETE /team-leader/projects/{id}/members/{userId};
 
   |Co so du lieu|
   :Xóa ProjectMember;

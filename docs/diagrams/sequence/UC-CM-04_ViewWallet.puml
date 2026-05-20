@@ -1,27 +1,57 @@
-@startuml UC-CM-04: View Wallet & Transaction History
+﻿@startuml
 
 actor "Người dùng" as User
-participant "Frontend" as FE
+participant "Frontend\n(Next.js)" as FE
 participant "WalletController" as API
-participant "WalletService" as Svc
-database "wallets / transactions" as DB
+participant "SSE Stream" as SSE
+database "wallets / ledger_entries" as DB
+
+== Xem Ví ==
 
 User -> FE: Chọn "Ví của tôi"
-FE -> API: GET /api/v1/wallet/me
-API -> Svc: getMyWallet(currentUser.id)
-Svc -> DB: findByUserId(userId)
-DB --> Svc: Wallet(balance, pendingBalance, debtBalance)
-Svc --> API: Wallet
-API --> FE: 200 Wallet
-FE --> User: Hiển thị Dashboard Ví\n(Số dư, Tiền treo, Dư nợ, Khả dụng)
+FE -> API: GET /api/v1/wallet
+API -> DB: findByOwnerTypeAndOwnerId(USER, userId)
+DB --> API: Wallet { id, ownerType, ownerId,\n  balance, lockedBalance, availableBalance }
+API --> FE: 200 WalletResponse
+FE --> User: Hiển thị Ví\n(Số dư = balance, Khả dụng = availableBalance,\n Tạm giữ = lockedBalance)
+
+note right of FE
+  availableBalance = balance - lockedBalance
+  Cập nhật realtime qua SSE event "wallet.updated"
+end note
+
+== Xem Lịch sử Giao dịch ==
 
 User -> FE: Chọn "Lịch sử giao dịch"
-FE -> API: GET /api/v1/wallet/transactions?type=&from=&to=&page=0&size=20
-API -> Svc: getTransactions(userId, filters, pageable)
-Svc -> DB: findByWalletId(walletId, filters, pageable)
-DB --> Svc: Page<Transaction>
-Svc --> API: Page<Transaction>
-API --> FE: 200 Page<Transaction>
-FE --> User: Hiển thị danh sách GD\n(DEPOSIT, WITHDRAW, REQUEST_PAYMENT, PAYSLIP_PAYMENT)
+User -> FE: Lọc theo ngày (from, to)
+FE -> API: GET /api/v1/wallet/transactions\n?from=&to=&page=0&size=20
+API -> DB: findLedgerEntriesByWalletId(walletId, filters)
+DB --> API: PageResponse<LedgerEntryResponse>
+API --> FE: 200 { items: LedgerEntryResponse[], total, page, size, totalPages }
+FE --> User: Danh sách giao dịch\n(CREDIT = tiền vào, DEBIT = tiền ra)
+
+note right of FE
+  LedgerEntryResponse:
+  { id, transactionCode, direction,
+    amount, balanceAfter, createdAt }
+  Loại direction: CREDIT | DEBIT
+end note
+
+== Xem Chi tiết 1 Giao dịch ==
+
+User -> FE: Chọn 1 giao dịch
+FE -> API: GET /api/v1/wallet/transactions/{transactionId}
+API --> FE: 200 TransactionResponse\n{ id, transactionCode, amount, type,\n  status, referenceType, referenceId,\n  description, createdAt }
+FE --> User: Chi tiết giao dịch
+
+== Realtime Cập nhật Số dư (SSE) ==
+
+SSE -> FE: event: wallet.updated\ndata: WalletResponse
+FE -> FE: WalletContext.updateFromSse(wallet)
+FE --> User: Số dư cập nhật tự động
+
+SSE -> FE: event: transaction.created\ndata: LedgerEntryResponse
+FE -> FE: Prepend vào danh sách giao dịch
+FE --> User: Hiển thị giao dịch mới nhất
 
 @enduml

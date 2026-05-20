@@ -1,61 +1,75 @@
-@startuml
+﻿@startuml
 
-title UC-EMP-01: Quản lý Yêu cầu Chi tiêu (Flow 1)
+title UC-EMP-01: Quản lý Yêu cầu Chi tiêu cá nhân (Flow 1)
 
 |Employee|
 start
 :Nhấn "Tạo yêu cầu mới";
-:Chọn loại: ADVANCE / EXPENSE / REIMBURSE;
-:Chọn Dự án đang Active;
-:Chọn Phase → Expense Category;
-:Nhập số tiền + Mô tả;
+:Chọn loại: ADVANCE | EXPENSE | REIMBURSE;
 
-if (Loại = EXPENSE hoặc REIMBURSE?) then (Có)
-  :Upload chứng từ bắt buộc;
+|He thong|
+:GET /projects?status=ACTIVE
+→ Danh sách dự án đang hoạt động;
+
+|Employee|
+:Chọn Dự án → Chọn Phase → Chọn Category;
+:Nhập số tiền + mô tả;
+
+if (Loại EXPENSE hoặc REIMBURSE?) then (Có — bắt buộc chứng từ)
+  |He thong|
+  :GET /uploads/signature?folder=REQUEST
+  → Lấy Cloudinary signature;
+
+  |Employee|
+  :Chọn file đính kèm;
+
+  |He thong|
+  :Upload file trực tiếp lên Cloudinary;
+  :Nhận { url, publicId, fileType, size };
+else (ADVANCE — không bắt buộc)
+endif
+
+if (Loại REIMBURSE?) then (Có — cần tạm ứng cũ)
+  |Employee|
+  :Chọn advanceBalance cần hoàn quyết
+  (advanceBalanceId bắt buộc);
 else (Không)
 endif
 
+|Employee|
+:Nhấn "Gửi yêu cầu";
+
 |He thong|
-:POST /api/v1/requests (CreateRequestDTO);
+:POST /requests
+{ type, projectId, phaseId, categoryId,
+  amount, description, attachments[],
+  advanceBalanceId? };
 
 |Co so du lieu|
-:Đọc Phase + PhaseCategoryBudget;
+:save(Request, status = PENDING,
+  requestCode tự sinh);
+:Gửi notification cho Team Leader;
 
 |He thong|
-:Kiểm tra ngân sách\nPhase/Category khả dụng;
-
-if (Ngân sách đủ?) then (Không)
-  |Employee|
-  :Thông báo "NS Phase/Category không đủ";
-  stop
-else (Có)
-endif
-
-|He thong|
-:Sinh requestCode tự động;
-
-|Co so du lieu|
-:Lưu Request\n(status = PENDING_APPROVAL);
-:Lưu RequestAttachment (nếu có);
-
-|He thong|
-:Gửi thông báo cho Team Leader;
+:Trả về 201 RequestDetailResponse;
 
 |Employee|
-:Tạo yêu cầu thành công\n-> Theo dõi trạng thái;
+:Yêu cầu đã gửi (PENDING)
+→ Chờ Team Leader duyệt;
 
-:Hủy yêu cầu;
-
-if (Muốn hủy va status = PENDING_APPROVAL) then (Có)
+if (Muốn hủy khi status = PENDING?) then (Có)
   :Nhấn "Hủy";
+
+  |He thong|
+  :DELETE /requests/{id};
 
   |Co so du lieu|
   :request.status = CANCELLED;
 
   |Employee|
-  :YC đã bị hủy;
+  :Yêu cầu đã hủy (CANCELLED);
   stop
-else (Không)
+else (Không — theo dõi tiến trình)
   stop
 endif
 

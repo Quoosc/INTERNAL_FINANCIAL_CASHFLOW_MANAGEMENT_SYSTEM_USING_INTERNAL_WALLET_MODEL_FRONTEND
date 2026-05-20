@@ -1,17 +1,20 @@
-@startuml UC-TL-01: Duyet Chi tieu ca nhan (Flow 1)
+﻿@startuml
 
-title UC-TL-01: Duyệt Chi tiêu cá nhân (Flow 1 — Ủy quyền Tuyệt đối)
+title UC-TL-01: Duyệt Chi tiêu cá nhân (Flow 1 — Segregation of Duties)
 
 |Team Leader|
 start
-:Xem DS yêu cầu PENDING_APPROVAL\ntrong DA mình là LEADER;
+:Xem DS yêu cầu PENDING
+trong dự án mình là LEADER;
 
 |He thong|
-:GET /api/v1/requests\n?status=PENDING_APPROVAL&projectRole=LEADER;
+:GET /team-leader/approvals
+?type=&projectId=&search=&page=0&size=20
+(Status filter ngầm: PENDING);
 
 |Co so du lieu|
-:Truy vấn requests theo DA + status;
-:Trả về danh sách YC;
+:Truy vấn approvals theo project + PENDING;
+:Trả về danh sách TLApprovalListItem;
 
 |He thong|
 :Hiển thị DS yêu cầu chờ duyệt;
@@ -20,31 +23,44 @@ start
 :Chọn YC → Xem chi tiết + chứng từ;
 
 if (Quyết định?) then (Duyệt)
+  :Nhập approvedAmount + comment (optional);
   :Nhấn "Duyệt";
 
+  |He thong|
+  :POST /team-leader/approvals/{id}/approve
+  { approvedAmount, comment? };
+
   |Co so du lieu|
-  :request.status = PENDING_ACCOUNTANT;
-  :Lưu RequestHistory(TL, APPROVE);
+  :request.status = APPROVED_BY_TEAM_LEADER;
+  :Lưu approval history;
 
   |He thong|
-  :Thông báo Accountant;
-  :Thông báo Employee: "Đã duyệt";
+  :Gửi notification cho Accountant
+  (REQUEST_APPROVED_BY_TL);
+  :Gửi notification cho Employee;
 
   |Team Leader|
+  :Đã duyệt
+  → Chờ Accountant giải ngân;
   stop
 else (Từ chối)
   :Nhấn "Từ chối";
   :Nhập lý do từ chối (bắt buộc);
 
+  |He thong|
+  :POST /team-leader/approvals/{id}/reject
+  { reason };
+
   |Co so du lieu|
   :request.status = REJECTED;
-  :request.rejectReason = lý do;
-  :Lưu RequestHistory(TL, REJECT);
+  :Lưu rejection reason;
 
   |He thong|
-  :Thông báo Employee: "Bị từ chối";
+  :Gửi notification cho Employee
+  (REQUEST_REJECTED);
 
   |Team Leader|
+  :Đã từ chối;
   stop
 endif
 

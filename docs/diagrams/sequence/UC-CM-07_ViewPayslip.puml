@@ -1,30 +1,37 @@
-@startuml UC-CM-07: View Payslip
+﻿@startuml
 
-actor "Người dùng" as User
-participant "Frontend" as FE
-participant "PayrollController" as API
-participant "PayrollService" as Svc
-database "payroll_periods / payslips" as DB
+actor "Nhân viên" as Emp
+participant "Frontend\n(Next.js)" as FE
+participant "PayslipController" as API
+database "payslips / payroll_periods" as DB
 
-User -> FE: Chọn "Phiếu lương"
-FE -> API: GET /api/v1/payroll/my-payslips
-API -> Svc: getMyPayslips(currentUser.id)
-Svc -> DB: findPayslipsByUserId(userId)
-DB --> Svc: List<Payslip>
-Svc --> API: List<Payslip>
-API --> FE: 200 List<Payslip>
-FE --> User: Hiển thị DS kỳ lương
+== Xem danh sách phiếu lương ==
 
-User -> FE: Chọn kỳ lương → Xem chi tiết
-FE --> User: baseSalary, bonus, deduction,\nadvanceDeduct, finalNetSalary
+Emp -> FE: Chọn "Phiếu lương"
+FE -> API: GET /api/v1/payslips\n?year=&status=DRAFT|PAID&page=1&limit=12
+API -> DB: findPayslipsByUserId(currentUser.id, filters)
+DB --> API: { items: PayslipListItem[], total, page, limit, totalPages }
+API --> FE: 200 PaginatedResponse<PayslipListItem>
+FE --> Emp: Danh sách kỳ lương\n(theo năm, lọc theo trạng thái)
 
-opt Tải PDF
-    User -> FE: Nhấn "Tải PDF"
-    FE -> API: GET /api/v1/payroll/payslips/{id}/pdf
-    API -> Svc: generatePayslipPdf(payslipId)
-    Svc --> API: byte[] PDF
-    API --> FE: 200 application/pdf
-    FE --> User: Download file PDF
-end
+note right of FE
+  PayslipStatus: DRAFT | PAID
+  page là 1-indexed
+end note
+
+== Xem chi tiết phiếu lương ==
+
+Emp -> FE: Chọn 1 phiếu lương
+FE -> API: GET /api/v1/payslips/{id}
+API -> DB: findPayslipById(id, userId)
+DB --> API: PayslipDetailResponse
+API --> FE: 200 PayslipDetailResponse
+FE --> Emp: Chi tiết phiếu lương:\n- baseSalary (lương cơ bản)\n- bonus (thưởng)\n- deduction (khấu trừ)\n- advanceDeduct (khấu trừ tạm ứng)\n- netSalary (lương thực nhận)\n- status (DRAFT | PAID)
+
+note right of FE
+  advanceDeduct = min(debtBalance, 50% * netSalary)
+  Tự động tính khi Accountant chạy auto-netting
+  trước khi run payroll
+end note
 
 @enduml

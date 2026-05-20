@@ -1,49 +1,61 @@
-@startuml UC-MGR-02: Approve/Reject Project Top-up (Flow 2)
+﻿@startuml
 
 actor "Manager" as Mgr
-participant "Frontend" as FE
-participant "RequestController" as API
-participant "RequestService" as Svc
-database "departments" as DeptDB
-database "projects" as ProjDB
-database "transactions" as TxDB
+participant "Frontend\n(Next.js)" as FE
+participant "ManagerApprovalController" as API
+participant "Scheduler" as Sched
+database "requests / wallets" as DB
 
-Mgr -> FE: Xem DS YC PROJECT_TOPUP chờ duyệt
-FE -> API: GET /api/v1/requests?type=PROJECT_TOPUP&status=PENDING_APPROVAL
-API --> FE: Danh sách YC
+== Xem danh sách PROJECT_TOPUP chờ duyệt ==
 
-Mgr -> FE: Chọn YC → Xem chi tiết
+Mgr -> FE: Chọn "Duyệt nạp quỹ dự án"
+FE -> API: GET /api/v1/manager/approvals\n?search=&page=0&size=20
+note right of FE
+  Chỉ thấy PROJECT_TOPUP thuộc department của Manager
+  Status filter ngầm: PENDING
+end note
+API --> FE: PageResponse<ManagerApprovalListItem>
+FE --> Mgr: Danh sách yêu cầu PROJECT_TOPUP chờ duyệt
+
+== Xem chi tiết ==
+
+Mgr -> FE: Chọn 1 yêu cầu
+FE -> API: GET /api/v1/manager/approvals/{id}
+API --> FE: ManagerApprovalDetailResponse\n(info dự án, quỹ phòng ban, số tiền yêu cầu)
+FE --> Mgr: Chi tiết yêu cầu
 
 alt Duyệt
-    Mgr -> FE: Nhấn "Duyệt"
-    FE -> API: POST /api/v1/requests/{id}/approve
-    API -> Svc: approveProjectTopup(requestId, Mgr)
-    Svc -> DeptDB: dept = findByIdForUpdate(deptId)
-    Svc -> Svc: check dept.totalAvailableBalance >= amount
+    Mgr -> FE: Nhấn "Duyệt"\nNhập approvedAmount + comment (optional)
+    FE -> API: POST /api/v1/manager/approvals/{id}/approve\n{ approvedAmount, comment? }
+    API -> DB: request.status = APPROVED_BY_MANAGER
+    API -> API: Gửi notification cho Team Leader (PROJECT_TOPUP_APPROVED)
 
-    alt NS phòng ban không đủ
-        Svc --> API: throw InsufficientDeptBudget
-        API --> FE: 400
-        FE --> Mgr: NS phòng ban không đủ
-    else Đủ
-        Svc -> DeptDB: dept.allocateToProject(amount)
-        Svc -> ProjDB: project.addBudget(amount)
-        Svc -> TxDB: createTx(PROJECT_QUOTA_ALLOCATION)
-        Svc -> Svc: request.status = PAID
-        Svc -> Svc: notifyTeamLeader(approved)
-        Svc --> API: Request(PAID)
-        API --> FE: 200
-        FE --> Mgr: Đã duyệt & cấp vốn tự động
-    end
+    note over API, Sched
+      Sau khi status = APPROVED_BY_MANAGER:
+      Backend Scheduler tự động xử lý (~1 phút)
+    end note
+
+    Sched -> DB: Department Wallet.debit(amount)
+    Sched -> DB: Project Wallet.credit(amount)
+    Sched -> DB: request.status = PAID
+    Sched -> DB: createTransaction(PROJECT_QUOTA_ALLOCATION)
+
+    API --> FE: 200 ManagerApproveResponse
+    FE --> Mgr: Đã duyệt\n→ Scheduler tự giải ngân vào quỹ dự án
 else Từ chối
-    Mgr -> FE: Nhấn "Từ chối" + nhập lý do
-    FE -> API: POST /api/v1/requests/{id}/reject {reason}
-    API -> Svc: reject(requestId, reason)
-    Svc -> Svc: request.status = REJECTED
-    Svc -> Svc: notifyTeamLeader(rejected)
-    Svc --> API: Request(REJECTED)
-    API --> FE: 200
+    Mgr -> FE: Nhấn "Từ chối"\nNhập lý do (bắt buộc)
+    FE -> API: POST /api/v1/manager/approvals/{id}/reject\n{ reason }
+    API -> DB: request.status = REJECTED
+    API -> API: Gửi notification cho Team Leader (PROJECT_TOPUP_REJECTED)
+    API --> FE: 200 ManagerRejectResponse
     FE --> Mgr: Đã từ chối
 end
+
+note right of DB
+  Money movement (Flow 2):
+  Department Wallet → Project Wallet
+  Transaction type: PROJECT_QUOTA_ALLOCATION
+  Không qua Accountant — Scheduler tự thực hiện
+end note
 
 @enduml

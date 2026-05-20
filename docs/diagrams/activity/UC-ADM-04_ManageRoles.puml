@@ -1,4 +1,4 @@
-@startuml UC-ADM-04: Quan ly Vai tro & Phan quyen
+﻿@startuml
 
 title UC-ADM-04: Quản lý Vai trò & Phân quyền (Dynamic RBAC)
 

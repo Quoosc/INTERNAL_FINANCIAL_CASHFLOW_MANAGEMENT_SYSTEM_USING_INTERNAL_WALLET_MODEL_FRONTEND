@@ -1,71 +1,62 @@
-@startuml UC-CM-03: Quan ly PIN Giao dich
+﻿@startuml
 
 title UC-CM-03: Quản lý PIN Giao dịch
 
 |Nguoi dung|
 start
-:Chọn "Cài đặt PIN" trong phần Bảo mật;
-:Nhập mật khẩu hiện tại;
+:Chọn "Đổi PIN giao dịch" trong phần Bảo mật;
+:Nhập PIN hiện tại (currentPin) + PIN mới (newPin, 5 số);
+
+note right
+  Đổi PIN dùng currentPin (không phải mật khẩu)
+  PUT /users/me/pin { currentPin, newPin }
+end note
 
 |He thong|
-:Xác thực mật khẩu hiện tại;
+:Xác thực currentPin (BCrypt so sánh với DB);
 
-if (Mật khẩu đúng?) then (Sai)
-  |Nguoi dung|
-  :Thông báo "Sai mật khẩu";
-  stop
+if (PIN hiện tại đúng?) then (Sai)
+  :retryCount++;
+
+  if (retryCount > 5?) then (Có — Bị khóa)
+    |Co so du lieu|
+    :Cập nhật lockedUntil (30 phút);
+
+    |He thong|
+    :Ghi Audit Log PIN_LOCKED;
+    |Nguoi dung|
+    :Thông báo "PIN bị khóa 30 phút";
+    stop
+  else (Chưa — Thử lại)
+    |Nguoi dung|
+    :Thông báo "Sai PIN — Còn N lần thử";
+    stop
+  endif
 else (Đúng)
 endif
 
 |He thong|
-if (Đã có PIN?) then (Chưa)
+:Validate PIN mới (5 chữ số);
+
+if (PIN mới hợp lệ?) then (Không)
   |Nguoi dung|
-  :Nhập PIN mới 5 số & Xác nhận;
-else (Rồi)
-  |Nguoi dung|
-  :Nhập PIN cũ;
-
-  |He thong|
-  if (PIN cũ đúng?) then (Sai)
-    :retryCount++;
-
-    |Co so du lieu|
-    :Đọc PIN_MAX_RETRY từ system_configs;
-
-    |He thong|
-    if (retryCount >= PIN_MAX_RETRY?) then (Có)
-      :Khóa PIN trong PIN_LOCK_MINUTES phút;
-
-      |Co so du lieu|
-      :Cập nhật lockedUntil vào DB;
-
-      |He thong|
-      :Ghi Audit Log PIN_LOCKED;
-      |Nguoi dung|
-      :Thông báo "PIN bị khóa";
-      stop
-    else (Chưa)
-      |Nguoi dung|
-      :Cho nhập lại PIN cũ;
-      stop
-    endif
-  else (Đúng)
-    |Nguoi dung|
-    :Nhập PIN mới 5 số & Xác nhận;
-  endif
+  :Thông báo "PIN phải đúng 5 chữ số";
+  stop
+else (Có)
 endif
 
 |He thong|
-:Mã hóa PIN mới (BCrypt);
+:BCrypt.encode(newPin);
 
 |Co so du lieu|
-:Lưu PIN mã hóa vào\nuser_security_settings;
+:Lưu PIN mã hóa vào user_security_settings;
 
 |He thong|
 :Ghi Audit Log PIN_RESET;
 :Thông báo thành công;
 
 |Nguoi dung|
+:Cập nhật PIN thành công;
 stop
 
 @enduml

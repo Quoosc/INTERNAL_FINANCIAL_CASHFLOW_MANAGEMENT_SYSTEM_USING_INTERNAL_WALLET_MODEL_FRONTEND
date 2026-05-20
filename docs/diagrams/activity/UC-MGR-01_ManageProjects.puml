@@ -1,51 +1,67 @@
-@startuml
+﻿@startuml
 
-title UC-MGR-01: Quản lý Dự án
+title UC-MGR-01: Quản lý Dự án (Manager)
 
 |Manager|
 start
 
-if (Thao tác = Tạo DA?) then (Có)
-  :Nhập tên, mô tả;
+if (Thao tác = Tạo DA mới?) then (Có)
+  :Nhập: name, description, totalBudget;
+  :Chọn Team Leader từ danh sách phòng ban;
 
   |He thong|
-  :Sinh projectCode (PRJ-{DEPT}-{YEAR});
+  :GET /manager/department/team-leaders
+  → Danh sách TL trong phòng ban;
+
+  |Manager|
+  :Xác nhận tạo DA;
+
+  |He thong|
+  :POST /manager/projects
+  { name, description?, totalBudget, teamLeaderId };
 
   |Co so du lieu|
-  :Lưu Project\n(dept=manager.dept, status=PLANNING);
+  :save(Project, dept = manager.dept, status = PLANNING);
+  :save(ProjectMember, role = LEADER, userId = teamLeaderId);
 
   |Manager|
   :Tạo DA thành công;
-
-  :Chọn NV → Chỉ định Team Leader;
-
-  |Co so du lieu|
-  :Lưu ProjectMember(role=LEADER);
-
-  |Manager|
   stop
 
-else (Khong)
-  if (Thao tác = Cập nhật?) then (Có)
-    :Sửa tên, mô tả;
+elseif (Thao tác = Cập nhật?) then (Có)
+  :Chọn DA → Sửa name / description / totalBudget / teamLeaderId / status;
+
+  |He thong|
+  :PUT /manager/projects/{id}
+  { name?, description?, totalBudget?, status?, teamLeaderId? };
+
+  |Co so du lieu|
+  :Cập nhật Project;
+
+  |Manager|
+  :Cập nhật thành công;
+  stop
+
+else (Đổi trạng thái)
+  if (Action?) then (Tạm dừng)
+    |He thong|
+    :PUT /manager/projects/{id} { status: "PAUSED" };
 
     |Co so du lieu|
-    :Cập nhật Project;
+    :project.status = PAUSED
+    → Chặn tạo request mới trong DA;
 
     |Manager|
     stop
-  else (Đổi trạng thái)
-    if (Action?) then (Tạm dừng)
-      |Co so du lieu|
-      :project.status = PAUSED\n-> Chan tao Request moi;
-      |Manager|
-      stop
-    else (Đóng DA)
-      |Co so du lieu|
-      :project.status = CLOSED\n-> Thu hoi von du;
-      |Manager|
-      stop
-    endif
+  else (Đóng DA)
+    |He thong|
+    :PUT /manager/projects/{id} { status: "CLOSED" };
+
+    |Co so du lieu|
+    :project.status = CLOSED;
+
+    |Manager|
+    stop
   endif
 endif
 

@@ -1,4 +1,4 @@
-@startuml UC-CM-07: Xem Phieu luong
+﻿@startuml
 
 title UC-CM-07: Xem Phiếu lương
 
@@ -7,34 +7,44 @@ start
 :Chọn "Phiếu lương" trên menu;
 
 |He thong|
-:GET /api/v1/payroll/my-payslips;
+:GET /payslips?year=&status=DRAFT|PAID&page=1&limit=12;
+note right
+  Endpoint đổi từ /payroll/my-payslips → /payslips
+  page là 1-indexed
+  Filter: year (tuỳ chọn), status (DRAFT | PAID)
+end note
 
 |Co so du lieu|
-:Truy vấn Payslip theo userId;
-:Trả về List<Payslip>;
+:Truy vấn payslips theo userId (người đang đăng nhập);
+:Trả về { items: PayslipListItem[], total, page, limit, totalPages };
 
 |He thong|
-:Hiển thị DS kỳ lương\n(tháng/năm, trạng thái);
+:Hiển thị DS kỳ lương
+(tháng/năm, trạng thái DRAFT | PAID);
 
 |Nguoi dung|
-:Chọn kỳ lương → Xem chi tiết;
+:Chọn 1 kỳ lương → Xem chi tiết;
 
 |He thong|
-:Hiển thị chi tiết:\nLương cơ bản, Thưởng, Khấu trừ,\nTrừ nợ tạm ứng, Thực lĩnh;
+:GET /payslips/{id};
+
+|Co so du lieu|
+:Trả về PayslipDetailResponse;
+
+|He thong|
+:Hiển thị chi tiết phiếu lương:
+- baseSalary (lương cơ bản)
+- bonus (thưởng)
+- deduction (khấu trừ)
+- advanceDeduct (trừ nợ tạm ứng, tối đa 50% netSalary)
+- netSalary (thực lĩnh)
+- status (DRAFT | PAID);
 
 |Nguoi dung|
-if (Muốn tải PDF?) then (Có)
-  :Nhấn "Tải PDF";
-
-  |He thong|
-  :GET /api/v1/payroll/payslips/{id}/pdf;
-  :Render PDF phiếu lương;
-
-  |Nguoi dung|
-  :Download file PDF;
-  stop
-else (Không)
-  stop
-endif
+:Xem phiếu lương;
+note right
+  Không có endpoint tải PDF trong phiên bản hiện tại
+end note
+stop
 
 @enduml

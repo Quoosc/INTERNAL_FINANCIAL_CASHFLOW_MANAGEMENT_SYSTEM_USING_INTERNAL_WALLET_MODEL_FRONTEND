@@ -1,54 +1,69 @@
-@startuml UC-ADM-03: Duyet cap von PB (Flow 3)
+﻿@startuml
 
-title UC-ADM-03: Duyệt cấp vốn Phòng ban (Flow 3)
+title UC-ADM-03: Duyệt Ngân sách Phòng ban — CFO (Flow 3)
 
-|Admin|
+note right
+  ⚠ ROLE ĐÚNG: CFO duyệt DEPARTMENT_TOPUP, KHÔNG phải Admin.
+  Admin chỉ quản lý IAM & system config.
+end note
+
+|CFO|
 start
-:Xem DS YC QUOTA_TOPUP\nstatus = PENDING_APPROVAL;
+:Xem DS YC DEPARTMENT_TOPUP chờ duyệt;
 
 |He thong|
-:Hiển thị DS yêu cầu cấp vốn PB;
+:GET /cfo/approvals?search=&page=0&size=20
+(Status filter ngầm: PENDING);
 
-|Admin|
-:Chọn YC → Xem chi tiết:\nPB, số tiền, lý do, NS Quỹ còn lại;
+|Co so du lieu|
+:Truy vấn DEPARTMENT_TOPUP thuộc phạm vi CFO;
+
+|He thong|
+:Hiển thị DS yêu cầu cấp ngân sách PB;
+
+|CFO|
+:Chọn YC → Xem chi tiết:
+Phòng ban, số tiền, quỹ công ty còn lại,
+số dư hiện tại của phòng ban;
 
 if (Quyết định?) then (Duyệt)
+  :Nhập approvedAmount + comment (optional);
   :Nhấn "Duyệt";
 
-  |Co so du lieu|
-  :Đọc SystemFund.totalBalance;
-
   |He thong|
-  if (System Fund đủ?) then (Không)
-    |Admin|
-    :Thông báo "Quỹ không đủ";
-    stop
-  else (Có)
-  endif
+  :POST /cfo/approvals/{id}/approve
+  { approvedAmount, comment? };
 
   |Co so du lieu|
-  :fund.totalBalance -= amount\n→ Trừ System Fund;
-  :dept.receiveQuota(amount)\n→ Cộng Dept Fund;
-  :Ghi Transaction\n(DEPT_QUOTA_ALLOCATION);
-  :request.status = PAID (tự động);
+  :request.status = APPROVED_BY_CFO;
 
   |He thong|
-  :Ghi Audit Log QUOTA_TOPUP;
-  :Thông báo Manager: "Đã duyệt";
+  :Gửi notification cho Manager (DEPT_TOPUP_APPROVED);
+  note right
+    Scheduler tự động xử lý ~1 phút sau:
+    Company Fund Wallet → Department Wallet
+    (DEPT_QUOTA_ALLOCATION)
+    request.status = PAID
+  end note
 
-  |Admin|
+  |CFO|
+  :Đã duyệt — Scheduler tự phân bổ;
   stop
 else (Từ chối)
   :Nhấn "Từ chối";
-  :Nhập lý do bắt buộc;
+  :Nhập lý do (bắt buộc);
+
+  |He thong|
+  :POST /cfo/approvals/{id}/reject { reason };
 
   |Co so du lieu|
   :request.status = REJECTED;
 
   |He thong|
-  :Thông báo Manager: "Bị từ chối";
+  :Gửi notification cho Manager (DEPT_TOPUP_REJECTED);
 
-  |Admin|
+  |CFO|
+  :Đã từ chối;
   stop
 endif
 

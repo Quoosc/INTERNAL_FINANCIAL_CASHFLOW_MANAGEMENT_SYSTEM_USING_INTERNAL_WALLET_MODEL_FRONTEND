@@ -1,57 +1,70 @@
-@startuml
+﻿@startuml
 
-title UC-TL-03: Quản lý Phase & Ngân sách DA
+title UC-TL-03: Quản lý Phase & Ngân sách Dự án
 
 |Team Leader|
 start
 :Chọn DA → "Quản lý Phase";
 
 |He thong|
-:GET /api/v1/projects/{id};
+:GET /team-leader/projects/{id};
 
 |Co so du lieu|
-:Truy vấn Project + phases;
+:Truy vấn TLProjectDetailResponse + phases;
 
 |He thong|
-:Hiển thị DS Phase\n(ACTIVE / CLOSED);
+:Hiển thị DS Phase (ACTIVE / CLOSED);
 
 |Team Leader|
-if (Thao tác?) then (Tạo Phase)
-  :Nhập tên + budget cho Phase mới;
+if (Thao tác?) then (Tạo Phase mới)
+  :Nhập name, budgetLimit, startDate, endDate;
 
   |He thong|
-  if (project.availableBudget >= budget?) then (Không đủ)
-    |Team Leader|
-    :Thông báo "NS DA không đủ";
-    stop
-  else (Đủ)
-  endif
-
-  :Sinh phaseCode tự động;
+  :POST /team-leader/projects/{id}/phases
+  { name, budgetLimit, startDate, endDate };
 
   |Co so du lieu|
-  :Lưu ProjectPhase (status=ACTIVE);
+  :save(ProjectPhase, status = ACTIVE);
 
   |Team Leader|
+  :Tạo Phase thành công;
   stop
 
-elseif (Thao tác = Gán Category?) then (Có)
-  :Chọn Phase → Gán ExpenseCategory;
-  :Đặt budget cho Category;
+elseif (Thao tác = Cập nhật Phase?) then (Có)
+  :Chọn Phase → Sửa name / budgetLimit / endDate / status;
+
+  |He thong|
+  :PUT /team-leader/projects/{id}/phases/{phaseId}
+  { name?, budgetLimit?, endDate?, status? };
 
   |Co so du lieu|
-  :Lưu PhaseCategoryBudget;
+  :Cập nhật ProjectPhase;
 
   |Team Leader|
+  :Cập nhật thành công;
   stop
 
-else (Đóng Phase)
-  :Nhấn "Đóng Phase";
+else (Quản lý Category Budget)
+  :Chọn Phase → Xem danh sách Category;
+
+  |He thong|
+  :GET /team-leader/projects/{id}/categories?phaseId={phaseId};
 
   |Co so du lieu|
-  :phase.status = CLOSED;
+  :Trả về danh sách ExpenseCategory + budgetLimit;
 
   |Team Leader|
+  :Đặt/Sửa budgetLimit cho một Category;
+
+  |He thong|
+  :PUT /team-leader/projects/{id}/categories
+  { phaseId, categoryId, budgetLimit };
+
+  |Co so du lieu|
+  :Cập nhật CategoryBudget;
+
+  |Team Leader|
+  :Cập nhật ngân sách Category thành công;
   stop
 endif
 

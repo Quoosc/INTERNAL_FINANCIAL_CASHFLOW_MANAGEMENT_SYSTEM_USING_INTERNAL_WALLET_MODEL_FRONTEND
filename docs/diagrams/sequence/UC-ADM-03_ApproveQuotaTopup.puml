@@ -1,50 +1,68 @@
-@startuml UC-ADM-03: Approve/Reject Quota Top-up (Flow 3)
+﻿@startuml
 
-actor "Admin" as Adm
-participant "Frontend" as FE
-participant "RequestController" as API
-participant "RequestService" as Svc
-database "system_fund" as FundDB
-database "departments" as DeptDB
-database "transactions" as TxDB
+note over CFO, DB
+  ⚠ ROLE ĐÚNG: Người duyệt DEPARTMENT_TOPUP là CFO, KHÔNG phải Admin.
+  Admin chỉ quản lý IAM & system config, không tham gia duyệt tài chính.
+  File này mô tả luồng của CFO (trước đây ghi sai là Admin).
+end note
 
-Adm -> FE: Xem DS YC QUOTA_TOPUP chờ duyệt
-FE -> API: GET /api/v1/requests?type=QUOTA_TOPUP&status=PENDING_APPROVAL
-API --> FE: Danh sách YC
+actor "CFO" as CFO
+participant "Frontend\n(Next.js)" as FE
+participant "CFOApprovalController" as API
+participant "Scheduler" as Sched
+database "requests / wallets" as DB
 
-Adm -> FE: Chọn YC → Xem chi tiết
+== Xem danh sách DEPARTMENT_TOPUP chờ duyệt ==
+
+CFO -> FE: Chọn "Duyệt ngân sách phòng ban"
+FE -> API: GET /api/v1/cfo/approvals\n?search=&page=0&size=20
+note right of FE
+  Chỉ thấy DEPARTMENT_TOPUP — status: PENDING
+  page là 0-indexed
+end note
+API --> FE: PageResponse (incl. recentApprovals)
+FE --> CFO: Danh sách yêu cầu DEPARTMENT_TOPUP chờ duyệt
+
+== Xem chi tiết ==
+
+CFO -> FE: Chọn 1 yêu cầu
+FE -> API: GET /api/v1/cfo/approvals/{id}
+API --> FE: Detail bao gồm:\n- department.totalAvailableBalance\n- companyFund.balance\n- amount yêu cầu
+FE --> CFO: Chi tiết + kiểm tra tính khả thi
 
 alt Duyệt
-    Adm -> FE: Nhấn "Duyệt"
-    FE -> API: POST /api/v1/requests/{id}/approve
-    API -> Svc: approveQuotaTopup(requestId, Adm)
-    Svc -> FundDB: fund = getSystemFund()
-    Svc -> Svc: check fund.totalBalance >= amount
+    CFO -> FE: Nhấn "Duyệt"\nNhập approvedAmount + comment (optional)
+    FE -> API: POST /api/v1/cfo/approvals/{id}/approve\n{ approvedAmount, comment? }
+    API -> DB: request.status = APPROVED_BY_CFO
 
-    alt Quỹ hệ thống không đủ
-        Svc --> API: throw InsufficientFund
-        API --> FE: 400
-        FE --> Adm: Quỹ không đủ
-    else Đủ
-        Svc -> FundDB: fund.totalBalance -= amount
-        Svc -> DeptDB: dept.receiveQuota(amount)
-        Svc -> TxDB: createTx(DEPT_QUOTA_ALLOCATION)
-        Svc -> Svc: request.status = PAID
-        Svc -> Svc: auditEvent(QUOTA_TOPUP)
-        Svc -> Svc: notifyManager(approved)
-        Svc --> API: Request(PAID)
-        API --> FE: 200
-        FE --> Adm: Đã duyệt & cấp vốn tự động
-    end
+    note over API, Sched
+      Sau APPROVED_BY_CFO:
+      Backend Scheduler tự động xử lý (~1 phút)
+    end note
+
+    Sched -> DB: Company Fund Wallet.debit(amount)
+    Sched -> DB: Department Wallet.credit(amount)
+    Sched -> DB: request.status = PAID
+    Sched -> DB: createTransaction(DEPT_QUOTA_ALLOCATION)
+    Sched -> Sched: Gửi notification (DEPT_TOPUP_APPROVED) → Manager
+
+    API --> FE: 200 CFO ApproveResponse
+    FE --> CFO: Đã duyệt\n→ Scheduler tự phân bổ vào quỹ phòng ban
 else Từ chối
-    Adm -> FE: Nhấn "Từ chối" + nhập lý do
-    FE -> API: POST /api/v1/requests/{id}/reject {reason}
-    API -> Svc: reject(requestId, reason)
-    Svc -> Svc: request.status = REJECTED
-    Svc -> Svc: notifyManager(rejected)
-    Svc --> API: Request(REJECTED)
-    API --> FE: 200
-    FE --> Adm: Đã từ chối
+    CFO -> FE: Nhấn "Từ chối"\nNhập lý do (bắt buộc)
+    FE -> API: POST /api/v1/cfo/approvals/{id}/reject\n{ reason }
+    API -> DB: request.status = REJECTED
+    API -> API: Gửi notification (DEPT_TOPUP_REJECTED) → Manager
+    API --> FE: 200 CFO RejectResponse
+    FE --> CFO: Đã từ chối
 end
+
+note right of DB
+  Money movement (Flow 3):
+  Company Fund Wallet → Department Wallet
+  Transaction type: DEPT_QUOTA_ALLOCATION
+  Không qua Accountant — Scheduler tự thực hiện
+  Status flow: PENDING → APPROVED_BY_CFO → PAID
+end note
 
 @enduml

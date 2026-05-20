@@ -1,28 +1,36 @@
-@startuml UC-TL-02: Request Project Top-up (Flow 2)
+﻿@startuml
 
 actor "Team Leader" as TL
-participant "Frontend" as FE
+participant "Frontend\n(Next.js)" as FE
 participant "RequestController" as API
-participant "RequestService" as Svc
 database "requests / projects" as DB
 
 TL -> FE: Nhấn "Xin cấp vốn dự án"
-TL -> FE: Chọn DA, nhập số tiền + lý do
-FE -> API: POST /api/v1/requests\n{type: PROJECT_TOPUP, projectId, amount, description}
-API -> Svc: createRequest(dto, currentUser)
-Svc -> Svc: validateProjectLeader(TL, projectId)
+FE -> API: GET /api/v1/team-leader/projects?status=ACTIVE&page=0&size=20
+API --> FE: Danh sách dự án TL đang là LEADER
+TL -> FE: Chọn dự án, nhập số tiền + mô tả
 
-alt Không phải Leader của DA
-    Svc --> API: throw Forbidden
-    API --> FE: 403
-    FE --> TL: Không có quyền
+FE -> API: POST /api/v1/requests\n{ type: "PROJECT_TOPUP",\n  projectId,\n  amount,\n  description }
+note right of FE
+  PROJECT_TOPUP: chỉ cần projectId
+  phaseId / categoryId = null
+end note
+API -> API: Kiểm tra TL là LEADER của dự án
+alt Không phải Leader của dự án
+    API --> FE: 403 Forbidden
+    FE --> TL: Không có quyền với dự án này
 else Là Leader
-    Svc -> Svc: generateRequestCode()
-    Svc -> DB: save(Request, type=PROJECT_TOPUP, PENDING_APPROVAL)
-    Svc -> Svc: notifyManager(project.department.manager)
-    Svc --> API: Request
-    API --> FE: 201
-    FE --> TL: Tạo YC cấp vốn thành công,\nchờ Manager duyệt
+    API -> DB: save(Request, type=PROJECT_TOPUP,\n  status=PENDING,\n  requestCode = "REQ-DEPT-YYYYMM-XXX")
+    API -> API: Gửi notification cho Manager của phòng ban
+    API --> FE: 201 RequestDetailResponse
+    FE --> TL: Tạo yêu cầu cấp vốn thành công\n(PENDING — chờ Manager duyệt)
 end
+
+note over TL, DB
+  Luồng sau khi tạo (Flow 2):
+  PENDING → APPROVED_BY_MANAGER (Manager duyệt)
+  → Scheduler auto-pay (~1 phút) → PAID
+  → Department Wallet → Project Wallet (PROJECT_QUOTA_ALLOCATION)
+end note
 
 @enduml

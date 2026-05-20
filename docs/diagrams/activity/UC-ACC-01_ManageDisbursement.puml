@@ -1,71 +1,83 @@
-@startuml UC-ACC-01: Giai ngan (Flow 1)
+﻿@startuml
 
-title UC-ACC-01: Giải ngân (Flow 1)
+title UC-ACC-01: Giải ngân (Flow 1 — Accountant Execution)
 
 |Accountant|
 start
 :Chọn "Giải ngân";
 
 |He thong|
-:GET /api/v1/requests?status=PENDING_ACCOUNTANT;
+:GET /accountant/disbursements
+?type=&search=&page=0&size=20
+(Chỉ thấy APPROVED_BY_TEAM_LEADER);
 
 |Co so du lieu|
-:Truy vấn requests\nstatus = PENDING_ACCOUNTANT;
+:Truy vấn disbursements
+status = APPROVED_BY_TEAM_LEADER;
 
 |He thong|
-:Hiển thị DS yêu cầu chờ giải ngân;
+:Hiển thị DS yêu cầu đã TL duyệt;
 
 |Accountant|
 :Chọn YC → Kiểm tra chứng từ;
 
 if (Quyết định?) then (Giải ngân)
   :Nhấn "Giải ngân";
-  :Nhập PIN Accountant;
+  :Nhập PIN Accountant (5 số);
 
   |He thong|
+  :POST /accountant/disbursements/{id}/disburse
+  { pin, note? };
   :Xác thực PIN;
 
-  if (PIN đúng?) then (Sai)
+  if (PIN đúng?) then (Sai / Bị khóa)
     |Accountant|
-    :Thông báo "Sai PIN";
+    :Thông báo "Sai PIN" / "PIN bị khóa";
     stop
   else (Đúng)
   endif
 
   |Co so du lieu|
-  :Đọc Project (Pessimistic Lock);
+  :Kiểm tra Project Wallet.availableBalance >= amount;
 
   |He thong|
-  if (NS dự án đủ?) then (Không)
+  if (Quỹ dự án đủ?) then (Không)
     |Accountant|
-    :Thông báo "NS DA không đủ";
+    :Thông báo "Quỹ dự án không đủ";
     stop
   else (Có)
   endif
 
   |Co so du lieu|
-  :project.deductBudget(amount)\n→ Trừ Project Fund;
-  :empWallet.credit(amount)\n→ Cộng Ví NV;
-  :Ghi Transaction\n(REQUEST_PAYMENT, COMPLETED);
+  :Project Wallet.debit(amount);
+  :User Wallet.credit(amount);
+  :createTransaction(REQUEST_PAYMENT);
   :request.status = PAID;
 
   |He thong|
-  :Thông báo Employee: "Đã giải ngân";
+  :Push SSE "wallet.updated" → Employee;
+  :Push SSE "notification" (REQUEST_PAID) → Employee;
 
   |Accountant|
+  :Giải ngân thành công;
   stop
 
-else (Từ chối)
+else (Từ chối — Sai sót chứng từ)
   :Nhấn "Từ chối";
   :Nhập lý do;
+
+  |He thong|
+  :POST /accountant/disbursements/{id}/reject
+  { reason };
 
   |Co so du lieu|
   :request.status = REJECTED;
 
   |He thong|
-  :Thông báo Employee: "Bị từ chối";
+  :Push SSE "notification" (REQUEST_REJECTED) → Employee;
 
   |Accountant|
+  :Đã từ chối;
   stop
 endif
 

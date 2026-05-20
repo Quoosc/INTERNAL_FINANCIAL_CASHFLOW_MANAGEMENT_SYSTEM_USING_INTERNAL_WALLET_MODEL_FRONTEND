@@ -1,19 +1,23 @@
-@startuml UC-ADM-05: Cau hinh He thong
+﻿@startuml
 
-title UC-ADM-05: Cấu hình Hệ thống
+title UC-ADM-05: Cấu hình Hệ thống (Admin)
 
 |Admin|
 start
 :Chọn "Cấu hình hệ thống";
 
 |He thong|
-:GET /api/v1/system-config;
+:GET /admin/settings;
+note right
+  Endpoint đổi từ /system-config → /admin/settings
+  Trả về { items: [{key, value, description}] }
+end note
 
 |Co so du lieu|
-:Truy vấn List<SystemConfig>;
+:Truy vấn SystemSettingsResponse;
 
 |He thong|
-:Hiển thị DS cấu hình\n(configKey, configValue, description);
+:Hiển thị DS cấu hình (key, value, description);
 
 |Admin|
 :Chọn config cần sửa;
@@ -29,24 +33,28 @@ if (Giá trị hợp lệ?) then (Không)
 else (Có)
 endif
 
-|Co so du lieu|
-:config.setValue(value);
-:save(config);
-
 |He thong|
+:PUT /admin/settings { configs: [{key, value}] };
+note right
+  Các config key hiện tại:
+  - WITHDRAWAL_LIMIT (giới hạn rút tiền)
+  - MINIMUM_WITHDRAWAL (tối thiểu rút tiền)
+  - MAX_FILE_SIZE_MB (dung lượng file tối đa)
+  - MAX_FILES_PER_REQUEST (số file / request)
+  - MINIMUM_REQUEST_AMOUNT (số tiền YC tối thiểu)
+  - PIN_MAX_RETRY (số lần nhập sai PIN)
+  - PIN_LOCK_DURATION_MINUTES (thời gian khóa PIN)
+  - REQUIRE_PIN_FOR_WITHDRAWAL (bật/tắt PIN rút tiền)
+  ⚠ WITHDRAW_AUTO_APPROVE_LIMIT không còn tồn tại
+  ⚠ MANAGER_APPROVAL_LIMIT không còn tồn tại
+end note
+
+|Co so du lieu|
+:Cập nhật config values;
 :Ghi Audit Log CONFIG_UPDATED;
 
 |Admin|
 :Cập nhật thành công;
-
-note right
-  Các config quan trọng:
-  - WITHDRAW_AUTO_APPROVE_LIMIT
-  - PIN_MAX_RETRY
-  - PIN_LOCK_MINUTES
-  - TOKEN_EXPIRY
-end note
-
 stop
 
 @enduml

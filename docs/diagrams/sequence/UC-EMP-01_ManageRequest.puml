@@ -1,46 +1,79 @@
-@startuml UC-EMP-01: Manage Request
+﻿@startuml
 
 actor "Employee" as Emp
-participant "Frontend" as FE
-participant "RequestController" as API
-participant "RequestService" as Svc
-database "projects / phases" as PDB
-database "requests" as RDB
+participant "Frontend\n(Next.js)" as FE
+participant "ProjectController" as ProjAPI
+participant "UploadController" as UploadAPI
+participant "Cloudinary" as CDN
+participant "RequestController" as ReqAPI
+database "projects / requests" as DB
+
+== Tạo yêu cầu mới ==
 
 Emp -> FE: Nhấn "Tạo yêu cầu mới"
-FE -> API: GET /api/v1/projects?status=ACTIVE&member=me
-API --> FE: Danh sách DA Active
+Emp -> FE: Chọn loại: ADVANCE | EXPENSE | REIMBURSE
+FE -> ProjAPI: GET /api/v1/projects?status=ACTIVE
+ProjAPI --> FE: { items: [{ id, projectCode, name }] }
+FE --> Emp: Dropdown chọn Dự án
+Emp -> FE: Chọn Dự án
+FE -> ProjAPI: GET /api/v1/projects/{projectId}/phases?status=ACTIVE
+ProjAPI --> FE: { projectId, projectName, phases: [] }
+Emp -> FE: Chọn Phase
+FE -> ProjAPI: GET /api/v1/projects/{phaseId}
+ProjAPI --> FE: { items: [{ id, name }] }  (expense categories)
+Emp -> FE: Chọn Category → Nhập số tiền + mô tả
 
-Emp -> FE: Chọn loại (ADVANCE/EXPENSE/REIMBURSE)
-Emp -> FE: Chọn DA → Phase → Category
-Emp -> FE: Nhập số tiền, mô tả, upload chứng từ
-
-FE -> API: POST /api/v1/requests (CreateRequestDTO)
-API -> Svc: createRequest(dto, currentUser)
-Svc -> PDB: findPhaseById(phaseId)
-Svc -> Svc: checkPhaseBudget(phase, amount)
-
-alt NS Phase không đủ
-    Svc --> API: throw InsufficientBudget
-    API --> FE: 400
-    FE --> Emp: NS Phase không đủ
-else Đủ
-    Svc -> Svc: generateRequestCode()
-    Svc -> RDB: save(Request, PENDING_APPROVAL)
-    Svc -> Svc: notifyTeamLeader(request)
-    Svc --> API: Request
-    API --> FE: 201 Request
-    FE --> Emp: Tạo thành công
+alt Loại EXPENSE hoặc REIMBURSE (bắt buộc upload chứng từ)
+    Emp -> FE: Chọn file đính kèm
+    FE -> UploadAPI: GET /api/v1/uploads/signature?folder=REQUEST
+    UploadAPI --> FE: { signature, timestamp, cloudName, apiKey, folder }
+    FE -> CDN: Upload file trực tiếp lên Cloudinary\n(với signature)
+    CDN --> FE: { url, publicId, fileType, size }
+    note right of FE
+      EXPENSE/REIMBURSE: bắt buộc có attachments[]
+      ADVANCE: không bắt buộc
+    end note
 end
 
-== Hủy yêu cầu ==
-
-opt status = PENDING_APPROVAL
-    Emp -> FE: Nhấn "Hủy"
-    FE -> API: POST /api/v1/requests/{id}/cancel
-    API -> Svc: cancel(requestId, currentUser)
-    Svc -> RDB: request.status = CANCELLED
-    Svc --> FE: 200
+alt Loại REIMBURSE (phải liên kết tạm ứng cũ)
+    Emp -> FE: Chọn advanceBalance cần hoàn quyết
+    note right of FE
+      REIMBURSE cần thêm advanceBalanceId
+      trong CreateRequestBody
+    end note
 end
+
+Emp -> FE: Nhấn "Gửi yêu cầu"
+FE -> ReqAPI: POST /api/v1/requests\n{ type, projectId, phaseId, categoryId,\n  amount, description, attachments[],\n  advanceBalanceId? (REIMBURSE) }
+ReqAPI -> DB: save(Request, status=PENDING,\n  requestCode = "REQ-DEPT-YYYYMM-XXX")
+ReqAPI -> ReqAPI: Gửi notification cho Team Leader
+ReqAPI --> FE: 201 RequestDetailResponse
+FE --> Emp: Tạo yêu cầu thành công\n(PENDING — chờ Team Leader duyệt)
+
+== Xem danh sách yêu cầu ==
+
+Emp -> FE: Chọn "Yêu cầu của tôi"
+FE -> ReqAPI: GET /api/v1/requests\n?type=&status=&search=&page=1&limit=20
+ReqAPI --> FE: PageResponse<RequestListItem>
+FE --> Emp: Danh sách yêu cầu\n(PENDING / APPROVED_BY_TEAM_LEADER / PAID / REJECTED / CANCELLED)
+
+== Sửa yêu cầu (khi PENDING) ==
+
+Emp -> FE: Nhấn "Sửa" trên yêu cầu PENDING
+FE -> ReqAPI: PUT /api/v1/requests/{id}\n{ amount?, description?, attachments? }
+note right of FE
+  Chỉ sửa được khi status = PENDING
+  attachments ghi đè toàn bộ
+end note
+ReqAPI --> FE: 200 RequestDetailResponse
+FE --> Emp: Cập nhật thành công
+
+== Hủy yêu cầu (khi PENDING) ==
+
+Emp -> FE: Nhấn "Hủy" trên yêu cầu PENDING
+FE -> ReqAPI: DELETE /api/v1/requests/{id}
+ReqAPI -> DB: request.status = CANCELLED
+ReqAPI --> FE: 200 { message }
+FE --> Emp: Yêu cầu đã hủy (CANCELLED)
 
 @enduml

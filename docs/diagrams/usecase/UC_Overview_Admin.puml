@@ -1,0 +1,63 @@
+@startuml UC_Overview_Admin
+title <b>Sơ đồ Use Case tổng quan — Quản trị viên (Admin)</b>
+
+left to right direction
+
+skinparam ActorBorderColor #37474F
+skinparam ActorFontStyle bold
+skinparam ActorFontSize 13
+
+skinparam usecase {
+  BackgroundColor #ECEFF1
+  BorderColor #455A64
+  FontSize 12
+}
+
+skinparam ArrowColor #455A64
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+actor "Quản trị viên\n(Admin)" as adm
+
+rectangle "IFMS — Chức năng Quản trị hệ thống" {
+
+  usecase "UC-ADM-01\nQuản lý nhân sự\n(Users)" as UC_ADM_01
+
+  usecase "Tạo tài khoản mới\n(requiresSetup = true)" as UC_CREATE_USER
+
+  usecase "Khóa / Mở khóa\ntài khoản" as UC_LOCK_USER
+
+  usecase "Reset mật khẩu\ntài khoản" as UC_RESET_PWD
+
+  usecase "UC-ADM-02\nQuản lý phòng ban\n(Departments)" as UC_ADM_02
+
+  usecase "UC-ADM-03\nQuản lý vai trò\n& phân quyền (RBAC)" as UC_ADM_03
+
+  usecase "UC-ADM-04\nCấu hình tham số\nhệ thống" as UC_ADM_04
+
+  usecase "UC-ADM-05\nXem nhật ký\nhệ thống (Audit Log)" as UC_ADM_05
+
+}
+
+adm --> UC_ADM_01
+adm --> UC_ADM_02
+adm --> UC_ADM_03
+adm --> UC_ADM_04
+adm --> UC_ADM_05
+
+UC_ADM_01 ..> UC_CREATE_USER : <<include>>
+UC_ADM_01 ..> UC_LOCK_USER   : <<extend>>
+UC_ADM_01 ..> UC_RESET_PWD   : <<extend>>
+
+note bottom
+  Ngoài các chức năng riêng trên, Admin kế thừa 8 Use Case chung:
+  UC-CM-01 Đăng nhập  |  UC-CM-02 Quản lý hồ sơ cá nhân  |  UC-CM-03 Quản lý PIN giao dịch
+  UC-CM-04 Xem ví & lịch sử  |  UC-CM-05 Nạp tiền (VNPay)  |  UC-CM-06 Rút tiền về ngân hàng
+  UC-CM-07 Xem phiếu lương  |  UC-CM-08 Xem thông báo
+  ─────────────────────────────────────────────────────────────────
+  Admin KHÔNG tham gia duyệt tài chính (không có Flow 1/2/3).
+  Flow 3 (DEPARTMENT_TOPUP) do CFO phê duyệt — không còn thuộc Admin.
+  UC-ADM-04 và UC-CFO-03 dùng chung nhóm endpoint cấu hình theo phân quyền.
+end note
+
+@enduml

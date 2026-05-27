@@ -1,0 +1,67 @@
+@startuml UC_Overview_Common
+title <b>Sơ đồ Use Case chung — Tất cả vai trò (UC-CM-01 .. UC-CM-08)</b>
+
+left to right direction
+
+skinparam ActorBorderColor #424242
+skinparam ActorFontStyle bold
+skinparam ActorFontSize 12
+
+skinparam usecase {
+  BackgroundColor #F3F3F3
+  BorderColor #616161
+  FontSize 12
+}
+
+skinparam ArrowColor #616161
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+actor "Tất cả\n6 vai trò" as all_roles
+
+rectangle "IFMS — Chức năng chung (áp dụng cho mọi role)" {
+
+  usecase "UC-CM-01\nĐăng nhập\n(Sign In)" as UC_CM_01
+
+  usecase "Đặt mật khẩu & PIN\nlần đầu đăng nhập" as UC_FIRST_LOGIN
+
+  usecase "UC-CM-02\nQuản lý hồ sơ cá nhân\n(Profile)" as UC_CM_02
+
+  usecase "UC-CM-03\nQuản lý PIN giao dịch\n(Transaction PIN)" as UC_CM_03
+
+  usecase "UC-CM-04\nXem ví & lịch sử\ngiao dịch" as UC_CM_04
+
+  usecase "UC-CM-05\nNạp tiền vào ví\n(Deposit qua VNPay)" as UC_CM_05
+
+  usecase "UC-CM-06\nRút tiền về ngân hàng\n(Withdraw)" as UC_CM_06
+
+  usecase "Xác thực PIN\nkhi rút tiền" as UC_PIN_WITHDRAW
+
+  usecase "UC-CM-07\nXem phiếu lương cá nhân\n(Payslip)" as UC_CM_07
+
+  usecase "UC-CM-08\nXem thông báo\n(Notifications)" as UC_CM_08
+
+}
+
+all_roles --> UC_CM_01
+all_roles --> UC_CM_02
+all_roles --> UC_CM_03
+all_roles --> UC_CM_04
+all_roles --> UC_CM_05
+all_roles --> UC_CM_06
+all_roles --> UC_CM_07
+all_roles --> UC_CM_08
+
+UC_CM_01 ..> UC_FIRST_LOGIN   : <<extend>>\n(requiresSetup = true)
+UC_CM_06 ..> UC_PIN_WITHDRAW  : <<include>>
+
+note bottom
+  8 Use Case này được kế thừa bởi TẤT CẢ 6 vai trò:
+  EMPLOYEE · TEAM_LEADER · MANAGER · ACCOUNTANT · CFO · ADMIN
+  ─────────────────────────────────────────────────────────────────
+  UC-CM-06 Rút tiền: Mock Bank tự xử lý tự động — KHÔNG có bước Accountant duyệt.
+  UC-CM-05 Nạp tiền: VNPay IPN server-to-server — SSE wallet.updated cập nhật số dư.
+  Số dư cập nhật realtime qua SSE event: wallet.updated (WalletResponse).
+end note
+
+@enduml

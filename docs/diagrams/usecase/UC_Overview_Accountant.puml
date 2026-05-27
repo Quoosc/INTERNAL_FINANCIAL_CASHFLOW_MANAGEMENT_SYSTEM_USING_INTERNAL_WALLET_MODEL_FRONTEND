@@ -1,0 +1,73 @@
+@startuml UC_Overview_Accountant
+title <b>Sơ đồ Use Case tổng quan — Kế toán (Accountant)</b>
+
+left to right direction
+
+skinparam ActorBorderColor #E65100
+skinparam ActorFontStyle bold
+skinparam ActorFontSize 13
+
+skinparam usecase {
+  BackgroundColor #FFF3E0
+  BorderColor #E65100
+  FontSize 12
+}
+
+skinparam ArrowColor #E65100
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+actor "Kế toán\n(Accountant)" as acc
+
+rectangle "IFMS — Chức năng Kế toán" {
+
+  usecase "UC-ACC-01\nGiải ngân yêu cầu\n(ADVANCE / EXPENSE / REIMBURSE)\n[Flow 1 — Thực thi]" as UC_ACC_01
+
+  usecase "Xác thực PIN\ngiao dịch" as UC_PIN
+
+  usecase "Kiểm tra\nchứng từ" as UC_VERIFY_DOC
+
+  usecase "Từ chối giải ngân\n(sai sót chứng từ)" as UC_REJECT
+
+  usecase "UC-ACC-02\nQuản lý bảng lương\n(Payroll)" as UC_ACC_02
+
+  usecase "Import Excel\nbảng lương" as UC_IMPORT
+
+  usecase "Auto-Netting\nkhấu trừ tạm ứng" as UC_NETTING
+
+  usecase "Chốt & chi lương\nhàng loạt" as UC_RUN_PAYROLL
+
+  usecase "UC-ACC-03\nQuản lý quỹ công ty\n(chia sẻ với CFO)" as UC_ACC_03
+
+  usecase "Nạp tiền vào quỹ\n(SYSTEM_TOPUP)" as UC_TOPUP
+
+  usecase "Đối soát\nFLOAT_MAIN" as UC_RECONCILE
+
+}
+
+acc --> UC_ACC_01
+acc --> UC_ACC_02
+acc --> UC_ACC_03
+
+UC_ACC_01 ..> UC_PIN           : <<include>>
+UC_ACC_01 ..> UC_VERIFY_DOC   : <<include>>
+UC_ACC_01 ..> UC_REJECT        : <<extend>>
+
+UC_ACC_02 ..> UC_IMPORT        : <<include>>
+UC_ACC_02 ..> UC_NETTING       : <<include>>
+UC_ACC_02 ..> UC_RUN_PAYROLL   : <<include>>
+
+UC_ACC_03 ..> UC_TOPUP         : <<include>>
+UC_ACC_03 ..> UC_RECONCILE     : <<include>>
+
+note bottom
+  Ngoài các chức năng riêng trên, Accountant kế thừa 8 Use Case chung:
+  UC-CM-01 Đăng nhập  |  UC-CM-02 Quản lý hồ sơ cá nhân  |  UC-CM-03 Quản lý PIN giao dịch
+  UC-CM-04 Xem ví & lịch sử  |  UC-CM-05 Nạp tiền (VNPay)  |  UC-CM-06 Rút tiền về ngân hàng
+  UC-CM-07 Xem phiếu lương  |  UC-CM-08 Xem thông báo
+  ─────────────────────────────────────────────────────────────────
+  Lưu ý: UC-ACC-04 "Duyệt rút tiền" đã bị xóa — Mock Bank tự xử lý tự động,
+  không còn bước phê duyệt của Accountant.
+end note
+
+@enduml

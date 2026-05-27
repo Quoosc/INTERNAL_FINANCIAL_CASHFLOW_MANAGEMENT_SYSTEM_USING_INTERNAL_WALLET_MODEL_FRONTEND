@@ -1,0 +1,50 @@
+@startuml UC_Overview_Employee
+title <b>Sơ đồ Use Case tổng quan — Nhân viên (Employee)</b>
+
+left to right direction
+
+skinparam ActorBorderColor #1565C0
+skinparam ActorFontStyle bold
+skinparam ActorFontSize 13
+
+skinparam usecase {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  FontSize 12
+}
+
+skinparam ArrowColor #1565C0
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+actor "Nhân viên\n(Employee)" as emp
+
+rectangle "IFMS — Chức năng Nhân viên" {
+
+  usecase "UC-EMP-01\nQuản lý yêu cầu chi tiêu\n(ADVANCE / EXPENSE / REIMBURSE)\n[Flow 1 — Khởi tạo]" as UC_EMP_01
+
+  usecase "Upload chứng từ\n(Cloudinary)" as UC_UPLOAD
+
+  usecase "Chọn advanceBalance\ncần hoàn quyết" as UC_ADVANCE
+
+  usecase "Hủy yêu cầu\n(khi còn PENDING)" as UC_CANCEL
+
+  usecase "UC-EMP-02\nXem dự án\nđang tham gia" as UC_EMP_02
+
+}
+
+emp --> UC_EMP_01
+emp --> UC_EMP_02
+
+UC_EMP_01 ..> UC_UPLOAD   : <<include>>\n(EXPENSE / REIMBURSE)
+UC_EMP_01 ..> UC_ADVANCE  : <<extend>>\n(chỉ khi REIMBURSE)
+UC_EMP_01 ..> UC_CANCEL   : <<extend>>
+
+note bottom
+  Ngoài các chức năng riêng trên, Employee kế thừa 8 Use Case chung:
+  UC-CM-01 Đăng nhập  |  UC-CM-02 Quản lý hồ sơ cá nhân  |  UC-CM-03 Quản lý PIN giao dịch
+  UC-CM-04 Xem ví & lịch sử  |  UC-CM-05 Nạp tiền (VNPay)  |  UC-CM-06 Rút tiền về ngân hàng
+  UC-CM-07 Xem phiếu lương  |  UC-CM-08 Xem thông báo
+end note
+
+@enduml

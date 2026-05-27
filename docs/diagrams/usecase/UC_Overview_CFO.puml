@@ -1,0 +1,59 @@
+@startuml UC_Overview_CFO
+title <b>Sơ đồ Use Case tổng quan — Giám đốc Tài chính (CFO)</b>
+
+left to right direction
+
+skinparam ActorBorderColor #B71C1C
+skinparam ActorFontStyle bold
+skinparam ActorFontSize 13
+
+skinparam usecase {
+  BackgroundColor #FCE4EC
+  BorderColor #C62828
+  FontSize 12
+}
+
+skinparam ArrowColor #C62828
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+actor "Giám đốc Tài chính\n(CFO)" as cfo
+
+rectangle "IFMS — Chức năng CFO" {
+
+  usecase "UC-CFO-01\nDuyệt / Từ chối\ncấp vốn phòng ban\n[Flow 3 — Phê duyệt]" as UC_CFO_01
+
+  usecase "Nhập lý do\ntừ chối" as UC_REJECT_REASON
+
+  usecase "UC-CFO-02\nQuản lý quỹ công ty\n(Company Fund)" as UC_CFO_02
+
+  usecase "Nạp tiền vào quỹ\n(SYSTEM_TOPUP\ntừ ngân hàng thực tế)" as UC_TOPUP
+
+  usecase "Đối soát\nFLOAT_MAIN" as UC_RECONCILE
+
+  usecase "UC-CFO-03\nCấu hình tham số\nhệ thống tài chính" as UC_CFO_03
+
+  usecase "UC-CFO-04\nXem nhật ký\nhệ thống (Audit Log)" as UC_CFO_04
+
+}
+
+cfo --> UC_CFO_01
+cfo --> UC_CFO_02
+cfo --> UC_CFO_03
+cfo --> UC_CFO_04
+
+UC_CFO_01 ..> UC_REJECT_REASON : <<include>>\n(khi từ chối)
+UC_CFO_02 ..> UC_TOPUP          : <<include>>
+UC_CFO_02 ..> UC_RECONCILE      : <<include>>
+
+note bottom
+  Ngoài các chức năng riêng trên, CFO kế thừa 8 Use Case chung:
+  UC-CM-01 Đăng nhập  |  UC-CM-02 Quản lý hồ sơ cá nhân  |  UC-CM-03 Quản lý PIN giao dịch
+  UC-CM-04 Xem ví & lịch sử  |  UC-CM-05 Nạp tiền (VNPay)  |  UC-CM-06 Rút tiền về ngân hàng
+  UC-CM-07 Xem phiếu lương  |  UC-CM-08 Xem thông báo
+  ─────────────────────────────────────────────────────────────────
+  UC-CFO-02 Quản lý quỹ công ty được chia sẻ với Accountant (UC-ACC-03).
+  CFO là role hoàn toàn mới — trước đây chức năng CFO nằm dưới namespace /admin.
+end note
+
+@enduml

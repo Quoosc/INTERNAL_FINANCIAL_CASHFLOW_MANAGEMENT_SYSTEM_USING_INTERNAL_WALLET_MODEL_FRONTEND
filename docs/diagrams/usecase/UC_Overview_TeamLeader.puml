@@ -1,0 +1,62 @@
+@startuml UC_Overview_TeamLeader
+title <b>Sơ đồ Use Case tổng quan — Trưởng nhóm (Team Leader)</b>
+
+left to right direction
+
+skinparam ActorBorderColor #1B5E20
+skinparam ActorFontStyle bold
+skinparam ActorFontSize 13
+
+skinparam usecase {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  FontSize 12
+}
+
+skinparam ArrowColor #2E7D32
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+actor "Trưởng nhóm\n(Team Leader)" as tl
+
+rectangle "IFMS — Chức năng Trưởng nhóm" {
+
+  package "Chức năng cá nhân (kế thừa từ Employee)" {
+    usecase "UC-EMP-01\nTạo yêu cầu chi tiêu cá nhân\n(ADVANCE / EXPENSE / REIMBURSE)" as UC_EMP_01
+  }
+
+  package "Chức năng quản lý — Team Leader" {
+
+    usecase "UC-TL-01\nDuyệt / Từ chối\nchi tiêu cá nhân\n[Flow 1 — Quyết định]" as UC_TL_01
+
+    usecase "Nhập lý do\ntừ chối" as UC_REJECT_REASON
+
+    usecase "UC-TL-02\nTạo yêu cầu\ncấp vốn dự án\n[Flow 2 — Khởi tạo]" as UC_TL_02
+
+    usecase "UC-TL-03\nQuản lý giai đoạn\n& ngân sách dự án" as UC_TL_03
+
+    usecase "Phân bổ ngân sách\ntheo ExpenseCategory" as UC_BUDGET
+
+    usecase "UC-TL-04\nQuản lý thành viên\ndự án" as UC_TL_04
+
+  }
+
+}
+
+tl --> UC_EMP_01
+tl --> UC_TL_01
+tl --> UC_TL_02
+tl --> UC_TL_03
+tl --> UC_TL_04
+
+UC_TL_01 ..> UC_REJECT_REASON : <<include>>\n(khi từ chối)
+UC_TL_03 ..> UC_BUDGET         : <<include>>
+
+note bottom
+  Ngoài các chức năng riêng trên, Team Leader kế thừa 8 Use Case chung:
+  UC-CM-01 Đăng nhập  |  UC-CM-02 Quản lý hồ sơ cá nhân  |  UC-CM-03 Quản lý PIN giao dịch
+  UC-CM-04 Xem ví & lịch sử  |  UC-CM-05 Nạp tiền (VNPay)  |  UC-CM-06 Rút tiền về ngân hàng
+  UC-CM-07 Xem phiếu lương  |  UC-CM-08 Xem thông báo
+end note
+
+@enduml

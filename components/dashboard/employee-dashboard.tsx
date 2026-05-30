@@ -695,7 +695,7 @@ export function EmployeeDashboard() {
             </div>
           }
         >
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={240} debounce={100}>
             <BarChart data={chartData} barGap={4}>
               <CartesianGrid
                 strokeDasharray="3 3"

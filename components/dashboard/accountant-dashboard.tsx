@@ -18,6 +18,7 @@ import {
   AccountantDashboardResponse,
   DisbursementListItem,
   PaginatedResponse,
+  RequestStatus,
   PayrollPeriodListItem,
   PayrollStatus,
   RequestType,
@@ -198,7 +199,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 1,
     requestCode: "REQ-2026-0041",
     type: RequestType.ADVANCE,
-    status: "APPROVED_BY_TEAM_LEADER",
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 3_500_000,
     approvedAmount: 3_500_000,
     description: "Mua vật tư thiết bị cho phase 1.",
@@ -230,7 +231,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 2,
     requestCode: "REQ-2026-0042",
     type: RequestType.EXPENSE,
-    status: "APPROVED_BY_TEAM_LEADER",
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 850_000,
     approvedAmount: 850_000,
     description: "Chi phí mua license công cụ.",
@@ -262,7 +263,7 @@ const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
     id: 3,
     requestCode: "REQ-2026-0038",
     type: RequestType.REIMBURSE,
-    status: "APPROVED_BY_TEAM_LEADER",
+    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
     amount: 1_200_000,
     approvedAmount: 1_200_000,
     description: "Hoàn ứng chi phí QA.",
@@ -599,7 +600,7 @@ export function AccountantDashboard() {
         </div>
 
         <div className="h-52">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" debounce={100}>
             <AreaChart
               data={CASHFLOW[period]}
               margin={{ top: 4, right: 8, left: 0, bottom: 0 }}

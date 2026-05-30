@@ -166,8 +166,15 @@ export function Header() {
                 {user?.departmentName ?? user?.role ?? "—"}
               </p>
             </div>
-            <div className="w-9 h-9 bg-linear-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0">
-              {initials}
+            <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden ring-2 ring-slate-200">
+              {user?.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
+                  {initials}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 # Tiến độ phát triển Frontend
 
 > File này được cập nhật sau **mỗi lần hoàn thành task**.
-> Cập nhật lần cuối: **2026-05-11** (Sprint 14)
+> Cập nhật lần cuối: **2026-05-30** (Sprint 15)
 
 ---
 
@@ -10,9 +10,9 @@
 | Hạng mục | Số lượng | Ghi chú |
 |---|---|---|
 | Auth pages LIVE | 3 | login, change-password, forgot-password |
-| Dashboard pages LIVE (API thật / hoàn chỉnh) | 47 | Sprint 13: thêm `wallet/deposit/my` — lịch sử nạp tiền VNPay |
+| Dashboard pages LIVE (API thật / hoàn chỉnh) | 48 | Sprint 15: thêm `accountant/payslips/[id]` — chi tiết phiếu lương kế toán |
 | Dashboard pages mock (backend chưa có) | 0 | — tất cả đã wired |
-| **Tổng pages** | **50** | không tính 2 orphaned đã xóa |
+| **Tổng pages** | **51** | không tính 2 orphaned đã xóa |
 
 ---
 
@@ -60,6 +60,7 @@
 | `accountant/withdrawals/page.tsx` | `GET/PUT /api/v1/wallet/withdraw` | Quản lý rút tiền của user — Sprint 9 |
 | `accountant/payroll/page.tsx` | `GET /api/v1/accountant/payroll` + `POST` | List + tạo kỳ lương + tải template — Sprint 10 |
 | `accountant/payroll/[id]/page.tsx` | `GET/PUT/POST import/auto-netting/run` | 4-step workflow, FormData import, 409 overwrite — Sprint 10 |
+| `accountant/payslips/[id]/page.tsx` | `GET /api/v1/accountant/payslips/{id}` | Chi tiết phiếu lương kế toán — breadcrumb, salary breakdown table — Sprint 15 |
 | `accountant/ledger/page.tsx` | `GET /api/v1/accountant/ledger` + `/summary` | Filter type/status/refType, summary cards — Sprint 10 |
 | `accountant/ledger/[id]/page.tsx` | `GET /api/v1/accountant/ledger/{id}` | Detail + bút toán kép table — Sprint 10 |
 | `admin/users/page.tsx` | `GET/POST /api/v1/admin/users` | Lock/unlock/reset-password |
@@ -67,7 +68,7 @@
 | `admin/departments/page.tsx` | `GET /api/v1/admin/departments` | CRUD |
 | `admin/departments/[id]/page.tsx` | `GET/PUT/DELETE /api/v1/admin/departments/{id}` | — |
 | `admin/audit-logs/page.tsx` | `GET /api/v1/admin/audit` | Filter, pagination, detail modal |
-| `admin/settings/page.tsx` | `GET/PUT /api/v1/system-configs` | Evict cache |
+| `admin/settings/page.tsx` | `GET/PUT /api/v1/admin/settings` | AdminSettingsController, batch update `{configs:[]}`, evict cache — migrated Sprint 15 |
 | `admin/system-fund/page.tsx` | `GET /api/v1/company-fund` + topup | Fixed diacritics Sprint 7 |
 | `admin/roles/page.tsx` | — | Static permission matrix, no API needed |
 | `admin/approvals/page.tsx` | — | Redirect → `/dashboard` (by design) |
@@ -81,6 +82,29 @@
 ---
 
 ## Nhật ký thay đổi
+
+### Sprint 15 — 2026-05-30
+
+**Mục tiêu:** Tích hợp tất cả 5 endpoint chưa wired (TODO_IMPROVEMENTS §5.1–5.5) + fix ESLint
+
+| Task | Kết quả |
+|---|---|
+| 5.1 — Migrate `admin/settings` → `AdminSettingsController` | Đổi `getAllConfigs/updateConfig` → `getAdminSettings/updateAdminSettings`; fix field `items→configs` trong `UpdateSettingsBody` |
+| 5.2 — Tạo `accountant/payslips/[id]/page.tsx` | Trang chi tiết phiếu lương kế toán; breadcrumb, salary table, net salary highlight; link "Chi tiết" từ payroll detail Step 2 |
+| 5.3 — Pre-verify PIN trước disburse | `handleDisburse()` gọi `POST /users/me/pin/verify` trước `POST /disbursements/{id}/disburse` — block sớm khi PIN sai |
+| 5.4 — Delete category trong TL project detail | Nút "Xóa" per row trong budget tab; confirm modal; disabled khi `currentSpent>0`; body `{phaseId,categoryId}` |
+| 5.5 — Create custom expense category trong TL project detail | Nút "+ Thêm danh mục"; modal tạo category (name, description, budgetLimit); auto-refresh list |
+| Fix ESLint `scripts/admin-smoke.spec.cjs` | Thêm `scripts/**` + `logs/**` vào `globalIgnores` trong `eslint.config.mjs` |
+| Thêm types `RemoveCategoryBody`, `CreateExpenseCategoryBody` | Vào `types/project.ts` |
+| `npm run lint` | ✅ 0 errors |
+
+**Lưu ý kỹ thuật Sprint 15:**
+- `api.delete(url, options)` không auto-serialize body — phải dùng `{ body: JSON.stringify(obj) }` thủ công
+- `api.post/put(url, body)` auto-serialize qua `JSON.stringify` — không cần wrap thủ công
+- `AdminSettingsController.GET /admin/settings` trả `{ items: SystemConfigResponse[] }` (wrapper `SettingsListResponse`)
+- `AdminSettingsController.PUT /admin/settings` nhận `{ configs: [{key,value}][] }` (không phải `items`)
+
+---
 
 ### Sprint 14 — 2026-05-11
 
@@ -261,7 +285,9 @@ Wire `notifications`, `cfo/system-fund`, `admin/settings`, `cfo/approvals/[id]`,
 
 ## Backend còn thiếu (blocker cho FE)
 
-Không còn blocker — tất cả module backend đã implement. 47/50 dashboard pages đang dùng API thật (3 pages còn lại là static: `admin/roles`, `admin/approvals` redirect, `cfo/audit-logs` + `cfo/settings` re-export từ admin).
+Không còn blocker — tất cả module backend đã implement và tất cả 6 endpoint ❌ đã được wire (Sprint 15). 48/51 dashboard pages đang dùng API thật (3 pages còn lại là static: `admin/roles`, `admin/approvals` redirect, `cfo/audit-logs` + `cfo/settings` re-export từ admin).
+
+**Còn chờ backend (analytics / export):** 4 feature cần endpoint mới — xem `TODO_IMPROVEMENTS.md §1–§4`.
 
 ---
 

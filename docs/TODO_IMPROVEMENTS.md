@@ -86,69 +86,53 @@ Hoặc thêm header `X-Pin-Attempts-Remaining: 3`.
 
 ## 5. Missing Frontend Integrations — Backend API Exists, FE Chưa Gọi
 
-> Các endpoint backend đã có nhưng frontend chưa tích hợp. Không phải lỗi — chỉ là tính năng chưa implement.
-> Phát hiện qua audit ngày 2026-05-12.
+> Cập nhật ngày 2026-05-30: **Tất cả 5 item đã được implement.**
 
-### 5.1 `GET /api/v1/admin/settings` và `PUT /api/v1/admin/settings`
+### ✅ 5.1 `GET /api/v1/admin/settings` và `PUT /api/v1/admin/settings`
 
-**Controller:** `AdminSettingsController` (`/admin/settings`)
-
-**Vấn đề:** Frontend hoàn toàn bỏ qua `AdminSettingsController`. Trang `/admin/settings` và `/cfo/settings` đang dùng trực tiếp `SystemConfigController` (`/system-configs`). Hai endpoint này là một lớp abstraction phía admin (nhóm key theo category, thêm RBAC riêng).
-
-**File cần tích hợp khi cần:**
-- `app/(dashboard)/admin/settings/page.tsx` — thay `getAllConfigs()` / `updateConfig()` bằng `GET/PUT /admin/settings`
-- `lib/api/system-config.ts` — thêm `getAdminSettings()` và `updateAdminSettings()`
+**Đã implement:** `app/(dashboard)/admin/settings/page.tsx` đã dùng `getAdminSettings()` / `updateAdminSettings()` từ `lib/api/system-config.ts`.
+`UpdateSettingsBody.configs` đã được fix (trước đó dùng `items`, nay đúng với backend `configs`).
 
 ---
 
-### 5.2 `GET /api/v1/accountant/payslips/{payslipId}`
+### ✅ 5.2 `GET /api/v1/accountant/payslips/{payslipId}`
 
-**Controller:** `AccountantPayslipController` (`/accountant/payslips/{payslipId}`)
-
-**Vấn đề:** Không có trang chi tiết phiếu lương dành cho kế toán. Hiện tại trang `/accountant/payroll/{id}` liệt kê các payslip entry nhưng không drill-down vào từng payslip.
-
-**File cần tạo khi implement:**
-- `app/(dashboard)/accountant/payroll/[id]/page.tsx` — thêm link click từng entry → gọi `GET /accountant/payslips/{payslipId}`
-- Hoặc tạo `app/(dashboard)/accountant/payslips/[id]/page.tsx` riêng
+**Đã implement:**
+- Tạo `app/(dashboard)/accountant/payslips/[id]/page.tsx` — trang chi tiết phiếu lương kế toán
+- `app/(dashboard)/accountant/payroll/[id]/page.tsx` Step 2 — thêm nút "Chi tiết" link đến `/accountant/payslips/{id}`
 
 ---
 
-### 5.3 `POST /api/v1/users/me/pin/verify`
+### ✅ 5.3 `POST /api/v1/users/me/pin/verify`
 
-**Controller:** `ProfileController` (`/users/me/pin/verify`)
-
-**Vấn đề:** Endpoint xác thực PIN (`{ pin } → { valid: boolean }`) chưa được gọi từ UI. Hiện tại Accountant nhập PIN thẳng vào form giải ngân (PIN được validate ở backend khi disburse). Endpoint này hữu ích cho luồng xác nhận trước khi thực hiện thao tác nhạy cảm (pre-check PIN trước khi submit).
-
-**File cần update khi implement:**
-- `app/(dashboard)/accountant/disbursements/[id]/page.tsx` — thêm bước pre-verify PIN trước khi gọi `/disburse`
-- `lib/api/` — thêm `verifyPin(pin: string): Promise<{ valid: boolean }>`
+**Đã implement:** `app/(dashboard)/accountant/disbursements/[id]/page.tsx` — gọi pre-verify PIN trước `disburse`:
+1. `POST /users/me/pin/verify { pin }` → nếu `valid = false` hiện lỗi ngay
+2. Nếu valid → tiếp tục gọi `POST /accountant/disbursements/{id}/disburse`
 
 ---
 
-### 5.4 `DELETE /api/v1/team-leader/projects/{id}/categories`
+### ✅ 5.4 `DELETE /api/v1/team-leader/projects/{id}/categories`
 
-**Controller:** `TeamLeaderCategoryController` (`/team-leader/projects/{id}/categories` DELETE)
-
-**Vấn đề:** Frontend chỉ gọi `GET` (lấy danh sách) và `PUT` (cập nhật budget) trên categories. Không có nút xóa danh mục trong trang `/team-leader/projects/{id}`.
-
-**File cần update khi implement:**
-- `app/(dashboard)/team-leader/projects/[id]/page.tsx` — thêm nút xóa danh mục trong phần category management
+**Đã implement:** `app/(dashboard)/team-leader/projects/[id]/page.tsx` — budget tab:
+- Thêm cột "Xóa" trong bảng categories
+- Nút xóa disabled khi `currentSpent > 0` (backend cũng enforce)
+- Confirm modal trước khi xóa
+- Thêm type `RemoveCategoryBody` vào `types/project.ts`
 
 ---
 
-### 5.5 `POST /api/v1/team-leader/projects/{id}/expense-categories`
+### ✅ 5.5 `POST /api/v1/team-leader/projects/{id}/expense-categories`
 
-**Controller:** `TeamLeaderCategoryController` (`/team-leader/projects/{id}/expense-categories` POST)
-
-**Vấn đề:** Frontend chỉ `GET /team-leader/expense-categories?projectId=...` để lấy danh sách template categories. Không có UI để Team Leader tạo expense category tùy chỉnh cho một project cụ thể.
-
-**File cần update khi implement:**
-- `app/(dashboard)/team-leader/projects/[id]/page.tsx` — thêm form tạo custom expense category
+**Đã implement:** `app/(dashboard)/team-leader/projects/[id]/page.tsx` — budget tab:
+- Thêm nút "+ Thêm danh mục"
+- Modal tạo custom expense category (name, description, budgetLimit)
+- Tự động refresh category list sau khi tạo
+- Thêm type `CreateExpenseCategoryBody` vào `types/project.ts`
 
 ---
 
 ## Ghi chú
 
-- Các item trên **không ảnh hưởng đến luồng nghiệp vụ** (3 flows đều hoạt động đầy đủ).
-- Đây là cải tiến UX/reporting — ưu tiên sau khi các luồng core ổn định.
+- Các item 5.1–5.5 **đã hoàn thiện** (2026-05-30).
+- Chart mock data (items 1–4 bên trên) **vẫn cần backend implement các analytics endpoint mới**. Xem §1–§4 bên trên.
 - Chart mock data hiện tại là intentional fallback — không gây lỗi runtime, chỉ hiển thị dữ liệu tĩnh.

@@ -1,7 +1,7 @@
 # API_TEST_STATUS.md — Trạng thái Test Toàn bộ Endpoint
 
-> Cập nhật lần cuối: 2026-05-12 (session 3 — Phase 2 + Phase 3 test complete)
-> Tổng: **153 endpoint** · **138 đã tích hợp FE** · **15 chưa/không tích hợp**
+> Cập nhật lần cuối: 2026-05-30 (Sprint 15 — tích hợp tất cả 5.1–5.5)
+> Tổng: **153 endpoint** · **144 đã tích hợp FE** · **9 chưa/không tích hợp**
 >
 > **Chú thích trạng thái:**
 > - ✅ **Tested** — đã test thực tế (curl hoặc qua FE), xác nhận response đúng
@@ -16,8 +16,8 @@
 | Trạng thái | Số lượng |
 |---|---|
 | ✅ Tested | 104 |
-| ⚠️ Integrated, not tested | 34 |
-| ❌ Not integrated (Group A — thiếu FE feature) | 6 |
+| ⚠️ Integrated, not tested | 40 |
+| ❌ Not integrated (Group A — thiếu FE feature) | 0 |
 | — N/A (webhook / SSE / dev-only) | 9 |
 | **Tổng** | **153** |
 
@@ -47,7 +47,7 @@
 | PUT | `/users/me/avatar` | ⚠️ | Integrated — multipart upload; skip: cần Cloudinary |
 | PUT | `/users/me/bank-info` | ✅ | Tested — field `accountOwner` (không phải `accountHolder`) |
 | PUT | `/users/me/pin` | ✅ | Tested — change → re-login → restore |
-| POST | `/users/me/pin/verify` | ❌ | **Not integrated** — xem TODO_IMPROVEMENTS §5.3 |
+| POST | `/users/me/pin/verify` | ⚠️ | Integrated (Sprint 15) — pre-verify trước disburse; skip: cần test PIN sequence |
 | GET | `/banks` | ✅ | Tested — trả `BankOption[]` |
 
 ---
@@ -176,9 +176,9 @@
 |---|---|---|---|
 | GET | `/team-leader/projects/{id}/categories` | ✅ | Tested — trả danh sách `PhaseCategoryBudget` |
 | PUT | `/team-leader/projects/{id}/categories` | ✅ | Tested — body single object `{phaseId,categoryId,budgetLimit}`; cần record tồn tại (update-only, không upsert) |
-| DELETE | `/team-leader/projects/{id}/categories` | ❌ | **Not integrated** — xem TODO_IMPROVEMENTS §5.4 |
+| DELETE | `/team-leader/projects/{id}/categories` | ⚠️ | Integrated (Sprint 15) — body `{phaseId,categoryId}`; disabled khi `currentSpent>0` |
 | GET | `/team-leader/expense-categories` | ✅ | Tested |
-| POST | `/team-leader/projects/{id}/expense-categories` | ❌ | **Not integrated** — xem TODO_IMPROVEMENTS §5.5 |
+| POST | `/team-leader/projects/{id}/expense-categories` | ⚠️ | Integrated (Sprint 15) — tạo custom category + phase budget; auto-refresh list sau khi tạo |
 
 ---
 
@@ -245,7 +245,7 @@
 
 | Method | Endpoint | Trạng thái | Ghi chú |
 |---|---|---|---|
-| GET | `/accountant/payslips/{payslipId}` | ❌ | **Not integrated** — xem TODO_IMPROVEMENTS §5.2 |
+| GET | `/accountant/payslips/{payslipId}` | ⚠️ | Integrated (Sprint 15) — trang `accountant/payslips/[id]/page.tsx`; link từ payroll detail Step 2 |
 
 ---
 
@@ -338,8 +338,8 @@
 
 | Method | Endpoint | Trạng thái | Ghi chú |
 |---|---|---|---|
-| GET | `/admin/settings` | ❌ | **Not integrated** — xem TODO_IMPROVEMENTS §5.1 |
-| PUT | `/admin/settings` | ❌ | **Not integrated** — xem TODO_IMPROVEMENTS §5.1 |
+| GET | `/admin/settings` | ⚠️ | Integrated (Sprint 15) — `getAdminSettings()` từ `lib/api/system-config.ts`; dùng trong `admin/settings/page.tsx` |
+| PUT | `/admin/settings` | ⚠️ | Integrated (Sprint 15) — `updateAdminSettings({configs:[{key,value}]})` batch update |
 
 ---
 

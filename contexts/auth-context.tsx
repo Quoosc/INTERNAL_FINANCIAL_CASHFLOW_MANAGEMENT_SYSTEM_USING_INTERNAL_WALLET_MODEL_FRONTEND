@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { AuthUser, RoleName } from "@/types";
 import { getAccessToken } from "@/lib/api-client";
 import { logout as authLogout } from "@/lib/auth";
@@ -46,25 +46,41 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AuthState>(() => {
-    const token = getAccessToken();
-    if (token) {
-      const payload = decodeJwtPayload(token);
-      if (payload && typeof window !== "undefined") {
-        const storedUser = localStorage.getItem("user_info");
-        if (storedUser) {
-          try {
-            const user: AuthUser = JSON.parse(storedUser);
-            return { user, isAuthenticated: true, isLoading: false };
-          } catch {
-            // Invalid stored data
-          }
-        }
+// ─── Initial auth resolver (called once after mount, safe from SSR) ───────────
+
+function resolveStoredAuth(): { user: AuthUser; isAuthenticated: true } | { user: null; isAuthenticated: false } {
+  const token = getAccessToken();
+  if (token && decodeJwtPayload(token)) {
+    try {
+      const raw = localStorage.getItem("user_info");
+      if (raw) {
+        const user = JSON.parse(raw) as AuthUser;
+        return { user, isAuthenticated: true };
       }
+    } catch {
+      // corrupt data — fall through
     }
-    return { user: null, isAuthenticated: false, isLoading: false };
+  }
+  return { user: null, isAuthenticated: false };
+}
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Start with isLoading: true so server HTML and initial client render are identical
+  // (localStorage is not readable during SSR → no hydration mismatch).
+  // useEffect runs after mount and resolves the actual stored user in one pass.
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: true,
   });
+
+  useEffect(() => {
+    // One-time read from localStorage after client mount — safe, no dependency loop.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState({ ...resolveStoredAuth(), isLoading: false });
+  }, []);
 
   const setUser = useCallback((user: AuthUser | null) => {
     if (user) {
@@ -84,18 +100,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const hasRole = useCallback(
-    (role: RoleName): boolean => {
-      if (!state.user) return false;
-      return state.user.role === role;
-    },
+    (role: RoleName): boolean => state.user?.role === role,
     [state.user]
   );
 
   const hasAnyRole = useCallback(
-    (roles: RoleName[]): boolean => {
-      if (!state.user) return false;
-      return roles.some((r) => state.user!.role === r);
-    },
+    (roles: RoleName[]): boolean => roles.some((r) => state.user?.role === r),
     [state.user]
   );
 

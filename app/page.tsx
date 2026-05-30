@@ -1,6 +1,16 @@
-import { redirect } from "next/navigation";
+"use client";
 
-// Root page redirects to dashboard (or login via middleware if not authenticated)
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+// Avoid server-side redirect here because Turbopack dev can keep a stale
+// react-server navigation module after hot reloads.
 export default function HomePage() {
-  redirect("/dashboard");
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard");
+  }, [router]);
+
+  return null;
 }

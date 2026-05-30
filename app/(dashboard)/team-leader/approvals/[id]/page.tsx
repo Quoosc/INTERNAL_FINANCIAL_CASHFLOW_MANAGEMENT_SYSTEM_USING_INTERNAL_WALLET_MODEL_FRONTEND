@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   RequestAction,
   RequestStatus,
@@ -424,10 +425,10 @@ function getAttachmentIcon(fileType: string): React.ReactNode {
 export default function TLApprovalDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { id } = use(params);
+  const toast = useToast();
 
   const [request, setRequest] = useState<TLApprovalDetailView | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -442,7 +443,6 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
 
     const loadDetail = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<unknown>(
@@ -477,9 +477,9 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
         });
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -491,7 +491,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   const budgetSummary = useMemo(() => {
     if (!request) return null;
@@ -908,12 +908,6 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
 
       {showApproveModal && request && (
         <div className="fixed inset-0 z-50">

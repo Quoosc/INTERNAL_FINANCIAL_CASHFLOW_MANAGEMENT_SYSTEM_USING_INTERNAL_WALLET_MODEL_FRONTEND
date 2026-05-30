@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   getCompanyFund,
   getReconciliationReport,
@@ -14,12 +15,11 @@ import { formatCurrency } from "@/lib/format";
 
 
 export default function AdminSystemFundPage() {
+  const toast = useToast();
   const [companyFund, setCompanyFund] = useState<CompanyFundResponse | null>(null);
   const [reconciliation, setReconciliation] = useState<ReconciliationReportResponse | null>(null);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const [showTopupModal, setShowTopupModal] = useState(false);
   const [showStatementModal, setShowStatementModal] = useState(false);
@@ -34,7 +34,6 @@ export default function AdminSystemFundPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
     try {
       const [fundRes, reconRes] = await Promise.all([
@@ -47,14 +46,14 @@ export default function AdminSystemFundPage() {
       setStatementBalance(String(fundRes.data.externalBankBalance ?? 0));
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể tải dữ liệu quỹ hệ thống.");
+        toast.error("Không thể tải dữ liệu quỹ hệ thống.");
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadData();
@@ -63,13 +62,11 @@ export default function AdminSystemFundPage() {
   const handleTopup = async () => {
     const amount = Number(topupAmount.replace(/\D/g, ""));
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Số tiền nạp không hợp lệ.");
+      toast.error("Số tiền nạp không hợp lệ.");
       return;
     }
 
     setTopupSubmitting(true);
-    setError(null);
-    setNotice(null);
 
     try {
       await topupCompanyFund({
@@ -81,13 +78,13 @@ export default function AdminSystemFundPage() {
       setTopupAmount("");
       setTopupDescription("");
       setTopupReferenceCode("");
-      setNotice("Đã nạp tiền vào quỹ hệ thống.");
+      toast.success("Đã nạp tiền vào quỹ hệ thống.");
       await loadData();
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể nạp tiền vào quỹ hệ thống.");
+        toast.error("Không thể nạp tiền vào quỹ hệ thống.");
       }
     } finally {
       setTopupSubmitting(false);
@@ -97,13 +94,11 @@ export default function AdminSystemFundPage() {
   const handleUpdateStatement = async () => {
     const bankBalance = Number(statementBalance.replace(/\D/g, ""));
     if (!Number.isFinite(bankBalance) || bankBalance < 0) {
-      setError("Số dư ngân hàng không hợp lệ.");
+      toast.error("Số dư ngân hàng không hợp lệ.");
       return;
     }
 
     setStatementSubmitting(true);
-    setError(null);
-    setNotice(null);
 
     try {
       await updateBankStatement({
@@ -111,13 +106,13 @@ export default function AdminSystemFundPage() {
         lastStatementDate: new Date().toISOString().slice(0, 10),
       });
       setShowStatementModal(false);
-      setNotice("Đã cập nhật số dư ngân hàng.");
+      toast.success("Đã cập nhật số dư ngân hàng.");
       await loadData();
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể cập nhật số dư ngân hàng.");
+        toast.error("Không thể cập nhật số dư ngân hàng.");
       }
     } finally {
       setStatementSubmitting(false);
@@ -232,18 +227,6 @@ export default function AdminSystemFundPage() {
           </Link>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">
-          {notice}
-        </div>
-      )}
 
       {showTopupModal && (
         <Modal title="Nạp tiền từ ngân hàng" onClose={() => setShowTopupModal(false)}>

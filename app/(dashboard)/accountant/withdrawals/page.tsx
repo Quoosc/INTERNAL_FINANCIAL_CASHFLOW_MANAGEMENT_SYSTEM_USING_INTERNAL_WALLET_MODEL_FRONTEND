@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/contexts/toast-context";
 import { ApiError } from "@/lib/api-client";
 import {
   executeWithdraw,
@@ -70,11 +71,11 @@ function mapTabToStatus(tab: WithdrawFilterTab): WithdrawStatus | undefined {
 
 export default function AccountantWithdrawalsPage() {
   const { hasRole } = useAuth();
+  const toast = useToast();
 
   const [filterTab, setFilterTab] = useState<WithdrawFilterTab>("PENDING");
   const [items, setItems] = useState<WithdrawRequestListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [executingId, setExecutingId] = useState<number | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
@@ -88,7 +89,6 @@ export default function AccountantWithdrawalsPage() {
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
     try {
       const res = await getAllWithdrawRequests(statusFilter, 0, 20);
@@ -96,14 +96,14 @@ export default function AccountantWithdrawalsPage() {
     } catch (err) {
       setItems([]);
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể tải danh sách yêu cầu rút tiền.");
+        toast.error("Không thể tải danh sách yêu cầu rút tiền.");
       }
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, toast]);
 
   useEffect(() => {
     void loadRequests();
@@ -111,16 +111,15 @@ export default function AccountantWithdrawalsPage() {
 
   const handleExecute = async (id: number) => {
     setExecutingId(id);
-    setError(null);
 
     try {
       await executeWithdraw(id);
       await loadRequests();
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể thực hiện yêu cầu rút tiền.");
+        toast.error("Không thể thực hiện yêu cầu rút tiền.");
       }
     } finally {
       setExecutingId(null);
@@ -281,12 +280,6 @@ export default function AccountantWithdrawalsPage() {
           </table>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-          {error}
-        </div>
-      )}
 
       {showRejectModal && (
         <div className="fixed inset-0 z-50">

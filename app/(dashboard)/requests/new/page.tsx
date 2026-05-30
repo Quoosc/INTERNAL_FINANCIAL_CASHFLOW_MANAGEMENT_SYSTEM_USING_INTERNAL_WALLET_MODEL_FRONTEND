@@ -6,7 +6,6 @@ import Image from "next/image";
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, parseAmountInput } from "@/lib/format";
-import { ErrorAlert } from "@/components/ui/error-alert";
 import { useToast } from "@/contexts/toast-context";
 import {
   CreateRequestBody,
@@ -260,7 +259,6 @@ export default function NewRequestPage() {
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
 
   const isProjectBasedType = useMemo(
@@ -273,7 +271,6 @@ export default function NewRequestPage() {
 
     const loadProjects = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const projectsRes = await api.get<PaginatedResponse<ProjectListItem>>(
@@ -287,9 +284,9 @@ export default function NewRequestPage() {
         setProjects(MOCK_PROJECTS);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải danh sách dự án, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải danh sách dự án, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -301,7 +298,7 @@ export default function NewRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     const projectId = form.projectId;
@@ -322,7 +319,6 @@ export default function NewRequestPage() {
 
     const loadPhases = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const phasesRes = await api.get<ProjectPhasesResponse>(
@@ -342,9 +338,9 @@ export default function NewRequestPage() {
         });
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải phase dự án, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải phase dự án, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -356,7 +352,7 @@ export default function NewRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, [form.projectId, projects, isProjectBasedType]);
+  }, [form.projectId, projects, isProjectBasedType, toast]);
 
   useEffect(() => {
     const phaseId = form.phaseId;
@@ -375,7 +371,6 @@ export default function NewRequestPage() {
 
     const loadCategories = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<{ items: ExpenseCategoryResponse[] } | ExpenseCategoryResponse[]>(
@@ -392,9 +387,9 @@ export default function NewRequestPage() {
         setCategoryOptions([]);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải danh sách hạng mục chi phí.");
+          toast.error("Không thể tải danh sách hạng mục chi phí.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -406,7 +401,7 @@ export default function NewRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, [form.phaseId, isProjectBasedType]);
+  }, [form.phaseId, isProjectBasedType, toast]);
 
   useEffect(() => {
     return () => {
@@ -503,7 +498,6 @@ export default function NewRequestPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
 
     if (!validateBeforeSubmit()) return;
 
@@ -533,11 +527,11 @@ export default function NewRequestPage() {
       router.push(`/requests/${res.data.id}`);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("Không thể tạo yêu cầu. Vui lòng thử lại.");
+        toast.error("Không thể tạo yêu cầu. Vui lòng thử lại.");
       }
     } finally {
       setSubmitting(false);
@@ -775,8 +769,6 @@ export default function NewRequestPage() {
             </div>
           )}
         </div>
-
-        {error && <ErrorAlert message={error} />}
 
         <div className="flex items-center gap-3">
           <button

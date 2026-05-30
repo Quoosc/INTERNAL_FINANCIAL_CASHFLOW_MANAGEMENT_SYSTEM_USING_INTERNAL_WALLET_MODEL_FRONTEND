@@ -4,7 +4,7 @@
 // =============================================================
 
 import { api } from "@/lib/api-client";
-import type { SystemConfigResponse, SystemConfigRequest } from "@/types";
+import type { SystemConfigResponse, SystemConfigRequest, SystemSettingsResponse, UpdateSettingsBody } from "@/types";
 
 /** GET /api/v1/system-configs — List tất cả configs */
 export async function getAllConfigs() {
@@ -34,4 +34,14 @@ export async function evictConfigCache(key: string) {
 /** DELETE /api/v1/system-configs/cache — Evict toàn bộ cache */
 export async function evictAllConfigCache() {
   return api.delete<void>("/api/v1/system-configs/cache");
+}
+
+/** GET /api/v1/admin/settings — Lấy tất cả configs qua AdminSettingsController */
+export async function getAdminSettings() {
+  return api.get<SystemSettingsResponse>("/api/v1/admin/settings");
+}
+
+/** PUT /api/v1/admin/settings — Batch update configs qua AdminSettingsController */
+export async function updateAdminSettings(data: UpdateSettingsBody) {
+  return api.put<SystemSettingsResponse>("/api/v1/admin/settings", data);
 }

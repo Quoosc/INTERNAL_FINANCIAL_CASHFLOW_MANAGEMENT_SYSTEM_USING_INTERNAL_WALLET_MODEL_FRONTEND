@@ -147,9 +147,10 @@ export interface UpdateProfileRequest {
 /** PUT /users/me/avatar — body (sau khi upload lên Cloudinary) */
 export interface UpdateAvatarRequest {
   cloudinaryPublicId: string;
+  url: string;
   fileName: string;
-  fileType: string;
-  size: number;
+  fileType?: string;
+  size?: number;
 }
 
 /** PUT /users/me/bank-info — body */

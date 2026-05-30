@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { getNotifications, markAllAsRead, markAsRead } from "@/lib/api";
+import { useToast } from "@/contexts/toast-context";
 import { NotificationResponse, NotificationType } from "@/types";
 
 const PAGE_SIZE = 20;
@@ -103,6 +104,7 @@ function getNotificationTarget(item: NotificationResponse): string | null {
 
 export default function NotificationsPage() {
   const router = useRouter();
+  const toast = useToast();
 
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
   const [total, setTotal] = useState(0);
@@ -111,7 +113,6 @@ export default function NotificationsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<NotificationFilterTab>("ALL");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const seenSseNotificationIds = useRef<Set<number>>(new Set());
 
   const prependNotificationFromSse = useCallback(
@@ -152,7 +153,6 @@ export default function NotificationsPage() {
 
     const loadNotifications = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await getNotifications(
@@ -174,9 +174,9 @@ export default function NotificationsPage() {
         setTotalPages(1);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải thông báo từ API.");
+          toast.error("Không thể tải thông báo từ API.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -188,7 +188,7 @@ export default function NotificationsPage() {
     return () => {
       cancelled = true;
     };
-  }, [filter, page]);
+  }, [filter, page, toast]);
 
   useEffect(() => {
     const onSseNotification = (event: Event) => {
@@ -382,7 +382,6 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

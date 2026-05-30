@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@/lib/api-client";
 import { getMyDeposits } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 import { DepositLogResponse, DepositStatus } from "@/types";
 
 const PAGE_SIZE = 10;
@@ -36,17 +37,16 @@ function getStatusClass(status: DepositStatus): string {
 }
 
 export default function DepositHistoryPage() {
+  const toast = useToast();
   const [deposits, setDeposits] = useState<DepositLogResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const loadDeposits = useCallback(async (nextPage: number) => {
     let cancelled = false;
     setLoading(true);
-    setError(null);
 
     try {
       const res = await getMyDeposits(nextPage, PAGE_SIZE);
@@ -64,9 +64,9 @@ export default function DepositHistoryPage() {
       setTotalPages(1);
 
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể tải lịch sử nạp tiền.");
+        toast.error("Không thể tải lịch sử nạp tiền.");
       }
     } finally {
       if (!cancelled) setLoading(false);
@@ -75,7 +75,7 @@ export default function DepositHistoryPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadDeposits(0);
@@ -225,11 +225,6 @@ export default function DepositHistoryPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
     </div>
   );
 }

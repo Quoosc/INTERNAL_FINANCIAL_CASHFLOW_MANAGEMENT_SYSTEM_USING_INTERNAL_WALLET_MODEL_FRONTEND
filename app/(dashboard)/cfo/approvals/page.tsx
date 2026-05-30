@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   AdminApprovalFilterParams,
   AdminApprovalListItem,
@@ -95,6 +96,7 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
 }
 
 export default function CfoApprovalsPage() {
+  const toast = useToast();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -115,7 +117,6 @@ export default function CfoApprovalsPage() {
   const [systemFundBalance, setSystemFundBalance] = useState(0);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
@@ -173,7 +174,6 @@ export default function CfoApprovalsPage() {
 
     const loadApprovals = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const filters: AdminApprovalFilterParams = {
@@ -232,9 +232,9 @@ export default function CfoApprovalsPage() {
         }
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -246,7 +246,7 @@ export default function CfoApprovalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search]);
+  }, [goToPage, page, search, toast]);
 
   const totalRequestedAmount = useMemo(
     () => items.reduce((sum, item) => sum + item.amount, 0),
@@ -447,11 +447,6 @@ export default function CfoApprovalsPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   AdminUserDetailResponse,
   DepartmentListItem,
@@ -54,8 +55,8 @@ const MOCK_DETAIL: AdminUserDetailResponse = {
   },
   wallet: {
     balance: 15_250_000,
-    lockedBalance: 2_000_000,
-    availableBalance: 13_250_000,
+    pendingBalance: 2_000_000,
+    debtBalance: 0,
   },
   securitySettings: {
     hasPIN: true,
@@ -109,16 +110,20 @@ function normalizeRole(role: string): RoleName {
   return values.includes(role as RoleName) ? (role as RoleName) : RoleName.EMPLOYEE;
 }
 
+function normalizeMoney(value: number | null | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
 export default function AdminUserDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { id } = use(params);
+  const toast = useToast();
 
   const [user, setUser] = useState<AdminUserDetailResponse | null>(null);
   const [departments, setDepartments] = useState<DepartmentListItem[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);  const [confirmState, setConfirmState] = useState<{ open: boolean; message: string; onConfirm: () => void }>(
+  const [confirmState, setConfirmState] = useState<{ open: boolean; message: string; onConfirm: () => void }>(
     { open: false, message: "", onConfirm: () => {} }
   );
 
@@ -135,7 +140,6 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
     const loadDetail = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<AdminUserDetailResponse>(`/api/v1/admin/users/${id}`);
@@ -151,9 +155,9 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         });
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -165,7 +169,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,7 +209,6 @@ export default function AdminUserDetailPage({ params }: PageProps) {
     setEditFullName(user.fullName);
     setEditRole(normalizeRole(user.role));
     setEditDepartmentId(user.departmentId ? String(user.departmentId) : "");
-    setNotice(null);
     setShowEditModal(true);
   };
 
@@ -214,12 +217,12 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
     const selectedRole = ROLE_OPTIONS.find((option) => option.value === editRole);
     if (!selectedRole) {
-      setNotice("Vai trò không hợp lệ.");
+      toast.error("Vai trò không hợp lệ.");
       return;
     }
 
     if (!editFullName.trim()) {
-      setNotice("Họ tên là bắt buộc.");
+      toast.error("Họ tên là bắt buộc.");
       return;
     }
 
@@ -237,7 +240,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
     try {
       const res = await api.put<AdminUserDetailResponse>(`/api/v1/admin/users/${user.id}`, body);
       setUser(res.data);
-      setNotice("Đã cập nhật thông tin user.");
+      toast.success("Đã cập nhật thông tin user.");
     } catch {
       const selectedDepartment = departments.find((department) => department.id === body.departmentId);
 
@@ -253,7 +256,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           : prev
       );
 
-      setNotice("API chưa sẵn sàng, đã mô phỏng cập nhật user.");
+      toast.info("API chưa sẵn sàng, đã mô phỏng cập nhật user.");
     } finally {
       setSaving(false);
       setShowEditModal(false);
@@ -275,11 +278,11 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       if (isLocked) {
         const res = await api.post<UnlockUserResponse>(`/api/v1/admin/users/${user.id}/unlock`);
         setUser((prev) => (prev ? { ...prev, status: res.data.status } : prev));
-        setNotice("Đã mở khóa tài khoản.");
+        toast.success("Đã mở khóa tài khoản.");
       } else {
         const res = await api.post<LockUserResponse>(`/api/v1/admin/users/${user.id}/lock`);
         setUser((prev) => (prev ? { ...prev, status: res.data.status } : prev));
-        setNotice("Đã khóa tài khoản.");
+        toast.success("Đã khóa tài khoản.");
       }
     } catch {
       setUser((prev) =>
@@ -290,7 +293,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             }
           : prev
       );
-      setNotice("API chưa sẵn sàng, đã mô phỏng lock/unlock.");
+      toast.info("API chưa sẵn sàng, đã mô phỏng lock/unlock.");
       } finally {
         setProcessing(false);
       }
@@ -310,9 +313,9 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
     try {
       await api.post<{ message: string }>(`/api/v1/admin/users/${user.id}/reset-password`);
-      setNotice("Đã reset mật khẩu và gửi email onboarding.");
+      toast.success("Đã reset mật khẩu và gửi email onboarding.");
     } catch {
-      setNotice("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
+      toast.info("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
       } finally {
         setProcessing(false);
       }
@@ -333,6 +336,15 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   if (!user) {
     return <div className="text-slate-600">Không tìm thấy user.</div>;
   }
+
+  const securitySettings = user.securitySettings ?? {
+    hasPIN: false,
+    pinLockedUntil: null,
+    retryCount: 0,
+  };
+  const walletBalance = normalizeMoney(user.wallet?.balance);
+  const walletPendingBalance = normalizeMoney(user.wallet?.pendingBalance);
+  const walletDebtBalance = normalizeMoney(user.wallet?.debtBalance);
 
   return (
     <div className="space-y-6">
@@ -390,9 +402,9 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold text-slate-900">Thông tin ví</h2>
             {user.wallet ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <InfoCard label="Tổng số dư" value={formatCurrency(user.wallet.balance)} tone="text-slate-900" />
-                <InfoCard label="Số dư khóa" value={formatCurrency(user.wallet.lockedBalance)} tone="text-amber-700" />
-                <InfoCard label="Số dư khả dụng" value={formatCurrency(user.wallet.availableBalance)} tone="text-emerald-700" />
+                <InfoCard label="Tổng số dư" value={formatCurrency(walletBalance)} tone="text-slate-900" />
+                <InfoCard label="Đang xử lý" value={formatCurrency(walletPendingBalance)} tone="text-amber-700" />
+                <InfoCard label="Tạm ứng còn nợ" value={formatCurrency(walletDebtBalance)} tone="text-rose-700" />
               </div>
             ) : (
               <p className="text-sm text-slate-500">User chưa có ví.</p>
@@ -403,9 +415,9 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         <div className="space-y-6">
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Bảo mật</h2>
-            <InfoCard label="Đã có PIN" value={user.securitySettings.hasPIN ? "Có" : "Chưa"} />
-            <InfoCard label="PIN khóa đến" value={user.securitySettings.pinLockedUntil ?? "—"} />
-            <InfoCard label="Số lần nhập sai PIN" value={String(user.securitySettings.retryCount)} />
+            <InfoCard label="Đã có PIN" value={securitySettings.hasPIN ? "Có" : "Chưa"} />
+            <InfoCard label="PIN khóa đến" value={securitySettings.pinLockedUntil ?? "—"} />
+            <InfoCard label="Số lần nhập sai PIN" value={String(securitySettings.retryCount ?? 0)} />
             <InfoCard label="Đăng nhập lần đầu" value={user.isFirstLogin ? "Có" : "Không"} />
           </div>
 
@@ -441,18 +453,6 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
 
       {showEditModal && (
         <div className="fixed inset-0 z-50">

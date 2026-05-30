@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   DisbursementFilterParams,
   DisbursementListItem,
@@ -271,6 +272,7 @@ export default function AccountantDisbursementsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
   const search = useMemo(
@@ -290,7 +292,6 @@ export default function AccountantDisbursementsPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
@@ -347,7 +348,6 @@ export default function AccountantDisbursementsPage() {
 
     const loadDisbursements = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const filters: DisbursementFilterParams = {
@@ -402,9 +402,9 @@ export default function AccountantDisbursementsPage() {
         }
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -416,7 +416,7 @@ export default function AccountantDisbursementsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search, type]);
+  }, [goToPage, page, search, type, toast]);
 
   const fundHealth = getFundHealth(MOCK_SYSTEM_FUND_BALANCE);
 
@@ -637,11 +637,6 @@ export default function AccountantDisbursementsPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
     </div>
   );
 }

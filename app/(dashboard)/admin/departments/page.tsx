@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   AdminUserListItem,
   CreateDepartmentBody,
@@ -43,6 +44,7 @@ export default function AdminDepartmentsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
   const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
@@ -55,8 +57,6 @@ export default function AdminDepartmentsPage() {
   const [totalPages, setTotalPages] = useState(1);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(search);
 
   const [showModal, setShowModal] = useState(false);
@@ -146,7 +146,6 @@ export default function AdminDepartmentsPage() {
 
     const loadDepartments = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const query = new URLSearchParams();
@@ -179,9 +178,9 @@ export default function AdminDepartmentsPage() {
         if (safePage !== page) goToPage(safePage);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -193,7 +192,7 @@ export default function AdminDepartmentsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search]);
+  }, [goToPage, page, search, toast]);
 
   const openCreateModal = () => {
     setIsEditing(false);
@@ -202,7 +201,6 @@ export default function AdminDepartmentsPage() {
     setFormCode("");
     setFormManagerId("");
     setFormQuota("");
-    setNotice(null);
     setShowModal(true);
   };
 
@@ -213,7 +211,6 @@ export default function AdminDepartmentsPage() {
     setFormCode(department.code);
     setFormManagerId(department.manager?.id ? String(department.manager.id) : "");
     setFormQuota(String(department.totalProjectQuota));
-    setNotice(null);
     setShowModal(true);
   };
 
@@ -222,12 +219,12 @@ export default function AdminDepartmentsPage() {
     const managerIdNumber = Number(formManagerId);
 
     if (!formName.trim()) {
-      setNotice("Tên phòng ban là bắt buộc.");
+      toast.error("Tên phòng ban là bắt buộc.");
       return;
     }
 
     if (formQuota && (!Number.isFinite(quotaNumber) || quotaNumber < 0)) {
-      setNotice("Quota phải là số không âm.");
+      toast.error("Quota phải là số không âm.");
       return;
     }
 
@@ -245,7 +242,7 @@ export default function AdminDepartmentsPage() {
         const res = await api.post<DepartmentListItem>("/api/v1/admin/departments", body);
         setItems((prev) => [res.data, ...prev].slice(0, PAGE_LIMIT));
         setTotal((prev) => prev + 1);
-        setNotice("Đã tạo phòng ban mới.");
+        toast.success("Đã tạo phòng ban mới.");
       } else {
         if (!editingDepartmentId) return;
 
@@ -257,7 +254,7 @@ export default function AdminDepartmentsPage() {
 
         const res = await api.put<DepartmentListItem>(`/api/v1/admin/departments/${editingDepartmentId}`, body);
         setItems((prev) => prev.map((item) => (item.id === editingDepartmentId ? res.data : item)));
-        setNotice("Đã cập nhật phòng ban.");
+        toast.success("Đã cập nhật phòng ban.");
       }
     } catch {
       const selectedManager = managers.find((manager) => manager.id === managerIdNumber);
@@ -276,7 +273,7 @@ export default function AdminDepartmentsPage() {
 
         setItems((prev) => [mockDepartment, ...prev].slice(0, PAGE_LIMIT));
         setTotal((prev) => prev + 1);
-        setNotice("API chưa sẵn sàng, đã mô phỏng tạo phòng ban.");
+        toast.info("API chưa sẵn sàng, đã mô phỏng tạo phòng ban.");
       } else if (editingDepartmentId) {
         setItems((prev) =>
           prev.map((item) =>
@@ -291,7 +288,7 @@ export default function AdminDepartmentsPage() {
               : item
           )
         );
-        setNotice("API chưa sẵn sàng, đã mô phỏng cập nhật phòng ban.");
+        toast.info("API chưa sẵn sàng, đã mô phỏng cập nhật phòng ban.");
       }
     } finally {
       setSaving(false);
@@ -416,18 +413,6 @@ export default function AdminDepartmentsPage() {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50">

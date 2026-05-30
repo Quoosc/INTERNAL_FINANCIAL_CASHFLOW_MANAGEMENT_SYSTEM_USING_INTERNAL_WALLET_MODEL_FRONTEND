@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   PaginatedResponse,
@@ -124,6 +125,7 @@ export default function TLTeamPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
   const search = searchParams.get("search") ?? "";
@@ -134,7 +136,6 @@ export default function TLTeamPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [selectedMember, setSelectedMember] = useState<TLTeamMemberDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -190,7 +191,6 @@ export default function TLTeamPage() {
     let cancelled = false;
     const loadMembers = async () => {
       setLoading(true);
-      setError(null);
       try {
         const query = new URLSearchParams();
         if (search.trim()) query.set("search", search.trim());
@@ -214,8 +214,8 @@ export default function TLTeamPage() {
         setTotal(mockTotal);
         setTotalPages(mockTotalPages);
         if (safePage !== page) goToPage(safePage);
-        if (err instanceof ApiError) setError(err.apiMessage);
-        else setError("Không thể tải dữ liệu.");
+        if (err instanceof ApiError) toast.error(err.apiMessage);
+        else toast.error("Không thể tải dữ liệu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -224,7 +224,7 @@ export default function TLTeamPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, projectFilter, search]);
+  }, [goToPage, page, projectFilter, search, toast]);
 
   const projectOptions = useMemo(() => {
     const map = new Map<number, string>();
@@ -322,8 +322,6 @@ export default function TLTeamPage() {
           <button onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-900 text-sm">Sau</button>
         </div>
       </div>
-
-      {error && <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">{error}</div>}
 
       {showDetail && (
         <div className="fixed inset-0 z-50">

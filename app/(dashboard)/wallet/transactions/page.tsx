@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 import {
   TransactionResponse,
   TransactionStatus,
@@ -174,6 +175,7 @@ function normalizeList(payload: WalletTransactionsApi, fallbackPage: number) {
 export default function TransactionsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const initialState = useMemo(
     () => getInitialState(searchParams),
@@ -193,7 +195,6 @@ export default function TransactionsPage() {
   );
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
   const syncUrl = useCallback(
@@ -219,7 +220,6 @@ export default function TransactionsPage() {
 
     const loadTransactions = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const query = new URLSearchParams();
@@ -248,9 +248,9 @@ export default function TransactionsPage() {
         setTotalPages(1);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu giao dịch.");
+          toast.error("Không thể tải dữ liệu giao dịch.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -262,7 +262,7 @@ export default function TransactionsPage() {
     return () => {
       cancelled = true;
     };
-  }, [filters, page, refreshTick, syncUrl]);
+  }, [filters, page, refreshTick, syncUrl, toast]);
 
   useEffect(() => {
     if (page !== 0) return;
@@ -481,7 +481,7 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
-                        href={`/wallet/transactions/${tx.transactionId}`}
+                        href={`/wallet/transactions/${tx.id}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium hover:bg-blue-100 transition-colors"
                       >
                         Xem chi tiết
@@ -520,7 +520,6 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

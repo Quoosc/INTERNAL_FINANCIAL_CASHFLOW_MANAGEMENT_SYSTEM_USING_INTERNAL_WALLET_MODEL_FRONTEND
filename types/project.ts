@@ -166,6 +166,20 @@ export interface UpdateCategoryBudgetBody {
   budgetLimit: number;
 }
 
+/** DELETE /team-leader/projects/:id/categories — body */
+export interface RemoveCategoryBody {
+  phaseId: number;
+  categoryId: number;
+}
+
+/** POST /team-leader/projects/:id/expense-categories — body */
+export interface CreateExpenseCategoryBody {
+  name: string;
+  description?: string;
+  phaseId: number;
+  budgetLimit: number;
+}
+
 /** POST /manager/projects — body */
 export interface CreateProjectBody {
   name: string;

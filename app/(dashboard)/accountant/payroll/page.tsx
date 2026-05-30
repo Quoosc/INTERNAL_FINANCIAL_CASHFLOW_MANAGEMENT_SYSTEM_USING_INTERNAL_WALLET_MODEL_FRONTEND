@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   CreatePayrollPeriodBody,
   PaginatedResponse,
@@ -142,6 +143,7 @@ export default function AccountantPayrollPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
   const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
@@ -152,7 +154,6 @@ export default function AccountantPayrollPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -207,7 +208,6 @@ export default function AccountantPayrollPage() {
 
     const loadPeriods = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const query = new URLSearchParams();
@@ -251,7 +251,7 @@ export default function AccountantPayrollPage() {
         setTotalPages(mockTotalPages);
         if (safePage !== page) goToPage(safePage);
 
-        setError(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu, đang hiển thị dữ liệu mẫu.");
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu, đang hiển thị dữ liệu mẫu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -259,7 +259,7 @@ export default function AccountantPayrollPage() {
 
     void loadPeriods();
     return () => { cancelled = true; };
-  }, [goToPage, page, year, status]);
+  }, [goToPage, page, year, status, toast]);
 
   const openCreateModal = () => {
     const now = new Date();
@@ -307,7 +307,7 @@ export default function AccountantPayrollPage() {
       setShowCreateModal(false);
       router.push(`/accountant/payroll/${res.data.id}`);
     } catch (err) {
-      setCreateError(err instanceof ApiError ? err.apiMessage : "Không thể tạo kỳ lương.");
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tạo kỳ lương.");
     } finally {
       setCreating(false);
     }
@@ -465,12 +465,6 @@ export default function AccountantPayrollPage() {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
 
       {/* Create modal */}
       {showCreateModal && (

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { PaginatedResponse, ProjectListItem, ProjectStatus } from "@/types";
 import { formatCurrency } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 
 const PAGE_LIMIT = 9;
 
@@ -75,7 +76,7 @@ export default function ProjectsPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() =>
     parseStatus(searchParams.get("status"))
@@ -101,7 +102,6 @@ export default function ProjectsPage() {
 
     const loadProjects = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const query = new URLSearchParams();
@@ -126,9 +126,9 @@ export default function ProjectsPage() {
         setTotalPages(1);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải danh sách dự án.");
+          toast.error("Không thể tải danh sách dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -140,7 +140,7 @@ export default function ProjectsPage() {
     return () => {
       cancelled = true;
     };
-  }, [statusFilter, search, page, syncUrl]);
+  }, [statusFilter, search, page, syncUrl, toast]);
 
   const statusTabs = useMemo<{ label: string; value: StatusFilter }[]>(
     () => [
@@ -309,7 +309,6 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

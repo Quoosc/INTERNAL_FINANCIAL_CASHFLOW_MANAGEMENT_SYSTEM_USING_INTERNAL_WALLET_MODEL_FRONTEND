@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   AccountantLedgerFilterParams,
   AccountantLedgerItemResponse,
@@ -92,6 +93,7 @@ export default function AccountantLedgerPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
 
@@ -116,7 +118,6 @@ export default function AccountantLedgerPage() {
   const [total, setTotal]     = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
 
   const pushWithParams = useCallback(
     (params: URLSearchParams) => {
@@ -152,7 +153,6 @@ export default function AccountantLedgerPage() {
 
     const load = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const filters: AccountantLedgerFilterParams = {
@@ -217,7 +217,7 @@ export default function AccountantLedgerPage() {
         setTotalPages(mockTotalPages);
         if (safePage !== page) goToPage(safePage);
 
-        setError(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu sổ cái, đang hiển thị dữ liệu mẫu.");
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu sổ cái, đang hiển thị dữ liệu mẫu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -225,7 +225,7 @@ export default function AccountantLedgerPage() {
 
     void load();
     return () => { cancelled = true; };
-  }, [from, goToPage, page, refType, to, txStatus, type]);
+  }, [from, goToPage, page, refType, to, txStatus, type, toast]);
 
   const typeOptions = Object.values(TransactionType);
   const statusOptions = Object.values(TransactionStatus);
@@ -391,11 +391,6 @@ export default function AccountantLedgerPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
     </div>
   );
 }

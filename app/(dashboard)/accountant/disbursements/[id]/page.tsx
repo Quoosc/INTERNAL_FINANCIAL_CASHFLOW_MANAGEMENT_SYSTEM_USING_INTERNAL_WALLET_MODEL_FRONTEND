@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   DisburseBody,
   DisburseResponse,
@@ -11,6 +12,7 @@ import {
   DisbursementRejectBody,
   RequestAction,
   RequestType,
+  VerifyPinResponse,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
@@ -129,10 +131,10 @@ export default function AccountantDisbursementDetailPage({
 }: PageProps) {
   const router = useRouter();
   const { id } = use(params);
+  const toast = useToast();
 
   const [detail, setDetail] = useState<DisbursementDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [checklist, setChecklist] = useState({
     identityVerified: false,
@@ -161,7 +163,6 @@ export default function AccountantDisbursementDetailPage({
 
     const loadDetail = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<DisbursementDetailResponse>(
@@ -176,9 +177,9 @@ export default function AccountantDisbursementDetailPage({
         setDetail(null);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu giải ngân.");
+          toast.error("Không thể tải dữ liệu giải ngân.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -190,7 +191,7 @@ export default function AccountantDisbursementDetailPage({
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   const allChecked = useMemo(
     () => Object.values(checklist).every(Boolean),
@@ -254,6 +255,14 @@ export default function AccountantDisbursementDetailPage({
     setPinError(null);
 
     try {
+      // Pre-verify PIN trước khi thực hiện giải ngân
+      const verifyRes = await api.post<VerifyPinResponse>("/api/v1/users/me/pin/verify", { pin });
+      if (!verifyRes.data.valid) {
+        setPinError("Mã PIN không đúng. Vui lòng kiểm tra lại.");
+        setSubmitting(false);
+        return;
+      }
+
       const body: DisburseBody = {
         pin,
         note: disburseNote.trim() || undefined,
@@ -343,12 +352,6 @@ export default function AccountantDisbursementDetailPage({
         <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500">
           Không tìm thấy yêu cầu giải ngân.
         </div>
-
-        {error && (
-          <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-            {error}
-          </div>
-        )}
       </div>
     );
   }
@@ -665,12 +668,6 @@ export default function AccountantDisbursementDetailPage({
           </div>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
 
       {showRejectModal && (
         <div className="fixed inset-0 z-50">

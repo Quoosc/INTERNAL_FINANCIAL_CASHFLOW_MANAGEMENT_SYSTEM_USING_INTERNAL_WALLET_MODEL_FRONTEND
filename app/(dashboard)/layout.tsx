@@ -456,11 +456,6 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
               icon: icons.approvals,
             },
             {
-              label: "Quỹ hệ thống",
-              href: "/admin/system-fund",
-              icon: icons.systemFund,
-            },
-            {
               label: "Cấu hình",
               href: "/admin/settings",
               icon: icons.settings,
@@ -664,10 +659,17 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
         {/* User Info */}
         <div className={`relative border-t border-white/10 ${isCollapsed ? "p-2" : "p-4"}`}>
           <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
-            <div className="w-9 h-9 rounded-full bg-linear-to-br from-purple-400 to-pink-400 flex items-center justify-center shrink-0">
-              <span className="text-white font-semibold text-sm">
-                {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
-              </span>
+            <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden ring-2 ring-white/20">
+              {user?.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-linear-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+                  </span>
+                </div>
+              )}
             </div>
             {!isCollapsed && (
               <>

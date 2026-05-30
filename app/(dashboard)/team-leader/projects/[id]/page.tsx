@@ -3,11 +3,13 @@
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import { formatCurrency } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
   AddMemberBody,
   AvailableMemberResponse,
+  CreateExpenseCategoryBody,
   CreatePhaseBody,
   ExpenseCategoryResponse,
   PhaseCategoriesResponse,
@@ -15,6 +17,7 @@ import {
   ProjectPhaseResponse,
   ProjectRole,
   ProjectStatus,
+  RemoveCategoryBody,
   RequestType,
   TLProjectDetailResponse,
   UpdateCategoryBudgetBody,
@@ -210,6 +213,7 @@ function roleBadge(role: ProjectRole): string {
 export default function TLProjectDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
+  const toast = useToast();
 
   const [project, setProject] = useState<TLProjectDetailResponse | null>(null);
   const [phaseCategories, setPhaseCategories] =
@@ -223,8 +227,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
   const [tab, setTab] = useState<TabKey>("phases");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [showTopup, setShowTopup] = useState(false);
@@ -257,6 +259,12 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const [showEditMember, setShowEditMember] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [editingPosition, setEditingPosition] = useState("");
+
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatDesc, setNewCatDesc] = useState("");
+  const [newCatBudget, setNewCatBudget] = useState("");
+
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
     message: string;
@@ -267,7 +275,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      setError(null);
       try {
         const res = await api.get<TLProjectDetailResponse>(
           `/api/v1/team-leader/projects/${id}`,
@@ -289,7 +296,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         setSelectedPhaseId(
           fallback.currentPhaseId ?? fallback.phases[0]?.id ?? null,
         );
-        setError("Không thể tải API, đang dùng dữ liệu mẫu.");
+        toast.error("Không thể tải API, đang dùng dữ liệu mẫu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -298,7 +305,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   useEffect(() => {
     if (!project) return;
@@ -413,11 +420,10 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       !phaseEnd ||
       Number(phaseBudget) <= 0
     ) {
-      setError("Vui lòng nhập đủ thông tin phase hợp lệ.");
+      toast.error("Vui lòng nhập đủ thông tin phase hợp lệ.");
       return;
     }
     setSubmitting(true);
-    setError(null);
     const body: CreatePhaseBody = {
       name: phaseName.trim(),
       budgetLimit: Number(phaseBudget),
@@ -455,7 +461,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setPhaseBudget("");
       setPhaseStart("");
       setPhaseEnd("");
-      setNotice("Đã tạo phase mới.");
+      toast.success("Đã tạo phase mới.");
     }
   };
 
@@ -466,7 +472,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       !editPhaseName.trim() ||
       Number(editPhaseBudget) <= 0
     ) {
-      setError("Thông tin cập nhật phase chưa hợp lệ.");
+      toast.error("Thông tin cập nhật phase chưa hợp lệ.");
       return;
     }
     setSubmitting(true);
@@ -514,7 +520,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setSubmitting(false);
       setShowEditPhase(false);
       setEditingPhaseId(null);
-      setNotice("Đã cập nhật phase.");
+      toast.success("Đã cập nhật phase.");
     }
   };
 
@@ -531,8 +537,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const onSaveBudget = async () => {
     if (!project || !selectedPhaseId || !phaseCategories) return;
     setSubmitting(true);
-    setError(null);
-    setNotice(null);
     const updates: UpdateCategoryBudgetBody[] = phaseCategories.categories.map(
       (c) => ({
         phaseId: selectedPhaseId,
@@ -594,22 +598,22 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
       if (failedCount === 0) {
         setEditingBudget(false);
-        setNotice("Đã cập nhật ngân sách.");
+        toast.success("Đã cập nhật ngân sách.");
         return;
       }
 
       if (successCount === 0) {
-        setError("Không thể cập nhật ngân sách. Vui lòng thử lại.");
+        toast.error("Không thể cập nhật ngân sách. Vui lòng thử lại.");
         return;
       }
 
       setEditingBudget(false);
-      setNotice(`Đã cập nhật ${successCount}/${total} danh mục ngân sách.`);
-      setError(
+      toast.success(`Đã cập nhật ${successCount}/${total} danh mục ngân sách.`);
+      toast.error(
         `Có ${failedCount}/${total} danh mục cập nhật thất bại. Vui lòng kiểm tra và thử lại.`,
       );
     } catch {
-      setError("Không thể cập nhật ngân sách. Vui lòng thử lại.");
+      toast.error("Không thể cập nhật ngân sách. Vui lòng thử lại.");
     } finally {
       setSubmitting(false);
     }
@@ -617,7 +621,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
   const onAddMember = async () => {
     if (!project || !selectedMemberId || !memberPosition.trim()) {
-      setError("Vui lòng chọn thành viên và nhập vị trí.");
+      toast.error("Vui lòng chọn thành viên và nhập vị trí.");
       return;
     }
     const selected = availableMembers.find((m) => m.id === selectedMemberId);
@@ -660,13 +664,13 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setSelectedMemberId(null);
       setMemberSearch("");
       setMemberPosition("");
-      setNotice("Đã thêm thành viên.");
+      toast.success("Đã thêm thành viên.");
     }
   };
 
   const onUpdateMember = async () => {
     if (!project || !editingMemberId || !editingPosition.trim()) {
-      setError("Vị trí thành viên không hợp lệ.");
+      toast.error("Vị trí thành viên không hợp lệ.");
       return;
     }
     setSubmitting(true);
@@ -694,7 +698,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setSubmitting(false);
       setShowEditMember(false);
       setEditingMemberId(null);
-      setNotice("Đã cập nhật vị trí.");
+      toast.success("Đã cập nhật vị trí.");
     }
   };
 
@@ -703,7 +707,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     const target = project.members.find((m) => m.userId === userId);
     if (!target) return;
     if (target.projectRole === ProjectRole.LEADER) {
-      setError("Không thể xóa LEADER.");
+      toast.error("Không thể xóa LEADER.");
       return;
     }
     setConfirmState({
@@ -728,7 +732,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               : prev,
           );
           setSubmitting(false);
-          setNotice("Đã xóa thành viên.");
+          toast.success("Đã xóa thành viên.");
         }
       },
     });
@@ -736,7 +740,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
   const onTopup = async () => {
     if (!project || Number(topupAmount) <= 0) {
-      setError("Số tiền xin cấp vốn không hợp lệ.");
+      toast.error("Số tiền xin cấp vốn không hợp lệ.");
       return;
     }
     setSubmitting(true);
@@ -755,7 +759,79 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setShowTopup(false);
       setTopupAmount("");
       setTopupNote("");
-      setNotice("Đã gửi yêu cầu xin cấp vốn.");
+      toast.success("Đã gửi yêu cầu xin cấp vốn.");
+    }
+  };
+
+  const onDeleteCategory = (categoryId: number, categoryName: string, currentSpent: number) => {
+    if (!project || !selectedPhaseId) return;
+    if (currentSpent > 0) {
+      toast.error(`Không thể xóa danh mục "${categoryName}" vì đã có chi tiêu (${formatCurrency(currentSpent)}).`);
+      return;
+    }
+    setConfirmState({
+      open: true,
+      message: `Bạn có chắc muốn xóa danh mục "${categoryName}" khỏi phase này?`,
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, open: false }));
+        setSubmitting(true);
+        const body: RemoveCategoryBody = { phaseId: selectedPhaseId, categoryId };
+        try {
+          await api.delete(`/api/v1/team-leader/projects/${project.id}/categories`, {
+            body: JSON.stringify(body),
+          });
+          setPhaseCategories((prev) =>
+            prev ? { ...prev, categories: prev.categories.filter((c) => c.categoryId !== categoryId) } : prev,
+          );
+          toast.success(`Đã xóa danh mục "${categoryName}".`);
+        } catch {
+          toast.error("Không thể xóa danh mục. Vui lòng thử lại.");
+        } finally {
+          setSubmitting(false);
+        }
+      },
+    });
+  };
+
+  const onCreateCategory = async () => {
+    if (!project || !selectedPhaseId) return;
+    if (!newCatName.trim()) {
+      toast.error("Tên danh mục không được để trống.");
+      return;
+    }
+    if (Number(newCatBudget) <= 0) {
+      toast.error("Ngân sách danh mục phải lớn hơn 0.");
+      return;
+    }
+    setSubmitting(true);
+    const body: CreateExpenseCategoryBody = {
+      name: newCatName.trim(),
+      description: newCatDesc.trim() || undefined,
+      phaseId: selectedPhaseId,
+      budgetLimit: Number(newCatBudget),
+    };
+    try {
+      await api.post<ExpenseCategoryResponse>(
+        `/api/v1/team-leader/projects/${project.id}/expense-categories`,
+        body,
+      );
+      const refreshed = await api.get<PhaseCategoriesResponse>(
+        `/api/v1/team-leader/projects/${project.id}/categories?phaseId=${selectedPhaseId}`,
+      );
+      setPhaseCategories(refreshed.data);
+      const catRefreshed = await api.get<ExpenseCategoryResponse[]>(
+        `/api/v1/team-leader/expense-categories?projectId=${project.id}`,
+      );
+      setExpenseCategories(catRefreshed.data);
+      toast.success(`Đã thêm danh mục "${body.name}" vào phase.`);
+    } catch {
+      toast.error("Không thể tạo danh mục. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+      setShowCreateCategory(false);
+      setNewCatName("");
+      setNewCatDesc("");
+      setNewCatBudget("");
     }
   };
 
@@ -959,7 +1035,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       {tab === "budget" && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h3 className="text-lg font-semibold text-slate-900">
                 Ngân sách theo danh mục
               </h3>
@@ -975,30 +1051,39 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                 ))}
               </select>
             </div>
-            {editingBudget ? (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setEditingBudget(false)}
-                  className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={onSaveBudget}
-                  disabled={submitting}
-                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm"
-                >
-                  Lưu
-                </button>
-              </div>
-            ) : (
+            <div className="flex gap-2 flex-wrap">
               <button
-                onClick={startEditBudget}
-                className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm"
+                onClick={() => setShowCreateCategory(true)}
+                disabled={!selectedPhaseId || editingBudget}
+                className="px-3 py-2 rounded-lg border border-emerald-300 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 text-sm"
               >
-                Cập nhật ngân sách
+                + Thêm danh mục
               </button>
-            )}
+              {editingBudget ? (
+                <>
+                  <button
+                    onClick={() => setEditingBudget(false)}
+                    className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={onSaveBudget}
+                    disabled={submitting}
+                    className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm"
+                  >
+                    Lưu
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={startEditBudget}
+                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm"
+                >
+                  Cập nhật ngân sách
+                </button>
+              )}
+            </div>
           </div>
 
           {!phaseCategories ? (
@@ -1007,7 +1092,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             </p>
           ) : (
             <div className="rounded-xl border border-slate-200 overflow-x-auto">
-              <table className="w-full min-w-[760px]">
+              <table className="w-full min-w-[860px]">
                 <thead>
                   <tr className="bg-white/70 border-b border-slate-200">
                     <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -1024,6 +1109,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                     </th>
                     <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       Burn %
+                    </th>
+                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Xóa
                     </th>
                   </tr>
                 </thead>
@@ -1066,6 +1154,16 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                         </td>
                         <td className="px-4 py-3 text-right text-sm text-slate-600">
                           {pct}%
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => onDeleteCategory(c.categoryId, c.categoryName, c.currentSpent)}
+                            disabled={submitting || editingBudget}
+                            title={c.currentSpent > 0 ? "Không thể xóa khi đã có chi tiêu" : "Xóa danh mục"}
+                            className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 disabled:opacity-40 disabled:cursor-not-allowed text-rose-700 border border-rose-200 text-xs"
+                          >
+                            Xóa
+                          </button>
                         </td>
                       </tr>
                     );
@@ -1132,17 +1230,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-          {error}
-        </div>
-      )}
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">
-          {notice}
         </div>
       )}
 
@@ -1317,6 +1404,49 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           </div>
         </Modal>
       )}
+      {showCreateCategory && (
+        <Modal title="Thêm danh mục chi phí" onClose={() => setShowCreateCategory(false)}>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Tên danh mục *</label>
+              <input
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="VD: Chi phí vận chuyển"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Mô tả (tùy chọn)</label>
+              <textarea
+                rows={2}
+                value={newCatDesc}
+                onChange={(e) => setNewCatDesc(e.target.value)}
+                placeholder="Mô tả danh mục..."
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Ngân sách cho phase này *</label>
+              <input
+                type="number"
+                min={0}
+                value={newCatBudget}
+                onChange={(e) => setNewCatBudget(e.target.value)}
+                placeholder="Ngân sách (VNĐ)"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+              />
+            </div>
+            <ModalActions
+              onClose={() => setShowCreateCategory(false)}
+              onConfirm={onCreateCategory}
+              confirmText={submitting ? "Đang tạo..." : "Tạo danh mục"}
+              disabled={submitting || !newCatName.trim() || Number(newCatBudget) <= 0}
+            />
+          </div>
+        </Modal>
+      )}
+
       <ConfirmModal
         open={confirmState.open}
         message={confirmState.message}

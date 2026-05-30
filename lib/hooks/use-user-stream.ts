@@ -61,17 +61,17 @@ export function useUserStream() {
       if (!isObject(payload)) return;
 
       if (eventName === "wallet.updated") {
-        updateFromSse(payload as WalletUpdatedEvent);
+        updateFromSse(payload as unknown as WalletUpdatedEvent);
         return;
       }
 
       if (eventName === "transaction.created") {
-        pushTransactionEvent(payload as TransactionCreatedEvent);
+        pushTransactionEvent(payload as unknown as TransactionCreatedEvent);
         return;
       }
 
       if (eventName === "notification") {
-        pushNotificationEvent(payload as NotificationEvent);
+        pushNotificationEvent(payload as unknown as NotificationEvent);
       }
     };
 
@@ -107,9 +107,9 @@ export function useUserStream() {
       onerror: (error) => {
         if (controller.signal.aborted) return;
         // Keep default auto-reconnect behavior from fetch-event-source.
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("User stream error", error);
-        }
+        // Use debug level (hidden by default in devtools) to avoid repeating noise
+        // from the normal retry cycle when the backend closes the SSE connection.
+        console.debug("User stream error", error);
       },
     });
 

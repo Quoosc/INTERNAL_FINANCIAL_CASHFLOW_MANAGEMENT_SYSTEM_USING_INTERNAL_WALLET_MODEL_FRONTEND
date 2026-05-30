@@ -7,7 +7,7 @@ import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
 import { createWithdrawRequest, createDeposit } from "@/lib/api";
 import { withdrawSchema, depositSchema } from "@/lib/schemas";
-import { formatCurrency, formatDateTime, formatInputAmount } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatInputAmount, parseAmountInput } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { useToast } from "@/contexts/toast-context";
 import {
@@ -29,7 +29,6 @@ function DepositModal({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
 
   const amountNum = useMemo(() => Number(amount || 0), [amount]);
-  const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,11 +69,16 @@ function DepositModal({ onClose }: { onClose: () => void }) {
                 <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền nạp</label>
                 <input
                   type="text" inputMode="numeric" placeholder="Nhập số tiền"
-                  value={amountDisplay}
-                  onChange={(e) => setAmount(e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""))}
+                  value={amount}
+                  onChange={(e) => setAmount(parseAmountInput(e.target.value))}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
-                <p className="text-xs text-slate-500 mt-1">Tối thiểu: 10.000 ₫</p>
+                <div className="flex items-center justify-between gap-3 mt-1 text-xs">
+                  <p className="text-slate-500">Tối thiểu: 10.000 ₫</p>
+                  {amountNum > 0 && (
+                    <p className="font-medium text-slate-700">{formatCurrency(amountNum)}</p>
+                  )}
+                </div>
               </div>
               {error && <ErrorAlert message={error} />}
               <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold transition-colors">
@@ -186,7 +190,7 @@ function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBal
                 <input
                   type="text" inputMode="numeric" placeholder="Nhập số tiền"
                   value={amountDisplay}
-                  onChange={(e) => setAmount(e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""))}
+                  onChange={(e) => setAmount(parseAmountInput(e.target.value))}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
@@ -308,11 +312,10 @@ export default function WalletPage() {
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
-  const [transactionsError, setTransactionsError] = useState<string | null>(null);
+  const toast = useToast();
 
   const loadRecentTransactions = useCallback(async () => {
     setTransactionsLoading(true);
-    setTransactionsError(null);
 
     try {
       const res = await api.get<WalletTransactionsResponse>(
@@ -322,14 +325,14 @@ export default function WalletPage() {
     } catch (err) {
       setTransactions([]);
       if (err instanceof ApiError) {
-        setTransactionsError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setTransactionsError("Không thể tải giao dịch gần đây.");
+        toast.error("Không thể tải giao dịch gần đây.");
       }
     } finally {
       setTransactionsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void fetchWallet();
@@ -520,9 +523,6 @@ export default function WalletPage() {
           </div>
         )}
 
-        {transactionsError && (
-          <p className="text-amber-700 text-xs mt-3">{transactionsError}</p>
-        )}
       </div>
 
       {showDeposit && <DepositModal onClose={() => setShowDeposit(false)} />}

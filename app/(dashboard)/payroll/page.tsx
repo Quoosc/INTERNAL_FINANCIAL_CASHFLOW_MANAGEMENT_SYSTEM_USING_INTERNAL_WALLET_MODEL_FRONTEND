@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 import { PaginatedResponse, PayslipListItem, PayslipStatus } from "@/types";
 
 interface PayrollFilters {
@@ -89,6 +90,7 @@ function buildInitialState(searchParams: {
 export default function PayrollPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const initial = useMemo(
     () => buildInitialState(searchParams),
@@ -102,7 +104,6 @@ export default function PayrollPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState<PayrollFilters>(initial.filters);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const next = buildInitialState(searchParams);
@@ -128,7 +129,6 @@ export default function PayrollPage() {
 
     const loadPayslips = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const query = new URLSearchParams();
@@ -167,9 +167,9 @@ export default function PayrollPage() {
         setTotalPages(1);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải danh sách phiếu lương.");
+          toast.error("Không thể tải danh sách phiếu lương.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -181,7 +181,7 @@ export default function PayrollPage() {
     return () => {
       cancelled = true;
     };
-  }, [filters, page, syncUrl]);
+  }, [filters, page, syncUrl, toast]);
 
   const handleFilterChange = (key: keyof PayrollFilters, value: string) => {
     let parsed: number | PayslipStatus | undefined;
@@ -425,7 +425,6 @@ export default function PayrollPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

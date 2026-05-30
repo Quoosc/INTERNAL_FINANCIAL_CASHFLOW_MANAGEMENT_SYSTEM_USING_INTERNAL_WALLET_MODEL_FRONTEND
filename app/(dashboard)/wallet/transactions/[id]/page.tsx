@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { use, useEffect, useState } from "react";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import { TransactionResponse, TransactionStatus, TransactionType } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
@@ -56,17 +57,16 @@ function getStatusLabel(status: TransactionStatus): string {
 
 export default function TransactionDetailPage({ params }: TransactionDetailPageProps) {
   const { id } = use(params);
+  const toast = useToast();
 
   const [transaction, setTransaction] = useState<TransactionResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadTransaction = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<TransactionResponse>(`/api/v1/wallet/transactions/${id}`);
@@ -76,9 +76,9 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
         if (cancelled) return;
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Khong the tai chi tiet giao dich.");
+          toast.error("Khong the tai chi tiet giao dich.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -90,7 +90,7 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -127,11 +127,6 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
         </div>
       )}
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-          {error}
-        </div>
-      )}
     </div>
   );
 }

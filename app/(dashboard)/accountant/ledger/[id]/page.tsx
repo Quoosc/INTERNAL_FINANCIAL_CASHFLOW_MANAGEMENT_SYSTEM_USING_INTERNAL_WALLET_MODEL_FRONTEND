@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   AccountantTransactionDetailResponse,
@@ -82,17 +83,16 @@ function getReferenceLink(txn: AccountantTransactionDetailResponse): { label: st
 
 export default function AccountantLedgerDetailPage({ params }: PageProps) {
   const { id } = use(params);
+  const toast = useToast();
 
   const [txn, setTxn]       = useState<AccountantTransactionDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<AccountantTransactionDetailResponse>(`/api/v1/accountant/ledger/${id}`);
@@ -100,7 +100,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
         setTxn(res.data);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu giao dịch.");
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu giao dịch.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -108,7 +108,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
     void load();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, toast]);
 
   const refLink = useMemo(() => (txn ? getReferenceLink(txn) : null), [txn]);
 
@@ -132,7 +132,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           Quay lại sổ cái
         </Link>
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500">
-          {error ?? "Không tìm thấy giao dịch."}
+          Không tìm thấy giao dịch.
         </div>
       </div>
     );
@@ -173,7 +173,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           <InfoCard
             label="Số tiền"
             value={formatCurrency(txn.amount)}
-            tone={txn.direction === TransactionDirection.CREDIT ? "text-emerald-700" : "text-rose-700"}
+            tone={txn.amount > 0 ? "text-emerald-700" : "text-rose-700"}
           />
           <InfoCard label="Số dư sau" value={formatCurrency(txn.balanceAfter)} />
           <InfoCard label="Ví chủ thể" value={`${txn.walletOwnerType} #${txn.walletOwnerId}`} mono />
@@ -262,12 +262,6 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
         </div>
       )}
 

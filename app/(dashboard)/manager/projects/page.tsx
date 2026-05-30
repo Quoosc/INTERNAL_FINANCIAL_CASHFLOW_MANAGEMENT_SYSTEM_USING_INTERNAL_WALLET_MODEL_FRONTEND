@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   CreateProjectBody,
   ManagerProjectFilterParams,
@@ -173,6 +174,7 @@ export default function ManagerProjectsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
   const statusFilter = useMemo(
@@ -192,8 +194,6 @@ export default function ManagerProjectsPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(search);
 
   const [teamLeaderOptions, setTeamLeaderOptions] = useState<
@@ -283,7 +283,6 @@ export default function ManagerProjectsPage() {
 
     const loadProjects = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const filters: ManagerProjectFilterParams = {
@@ -334,9 +333,9 @@ export default function ManagerProjectsPage() {
         }
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -348,7 +347,7 @@ export default function ManagerProjectsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search, statusFilter]);
+  }, [goToPage, page, search, statusFilter, toast]);
 
   const statusTabs: { label: string; value?: ProjectStatus }[] = [
     { label: "Tất cả" },
@@ -363,7 +362,6 @@ export default function ManagerProjectsPage() {
     setProjectDescription("");
     setProjectBudget("");
     setTeamLeaderId("");
-    setNotice(null);
     setShowCreateModal(true);
   };
 
@@ -372,17 +370,17 @@ export default function ManagerProjectsPage() {
     const selectedTl = Number(teamLeaderId);
 
     if (!projectName.trim()) {
-      setNotice("Tên dự án là bắt buộc.");
+      toast.error("Tên dự án là bắt buộc.");
       return;
     }
 
     if (!Number.isFinite(budgetNumber) || budgetNumber <= 0) {
-      setNotice("Tổng ngân sách phải lớn hơn 0.");
+      toast.error("Tổng ngân sách phải lớn hơn 0.");
       return;
     }
 
     if (!Number.isFinite(selectedTl) || selectedTl <= 0) {
-      setNotice("Vui lòng chọn Team Leader.");
+      toast.error("Vui lòng chọn Team Leader.");
       return;
     }
 
@@ -410,13 +408,13 @@ export default function ManagerProjectsPage() {
 
       setItems((prev) => [created, ...prev].slice(0, PAGE_LIMIT));
       setTotal((prev) => prev + 1);
-      setNotice("Đã tạo dự án mới.");
+      toast.success("Đã tạo dự án mới.");
       setShowCreateModal(false);
     } catch (err) {
       if (err instanceof ApiError) {
-        setNotice(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setNotice("Không thể tạo dự án. Vui lòng thử lại.");
+        toast.error("Không thể tạo dự án. Vui lòng thử lại.");
       }
     } finally {
       setCreating(false);
@@ -610,18 +608,6 @@ export default function ManagerProjectsPage() {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
 
       {showCreateModal && (
         <div className="fixed inset-0 z-50">

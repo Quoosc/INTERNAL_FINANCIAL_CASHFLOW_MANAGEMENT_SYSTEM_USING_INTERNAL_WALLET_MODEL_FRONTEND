@@ -5,35 +5,32 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { createDeposit } from "@/lib/api";
-import { formatCurrency, formatInputAmount } from "@/lib/format";
+import { formatCurrency, parseAmountInput } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 import { DepositLogResponse } from "@/types";
 
 const MIN_AMOUNT = 10_000;
 
 export default function DepositPage() {
   const router = useRouter();
+  const toast = useToast();
 
   const [amount, setAmount] = useState("");
   const [paymentData, setPaymentData] = useState<DepositLogResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const amountNumber = useMemo(() => Number(amount || 0), [amount]);
-  const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
-
   const handleAmountChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-    setAmount(digitsOnly);
+    setAmount(parseAmountInput(value));
   };
 
   const handleGeneratePayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     setCopied(false);
 
     if (amountNumber < MIN_AMOUNT) {
-      setError("Số tiền nạp tối thiểu là 10.000 ₫.");
+      toast.error("Số tiền nạp tối thiểu là 10.000 ₫.");
       return;
     }
 
@@ -45,9 +42,9 @@ export default function DepositPage() {
     } catch (err) {
       setPaymentData(null);
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể tạo liên kết thanh toán VNPay.");
+        toast.error("Không thể tạo liên kết thanh toán VNPay.");
       }
     } finally {
       setLoading(false);
@@ -61,7 +58,7 @@ export default function DepositPage() {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Không thể sao chép mã nạp tiền.");
+      toast.error("Không thể sao chép mã nạp tiền.");
     }
   };
 
@@ -111,18 +108,17 @@ export default function DepositPage() {
             type="text"
             inputMode="numeric"
             placeholder="Nhập số tiền"
-            value={amountDisplay}
+            value={amount}
             onChange={(e) => handleAmountChange(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           />
-          <p className="text-xs text-slate-500 mt-2">Tối thiểu: {formatCurrency(MIN_AMOUNT)}</p>
-        </div>
-
-        {error && (
-          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-            {error}
+          <div className="flex items-center justify-between gap-3 mt-2 text-xs">
+            <p className="text-slate-500">Tối thiểu: {formatCurrency(MIN_AMOUNT)}</p>
+            {amountNumber > 0 && (
+              <p className="font-medium text-slate-700">{formatCurrency(amountNumber)}</p>
+            )}
           </div>
-        )}
+        </div>
 
         <button
           type="submit"

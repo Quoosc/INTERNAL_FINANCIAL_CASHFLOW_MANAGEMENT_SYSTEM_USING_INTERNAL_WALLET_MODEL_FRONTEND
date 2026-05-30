@@ -12,6 +12,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 import { normalizeTLApprovalListItem } from "@/lib/adapters/team-leader";
+import { useToast } from "@/contexts/toast-context";
 
 const PAGE_LIMIT = 10;
 
@@ -258,6 +259,7 @@ export default function TLApprovalsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
   const typeFilter = useMemo(
@@ -277,7 +279,6 @@ export default function TLApprovalsPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
@@ -336,7 +337,6 @@ export default function TLApprovalsPage() {
 
     const loadApprovals = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const query = new URLSearchParams();
@@ -383,9 +383,9 @@ export default function TLApprovalsPage() {
         }
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -397,7 +397,7 @@ export default function TLApprovalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search, typeFilter]);
+  }, [goToPage, page, search, typeFilter, toast]);
 
   const typeTabs: { label: string; value?: RequestType }[] = [
     { label: "Tất cả" },
@@ -606,11 +606,6 @@ export default function TLApprovalsPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   ProjectPhaseResponse,
 } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -28,16 +29,15 @@ export default function ProjectDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { id } = use(params);
 
+  const toast = useToast();
   const [data, setData] = useState<ProjectPhasesResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadData = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<ProjectPhasesResponse>(
@@ -50,9 +50,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
         setData(null);
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải chi tiết dự án.");
+          toast.error("Không thể tải chi tiết dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -64,7 +64,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   const phases = useMemo<ProjectPhaseResponse[]>(
     () => data?.phases ?? [],
@@ -141,12 +141,6 @@ export default function ProjectDetailPage({ params }: PageProps) {
         <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-slate-500">
           Không tìm thấy dự án hoặc bạn không có quyền truy cập.
         </div>
-
-        {error && (
-          <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-            {error}
-          </div>
-        )}
       </div>
     );
   }
@@ -310,11 +304,6 @@ export default function ProjectDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
     </div>
   );
 }

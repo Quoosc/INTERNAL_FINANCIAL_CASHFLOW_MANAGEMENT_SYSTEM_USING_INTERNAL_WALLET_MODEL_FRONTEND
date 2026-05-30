@@ -4,6 +4,7 @@ import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 import { PayslipDetailResponse, PayslipStatus } from "@/types";
 
 interface PageProps {
@@ -66,18 +67,17 @@ function buildDeductionBreakdown(totalDeduction: number): BreakdownItem[] {
 
 export default function PayslipDetailPage({ params }: PageProps) {
   const router = useRouter();
+  const toast = useToast();
   const { id } = use(params);
 
   const [payslip, setPayslip] = useState<PayslipDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadPayslip = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<PayslipDetailResponse>(`/api/v1/payslips/${id}`);
@@ -88,9 +88,9 @@ export default function PayslipDetailPage({ params }: PageProps) {
         if (cancelled) return;
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải chi tiết phiếu lương.");
+          toast.error("Không thể tải chi tiết phiếu lương.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -102,7 +102,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   const allowanceItems = useMemo(
     () => buildAllowanceBreakdown(payslip?.allowance ?? 0),
@@ -141,12 +141,6 @@ export default function PayslipDetailPage({ params }: PageProps) {
         <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-slate-500">
           Không tìm thấy phiếu lương.
         </div>
-
-        {error && (
-          <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-            {error}
-          </div>
-        )}
       </div>
     );
   }
@@ -261,11 +255,6 @@ export default function PayslipDetailPage({ params }: PageProps) {
           </div>
         )}
 
-        {error && (
-          <div className="print:hidden px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-            {error}
-          </div>
-        )}
       </div>
     </>
   );

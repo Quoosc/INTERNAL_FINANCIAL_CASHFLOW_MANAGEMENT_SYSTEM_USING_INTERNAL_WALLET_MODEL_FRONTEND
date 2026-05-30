@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   AdminApprovalDetailResponse,
   AdminApproveBody,
@@ -134,12 +135,12 @@ function timelineIcon(action: RequestAction): React.ReactNode {
 }
 
 export default function CfoApprovalDetailPage({ params }: PageProps) {
+  const toast = useToast();
   const router = useRouter();
   const { id } = use(params);
 
   const [request, setRequest] = useState<AdminApprovalDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [usingMockData, setUsingMockData] = useState(false);
 
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -156,7 +157,6 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
     const loadDetail = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<AdminApprovalDetailResponse>(
@@ -179,9 +179,9 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
         setUsingMockData(true);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -193,7 +193,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   const systemFundBalance = request?.systemFund.totalBalance ?? 0;
   const deptCurrent = request?.department.totalAvailableBalance ?? 0;
@@ -493,12 +493,6 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           <InfoCard label="Trạng thái hiện tại" value={statusLabel(request.status)} />
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
 
       {showApproveModal && (
         <div className="fixed inset-0 z-50">

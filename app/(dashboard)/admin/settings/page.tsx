@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/api-client";
-import { evictAllConfigCache, getAllConfigs, updateConfig } from "@/lib/api";
+import { useToast } from "@/contexts/toast-context";
+import { evictAllConfigCache, getAdminSettings, updateAdminSettings } from "@/lib/api";
 import { SystemConfigItem, SystemConfigResponse } from "@/types";
 
 type SettingsCategory = SystemConfigItem["category"];
@@ -42,29 +43,28 @@ function normalizeItem(
 }
 
 export default function AdminSettingsPage() {
+  const toast = useToast();
   const [items, setItems] = useState<SystemConfigItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [evictingCache, setEvictingCache] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+
   const loadSettings = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
     try {
-      const res = await getAllConfigs();
-      setItems(res.data.map(normalizeItem));
+      const res = await getAdminSettings();
+      setItems(res.data.items.map(normalizeItem));
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError("Không thể tải cấu hình hệ thống.");
+        toast.error("Không thể tải cấu hình hệ thống.");
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadSettings();
@@ -88,16 +88,15 @@ export default function AdminSettingsPage() {
     if (!item) return;
 
     setSavingKey(key);
-    setNotice(null);
 
     try {
-      await updateConfig(item.key, { value: item.value });
-      setNotice(`Đã cập nhật cấu hình ${item.key}.`);
+      await updateAdminSettings({ configs: [{ key: item.key, value: item.value }] });
+      toast.success(`Đã cập nhật cấu hình ${item.key}.`);
     } catch (err) {
       if (err instanceof ApiError) {
-        setNotice(`Lỗi API: ${err.apiMessage}`);
+        toast.error(`Lỗi API: ${err.apiMessage}`);
       } else {
-        setNotice("Không thể cập nhật cấu hình.");
+        toast.error("Không thể cập nhật cấu hình.");
       }
     } finally {
       setSavingKey(null);
@@ -106,16 +105,15 @@ export default function AdminSettingsPage() {
 
   const handleEvictAllCache = async () => {
     setEvictingCache(true);
-    setNotice(null);
 
     try {
       await evictAllConfigCache();
-      setNotice("Đã làm mới cache cấu hình.");
+      toast.success("Đã làm mới cache cấu hình.");
     } catch (err) {
       if (err instanceof ApiError) {
-        setNotice(`Lỗi API: ${err.apiMessage}`);
+        toast.error(`Lỗi API: ${err.apiMessage}`);
       } else {
-        setNotice("Không thể làm mới cache cấu hình.");
+        toast.error("Không thể làm mới cache cấu hình.");
       }
     } finally {
       setEvictingCache(false);
@@ -189,17 +187,6 @@ export default function AdminSettingsPage() {
         </button>
       </div>
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
     </div>
   );
 }

@@ -277,7 +277,6 @@ export default function RequestDetailPage({ params }: PageProps) {
 
   const [request, setRequest] = useState<RequestDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmState, setConfirmState] = useState<{
@@ -296,7 +295,6 @@ export default function RequestDetailPage({ params }: PageProps) {
 
     const loadDetail = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<RequestDetailResponse>(
@@ -315,9 +313,9 @@ export default function RequestDetailPage({ params }: PageProps) {
         });
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -329,7 +327,7 @@ export default function RequestDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   const parsed = useMemo(
     () => parseDescription(request?.description ?? ""),
@@ -357,26 +355,24 @@ export default function RequestDetailPage({ params }: PageProps) {
     e.preventDefault();
     if (!request) return;
 
-    setError(null);
-
     const amountNumber = Number(editAmount.replace(/\D/g, ""));
     if (!amountNumber || amountNumber <= 0) {
-      setError("Số tiền cập nhật không hợp lệ.");
+      toast.error("Số tiền cập nhật không hợp lệ.");
       return;
     }
 
     if (!editTitle.trim()) {
-      setError("Vui lòng nhập tiêu đề.");
+      toast.error("Vui lòng nhập tiêu đề.");
       return;
     }
 
     if (!editDescription.trim()) {
-      setError("Vui lòng nhập mô tả.");
+      toast.error("Vui lòng nhập mô tả.");
       return;
     }
 
     if (!editExpenseDate.trim()) {
-      setError("Vui lòng chọn ngày chi tiêu.");
+      toast.error("Vui lòng chọn ngày chi tiêu.");
       return;
     }
 
@@ -422,9 +418,9 @@ export default function RequestDetailPage({ params }: PageProps) {
       setEditing(false);
 
       if (err instanceof ApiError) {
-        setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setError(
+        toast.error(
           "Không thể cập nhật qua API, đã cập nhật dữ liệu mẫu trên giao diện.",
         );
       }
@@ -441,16 +437,15 @@ export default function RequestDetailPage({ params }: PageProps) {
       onConfirm: async () => {
         setConfirmState((prev) => ({ ...prev, open: false }));
         setActionLoading(true);
-        setError(null);
         try {
           await api.delete(`/api/v1/requests/${id}`);
           toast.success("Đã hủy yêu cầu thành công.");
           router.push("/requests");
         } catch (err) {
           if (err instanceof ApiError) {
-            setError(err.apiMessage);
+            toast.error(err.apiMessage);
           } else {
-            setError("Không thể hủy yêu cầu. Vui lòng thử lại.");
+            toast.error("Không thể hủy yêu cầu. Vui lòng thử lại.");
           }
         } finally {
           setActionLoading(false);
@@ -687,12 +682,6 @@ export default function RequestDetailPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
 
       {editing && (
         <div className="fixed inset-0 z-50">

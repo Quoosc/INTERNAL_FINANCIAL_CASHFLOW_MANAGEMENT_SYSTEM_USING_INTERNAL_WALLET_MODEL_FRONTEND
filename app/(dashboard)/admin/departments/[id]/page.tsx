@@ -3,6 +3,7 @@
 import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   AdminUserListItem,
   DepartmentDetailResponse,
@@ -68,13 +69,12 @@ function statusBadgeClass(status: string): string {
 export default function AdminDepartmentDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { id } = use(params);
+  const toast = useToast();
 
   const [department, setDepartment] = useState<DepartmentDetailResponse | null>(null);
   const [managers, setManagers] = useState<AdminUserListItem[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -88,7 +88,6 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
 
     const loadDetail = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<DepartmentDetailResponse>(`/api/v1/admin/departments/${id}`);
@@ -105,9 +104,9 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
         });
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -119,7 +118,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,7 +155,6 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
     setEditName(department.name);
     setEditManagerId(department.manager?.id ? String(department.manager.id) : "");
     setEditQuota(String(department.totalProjectQuota));
-    setNotice(null);
     setShowEditModal(true);
   };
 
@@ -167,12 +165,12 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
     const managerIdNumber = Number(editManagerId);
 
     if (!editName.trim()) {
-      setNotice("Tên phòng ban là bắt buộc.");
+      toast.error("Tên phòng ban là bắt buộc.");
       return;
     }
 
     if (!Number.isFinite(quotaNumber) || quotaNumber < 0) {
-      setNotice("Quota phải là số không âm.");
+      toast.error("Quota phải là số không âm.");
       return;
     }
 
@@ -187,7 +185,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
     try {
       const res = await api.put<DepartmentDetailResponse>(`/api/v1/admin/departments/${department.id}`, body);
       setDepartment(res.data);
-      setNotice("Đã cập nhật thông tin phòng ban.");
+      toast.success("Đã cập nhật thông tin phòng ban.");
     } catch {
       const selectedManager = managers.find((manager) => manager.id === body.managerId);
 
@@ -204,7 +202,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
           : prev
       );
 
-      setNotice("API chưa sẵn sàng, đã mô phỏng cập nhật phòng ban.");
+      toast.info("API chưa sẵn sàng, đã mô phỏng cập nhật phòng ban.");
     } finally {
       setSaving(false);
       setShowEditModal(false);
@@ -301,18 +299,6 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
           </div>
         )}
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
 
       {showEditModal && (
         <div className="fixed inset-0 z-50">

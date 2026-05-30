@@ -3,6 +3,7 @@
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   ProjectDetailResponse,
   ProjectRole,
@@ -63,12 +64,11 @@ function burnClass(percent: number): string {
 export default function ManagerProjectDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
+  const toast = useToast();
 
   const [project, setProject] = useState<ProjectDetailResponse | null>(null);
   const [teamLeaders, setTeamLeaders] = useState<TeamLeaderOptionResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -84,7 +84,6 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
     const loadProject = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await api.get<ProjectDetailResponse>(`/api/v1/manager/projects/${id}`);
@@ -93,9 +92,9 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       } catch (err) {
         if (cancelled) return;
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải thông tin dự án.");
+          toast.error("Không thể tải thông tin dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -107,7 +106,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, toast]);
 
   useEffect(() => {
     let cancelled = false;
@@ -148,7 +147,6 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
     setEditTotalBudget(String(project.totalBudget));
     setEditStatus(project.status);
     setEditTeamLeaderId(leader ? String(leader.userId) : "");
-    setNotice(null);
     setShowEditModal(true);
   };
 
@@ -159,17 +157,17 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
     const teamLeaderId = Number(editTeamLeaderId);
 
     if (!editName.trim()) {
-      setNotice("Tên dự án là bắt buộc.");
+      toast.error("Tên dự án là bắt buộc.");
       return;
     }
 
     if (!Number.isFinite(totalBudgetNumber) || totalBudgetNumber <= 0) {
-      setNotice("Tổng ngân sách phải lớn hơn 0.");
+      toast.error("Tổng ngân sách phải lớn hơn 0.");
       return;
     }
 
     if (!Number.isFinite(teamLeaderId) || teamLeaderId <= 0) {
-      setNotice("Vui lòng chọn Team Leader.");
+      toast.error("Vui lòng chọn Team Leader.");
       return;
     }
 
@@ -186,13 +184,13 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
     try {
       const res = await api.put<ProjectDetailResponse>(`/api/v1/manager/projects/${project.id}`, body);
       setProject(res.data);
-      setNotice("Đã cập nhật thông tin dự án.");
+      toast.success("Đã cập nhật thông tin dự án.");
       setShowEditModal(false);
     } catch (err) {
       if (err instanceof ApiError) {
-        setNotice(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
-        setNotice("Không thể cập nhật dự án. Vui lòng thử lại.");
+        toast.error("Không thể cập nhật dự án. Vui lòng thử lại.");
       }
     } finally {
       setSaving(false);
@@ -358,18 +356,6 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
           </div>
         )}
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
 
       {showEditModal && (
         <div className="fixed inset-0 z-50">

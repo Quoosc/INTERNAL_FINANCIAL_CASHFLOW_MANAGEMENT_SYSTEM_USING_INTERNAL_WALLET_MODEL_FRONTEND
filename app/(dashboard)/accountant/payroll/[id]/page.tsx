@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
@@ -76,10 +77,10 @@ function applyNetting(entries: PayrollEntry[], netting: AutoNettingResponse): Pa
 
 export default function AccountantPayrollDetailPage({ params }: PageProps) {
   const { id } = use(params);
+  const toast = useToast();
 
   const [period, setPeriod] = useState<PayrollDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [importResult, setImportResult] = useState<PayrollImportResponse | null>(null);
   const [nettingResult, setNettingResult] = useState<AutoNettingResponse | null>(null);
@@ -110,7 +111,6 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      setError(null);
       try {
         const res = await api.get<PayrollDetailResponse>(`/api/v1/accountant/payroll/${id}`);
         if (cancelled) return;
@@ -121,14 +121,14 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
         const safeId = Number(id);
         setPeriod({ ...MOCK_PERIOD, id: Number.isFinite(safeId) && safeId > 0 ? safeId : 0 });
         setActiveStep(1);
-        setError(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu kỳ lương.");
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu kỳ lương.");
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
     void load();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, toast]);
 
   const hasEntries = (period?.entries.length ?? 0) > 0;
   const hasNetting = Boolean(nettingResult);
@@ -215,7 +215,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           },
         });
       } else {
-        setError(err instanceof ApiError ? err.apiMessage : "Import thất bại.");
+        toast.error(err instanceof ApiError ? err.apiMessage : "Import thất bại.");
       }
     } finally {
       setUploading(false);
@@ -281,7 +281,6 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   const handleNetting = async () => {
     if (!period || period.entries.length === 0) return;
     setNetting(true);
-    setError(null);
 
     try {
       const res = await api.post<AutoNettingResponse>(`/api/v1/accountant/payroll/${period.id}/auto-netting`);
@@ -290,7 +289,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       setNettingResult(res.data);
       setActiveStep(3);
     } catch (err) {
-      setError(err instanceof ApiError ? err.apiMessage : "Auto-netting thất bại.");
+      toast.error(err instanceof ApiError ? err.apiMessage : "Auto-netting thất bại.");
     } finally {
       setNetting(false);
     }
@@ -299,7 +298,6 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   const handleRun = async () => {
     if (!period) return;
     setRunning(true);
-    setError(null);
 
     try {
       const res = await api.post<PayrollRunResponse>(`/api/v1/accountant/payroll/${period.id}/run`);
@@ -309,7 +307,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       );
       setActiveStep(4);
     } catch (err) {
-      setError(err instanceof ApiError ? err.apiMessage : "Chạy lương thất bại.");
+      toast.error(err instanceof ApiError ? err.apiMessage : "Chạy lương thất bại.");
     } finally {
       setRunning(false);
       setShowRunConfirm(false);
@@ -508,14 +506,22 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                     <td className="px-4 py-3 text-right text-sm text-rose-700">{formatCurrency(entry.deduction + entry.advanceDeduct)}</td>
                     <td className="px-4 py-3 text-right text-sm text-emerald-700 font-semibold">{formatCurrency(entry.finalNetSalary)}</td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(entry)}
-                        disabled={isCompleted}
-                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 text-xs"
-                      >
-                        Sửa
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/accountant/payslips/${entry.id}`}
+                          className="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs"
+                        >
+                          Chi tiết
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => openEdit(entry)}
+                          disabled={isCompleted}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 text-xs"
+                        >
+                          Sửa
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -651,12 +657,6 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           <button type="button" onClick={() => setActiveStep(3)} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm">
             ← Quay lại
           </button>
-        </div>
-      )}
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
         </div>
       )}
 

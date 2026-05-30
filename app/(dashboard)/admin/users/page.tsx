@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import {
   AdminUserFilterParams,
   AdminUserListItem,
@@ -160,6 +161,7 @@ export default function AdminUsersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useToast();
 
   const searchParamsString = searchParams.toString();
   const roleFilter = useMemo(() => searchParams.get("role") ?? "", [searchParams]);
@@ -174,8 +176,6 @@ export default function AdminUsersPage() {
   const [totalPages, setTotalPages] = useState(1);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(search);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -269,7 +269,6 @@ export default function AdminUsersPage() {
 
     const loadUsers = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const filters: AdminUserFilterParams = {
@@ -312,9 +311,9 @@ export default function AdminUsersPage() {
         if (safePage !== page) goToPage(safePage);
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -326,22 +325,22 @@ export default function AdminUsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, roleFilter, search, statusFilter]);
+  }, [goToPage, page, roleFilter, search, statusFilter, toast]);
 
   const handleCreateUser = async () => {
     const selectedRole = ROLE_OPTIONS.find((option) => option.value === newRole);
     if (!selectedRole) {
-      setNotice("Không xác định được role hợp lệ.");
+      toast.error("Không xác định được role hợp lệ.");
       return;
     }
 
     if (!newFullName.trim()) {
-      setNotice("Họ tên là bắt buộc.");
+      toast.error("Họ tên là bắt buộc.");
       return;
     }
 
     if (!newEmail.trim() || !newEmail.includes("@")) {
-      setNotice("Email không hợp lệ.");
+      toast.error("Email không hợp lệ.");
       return;
     }
 
@@ -376,7 +375,7 @@ export default function AdminUsersPage() {
 
       setItems((prev) => [createdItem, ...prev].slice(0, PAGE_LIMIT));
       setTotal((prev) => prev + 1);
-      setNotice("Đã tạo user mới và gửi email onboarding.");
+      toast.success("Đã tạo user mới và gửi email onboarding.");
     } catch {
       const mockId = Date.now();
       const selectedDepartment = departments.find((department) => department.id === body.departmentId);
@@ -398,7 +397,7 @@ export default function AdminUsersPage() {
 
       setItems((prev) => [createdItem, ...prev].slice(0, PAGE_LIMIT));
       setTotal((prev) => prev + 1);
-      setNotice("API chưa sẵn sàng, đã mô phỏng tạo user mới.");
+      toast.info("API chưa sẵn sàng, đã mô phỏng tạo user mới.");
     } finally {
       setCreating(false);
       setShowCreateModal(false);
@@ -421,11 +420,11 @@ export default function AdminUsersPage() {
           if (isLocked) {
             const res = await api.post<UnlockUserResponse>(`/api/v1/admin/users/${user.id}/unlock`);
             setItems((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: res.data.status } : item)));
-            setNotice(`Đã mở khóa ${user.fullName}.`);
+            toast.success(`Đã mở khóa ${user.fullName}.`);
           } else {
             const res = await api.post<LockUserResponse>(`/api/v1/admin/users/${user.id}/lock`);
             setItems((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: res.data.status } : item)));
-            setNotice(`Đã khóa ${user.fullName}.`);
+            toast.success(`Đã khóa ${user.fullName}.`);
           }
         } catch {
           setItems((prev) =>
@@ -435,7 +434,7 @@ export default function AdminUsersPage() {
                 : item
             )
           );
-          setNotice("API chưa sẵn sàng, đã mô phỏng thao tác lock/unlock.");
+          toast.info("API chưa sẵn sàng, đã mô phỏng thao tác lock/unlock.");
         } finally {
           setProcessingUserId(null);
         }
@@ -452,9 +451,9 @@ export default function AdminUsersPage() {
         setProcessingUserId(user.id);
         try {
           await api.post<{ message: string }>(`/api/v1/admin/users/${user.id}/reset-password`);
-          setNotice(`Đã reset mật khẩu và gửi email cho ${user.email}.`);
+          toast.success(`Đã reset mật khẩu và gửi email cho ${user.email}.`);
         } catch {
-          setNotice("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
+          toast.info("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
         } finally {
           setProcessingUserId(null);
         }
@@ -472,10 +471,7 @@ export default function AdminUsersPage() {
 
         <button
           type="button"
-          onClick={() => {
-            setNotice(null);
-            setShowCreateModal(true);
-          }}
+          onClick={() => setShowCreateModal(true)}
           className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
         >
           Tạo người dùng
@@ -638,18 +634,6 @@ export default function AdminUsersPage() {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
 
       {showCreateModal && (
         <div className="fixed inset-0 z-50">

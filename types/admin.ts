@@ -121,17 +121,17 @@ export interface AdminUserDetailResponse {
     bankName: string | null;
     accountNumber: string | null;
     accountOwner: string | null;
-  };
+  } | null;
   wallet: {
     balance: number;
-    lockedBalance: number;
-    availableBalance: number;
+    pendingBalance: number;
+    debtBalance: number;
   } | null;
   securitySettings: {
-    hasPIN: boolean;
+    hasPIN: boolean | null;
     pinLockedUntil: string | null;
-    retryCount: number;
-  };
+    retryCount: number | null;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -215,9 +215,9 @@ export interface SystemSettingsResponse {
   items: SystemConfigItem[];
 }
 
-/** PUT /api/v1/admin/settings — body */
+/** PUT /api/v1/admin/settings — body (khớp với UpdateSettingsRequest.configs) */
 export interface UpdateSettingsBody {
-  items: Array<{
+  configs: Array<{
     key: string;
     value: string;
   }>;

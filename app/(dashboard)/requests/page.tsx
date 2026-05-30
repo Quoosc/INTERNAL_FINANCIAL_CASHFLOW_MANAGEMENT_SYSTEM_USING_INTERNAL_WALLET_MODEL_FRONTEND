@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { useToast } from "@/contexts/toast-context";
 import {
   RequestStatusBadge,
   RequestTypeBadge,
@@ -257,7 +258,7 @@ export default function RequestsPage() {
   const [fromDate, setFromDate] = useState(initial.fromDate);
   const [toDate, setToDate] = useState(initial.toDate);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     const next = buildInitialState(searchParams);
@@ -292,7 +293,6 @@ export default function RequestsPage() {
 
     const loadData = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const query = new URLSearchParams();
@@ -336,9 +336,9 @@ export default function RequestsPage() {
         }
 
         if (err instanceof ApiError) {
-          setError(err.apiMessage);
+          toast.error(err.apiMessage);
         } else {
-          setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -350,7 +350,7 @@ export default function RequestsPage() {
     return () => {
       cancelled = true;
     };
-  }, [filters, page, fromDate, toDate, syncUrl]);
+  }, [filters, page, fromDate, toDate, syncUrl, toast]);
 
   const handleStatusChange = (value: string) => {
     const nextFilters: RequestFilterParams = {
@@ -657,7 +657,6 @@ export default function RequestsPage() {
         </div>
       </div>
 
-      {error && <p className="text-amber-700 text-sm">{error}</p>}
     </div>
   );
 }

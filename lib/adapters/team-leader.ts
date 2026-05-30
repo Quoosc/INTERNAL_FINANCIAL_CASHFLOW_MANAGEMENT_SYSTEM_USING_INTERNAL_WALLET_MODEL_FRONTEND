@@ -76,7 +76,7 @@ function mapTimeline(value: unknown): RequestTimelineEntry[] {
     return {
       id: asNumber(raw.id, index + 1),
       action: asRequestAction(raw.action),
-      statusAfterAction: normalizeRequestStatus(raw.statusAfterAction),
+      statusAfterAction: normalizeRequestStatus(raw.statusAfterAction as string | null | undefined),
       actorId: asNumber(raw.actorId, 0),
       actorName: asString(raw.actorName, "System"),
       comment: asNullableString(raw.comment),
@@ -101,7 +101,7 @@ export function normalizeTLApprovalListItem(
     id: asNumber(raw.id, 0),
     requestCode: asString(raw.requestCode, "N/A"),
     type: asRequestType(raw.type),
-    status: normalizeRequestStatus(raw.status),
+    status: normalizeRequestStatus(raw.status as string | null | undefined),
     amount: asNumber(raw.amount, 0),
     description: asNullableString(raw.description),
     requester: {
@@ -165,7 +165,7 @@ export function normalizeTLApprovalDetail(
     id: asNumber(raw.id, 0),
     requestCode: asString(raw.requestCode, "N/A"),
     type: asRequestType(raw.type),
-    status: normalizeRequestStatus(raw.status),
+    status: normalizeRequestStatus(raw.status as string | null | undefined),
     amount: asNumber(raw.amount, 0),
     approvedAmount:
       raw.approvedAmount === null || raw.approvedAmount === undefined

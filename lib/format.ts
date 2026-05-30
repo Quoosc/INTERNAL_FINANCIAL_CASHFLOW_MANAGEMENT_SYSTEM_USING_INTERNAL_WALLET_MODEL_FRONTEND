@@ -11,10 +11,10 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-/** Formats a raw digit string (from number inputs) as "1.000.000 ₫" */
+/** Formats a raw digit string (from amount inputs) as "1.000.000". */
 export function formatInputAmount(raw: string): string {
   if (!raw) return "";
-  return `${Number(raw).toLocaleString("vi-VN")} ₫`;
+  return Number(raw).toLocaleString("vi-VN");
 }
 
 export function formatDateTime(iso: string | null | undefined): string {

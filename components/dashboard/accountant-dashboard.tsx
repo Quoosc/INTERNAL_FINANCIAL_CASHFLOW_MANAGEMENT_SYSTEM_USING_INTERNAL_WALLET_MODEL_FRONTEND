@@ -13,12 +13,13 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
+import { getCashFlowAnalytics, PeriodKey } from "@/lib/api";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import {
   AccountantDashboardResponse,
+  CashFlowPoint,
   DisbursementListItem,
   PaginatedResponse,
-  RequestStatus,
   PayrollPeriodListItem,
   PayrollStatus,
   RequestType,
@@ -117,50 +118,14 @@ function getFundProgress(balance: number): number {
   return Math.min(100, Math.round((safe / 1_500_000_000) * 100));
 }
 
-type PeriodKey = "ytd" | "last6m" | "fy2025";
-
-interface CashFlowPoint {
-  label: string;
-  inflow: number;
-  outflow: number;
-}
-
 const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
-  { key: "ytd", label: "Năm 2026" },
+  { key: "ytd",    label: "Năm nay" },
   { key: "last6m", label: "6 tháng" },
   { key: "fy2025", label: "Năm 2025" },
 ];
 
-// mock chart data — replace when analytics API is available
-const CASHFLOW: Record<PeriodKey, CashFlowPoint[]> = {
-  ytd: [
-    { label: "T1", inflow: 280, outflow: 145 },
-    { label: "T2", inflow: 310, outflow: 162 },
-    { label: "T3", inflow: 295, outflow: 178 },
-    { label: "T4", inflow: 320, outflow: 188 },
-  ],
-  last6m: [
-    { label: "T11/25", inflow: 240, outflow: 130 },
-    { label: "T12/25", inflow: 290, outflow: 155 },
-    { label: "T1/26", inflow: 280, outflow: 145 },
-    { label: "T2/26", inflow: 310, outflow: 162 },
-    { label: "T3/26", inflow: 295, outflow: 178 },
-    { label: "T4/26", inflow: 320, outflow: 188 },
-  ],
-  fy2025: [
-    { label: "T1", inflow: 195, outflow: 112 },
-    { label: "T2", inflow: 210, outflow: 118 },
-    { label: "T3", inflow: 225, outflow: 130 },
-    { label: "T4", inflow: 240, outflow: 138 },
-    { label: "T5", inflow: 255, outflow: 147 },
-    { label: "T6", inflow: 270, outflow: 155 },
-    { label: "T7", inflow: 260, outflow: 150 },
-    { label: "T8", inflow: 248, outflow: 143 },
-    { label: "T9", inflow: 265, outflow: 152 },
-    { label: "T10", inflow: 275, outflow: 158 },
-    { label: "T11", inflow: 240, outflow: 130 },
-    { label: "T12", inflow: 290, outflow: 155 },
-  ],
+const EMPTY_CASHFLOW: Record<string, CashFlowPoint[]> = {
+  ytd: [], last6m: [], fy2025: [],
 };
 
 function fmtM(v: number): string {
@@ -175,7 +140,7 @@ function CashFlowTooltip({ active, payload, label }: any) {
   const outflow = (payload as any[])[1]?.value ?? 0;
   /* eslint-enable @typescript-eslint/no-explicit-any */
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-md text-xs">
+    <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-md text-xs">
       <p className="font-semibold text-slate-700 mb-1">{label}</p>
       <p className="text-emerald-600">Vào: {fmtM(inflow)}</p>
       <p className="text-rose-600">Ra: {fmtM(outflow)}</p>
@@ -183,132 +148,6 @@ function CashFlowTooltip({ active, payload, label }: any) {
   );
 }
 
-const MOCK_DASHBOARD: AccountantDashboardResponse = {
-  systemFundBalance: 1_248_500_000,
-  pendingDisbursementsCount: 4,
-  monthlyInflow: 320_000_000,
-  monthlyOutflow: 187_500_000,
-  payrollStatus: {
-    latestPeriod: "Tháng 03/2026",
-    status: PayrollStatus.COMPLETED,
-  },
-};
-
-const MOCK_PENDING_DISBURSEMENTS: DisbursementListItem[] = [
-  {
-    id: 1,
-    requestCode: "REQ-2026-0041",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 3_500_000,
-    approvedAmount: 3_500_000,
-    description: "Mua vật tư thiết bị cho phase 1.",
-    requester: {
-      id: 11,
-      fullName: "Đỗ Quốc Bảo",
-      avatar: null,
-      employeeCode: "EMP001",
-      jobTitle: "Frontend Developer",
-      departmentName: "Phòng IT",
-      bankName: "Vietcombank",
-      bankAccountNum: "001100220011",
-      bankAccountOwner: "DO QUOC BAO",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 1,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Phân tích",
-    },
-    attachments: [],
-    createdAt: "2026-04-03T09:15:00",
-  },
-  {
-    id: 2,
-    requestCode: "REQ-2026-0042",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 850_000,
-    approvedAmount: 850_000,
-    description: "Chi phí mua license công cụ.",
-    requester: {
-      id: 12,
-      fullName: "Vũ Thị Lan",
-      avatar: null,
-      employeeCode: "EMP002",
-      jobTitle: "Backend Developer",
-      departmentName: "Phòng IT",
-      bankName: "BIDV",
-      bankAccountNum: "102030405060",
-      bankAccountOwner: "VU THI LAN",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 1,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Phân tích",
-    },
-    attachments: [],
-    createdAt: "2026-04-02T14:30:00",
-  },
-  {
-    id: 3,
-    requestCode: "REQ-2026-0038",
-    type: RequestType.REIMBURSE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 1_200_000,
-    approvedAmount: 1_200_000,
-    description: "Hoàn ứng chi phí QA.",
-    requester: {
-      id: 13,
-      fullName: "Phạm Văn Đức",
-      avatar: null,
-      employeeCode: "EMP003",
-      jobTitle: "QA Engineer",
-      departmentName: "Phòng IT",
-      bankName: "Techcombank",
-      bankAccountNum: "778899665544",
-      bankAccountOwner: "PHAM VAN DUC",
-    },
-    project: {
-      id: 2,
-      projectCode: "PRJ-IT-002",
-      name: "Nâng cấp hạ tầng mạng",
-    },
-    phase: {
-      id: 4,
-      phaseCode: "PH-004",
-      name: "Phase 1 - Triển khai",
-    },
-    attachments: [],
-    createdAt: "2026-04-01T10:00:00",
-  },
-];
-
-const MOCK_PAYROLL_PERIODS: PayrollPeriodListItem[] = [
-  {
-    id: 5,
-    periodCode: "PR-2026-03",
-    name: "Lương tháng 03/2026",
-    month: 3,
-    year: 2026,
-    startDate: "2026-03-01",
-    endDate: "2026-03-31",
-    status: PayrollStatus.COMPLETED,
-    employeeCount: 12,
-    totalNetPayroll: 162_500_000,
-    createdAt: "2026-03-28T08:00:00",
-    updatedAt: "2026-04-02T17:00:00",
-  },
-];
 
 export function AccountantDashboard() {
   const { user, hasRole } = useAuth();
@@ -323,6 +162,8 @@ export function AccountantDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<PeriodKey>("last6m");
+  const [cashflow, setCashflow] = useState<Record<string, CashFlowPoint[]>>(EMPTY_CASHFLOW);
+  const [cfLoading, setCfLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -348,9 +189,9 @@ export function AccountantDashboard() {
 
       if (cancelled) return;
 
-      let nextDashboard = MOCK_DASHBOARD;
-      let nextDisbursements = MOCK_PENDING_DISBURSEMENTS;
-      let nextPayroll = MOCK_PAYROLL_PERIODS[0] ?? null;
+      let nextDashboard: AccountantDashboardResponse | null = null;
+      let nextDisbursements: DisbursementListItem[] = [];
+      let nextPayroll: PayrollPeriodListItem | null = null;
       let nextError: string | null = null;
 
       if (dashboardResult.status === "fulfilled") {
@@ -381,7 +222,7 @@ export function AccountantDashboard() {
           payrollResult.status === "rejected")
       ) {
         nextError =
-          "Không thể tải đầy đủ dữ liệu API, đang hiển thị dữ liệu mẫu.";
+          "Một số dữ liệu không thể tải. Vui lòng thử lại sau.";
       }
 
       setDashboard(nextDashboard);
@@ -396,6 +237,32 @@ export function AccountantDashboard() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadCashflow = async () => {
+      setCfLoading(true);
+      try {
+        const [ytd, last6m, fy2025] = await Promise.all([
+          getCashFlowAnalytics("ytd",    "million"),
+          getCashFlowAnalytics("last6m", "million"),
+          getCashFlowAnalytics("fy2025", "million"),
+        ]);
+        if (cancelled) return;
+        setCashflow({
+          ytd:    ytd.data.points,
+          last6m: last6m.data.points,
+          fy2025: fy2025.data.points,
+        });
+      } catch {
+        // Giữ mảng rỗng — chart hiển thị không có dữ liệu
+      } finally {
+        if (!cancelled) setCfLoading(false);
+      }
+    };
+    void loadCashflow();
+    return () => { cancelled = true; };
   }, []);
 
   const fundBalance = dashboard?.systemFundBalance ?? 0;
@@ -416,6 +283,18 @@ export function AccountantDashboard() {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Accountant dashboard</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Monitor disbursements, payroll, ledger and finance operations that need accounting action.</p>
+          </div>
+        </div>
+      </section>
+
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
@@ -432,7 +311,7 @@ export function AccountantDashboard() {
         </span>
       </div>
 
-      <div className="bg-linear-to-br from-cyan-100 via-blue-100 to-blue-50 border border-cyan-200 rounded-2xl p-5 space-y-4">
+      <div className="bg-linear-to-br from-cyan-100 via-blue-100 to-blue-50 border border-cyan-200 rounded-3xl p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.16em] text-cyan-200/80">
@@ -458,7 +337,7 @@ export function AccountantDashboard() {
             <span>Mức quỹ hiện tại</span>
             <span>{fundProgress}%</span>
           </div>
-          <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden">
+          <div className="h-3 rounded-full border border-slate-200 bg-white overflow-hidden">
             <div
               className={`h-full ${
                 health === "HEALTHY"
@@ -476,7 +355,7 @@ export function AccountantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           href="/accountant/disbursements"
-          className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all"
+          className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -489,7 +368,7 @@ export function AccountantDashboard() {
                 APPROVED_BY_TEAM_LEADER
               </p>
             </div>
-            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
+            <span className="w-9 h-9 rounded-xl bg-linear-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -507,7 +386,7 @@ export function AccountantDashboard() {
           </div>
         </Link>
 
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs text-slate-500">Dòng tiền vào tháng này</p>
@@ -515,7 +394,7 @@ export function AccountantDashboard() {
                 {formatCurrency(dashboard?.monthlyInflow ?? 0)}
               </p>
             </div>
-            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
+            <span className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -533,7 +412,7 @@ export function AccountantDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs text-slate-500">Dòng tiền ra tháng này</p>
@@ -546,7 +425,7 @@ export function AccountantDashboard() {
                 Dòng tiền ròng: {formatCurrency(monthlyNetFlow)}
               </p>
             </div>
-            <span className="w-9 h-9 rounded-lg bg-linear-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center shadow-sm shrink-0">
+            <span className="w-9 h-9 rounded-xl bg-linear-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center shadow-sm shrink-0">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -565,7 +444,7 @@ export function AccountantDashboard() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900">
             Xu hướng dòng tiền
@@ -579,7 +458,7 @@ export function AccountantDashboard() {
                 className={`px-3 py-1.5 transition-colors ${
                   period === opt.key
                     ? "bg-slate-800 text-white"
-                    : "bg-white text-slate-600 hover:bg-slate-50"
+                    : "bg-white text-slate-600 hover:bg-blue-50"
                 }`}
               >
                 {opt.label}
@@ -588,7 +467,7 @@ export function AccountantDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-[10px] text-slate-400">
+        <div className="flex items-center gap-4 text-xs text-slate-400">
           <span className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
             Dòng vào
@@ -600,9 +479,12 @@ export function AccountantDashboard() {
         </div>
 
         <div className="h-52">
+          {cfLoading ? (
+            <div className="h-full rounded-2xl bg-slate-100 animate-pulse" />
+          ) : (
           <ResponsiveContainer width="100%" height="100%" debounce={100}>
             <AreaChart
-              data={CASHFLOW[period]}
+              data={cashflow[period] ?? []}
               margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
             >
               <defs>
@@ -652,11 +534,12 @@ export function AccountantDashboard() {
               />
             </AreaChart>
           </ResponsiveContainer>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-slate-900">
               Chờ giải ngân
@@ -674,12 +557,12 @@ export function AccountantDashboard() {
               {[...Array(3)].map((_, index) => (
                 <div
                   key={`accountant-disbursement-loading-${index}`}
-                  className="h-24 rounded-xl bg-white animate-pulse"
+                  className="h-24 rounded-2xl bg-white animate-pulse"
                 />
               ))}
             </div>
           ) : pendingDisbursements.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-blue-50/60 p-8 text-center text-sm text-slate-500">
               Không có yêu cầu đang chờ giải ngân.
             </div>
           ) : (
@@ -688,7 +571,7 @@ export function AccountantDashboard() {
                 <Link
                   key={item.id}
                   href={`/accountant/disbursements/${item.id}`}
-                  className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
+                  className="block rounded-2xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-1.5 min-w-0">
@@ -725,7 +608,7 @@ export function AccountantDashboard() {
           )}
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-slate-900">
               Kỳ lương gần nhất
@@ -738,7 +621,7 @@ export function AccountantDashboard() {
             </Link>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2">
             <p className="text-xs text-slate-500">Kỳ lương</p>
             <p className="text-lg font-semibold text-slate-900">
               {latestPayroll?.name ?? payrollPeriodLabel}
@@ -765,14 +648,14 @@ export function AccountantDashboard() {
           <div className="space-y-2">
             <Link
               href="/accountant/ledger"
-              className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 hover:border-slate-300 hover:bg-white transition-colors"
+              className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 hover:border-slate-300 hover:bg-white transition-colors"
             >
               <span>Sổ cái</span>
               <span>→</span>
             </Link>
             <Link
-              href="/admin/system-fund"
-              className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 hover:border-slate-300 hover:bg-white transition-colors"
+              href="/accountant/system-fund"
+              className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 hover:border-slate-300 hover:bg-white transition-colors"
             >
               <span>Quỹ hệ thống</span>
               <span>→</span>
@@ -782,7 +665,7 @@ export function AccountantDashboard() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
+        <div className="px-4 py-3 rounded-2xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
           {error}
         </div>
       )}

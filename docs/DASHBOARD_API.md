@@ -1,10 +1,10 @@
 # Dashboard API Contract
 
 > Source of truth cho backend khi thiết kế API dashboard.
-> Derived trực tiếp từ mock data và `api.get(...)` calls trong các component FE.
 > File types tham chiếu: `types/dashboard.ts`, `types/request.ts`, `types/wallet.ts`, `types/accounting.ts`.
 >
-> **Trạng thái (2026-05-11):** Tất cả 4 dedicated endpoint đã implement — backend commit `bf67900`.
+> **Trạng thái (2026-05-31):** Tất cả 4 dedicated endpoint đã implement + 2 analytics endpoint mới (Sprint 16).
+> ⚠ CFO: `/dashboard/cfo` (không phải `/cfo/dashboard`). Admin: `/dashboard/admin` (không phải `/admin/dashboard`).
 
 ---
 
@@ -463,7 +463,7 @@ Kỳ lương gần nhất (0-indexed). Response: `PaginatedResponse<PayrollPerio
 
 Frontend thử `GET /api/v1/cfo/dashboard` trước. Nếu lỗi (404/500), fallback tự compose từ 2 endpoint có sẵn.
 
-### `GET /api/v1/cfo/dashboard` ✅ DONE (Sprint 12)
+### `GET /api/v1/dashboard/cfo` ✅ DONE (Sprint 12, URL fix Sprint 16)
 
 Response: `CfoDashboardResponse`
 
@@ -501,7 +501,7 @@ Response: `CfoDashboardResponse`
 - `monthlyRejectedCount` = số DEPARTMENT_TOPUP bị `REJECTED` trong tháng hiện tại
 - `recentApprovals` = 5 DEPARTMENT_TOPUP gần nhất (bất kể status)
 
-### Fallback compose (nếu `/cfo/dashboard` chưa sẵn sàng)
+### Fallback compose (nếu `/dashboard/cfo` chưa sẵn sàng)
 
 FE tự gọi song song:
 ```
@@ -515,7 +515,7 @@ GET /api/v1/cfo/approvals?status=PENDING&page=1&limit=5  → PaginatedResponse<A
 
 Frontend thử `GET /api/v1/admin/dashboard` trước. Nếu lỗi, fallback tự compose từ 4 endpoint có sẵn.
 
-### `GET /api/v1/admin/dashboard` ✅ DONE (Sprint 12)
+### `GET /api/v1/dashboard/admin` ✅ DONE (Sprint 12, URL fix Sprint 16)
 
 Response: `AdminDashboardResponse`
 
@@ -549,7 +549,7 @@ Response: `AdminDashboardResponse`
 - `totalWalletBalance` = tổng số dư tất cả ví **cá nhân** (ownerType = `USER`), không tính project/department fund
 - `recentAuditEvents` = 4–5 audit log gần nhất, `actorName` null nếu là hệ thống tự động
 
-### Fallback compose (nếu `/admin/dashboard` chưa sẵn sàng)
+### Fallback compose (nếu `/dashboard/admin` chưa sẵn sàng)
 
 FE tự gọi song song:
 ```
@@ -561,16 +561,29 @@ GET /api/v1/company-fund                         → lấy companyFundBalance l�
 
 ---
 
-## Chart data — KHÔNG cần API
+## Chart data — Analytics (Sprint 16)
 
-Các chart sau đang dùng **hardcode mock** trong FE component, backend không cần implement cho MVP:
+> **Sprint 16:** Mock data Accountant + Admin đã được thay bằng real API. Xem §17 trong `API_CONTRACT.md`.
 
-| Dashboard | Chart | Lý do |
+| Dashboard | Chart | Trạng thái |
 |---|---|---|
-| Accountant | Cash flow area chart (inflow/outflow theo tháng) | Mock trong `CASHFLOW` constant, comment "replace when analytics API available" |
-| Admin | Cash flow area chart + Department spending donut | Mock trong `CASHFLOW` + `DEPT_SPENDING` constant |
-| Admin | Top debtors table | Mock trong `TOP_DEBTORS` constant |
-| Employee | Monthly spending bar chart | Mock trong `MOCK_MONTHLY` constant |
+| Accountant | Cash flow area chart | ✅ Real API — `GET /dashboard/analytics/cashflow?unit=million` |
+| Admin | Cash flow area chart | ✅ Real API — `GET /dashboard/analytics/cashflow` (unit=raw) |
+| Admin | Department spending donut | ✅ Real API — `GET /dashboard/admin/analytics` `.deptSpending` |
+| Admin | Top debtors table | ✅ Real API — `GET /dashboard/admin/analytics` `.topDebtors` |
+| Employee | Monthly spending bar chart | ⏳ Vẫn dùng mock `MOCK_MONTHLY` — backend chưa có endpoint |
+
+### Analytics endpoints mới
+
+| Method | Endpoint | Auth | Mô tả |
+|---|---|---|---|
+| GET | `/dashboard/analytics/cashflow?period=last6m&unit=raw` | PAYROLL_MANAGE or USER_VIEW_LIST | Cashflow theo tháng, COMPANY_FUND |
+| GET | `/dashboard/admin/analytics` | USER_VIEW_LIST | Dept spending MTD + top advance debtors |
+
+| Role | Strategy |
+|---|---|
+| CFO | Dedicated | `GET /dashboard/cfo` |
+| ADMIN | Dedicated | `GET /dashboard/admin` + analytics chart từ `GET /dashboard/admin/analytics` |
 
 ---
 

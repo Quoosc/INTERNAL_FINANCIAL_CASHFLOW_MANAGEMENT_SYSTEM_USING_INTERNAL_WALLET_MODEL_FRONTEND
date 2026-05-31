@@ -8,11 +8,13 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
+import { getCashFlowAnalytics, getAdminAnalytics, PeriodKey } from "@/lib/api";
 import { formatCurrency, formatDateTime, formatRelativeTime } from "@/lib/format";
 import {
   AdminDashboardResponse,
   AdminUserListItem,
   AuditLogResponse,
+  CashFlowPoint,
   CompanyFundResponse,
   DepartmentListItem,
   PaginatedResponse,
@@ -20,77 +22,18 @@ import {
 
 // ─── Types ──────────────────────────────────────────────────────
 
-type PeriodKey = "ytd" | "last6m" | "fy2025";
-interface CashFlowPoint { date: string; inflow: number; outflow: number }
-interface DeptSpending  { dept: string; spent: number; fill: string }
-interface TopDebtor     { id: number; name: string; initials: string; dept: string; amount: number; days: number }
+interface DeptSpending { dept: string; spent: number; fill: string }
+interface TopDebtor    { id: number; name: string; initials: string; dept: string; amount: number; days: number }
 
-// ─── Mock chart data (not available from AdminDashboardResponse API) ─────────
-
-const MOCK_DASHBOARD: AdminDashboardResponse = {
-  totalUsers: 64,
-  totalDepartments: 8,
-  totalWalletBalance: 2_450_000_000,
-  recentAuditEvents: [
-    { id: 1, actorName: "Admin System",   action: "USER_CREATED",       entityName: "users",          createdAt: "2026-04-09T08:15:00" },
-    { id: 2, actorName: "Admin System",   action: "DEPARTMENT_UPDATED", entityName: "departments",    createdAt: "2026-04-09T07:40:00" },
-    { id: 3, actorName: "Admin Security", action: "CONFIG_UPDATED",     entityName: "system_configs", createdAt: "2026-04-09T06:30:00" },
-    { id: 4, actorName: "Admin HR",       action: "USER_LOCKED",        entityName: "users",          createdAt: "2026-04-08T15:05:00" },
-  ],
-};
+const DEPT_PALETTE = ["#6366f1","#f59e0b","#0ea5e9","#14b8a6","#8b5cf6","#ec4899","#10b981","#ef4444"];
 
 const PERIOD_OPTIONS: { value: PeriodKey; label: string }[] = [
-  { value: "ytd",    label: "Năm 2026" },
+  { value: "ytd",    label: "Năm nay" },
   { value: "last6m", label: "6 tháng" },
   { value: "fy2025", label: "Năm 2025" },
 ];
 
-const CASHFLOW: Record<PeriodKey, CashFlowPoint[]> = {
-  ytd: [
-    { date: "T1/26", inflow: 700_000_000, outflow: 330_000_000 },
-    { date: "T2/26", inflow: 182_500_000, outflow: 103_500_000 },
-  ],
-  last6m: [
-    { date: "T9/25",  inflow: 310_000_000, outflow: 228_000_000 },
-    { date: "T10/25", inflow: 285_000_000, outflow: 210_000_000 },
-    { date: "T11/25", inflow: 425_000_000, outflow: 295_000_000 },
-    { date: "T12/25", inflow: 520_000_000, outflow: 382_000_000 },
-    { date: "T1/26",  inflow: 700_000_000, outflow: 330_000_000 },
-    { date: "T2/26",  inflow: 182_500_000, outflow: 103_500_000 },
-  ],
-  fy2025: [
-    { date: "T1",  inflow: 180_000_000, outflow: 140_000_000 },
-    { date: "T2",  inflow: 210_000_000, outflow: 155_000_000 },
-    { date: "T3",  inflow: 195_000_000, outflow: 162_000_000 },
-    { date: "T4",  inflow: 245_000_000, outflow: 190_000_000 },
-    { date: "T5",  inflow: 230_000_000, outflow: 185_000_000 },
-    { date: "T6",  inflow: 280_000_000, outflow: 210_000_000 },
-    { date: "T7",  inflow: 260_000_000, outflow: 200_000_000 },
-    { date: "T8",  inflow: 220_000_000, outflow: 165_000_000 },
-    { date: "T9",  inflow: 310_000_000, outflow: 228_000_000 },
-    { date: "T10", inflow: 285_000_000, outflow: 210_000_000 },
-    { date: "T11", inflow: 425_000_000, outflow: 295_000_000 },
-    { date: "T12", inflow: 520_000_000, outflow: 382_000_000 },
-  ],
-};
-
-const DEPT_SPENDING: DeptSpending[] = [
-  { dept: "Engineering",       spent: 60_200_000, fill: "#6366f1" },
-  { dept: "Infrastructure",    spent: 32_750_000, fill: "#f59e0b" },
-  { dept: "Architecture",      spent: 23_500_000, fill: "#0ea5e9" },
-  { dept: "Data Analytics",    spent: 10_300_000, fill: "#14b8a6" },
-  { dept: "Quality Assurance", spent:  5_000_000, fill: "#8b5cf6" },
-  { dept: "Product Design",    spent:  3_200_000, fill: "#ec4899" },
-];
-
-const TOP_DEBTORS: TopDebtor[] = [
-  { id: 1, name: "Phạm Minh Đức",  initials: "PĐ", dept: "Infrastructure",    amount: 12_750_000, days: 45 },
-  { id: 2, name: "Bùi Thu Hương",  initials: "BH", dept: "Business Analysis", amount:  7_800_000, days: 52 },
-  { id: 3, name: "Nguyễn Văn An",  initials: "NA", dept: "Engineering",       amount:  8_500_000, days: 34 },
-  { id: 4, name: "Hoàng Thị Mai",  initials: "HM", dept: "Quality Assurance", amount:  5_000_000, days: 40 },
-  { id: 5, name: "Đào Thị Thủy",   initials: "ĐT", dept: "Data Analytics",    amount:  2_500_000, days: 28 },
-  { id: 6, name: "Trần Văn Bình",  initials: "TB", dept: "Engineering",       amount:  3_200_000, days: 22 },
-];
+const EMPTY_CF: Record<string, CashFlowPoint[]> = { ytd: [], last6m: [], fy2025: [] };
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -123,7 +66,7 @@ const ACCENT_TO_GRADIENT: Record<string, string> = {
 function CashFlowTooltip({ active, payload, label }: any) {
   if (!active || !(payload as unknown[])?.length) return null;
   return (
-    <div className="bg-white border border-slate-200 shadow-xl rounded-xl p-3 min-w-[170px]">
+    <div className="border border-slate-200 bg-white shadow-xl rounded-2xl p-3 min-w-[170px]">
       <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">{label as string}</p>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {(payload as any[]).map((p: any) => (
@@ -147,7 +90,7 @@ function DonutTooltip({ active, payload }: any) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = (payload as any[])[0];
   return (
-    <div className="bg-white border border-slate-200 shadow-xl rounded-xl p-3">
+    <div className="border border-slate-200 bg-white shadow-xl rounded-2xl p-3">
       <p className="text-xs font-semibold text-slate-700">{(p.payload as DeptSpending).dept}</p>
       <p className="text-sm font-black text-slate-900 tabular-nums">{formatCurrency(p.value as number)}</p>
     </div>
@@ -157,11 +100,11 @@ function DonutTooltip({ active, payload }: any) {
 // ─── StatCard ─────────────────────────────────────────────────
 
 function StatCard({ title, value, href, accent, icon }: {
-  title: string; value: string; href: string; accent: string; icon: React.ReactNode;
+  title: string; value: string; href?: string; accent: string; icon: React.ReactNode;
 }) {
   const iconGradient = ACCENT_TO_GRADIENT[accent] ?? "bg-linear-to-br from-slate-400 to-slate-500";
-  return (
-    <Link href={href} className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all">
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-slate-500">{title}</p>
@@ -171,6 +114,20 @@ function StatCard({ title, value, href, accent, icon }: {
           {icon}
         </span>
       </div>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={href} className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all">
+      {content}
     </Link>
   );
 }
@@ -185,6 +142,10 @@ export function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<PeriodKey>("last6m");
   const [activeDonut, setActiveDonut] = useState<number | null>(null);
+  const [cashflow, setCashflow] = useState<Record<string, CashFlowPoint[]>>(EMPTY_CF);
+  const [deptSpending, setDeptSpending] = useState<DeptSpending[]>([]);
+  const [topDebtors, setTopDebtors] = useState<TopDebtor[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,7 +155,7 @@ export function AdminDashboard() {
       setError(null);
 
       try {
-        const res = await api.get<AdminDashboardResponse>("/api/v1/admin/dashboard");
+        const res = await api.get<AdminDashboardResponse>("/api/v1/dashboard/admin");
         if (cancelled) return;
         setDashboard(res.data);
       } catch (dashboardErr) {
@@ -219,10 +180,10 @@ export function AdminDashboard() {
           });
         } catch (composeErr) {
           if (cancelled) return;
-          setDashboard(MOCK_DASHBOARD);
+          setDashboard(null);
           if (dashboardErr instanceof ApiError) setError(dashboardErr.apiMessage);
           else if (composeErr instanceof ApiError) setError(composeErr.apiMessage);
-          else setError("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          else setError("Không thể tải dữ liệu dashboard.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -233,20 +194,68 @@ export function AdminDashboard() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const loadAnalytics = async () => {
+      setAnalyticsLoading(true);
+      try {
+        const [ytd, last6m, fy2025, adminData] = await Promise.all([
+          getCashFlowAnalytics("ytd"),
+          getCashFlowAnalytics("last6m"),
+          getCashFlowAnalytics("fy2025"),
+          getAdminAnalytics(),
+        ]);
+        if (cancelled) return;
+        setCashflow({ ytd: ytd.data.points, last6m: last6m.data.points, fy2025: fy2025.data.points });
+        setDeptSpending(adminData.data.deptSpending.map((d, i) => ({
+          dept: d.deptName,
+          spent: d.spent,
+          fill: DEPT_PALETTE[i % DEPT_PALETTE.length],
+        })));
+        setTopDebtors(adminData.data.topDebtors.slice(0, 6).map((d) => ({
+          id: d.userId,
+          name: d.fullName,
+          initials: d.fullName.split(/\s+/).map((w) => w.charAt(0).toUpperCase()).slice(-2).join(""),
+          dept: d.deptName,
+          amount: d.outstandingAmount,
+          days: d.daysSinceDisbursement,
+        })));
+      } catch {
+        // Giữ state rỗng — chart/table render empty state
+      } finally {
+        if (!cancelled) setAnalyticsLoading(false);
+      }
+    };
+    void loadAnalytics();
+    return () => { cancelled = true; };
+  }, []);
+
   const todayLabel = useMemo(
     () => new Intl.DateTimeFormat("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date()),
     []
   );
 
   const recentActivity = dashboard?.recentAuditEvents.length ?? 0;
-  const cfData         = CASHFLOW[period];
+  const cfData         = cashflow[period] ?? [];
   const totalInflow    = cfData.reduce((s, d) => s + d.inflow,  0);
   const totalOutflow   = cfData.reduce((s, d) => s + d.outflow, 0);
   const netFlow        = totalInflow - totalOutflow;
-  const totalDeptSpend = DEPT_SPENDING.reduce((s, d) => s + d.spent, 0);
+  const totalDeptSpend = deptSpending.reduce((s, d) => s + d.spent, 0);
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Admin dashboard</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Manage users, departments, settings and system activity from one control surface.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
@@ -268,7 +277,7 @@ export function AdminDashboard() {
             <StatCard title="Tổng phòng ban" value={String(dashboard?.totalDepartments ?? 0)} href="/admin/departments" accent="text-emerald-700"
               icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" /></svg>}
             />
-            <StatCard title="Quỹ hệ thống" value={formatCurrency(dashboard?.totalWalletBalance ?? 0)} href="/admin/system-fund" accent="text-amber-700"
+            <StatCard title="Quỹ hệ thống" value={formatCurrency(dashboard?.totalWalletBalance ?? 0)} accent="text-amber-700"
               icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
             />
             <StatCard title="Hoạt động gần đây" value={String(recentActivity)} href="/admin/audit-logs" accent="text-violet-700"
@@ -282,14 +291,14 @@ export function AdminDashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h2 className="text-lg font-semibold text-slate-900">Phân tích dòng tiền</h2>
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 gap-0.5 shadow-sm">
+          <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-1 gap-0.5 shadow-sm">
             {PERIOD_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setPeriod(opt.value)}
                 className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
-                  period === opt.value ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                  period === opt.value ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-blue-50"
                 }`}
               >
                 {opt.label}
@@ -306,7 +315,7 @@ export function AdminDashboard() {
             { label: "Thặng dư",      value: netFlow,      color: netFlow >= 0 ? "text-emerald-600" : "text-rose-600",
               bg: netFlow >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200", icon: netFlow >= 0 ? "+" : "−" },
           ].map((item) => (
-            <div key={item.label} className={`flex items-center gap-4 p-4 rounded-xl border ${item.bg}`}>
+            <div key={item.label} className={`flex items-center gap-4 p-4 rounded-2xl border ${item.bg}`}>
               <div className="p-2 bg-white/70 rounded-lg shadow-sm">
                 <span className={`text-lg font-bold leading-none ${item.color}`}>{item.icon}</span>
               </div>
@@ -321,7 +330,7 @@ export function AdminDashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Cash flow area chart */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h3 className="text-sm font-bold text-slate-800">Xu hướng dòng tiền</h3>
@@ -333,6 +342,9 @@ export function AdminDashboard() {
               </div>
             </div>
 
+            {analyticsLoading ? (
+              <div className="h-55 rounded-2xl bg-slate-100 animate-pulse" />
+            ) : (
             <ResponsiveContainer width="100%" height={220} debounce={100}>
               <AreaChart data={cfData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
@@ -346,13 +358,14 @@ export function AdminDashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={fmtM} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={48} />
                 <RechartsTooltip content={<CashFlowTooltip />} cursor={{ stroke: "#e2e8f0", strokeWidth: 1 }} />
                 <Area type="monotone" dataKey="inflow"  name="Vào" stroke="#14b8a6" strokeWidth={2} fill="url(#adminGradIn)"  dot={{ r: 3, fill: "#14b8a6", strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
                 <Area type="monotone" dataKey="outflow" name="Ra"  stroke="#f43f5e" strokeWidth={2} fill="url(#adminGradOut)" dot={{ r: 3, fill: "#f43f5e", strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
+            )}
 
             <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-100">
               <span className="text-xs text-slate-400">
@@ -363,7 +376,7 @@ export function AdminDashboard() {
           </div>
 
           {/* Dept spending donut */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
             <div className="mb-4">
               <h3 className="text-sm font-bold text-slate-800">Chi tiêu theo phòng ban</h3>
               <p className="text-xs text-slate-400 mt-0.5">MTD — tháng hiện tại</p>
@@ -373,14 +386,14 @@ export function AdminDashboard() {
               <ResponsiveContainer width="100%" height="100%" debounce={100}>
                 <PieChart>
                   <Pie
-                    data={DEPT_SPENDING}
+                    data={deptSpending}
                     cx="50%" cy="50%"
                     innerRadius={52} outerRadius={76}
                     dataKey="spent" paddingAngle={2}
                     onMouseEnter={(_, i) => setActiveDonut(i)}
                     onMouseLeave={() => setActiveDonut(null)}
                   >
-                    {DEPT_SPENDING.map((d, i) => (
+                    {deptSpending.map((d, i) => (
                       <Cell key={d.dept} fill={d.fill} opacity={activeDonut === null || activeDonut === i ? 1 : 0.4} stroke="white" strokeWidth={2} />
                     ))}
                   </Pie>
@@ -394,18 +407,21 @@ export function AdminDashboard() {
             </div>
 
             <div className="mt-3 space-y-1.5">
-              {DEPT_SPENDING.map((d, i) => {
+              {deptSpending.length === 0 && !analyticsLoading && (
+                <p className="text-xs text-slate-400 text-center py-4">Chưa có dữ liệu chi tiêu tháng này.</p>
+              )}
+              {deptSpending.map((d, i) => {
                 const pct = totalDeptSpend > 0 ? ((d.spent / totalDeptSpend) * 100).toFixed(1) : "0";
                 return (
                   <div
                     key={d.dept}
-                    className={`flex items-center gap-2 p-1.5 rounded-lg cursor-default transition-colors ${activeDonut === i ? "bg-slate-100" : "hover:bg-slate-50"}`}
+                    className={`flex items-center gap-2 p-1.5 rounded-lg cursor-default transition-colors ${activeDonut === i ? "bg-slate-100" : "hover:bg-blue-50"}`}
                     onMouseEnter={() => setActiveDonut(i)}
                     onMouseLeave={() => setActiveDonut(null)}
                   >
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.fill }} />
                     <span className="flex-1 text-xs text-slate-600 truncate">{d.dept}</span>
-                    <span className="text-[10px] text-slate-400 tabular-nums w-9 text-right">{pct}%</span>
+                    <span className="text-xs text-slate-400 tabular-nums w-9 text-right">{pct}%</span>
                   </div>
                 );
               })}
@@ -415,7 +431,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Top Debtors */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
           <div>
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -427,25 +443,30 @@ export function AdminDashboard() {
             <p className="text-xs text-slate-400 mt-0.5">Nhân viên có số dư tạm ứng chưa hoàn trả</p>
           </div>
           <span className="text-[11px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-            {TOP_DEBTORS.filter((d) => d.days > 30).length} quá hạn &gt;30ng
+            {topDebtors.filter((d) => d.days > 30).length} quá hạn &gt;30ng
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px]">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-100">
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-5 pr-3 py-2.5">Nhân viên</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2.5 hidden sm:table-cell">Phòng ban</th>
-                <th className="text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2.5">Tồn đọng</th>
-                <th className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider pr-5 pl-3 py-2.5">Ngày</th>
+              <tr className="bg-blue-50/60 border-b border-slate-100">
+                <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider pl-5 pr-3 py-2.5">Nhân viên</th>
+                <th className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider px-3 py-2.5 hidden sm:table-cell">Phòng ban</th>
+                <th className="text-right text-xs font-bold text-slate-400 uppercase tracking-wider px-3 py-2.5">Tồn đọng</th>
+                <th className="text-center text-xs font-bold text-slate-400 uppercase tracking-wider pr-5 pl-3 py-2.5">Ngày</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {TOP_DEBTORS.map((d) => {
+              {analyticsLoading ? (
+                <tr><td colSpan={4} className="px-5 py-8 text-center text-slate-400 text-sm">Đang tải...</td></tr>
+              ) : topDebtors.length === 0 ? (
+                <tr><td colSpan={4} className="px-5 py-8 text-center text-slate-400 text-sm">Không có tạm ứng tồn đọng.</td></tr>
+              ) : null}
+              {topDebtors.map((d) => {
                 const overdue = d.days > 30;
                 return (
-                  <tr key={d.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={d.id} className="hover:bg-blue-50/40 transition-colors">
                     <td className="pl-5 pr-3 py-3.5">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white text-[11px] font-black shrink-0">
@@ -473,7 +494,7 @@ export function AdminDashboard() {
               <tr className="bg-slate-50/60 border-t border-slate-100">
                 <td colSpan={2} className="pl-5 py-2.5 text-[11px] font-semibold text-slate-500">Tổng tồn đọng</td>
                 <td className="px-3 py-2.5 text-right text-sm font-black text-amber-600 tabular-nums">
-                  {formatCurrency(TOP_DEBTORS.reduce((s, d) => s + d.amount, 0))}
+                  {formatCurrency(topDebtors.reduce((s, d) => s + d.amount, 0))}
                 </td>
                 <td />
               </tr>
@@ -484,30 +505,30 @@ export function AdminDashboard() {
 
       {/* System health + Audit events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Sức khỏe hệ thống</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="rounded-xl border border-slate-200 bg-white p-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3">
               <p className="text-xs text-slate-500">Người dùng / phòng ban</p>
               <p className="text-base font-semibold text-slate-900 mt-1">
                 {dashboard && dashboard.totalDepartments > 0 ? (dashboard.totalUsers / dashboard.totalDepartments).toFixed(1) : "0.0"}
               </p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3">
               <p className="text-xs text-slate-500">Đăng nhập role</p>
               <p className="text-base font-semibold text-slate-900 mt-1">{user?.role ?? "ADMIN"}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3">
               <p className="text-xs text-slate-500">Sự kiện gần đây</p>
               <p className="text-base font-semibold text-slate-900 mt-1">{recentActivity}</p>
             </div>
           </div>
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
             Trạng thái hệ thống ổn định. Theo dõi nhật ký audit để kiểm soát thay đổi IAM và cấu hình.
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-slate-900">Audit gần đây</h2>
             <Link href="/admin/audit-logs" className="text-sm text-blue-700 hover:text-blue-600">Xem tất cả →</Link>
@@ -515,16 +536,16 @@ export function AdminDashboard() {
 
           {loading ? (
             <div className="space-y-3">
-              {[...Array(4)].map((_, i) => <div key={`audit-skel-${i}`} className="h-16 rounded-xl bg-white animate-pulse" />)}
+              {[...Array(4)].map((_, i) => <div key={`audit-skel-${i}`} className="h-16 rounded-2xl bg-white animate-pulse" />)}
             </div>
           ) : (dashboard?.recentAuditEvents.length ?? 0) === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-blue-50/60 p-8 text-center text-sm text-slate-500">
               Chưa có hoạt động audit.
             </div>
           ) : (
             <div className="space-y-3">
               {dashboard?.recentAuditEvents.slice(0, 5).map((item) => (
-                <div key={item.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-3">
                   <p className="text-sm font-medium text-slate-900">{item.action}</p>
                   <p className="text-xs text-slate-500 mt-1">{item.actorName ?? "System"} • {item.entityName}</p>
                   <p className="text-xs text-slate-500 mt-1">{formatRelativeTime(item.createdAt)} ({formatDateTime(item.createdAt)})</p>
@@ -536,7 +557,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Quick links */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-4">
         <h2 className="text-lg font-semibold text-slate-900">Truy cập nhanh</h2>
         <div className="mt-3 flex flex-wrap gap-3">
           <QuickLink href="/admin/users" label="Nhân sự" />
@@ -547,7 +568,7 @@ export function AdminDashboard() {
       </div>
 
       {error && (
-        <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">{error}</div>
+        <div className="px-4 py-3 rounded-2xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">{error}</div>
       )}
     </div>
   );
@@ -555,7 +576,7 @@ export function AdminDashboard() {
 
 function QuickLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors">
+    <Link href={href} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors">
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14m-7-7l7 7-7 7" />
       </svg>

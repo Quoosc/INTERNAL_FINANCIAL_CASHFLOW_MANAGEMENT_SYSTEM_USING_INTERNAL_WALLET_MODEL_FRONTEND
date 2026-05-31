@@ -1,12 +1,18 @@
 # API_CONTRACT.md - Frontend/Backend Contract
 
-> Version: 3.6 (2026-05-11)
+> Version: 4.0 (2026-05-31)
 > Source priority: backend runtime source code > backend docs > frontend docs
 > Roles: EMPLOYEE, TEAM_LEADER, MANAGER, ACCOUNTANT, CFO, ADMIN
 >
-> **Thay đổi so với 3.5:** `GET /wallet/deposit/my` — FE page `wallet/deposit/my` implemented (Sprint 13). MVP 100% complete.
-> **Thay đổi so với 3.4:** Thêm §16 Dashboard endpoints (Manager, Accountant, CFO, Admin) — backend commit `bf67900`. Type fix: `AccountantDashboardResponse.payrollStatus` nullable.
-> **Thay đổi so với 3.2:** Realtime transport STOMP/WebSocket → **SSE** (1 endpoint `GET /users/stream`, 4 event: `connected`, `wallet.updated`, `transaction.created`, `notification`). Xem §15.
+> **Thay đổi v4.0 (Sprint 16):**
+> - `POST /users/me/pin/verify` — response thêm `attemptsRemaining?: number`; sai PIN trả HTTP 200 `{ valid: false }` thay vì HTTP 401
+> - `GET /wallet/deposit/my` — thêm params filter `status`, `from`, `to`
+> - Thêm §17: Analytics endpoints `GET /dashboard/analytics/cashflow` + `GET /dashboard/admin/analytics`
+> - CFO dashboard URL đổi: `/cfo/dashboard` → `/dashboard/cfo`
+> - Admin dashboard URL đổi: `/admin/dashboard` → `/dashboard/admin`
+>
+> **Thay đổi v3.6 (Sprint 13–15):** `GET /wallet/deposit/my` — FE page implemented. `GET /dashboard/cfo` + `/dashboard/admin` — backend expose. MVP 100% complete.
+> **Thay đổi v3.4:** Thêm §16 Dashboard endpoints. SSE transport.
 
 ## Base URL
 
@@ -68,7 +74,7 @@ Notes:
 | PUT    | `/users/me/avatar`     | `UpdateAvatarRequest`   | `{ avatar: string }`  |
 | PUT    | `/users/me/bank-info`  | `UpdateBankInfoRequest` | `BankInfo`            |
 | PUT    | `/users/me/pin`        | `UpdatePinRequest`      | `{ message }`         |
-| POST   | `/users/me/pin/verify` | `VerifyPinRequest`      | `{ valid: boolean }`  |
+| POST   | `/users/me/pin/verify` | `VerifyPinRequest`      | `{ valid: boolean, attemptsRemaining?: number }` |
 | GET    | `/banks`               | -                       | `BankOption[]`        |
 | GET    | `/users/stream`        | -                       | SSE stream — xem §15  |
 
@@ -76,6 +82,7 @@ Notes:
 
 - Avatar là Signed URL Cloudinary (hết hạn 15 phút)
 - PIN: 5 chữ số. Nhập sai > 5 lần → khoá 30 phút (`423 Locked`)
+- `POST /users/me/pin/verify` khi sai PIN: HTTP 200 `{ valid: false, attemptsRemaining: N }` — KHÔNG throw 401. Chỉ throw 401 khi format PIN sai (không phải 5 chữ số). Throw 423 khi PIN đã bị khóa.
 - `PUT /users/me/pin` body: `{ currentPin, newPin }` — đổi PIN khi đã có PIN
 - `GET /users/stream` là endpoint realtime duy nhất (SSE). Mở 1 connection cho cả session để nhận mọi event của user hiện tại.
 
@@ -155,10 +162,10 @@ Client-direct upload flow:
 
 > **Breaking change v3.4 (2026-05-02):** Endpoint nạp tiền chuyển từ `POST /payments` (PaymentController) sang `POST /wallet/deposit` (DepositController). Backend giờ tự sinh `depositCode` — FE không gửi.
 
-| Method | Endpoint                            | Body / Params                    | Response                           | Auth |
-| ------ | ----------------------------------- | -------------------------------- | ---------------------------------- | :--: |
-| POST   | `/wallet/deposit`                   | `CreateDepositRequest`           | `DepositLogResponse`               | Yes  |
-| GET    | `/wallet/deposit/my?page=0&size=10` | -                                | `SpringPage<DepositLogResponse>`   | Yes  |
+| Method | Endpoint                                                      | Body / Params          | Response                         | Auth |
+| ------ | ------------------------------------------------------------- | ---------------------- | -------------------------------- | :--: |
+| POST   | `/wallet/deposit`                                             | `CreateDepositRequest` | `DepositLogResponse`             | Yes  |
+| GET    | `/wallet/deposit/my?page=0&size=10&status=&from=&to=`         | —                      | `PageResponse<DepositLogResponse>` | Yes  |
 
 **CreateDepositRequest body:**
 
@@ -191,7 +198,9 @@ Client-direct upload flow:
 > `paymentUrl`: non-null khi vừa tạo — FE mở URL này để user thanh toán.
 > `vnpTransactionNo`, `paidAt`: `null` khi chưa hoàn thành.
 > Khi VNPay IPN callback về, backend cập nhật `status → COMPLETED` + credit wallet. SSE `wallet.updated` tự push về FE.
-> `GET /wallet/deposit/my` trả Spring Page (0-indexed): `{ content[], totalElements, totalPages, number, size }` — khác với custom `PageResponse` 1-indexed. FE page: `wallet/deposit/my`.
+> `GET /wallet/deposit/my` trả `PageResponse<T>` chuẩn (0-indexed): `{ items[], total, page, size, totalPages }`.
+> Filter params: `status=PENDING|COMPLETED|FAILED` (optional), `from=YYYY-MM-DD` (optional), `to=YYYY-MM-DD` (optional).
+> FE page: `wallet/deposit/my` — có dropdown status + date range filter.
 
 **IPN / Return callbacks (server-to-server, FE không gọi trực tiếp):**
 
@@ -694,10 +703,11 @@ await fetchEventSource("/api/v1/users/stream", {
 
 ---
 
-## 16. Dashboard (`/dashboard`, `/cfo/dashboard`, `/admin/dashboard`)
+## 16. Dashboard (`/dashboard`)
 
-> Implemented tại backend commit `bf67900` (2026-05-11). FE: `components/dashboard/`.
+> Tất cả endpoint dashboard đều mount tại `/dashboard`. `DashboardController` xử lý.
 > Employee + Team Leader dùng chiến lược **Composition** — không có dedicated endpoint.
+> ⚠ **v4.0:** CFO dùng `/dashboard/cfo` (không phải `/cfo/dashboard`). Admin dùng `/dashboard/admin` (không phải `/admin/dashboard`).
 
 ### Manager
 
@@ -743,7 +753,7 @@ await fetchEventSource("/api/v1/users/stream", {
 
 | Method | Endpoint | Response |
 | ------ | -------- | -------- |
-| GET | `/cfo/dashboard` | `CfoDashboardResponse` |
+| GET | `/dashboard/cfo` | `CfoDashboardResponse` |
 
 ```json
 {
@@ -768,7 +778,7 @@ await fetchEventSource("/api/v1/users/stream", {
 
 | Method | Endpoint | Response |
 | ------ | -------- | -------- |
-| GET | `/admin/dashboard` | `AdminDashboardResponse` |
+| GET | `/dashboard/admin` | `AdminDashboardResponse` |
 
 ```json
 {
@@ -795,5 +805,68 @@ await fetchEventSource("/api/v1/users/stream", {
 | TEAM_LEADER | Composition | `GET /team-leader/approvals?page=0&size=3&status=PENDING` + `GET /team-leader/projects?page=0&size=3` |
 | MANAGER | Dedicated | `GET /dashboard/manager` + sub-lists |
 | ACCOUNTANT | Dedicated | `GET /dashboard/accountant` + sub-lists |
-| CFO | Dedicated | `GET /cfo/dashboard` |
-| ADMIN | Dedicated | `GET /admin/dashboard` |
+| CFO | Dedicated | `GET /dashboard/cfo` |
+| ADMIN | Dedicated | `GET /dashboard/admin` |
+
+---
+
+## 17. Analytics (`/dashboard/analytics`)
+
+> Implement Sprint 16. Thay thế mock data trong Admin + Accountant dashboard.
+
+### `GET /dashboard/analytics/cashflow`
+
+**Auth:** `PAYROLL_MANAGE` (Accountant) hoặc `USER_VIEW_LIST` (Admin)
+
+| Param | Type | Mặc định | Mô tả |
+|---|---|---|---|
+| `period` | string | `last6m` | `ytd` / `last6m` / `fy{year}` (ví dụ `fy2025`) |
+| `unit` | string | `raw` | `raw` (VND đầy đủ) / `million` (chia 1_000_000, scale 2) |
+
+**Response:** `CashFlowAnalyticsResponse`
+
+```json
+{
+  "period": "last6m",
+  "points": [
+    { "label": "T11/25", "inflow": 240000000, "outflow": 130000000 },
+    { "label": "T12/25", "inflow": 290000000, "outflow": 155000000 }
+  ],
+  "totalInflow": 840000000,
+  "totalOutflow": 450000000
+}
+```
+
+> Label format: `T{m}/{2-digit-year}` cho `ytd`/`last6m`, `T{m}` cho `fy{year}`.
+> Inflow = CREDIT vào COMPANY_FUND wallet. Outflow = DEBIT từ COMPANY_FUND wallet.
+> FE Accountant dùng `unit=million` — chart nhận số triệu, `fmtM(v)` format thành `${v}M`.
+
+---
+
+### `GET /dashboard/admin/analytics`
+
+**Auth:** `USER_VIEW_LIST` (Admin only)
+
+**Response:** `AdminAnalyticsResponse`
+
+```json
+{
+  "deptSpending": [
+    { "deptId": 1, "deptName": "Engineering", "spent": 60200000 }
+  ],
+  "topDebtors": [
+    {
+      "userId": 5,
+      "fullName": "Nguyễn Văn A",
+      "deptName": "Infrastructure",
+      "outstandingAmount": 12750000,
+      "daysSinceDisbursement": 45
+    }
+  ]
+}
+```
+
+> `deptSpending`: MTD (từ đầu tháng hiện tại đến hiện tại), DEBIT từ DEPARTMENT wallet, sorted descending by spent.
+> `topDebtors`: tổng tạm ứng chưa hoàn (`remainingAmount > 0`, `status != SETTLED`), top 10 sorted by amount desc.
+> `daysSinceDisbursement`: số ngày từ advance cũ nhất của user chưa được settle.
+> FE gán màu từ palette cố định: `["#6366f1","#f59e0b","#0ea5e9","#14b8a6","#8b5cf6","#ec4899",...]`.

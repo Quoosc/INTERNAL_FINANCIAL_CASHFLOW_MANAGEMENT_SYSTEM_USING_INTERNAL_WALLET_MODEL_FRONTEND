@@ -33,124 +33,6 @@ import {
 //      GET /requests?status=PENDING&limit=3  (Sprint 5)
 // =============================================================
 
-// ─── MOCK DATA (xóa khi backend sẵn sàng) ───────────────────
-const MOCK_DASHBOARD: EmployeeDashboardResponse = {
-  wallet: {
-    balance: 15_500_000,
-    lockedBalance: 2_300_000,
-    availableBalance: 13_200_000,
-    pendingBalance: 2_300_000,
-    debtBalance: 3_200_000,
-  },
-  pendingRequestsCount: 3,
-  recentTransactions: [
-    {
-      id: 1,
-      transactionCode: "TXN-8829145A",
-      type: "REQUEST_PAYMENT",
-      amount: 5_000_000,
-      status: "COMPLETED",
-      createdAt: "2026-03-28T14:30:00",
-    },
-    {
-      id: 2,
-      transactionCode: "TXN-7714209B",
-      type: "PAYSLIP_PAYMENT",
-      amount: 12_500_000,
-      status: "COMPLETED",
-      createdAt: "2026-03-25T09:00:00",
-    },
-    {
-      id: 3,
-      transactionCode: "TXN-6612034C",
-      type: "WITHDRAW",
-      amount: -2_000_000,
-      status: "COMPLETED",
-      createdAt: "2026-03-22T11:20:00",
-    },
-    {
-      id: 4,
-      transactionCode: "TXN-5501988D",
-      type: "DEPOSIT",
-      amount: 1_000_000,
-      status: "COMPLETED",
-      createdAt: "2026-03-20T16:45:00",
-    },
-    {
-      id: 5,
-      transactionCode: "TXN-4498771E",
-      type: "REQUEST_PAYMENT",
-      amount: 850_000,
-      status: "COMPLETED",
-      createdAt: "2026-03-18T10:05:00",
-    },
-  ],
-  recentPayslip: {
-    id: 7,
-    payslipCode: "PS-2026-03",
-    periodName: "Tháng 3/2026",
-    finalNetSalary: 12_500_000,
-    status: "PAID",
-  },
-};
-
-const MOCK_PENDING_REQUESTS: RequestListItem[] = [
-  {
-    id: 101,
-    requestCode: "REQ-IT-0326-001",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING,
-    amount: 1_200_000,
-    approvedAmount: null,
-    description: "Tạm ứng chi phí đi công tác Đà Nẵng",
-    rejectReason: null,
-    projectId: 5,
-    projectName: "Hệ thống quản lý nội bộ",
-    phaseId: 12,
-    phaseName: "Phase 2 - Development",
-    categoryId: 3,
-    categoryName: "Chi phí di chuyển",
-    createdAt: "2026-04-01T09:15:00",
-    updatedAt: "2026-04-01T09:15:00",
-  },
-  {
-    id: 102,
-    requestCode: "REQ-IT-0326-002",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING,
-    amount: 450_000,
-    approvedAmount: null,
-    description: "Hoàn ứng mua văn phòng phẩm",
-    rejectReason: null,
-    projectId: 5,
-    projectName: "Hệ thống quản lý nội bộ",
-    phaseId: 12,
-    phaseName: "Phase 2 - Development",
-    categoryId: 7,
-    categoryName: "Văn phòng phẩm",
-    createdAt: "2026-03-31T14:30:00",
-    updatedAt: "2026-03-31T14:30:00",
-  },
-  {
-    id: 103,
-    requestCode: "REQ-IT-0326-003",
-    type: RequestType.REIMBURSE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 850_000,
-    approvedAmount: 850_000,
-    description: "Hoàn tiền mua thiết bị văn phòng",
-    rejectReason: null,
-    projectId: 5,
-    projectName: "Hệ thống quản lý nội bộ",
-    phaseId: 11,
-    phaseName: "Phase 1 - Planning",
-    categoryId: 8,
-    categoryName: "Thiết bị",
-    createdAt: "2026-03-29T10:45:00",
-    updatedAt: "2026-04-01T08:00:00",
-  },
-];
-
 function mapWalletResponse(wallet: WalletResponse): EmployeeDashboardResponse["wallet"] {
   return {
     balance: wallet.balance,
@@ -377,7 +259,7 @@ function StatCard({
   const [showTip, setShowTip] = useState(false);
   return (
     <div
-      className={`bg-white border border-slate-200 rounded-xl shadow-sm p-5 hover:border-slate-300 transition-all ${gradient}`}
+      className={`rounded-2xl border border-slate-200 bg-white shadow-sm p-5 hover:border-slate-300 transition-all ${gradient}`}
     >
       <div className="flex items-start justify-between mb-4">
         <div
@@ -396,7 +278,7 @@ function StatCard({
               i
             </button>
             {showTip && (
-              <div className="absolute right-0 top-7 w-56 bg-white border border-slate-200 text-slate-900 text-xs rounded-lg p-3 z-20 shadow-xl">
+              <div className="absolute right-0 top-7 w-56 border border-slate-200 bg-white text-slate-900 text-xs rounded-lg p-3 z-20 shadow-xl">
                 {tooltip}
               </div>
             )}
@@ -422,7 +304,7 @@ function SectionCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-6">
       <div className="flex items-start justify-between mb-5">
         <div>
           <h3 className="text-base font-semibold text-slate-900">{title}</h3>
@@ -480,13 +362,13 @@ export function EmployeeDashboard() {
             : null;
 
         setData({
-          wallet: wallet ? mapWalletResponse(wallet) : MOCK_DASHBOARD.wallet,
+          wallet: wallet ? mapWalletResponse(wallet) : { balance: 0, lockedBalance: 0, availableBalance: 0 },
           pendingRequestsCount:
-            summary?.totalPendingApproval ?? pendingCount ?? MOCK_DASHBOARD.pendingRequestsCount,
+            summary?.totalPendingApproval ?? pendingCount ?? 0,
           recentTransactions: mapRecentTransactions(recentTransactions),
           recentPayslip: mapRecentPayslip(recentPayslip),
         });
-        setPendingRequests(pendingItems ?? MOCK_PENDING_REQUESTS);
+        setPendingRequests(pendingItems ?? []);
       } finally {
         setIsLoading(false);
       }
@@ -544,6 +426,18 @@ export function EmployeeDashboard() {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Employee dashboard</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Track wallet balance, requests, payroll and recent activity in a cleaner workspace.</p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
         <div>
@@ -554,7 +448,7 @@ export function EmployeeDashboard() {
         </div>
         <Link
           href="/requests/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
         >
           <svg
             className="w-4 h-4"
@@ -686,7 +580,7 @@ export function EmployeeDashboard() {
                   className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                     chartRange === n
                       ? "bg-blue-600 text-white"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-blue-50"
                   }`}
                 >
                   {n} tháng
@@ -772,7 +666,7 @@ export function EmployeeDashboard() {
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
@@ -852,7 +746,7 @@ export function EmployeeDashboard() {
                     <Link
                       key={req.id}
                       href={`/requests/${req.id}`}
-                      className="flex items-center justify-between gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-200 hover:bg-slate-50 transition-all group"
+                      className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200 hover:border-slate-200 hover:bg-blue-50 transition-all group"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <span
@@ -981,7 +875,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all group"
+      className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-blue-50 transition-all group"
     >
       <div
         className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center shrink-0 text-white shadow-sm group-hover:scale-105 transition-transform`}

@@ -1,7 +1,7 @@
 # Tiến độ phát triển Frontend
 
 > File này được cập nhật sau **mỗi lần hoàn thành task**.
-> Cập nhật lần cuối: **2026-05-30** (Sprint 15)
+> Cập nhật lần cuối: **2026-05-31** (Sprint 16)
 
 ---
 
@@ -10,7 +10,7 @@
 | Hạng mục | Số lượng | Ghi chú |
 |---|---|---|
 | Auth pages LIVE | 3 | login, change-password, forgot-password |
-| Dashboard pages LIVE (API thật / hoàn chỉnh) | 48 | Sprint 15: thêm `accountant/payslips/[id]` — chi tiết phiếu lương kế toán |
+| Dashboard pages LIVE (API thật / hoàn chỉnh) | 48 | Sprint 16: xóa tất cả mock chart data Admin/Accountant dashboard |
 | Dashboard pages mock (backend chưa có) | 0 | — tất cả đã wired |
 | **Tổng pages** | **51** | không tính 2 orphaned đã xóa |
 
@@ -77,11 +77,41 @@
 | `cfo/system-fund/page.tsx` | `GET /api/v1/company-fund` + topup | Fixed diacritics Sprint 7 |
 | `cfo/audit-logs/page.tsx` | — | Re-export từ `admin/audit-logs/page` |
 | `cfo/settings/page.tsx` | — | Re-export từ `admin/settings/page` |
-| `dashboard/page.tsx` | Composite + dedicated endpoints — Sprint 12 | Employee/TL: compose từ API có sẵn. Manager: `/api/v1/dashboard/manager`. Accountant: `/api/v1/dashboard/accountant`. CFO: `/api/v1/cfo/dashboard`. Admin: `/api/v1/admin/dashboard` |
+| `dashboard/page.tsx` | Composite + dedicated endpoints — Sprint 12/16 | Employee/TL: compose từ API có sẵn. Manager: `/api/v1/dashboard/manager`. Accountant: `/api/v1/dashboard/accountant`. CFO: `/api/v1/dashboard/cfo`. Admin: `/api/v1/dashboard/admin` |
 
 ---
 
 ## Nhật ký thay đổi
+
+### Sprint 16 — 2026-05-31
+
+**Mục tiêu:** Implement analytics API (thay mock data), fix dashboard URLs, filter nạp tiền, PIN attempts
+
+| Task | Kết quả |
+|---|---|
+| Backend: thêm `GET /dashboard/cfo` + `GET /dashboard/admin` | `DashboardController` expose 2 endpoint còn thiếu (service đã có, chưa có controller) |
+| Fix URL CFO dashboard | `cfo-dashboard.tsx`: `/api/v1/cfo/dashboard` → `/api/v1/dashboard/cfo` |
+| Fix URL Admin dashboard | `admin-dashboard.tsx`: `/api/v1/admin/dashboard` → `/api/v1/dashboard/admin` |
+| Backend: `PinVerifyResponse` thêm `attemptsRemaining` | Nhập sai PIN trả HTTP 200 `{ valid: false, attemptsRemaining: N }` thay vì HTTP 401 |
+| Frontend: hiển thị số lần thử PIN còn lại | `disbursements/[id]/page.tsx`: "Còn N lần thử" dưới ô PIN |
+| Backend: filter deposit history | `GET /wallet/deposit/my` nhận thêm `status`, `from`, `to` |
+| Frontend: filter UI deposit history | `wallet/deposit/my/page.tsx`: dropdown status + date range + nút Lọc/Xóa lọc |
+| Backend: 2 analytics endpoints mới | `GET /dashboard/analytics/cashflow` (period + unit) + `GET /dashboard/admin/analytics` (dept spending + top debtors) |
+| Frontend: xóa mock `CASHFLOW` (accountant) | `accountant-dashboard.tsx` gọi `getCashFlowAnalytics(period, "million")`, skeleton loading |
+| Frontend: xóa 3 mock (admin) | `admin-dashboard.tsx` xóa `CASHFLOW`, `DEPT_SPENDING`, `TOP_DEBTORS` — gọi real API song song, empty/loading states |
+| Tạo `lib/api/analytics.ts` | `getCashFlowAnalytics()` + `getAdminAnalytics()` |
+| Thêm types analytics | `types/dashboard.ts`: `CashFlowPoint`, `CashFlowAnalyticsResponse`, `AdminAnalyticsResponse` |
+| `npm run lint` | ✅ 0 errors |
+
+**Lưu ý kỹ thuật Sprint 16:**
+- `DashboardController` mount tại `/api/v1/dashboard` — CFO/Admin phải gọi `/dashboard/cfo` và `/dashboard/admin`, KHÔNG phải `/cfo/dashboard` hay `/admin/dashboard`
+- `getCashFlowAnalytics` với `unit=million`: backend chia cho 1_000_000 với `setScale(2, HALF_UP)` — chart Accountant nhận số triệu, không cần FE chia
+- `getAdminAnalytics` lấy dept spending MTD (từ đầu tháng đến hiện tại) từ DEBIT của DEPARTMENT wallet
+- `findTopDebtorsSystemWide` group theo user, lấy `MIN(createdAt)` làm ngày advance lâu nhất — `daysSinceDisbursement` tính từ đó
+- `attemptsRemaining` chỉ có trong response khi `valid: false` (null khi valid = true)
+- Deposit filter: backend dùng JPQL với nullable params (`:status IS NULL OR d.status = :status`)
+
+---
 
 ### Sprint 15 — 2026-05-30
 
@@ -285,9 +315,11 @@ Wire `notifications`, `cfo/system-fund`, `admin/settings`, `cfo/approvals/[id]`,
 
 ## Backend còn thiếu (blocker cho FE)
 
-Không còn blocker — tất cả module backend đã implement và tất cả 6 endpoint ❌ đã được wire (Sprint 15). 48/51 dashboard pages đang dùng API thật (3 pages còn lại là static: `admin/roles`, `admin/approvals` redirect, `cfo/audit-logs` + `cfo/settings` re-export từ admin).
+Không còn blocker. 48/51 dashboard pages dùng API thật. 3 pages static: `admin/roles`, `admin/approvals` (redirect), `cfo/audit-logs` + `cfo/settings` (re-export từ admin).
 
-**Còn chờ backend (analytics / export):** 4 feature cần endpoint mới — xem `TODO_IMPROVEMENTS.md §1–§4`.
+**Sprint 16 đã giải quyết:** analytics charts (Admin + Accountant), deposit filter, PIN attempts, dashboard URL fixes.
+
+**Còn tồn đọng:** Export CSV/PDF (chưa có backend endpoint). `MOCK_MONTHLY` trong `employee-dashboard.tsx` (chart chi tiêu cá nhân theo tháng). Xem `TODO_IMPROVEMENTS.md §2`.
 
 ---
 

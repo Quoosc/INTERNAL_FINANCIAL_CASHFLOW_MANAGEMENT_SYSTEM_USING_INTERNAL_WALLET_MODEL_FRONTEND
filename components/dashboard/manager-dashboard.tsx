@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
+import { useToast } from "@/contexts/toast-context";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import {
   ManagerApprovalListItem,
@@ -14,109 +15,6 @@ import {
   RequestStatus,
   RequestType,
 } from "@/types";
-
-const MOCK_DASHBOARD: ManagerDashboardResponse = {
-  departmentBudget: {
-    totalProjectQuota: 800_000_000,
-    totalAvailableBalance: 524_500_000,
-    totalSpent: 275_500_000,
-  },
-  projectStatusSummary: { active: 3, planning: 2, paused: 1, closed: 0 },
-  pendingApprovalsCount: 2,
-  teamDebtSummary: { totalDebt: 5_200_000, employeesWithDebt: 3 },
-};
-
-const MOCK_PENDING_APPROVALS: ManagerApprovalListItem[] = [
-  {
-    id: 10,
-    requestCode: "REQ-2026-0050",
-    type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING,
-    amount: 50_000_000,
-    description: "Xin cấp vốn bổ sung Phase 2 dự án HTQL nội bộ",
-    requester: {
-      id: 4,
-      fullName: "Hoàng Minh Tuấn",
-      avatar: null,
-      employeeCode: "TL001",
-      jobTitle: "Team Leader",
-      email: "tl.it@ifms.vn",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-      availableBudget: 12_000_000,
-    },
-    createdAt: "2026-04-03T10:00:00",
-  },
-  {
-    id: 11,
-    requestCode: "REQ-2026-0048",
-    type: RequestType.PROJECT_TOPUP,
-    status: RequestStatus.PENDING,
-    amount: 30_000_000,
-    description: "Cấp vốn cho Phase triển khai dự án hạ tầng mạng",
-    requester: {
-      id: 4,
-      fullName: "Hoàng Minh Tuấn",
-      avatar: null,
-      employeeCode: "TL001",
-      jobTitle: "Team Leader",
-      email: "tl.it@ifms.vn",
-    },
-    project: {
-      id: 2,
-      projectCode: "PRJ-IT-002",
-      name: "Nâng cấp hạ tầng mạng",
-      availableBudget: 8_500_000,
-    },
-    createdAt: "2026-04-02T14:00:00",
-  },
-];
-
-const MOCK_PROJECTS: ManagerProjectListItem[] = [
-  {
-    id: 1,
-    projectCode: "PRJ-IT-001",
-    name: "Hệ thống quản lý nội bộ",
-    status: "ACTIVE",
-    totalBudget: 150_000_000,
-    availableBudget: 12_000_000,
-    totalSpent: 138_000_000,
-    memberCount: 5,
-    currentPhaseId: 2,
-    currentPhaseName: "Phase 2 - Triển khai",
-    createdAt: "2026-01-10T08:00:00",
-  },
-  {
-    id: 2,
-    projectCode: "PRJ-IT-002",
-    name: "Nâng cấp hạ tầng mạng",
-    status: "ACTIVE",
-    totalBudget: 80_000_000,
-    availableBudget: 8_500_000,
-    totalSpent: 71_500_000,
-    memberCount: 3,
-    currentPhaseId: 4,
-    currentPhaseName: "Phase 1 - Triển khai",
-    createdAt: "2026-02-15T08:00:00",
-  },
-  {
-    id: 3,
-    projectCode: "PRJ-IT-003",
-    name: "Nghiên cứu AI integration",
-    status: "PLANNING",
-    totalBudget: 50_000_000,
-    availableBudget: 50_000_000,
-    totalSpent: 0,
-    memberCount: 2,
-    currentPhaseId: null,
-    currentPhaseName: null,
-    createdAt: "2026-03-20T08:00:00",
-  },
-];
-
 
 function parseItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
@@ -197,16 +95,16 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 hover:shadow-md hover:border-slate-300 transition-all"
+      className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/10"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-slate-500">{title}</p>
-          <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
+          <p className="text-sm font-medium text-slate-500">{title}</p>
+          <p className={`mt-2 text-2xl font-bold ${accent}`}>{value}</p>
           {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
         </div>
         <span
-          className={`w-9 h-9 rounded-lg ${iconGradient} text-white flex items-center justify-center shadow-sm`}
+          className={`flex h-11 w-11 items-center justify-center rounded-2xl ${iconGradient} text-white shadow-sm`}
         >
           {icon}
         </span>
@@ -218,6 +116,7 @@ function StatCard({
 export function ManagerDashboard() {
   const { user } = useAuth();
   const { fetchWallet } = useWallet();
+  const toast = useToast();
 
   const [dashboard, setDashboard] = useState<ManagerDashboardResponse | null>(
     null,
@@ -232,7 +131,6 @@ export function ManagerDashboard() {
   const [quotaAmount, setQuotaAmount] = useState("");
   const [quotaDescription, setQuotaDescription] = useState("");
   const [quotaSubmitting, setQuotaSubmitting] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -271,16 +169,14 @@ export function ManagerDashboard() {
       } catch (err) {
         if (cancelled) return;
 
-        setDashboard(MOCK_DASHBOARD);
-        setApprovals(MOCK_PENDING_APPROVALS);
-        setProjects(MOCK_PROJECTS);
+        setDashboard(null);
+        setApprovals([]);
+        setProjects([]);
 
         if (err instanceof ApiError) {
           setError(err.apiMessage);
         } else {
-          setError(
-            "Không thể tải dashboard từ API, đang hiển thị dữ liệu mẫu.",
-          );
+          setError("Không thể tải dữ liệu dashboard.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -310,25 +206,27 @@ export function ManagerDashboard() {
     projects.filter((p) => p.status === "ACTIVE").length;
   const pendingCount = dashboard?.pendingApprovalsCount ?? approvals.length;
   const deptBalance = dashboard?.departmentBudget.totalAvailableBalance ?? 0;
+  const deptQuota = dashboard?.departmentBudget.totalProjectQuota ?? 0;
+  const deptSpent = dashboard?.departmentBudget.totalSpent ?? Math.max(0, deptQuota - deptBalance);
   const teamDebt = dashboard?.teamDebtSummary.totalDebt ?? 0;
   const debtUsers = dashboard?.teamDebtSummary.employeesWithDebt ?? 0;
+  const pendingAmount = approvals.reduce((sum, item) => sum + item.amount, 0);
 
   const handleOpenQuotaModal = () => {
     setQuotaAmount("");
     setQuotaDescription("");
-    setNotice(null);
     setShowQuotaModal(true);
   };
 
   const handleCreateQuotaTopup = async () => {
     const amountNumber = Number(quotaAmount);
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-      setNotice("Số tiền xin cấp vốn phải lớn hơn 0.");
+      toast.error("Số tiền xin cấp vốn phải lớn hơn 0.");
       return;
     }
 
     if (quotaDescription.trim().length < 10) {
-      setNotice("Mô tả cần ít nhất 10 ký tự.");
+      toast.error("Mô tả cần ít nhất 10 ký tự.");
       return;
     }
 
@@ -340,37 +238,46 @@ export function ManagerDashboard() {
         amount: amountNumber,
         description: quotaDescription.trim(),
       });
-      setNotice("Đã gửi yêu cầu xin cấp vốn phòng ban.");
-    } catch {
-      setNotice("API chưa sẵn sàng, đã mô phỏng gửi yêu cầu xin cấp vốn.");
-    } finally {
-      setQuotaSubmitting(false);
       setShowQuotaModal(false);
       setQuotaAmount("");
       setQuotaDescription("");
+      toast.success("Đã gửi yêu cầu xin cấp vốn phòng ban.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể gửi yêu cầu cấp vốn. Vui lòng thử lại.");
+    } finally {
+      setQuotaSubmitting(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Xin chào, {user?.fullName ?? "Quản lý"}
-          </h1>
-          <p className="text-slate-500 mt-1">Hôm nay là {todayLabel}</p>
+      <section className="overflow-hidden rounded-3xl border border-indigo-200 bg-linear-to-br from-indigo-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-indigo-900/15">
+        <div className="relative px-6 py-7 sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Manager dashboard</p>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                Xin chào, {user?.fullName ?? "Quản lý"}
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
+                Hôm nay là {todayLabel}. Theo dõi quỹ phòng ban, dự án, cấp vốn và dư nợ trong một màn hình.
+              </p>
+            </div>
+            <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-emerald-300" />
+              Quản lý
+            </div>
+          </div>
         </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
-          Quản lý
-        </span>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {loading ? (
           [...Array(4)].map((_, index) => (
             <div
               key={`manager-stat-skeleton-${index}`}
-              className="h-24 rounded-2xl bg-white animate-pulse"
+              className="h-28 animate-pulse rounded-3xl bg-white"
             />
           ))
         ) : (
@@ -470,17 +377,42 @@ export function ManagerDashboard() {
         )}
       </div>
 
+      {!loading && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="rounded-3xl border border-blue-100 bg-blue-50/70 p-5">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-bold text-blue-900">Tổng quan quỹ phòng ban</p>
+                <p className="mt-1 text-sm text-blue-700">Đã dùng {formatCurrency(deptSpent)} / {formatCurrency(deptQuota)}</p>
+              </div>
+              <p className="text-2xl font-bold text-blue-900">{formatCurrency(deptBalance)}</p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-indigo-100 bg-indigo-50/70 p-5">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-bold text-indigo-900">PROJECT_TOPUP đang chờ</p>
+                <p className="mt-1 text-sm text-indigo-700">Tổng giá trị các đề xuất mới nhất</p>
+              </div>
+              <p className="text-2xl font-bold text-indigo-900">{formatCurrency(pendingAmount)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">
-              PROJECT_TOPUP chờ duyệt
-            </h2>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">PROJECT_TOPUP chờ duyệt</h2>
+              <p className="mt-1 text-sm text-slate-500">Các đề xuất cấp vốn mới từ Team Leader.</p>
+            </div>
             <Link
               href="/manager/approvals"
-              className="text-sm text-blue-700 hover:text-blue-600"
+              className="rounded-xl bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
             >
-              Xem tất cả →
+              Xem tất cả
             </Link>
           </div>
 
@@ -489,7 +421,7 @@ export function ManagerDashboard() {
               {[...Array(3)].map((_, index) => (
                 <div
                   key={`manager-approval-skeleton-${index}`}
-                  className="h-24 rounded-xl bg-white animate-pulse"
+                  className="h-24 animate-pulse rounded-2xl bg-slate-100"
                 />
               ))}
             </div>
@@ -503,7 +435,7 @@ export function ManagerDashboard() {
                 <Link
                   key={item.id}
                   href={`/manager/approvals/${item.id}`}
-                  className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
+                  className="block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-200 hover:bg-blue-50/30"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="space-y-2 min-w-0">
@@ -537,16 +469,17 @@ export function ManagerDashboard() {
           )}
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Dự án phòng ban
-            </h2>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Dự án phòng ban</h2>
+              <p className="mt-1 text-sm text-slate-500">Tóm tắt mức tiêu hao ngân sách.</p>
+            </div>
             <Link
               href="/manager/projects"
-              className="text-sm text-blue-700 hover:text-blue-600"
+              className="rounded-xl bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
             >
-              Xem tất cả →
+              Xem tất cả
             </Link>
           </div>
 
@@ -555,7 +488,7 @@ export function ManagerDashboard() {
               {[...Array(3)].map((_, index) => (
                 <div
                   key={`manager-project-skeleton-${index}`}
-                  className="h-24 rounded-xl bg-white animate-pulse"
+                  className="h-24 animate-pulse rounded-2xl bg-slate-100"
                 />
               ))}
             </div>
@@ -571,7 +504,7 @@ export function ManagerDashboard() {
                   <Link
                     key={project.id}
                     href={`/manager/projects/${project.id}`}
-                    className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 hover:bg-white/70 transition-all"
+                    className="block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-200 hover:bg-blue-50/30"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-semibold text-slate-900 truncate">
@@ -619,13 +552,16 @@ export function ManagerDashboard() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-        <h2 className="text-lg font-semibold text-slate-900">Thao tác nhanh</h2>
-        <div className="mt-3 flex flex-wrap gap-3">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Thao tác nhanh</h2>
+          <p className="mt-1 text-sm text-slate-500">Đi thẳng tới các workflow quản lý thường dùng.</p>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
           <button
             type="button"
             onClick={handleOpenQuotaModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-500"
           >
             <svg
               className="w-4 h-4"
@@ -645,7 +581,7 @@ export function ManagerDashboard() {
 
           <Link
             href="/wallet"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50"
           >
             <svg
               className="w-4 h-4"
@@ -671,12 +607,6 @@ export function ManagerDashboard() {
         </div>
       )}
 
-      {notice && (
-        <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
-          {notice}
-        </div>
-      )}
-
       {showQuotaModal && (
         <div className="fixed inset-0 z-50">
           <button
@@ -686,14 +616,17 @@ export function ManagerDashboard() {
             aria-label="Đóng modal xin cấp vốn phòng ban"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">
-              Xin cấp vốn phòng ban
-            </h3>
-            <p className="text-sm text-slate-500">
-              Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.
-            </p>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl shadow-slate-950/20">
+            <div className="mb-5">
+              <h3 className="text-xl font-bold text-slate-900">
+                Xin cấp vốn phòng ban
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.
+              </p>
+            </div>
 
+            <div className="space-y-5">
             <div>
               <label className="block text-sm text-slate-600 mb-2">
                 Số tiền cần cấp
@@ -704,7 +637,7 @@ export function ManagerDashboard() {
                 value={quotaAmount}
                 onChange={(event) => setQuotaAmount(event.target.value)}
                 placeholder="Ví dụ: 100000000"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               />
             </div>
 
@@ -717,15 +650,16 @@ export function ManagerDashboard() {
                 value={quotaDescription}
                 onChange={(event) => setQuotaDescription(event.target.value)}
                 placeholder="Mô tả lý do xin cấp vốn..."
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               />
             </div>
+            </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex items-center justify-end gap-3 pt-5">
               <button
                 type="button"
                 onClick={() => setShowQuotaModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
               >
                 Hủy
               </button>
@@ -733,7 +667,7 @@ export function ManagerDashboard() {
                 type="button"
                 onClick={handleCreateQuotaTopup}
                 disabled={quotaSubmitting}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {quotaSubmitting ? "Đang gửi..." : "Gửi yêu cầu"}
               </button>

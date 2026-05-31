@@ -102,3 +102,37 @@ export interface AdminDashboardResponse {
     createdAt: string;
   }[];
 }
+
+// --- Analytics (shared) ---
+
+export interface CashFlowPoint {
+  label: string;
+  inflow: number;
+  outflow: number;
+}
+
+/** GET /dashboard/analytics/cashflow?period=...&unit=... */
+export interface CashFlowAnalyticsResponse {
+  period: string;
+  points: CashFlowPoint[];
+  totalInflow: number;
+  totalOutflow: number;
+}
+
+// --- Admin Analytics ---
+
+/** GET /dashboard/admin/analytics */
+export interface AdminAnalyticsResponse {
+  deptSpending: {
+    deptId: number;
+    deptName: string;
+    spent: number;
+  }[];
+  topDebtors: {
+    userId: number;
+    fullName: string;
+    deptName: string;
+    outstandingAmount: number;
+    daysSinceDisbursement: number;
+  }[];
+}

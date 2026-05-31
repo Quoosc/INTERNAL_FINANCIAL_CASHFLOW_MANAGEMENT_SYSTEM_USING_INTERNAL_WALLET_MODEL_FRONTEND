@@ -319,7 +319,7 @@ Không còn blocker. 48/51 dashboard pages dùng API thật. 3 pages static: `ad
 
 **Sprint 16 đã giải quyết:** analytics charts (Admin + Accountant), deposit filter, PIN attempts, dashboard URL fixes.
 
-**Còn tồn đọng:** Export CSV/PDF (chưa có backend endpoint). `MOCK_MONTHLY` trong `employee-dashboard.tsx` (chart chi tiêu cá nhân theo tháng). Xem `TODO_IMPROVEMENTS.md §2`.
+**Còn tồn đọng:** Export CSV/PDF (chưa có backend endpoint) — xem `TODO_IMPROVEMENTS.md §2`. ~~`MOCK_MONTHLY` trong `employee-dashboard.tsx`~~ đã thay bằng API thật `GET /api/v1/dashboard/analytics/employee` (Sprint 17).
 
 ---
 

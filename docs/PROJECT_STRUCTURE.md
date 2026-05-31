@@ -70,11 +70,11 @@ financial-wallet-frontend/
 │   │   │   │   └── [id]/page.tsx    # [Client] ✅ LIVE
 │   │   │   ├── withdrawals/page.tsx # [Client] ✅ LIVE — quản lý rút tiền user (execute/reject)
 │   │   │   ├── payroll/             # Quản lý bảng lương (import Excel, run)
-│   │   │   │   ├── page.tsx         # [Client] ⛔ BLOCKED — AccountantPayrollController chưa có
-│   │   │   │   └── [id]/page.tsx    # [Client] ⛔ BLOCKED
+│   │   │   │   ├── page.tsx         # [Client] ✅ LIVE (Sprint 10)
+│   │   │   │   └── [id]/page.tsx    # [Client] ✅ LIVE (Sprint 10)
 │   │   │   └── ledger/              # Sổ cái double-entry
-│   │   │       ├── page.tsx         # [Client] ⛔ BLOCKED — AccountantLedgerController chưa có
-│   │   │       └── [id]/page.tsx    # [Client] ⛔ BLOCKED
+│   │   │       ├── page.tsx         # [Client] ✅ LIVE (Sprint 10)
+│   │   │       └── [id]/page.tsx    # [Client] ✅ LIVE (Sprint 10)
 │   │   │
 │   │   ├── cfo/                     # CFO only — quản trị tài chính
 │   │   │   ├── approvals/           # Flow 3: duyệt DEPARTMENT_TOPUP
@@ -224,10 +224,12 @@ financial-wallet-frontend/
 
 ## Pages còn BLOCKED (backend chưa implement)
 
-| Route | Cần cho | Lý do |
+> **Cập nhật 2026-06-01:** Tất cả pages đã được implement. Không còn trang BLOCKED.
+
+| Route | Trạng thái | Ghi chú |
 |---|---|---|
-| `app/(dashboard)/accountant/payroll/*` | Quản lý bảng lương | `AccountantPayrollController` chưa có |
-| `app/(dashboard)/accountant/ledger/*` | Sổ cái double-entry | `AccountantLedgerController` chưa có |
-| `app/(dashboard)/dashboard/page.tsx` | Live stats 6 roles | `/api/v1/dashboard/*` chưa có — render mock |
+| `app/(dashboard)/accountant/payroll/*` | ✅ LIVE | `AccountantPayrollController` — Sprint 10 |
+| `app/(dashboard)/accountant/ledger/*` | ✅ LIVE | `AccountantLedgerController` (trong wallet module) — Sprint 10 |
+| `app/(dashboard)/dashboard/page.tsx` | ✅ LIVE | `/api/v1/dashboard/*` — Sprint 16 |
 
 > Tất cả orphaned pages (`register`, `create-pin`) đã bị xóa khỏi codebase (2026-04-30).

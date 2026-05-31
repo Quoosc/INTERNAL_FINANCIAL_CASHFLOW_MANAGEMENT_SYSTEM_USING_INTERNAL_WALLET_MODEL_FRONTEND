@@ -428,6 +428,7 @@ Trả về danh sách các khoản tạm ứng **chưa hoàn toàn hoàn trả**
 | PUT    | `/team-leader/projects/:id/phases/:phaseId` — body: `{ name?, budgetLimit?, endDate?, status? }` |
 | GET    | `/team-leader/projects/:id/categories?phaseId=`                                                  |
 | PUT    | `/team-leader/projects/:id/categories` — body: `{ phaseId, categoryId, budgetLimit }`            |
+| DELETE | `/team-leader/projects/:id/categories` — body: `{ phaseId, categoryId }` — disabled khi `currentSpent > 0` |
 | GET    | `/team-leader/expense-categories?projectId=`                                                     |
 
 ### Team Members

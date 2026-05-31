@@ -186,6 +186,7 @@ export interface VerifyPinRequest {
 /** POST /users/me/pin/verify — response */
 export interface VerifyPinResponse {
   valid: boolean;
+  attemptsRemaining?: number;
 }
 
 /** PUT /users/me/avatar — response */

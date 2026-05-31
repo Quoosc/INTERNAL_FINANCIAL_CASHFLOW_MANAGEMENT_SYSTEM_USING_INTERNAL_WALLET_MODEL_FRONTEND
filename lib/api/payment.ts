@@ -18,13 +18,23 @@ export async function createDeposit(input: {
   });
 }
 
-/** GET /api/v1/wallet/deposit/my — lịch sử nạp tiền của user hiện tại (Spring Page, 0-indexed). */
-export async function getMyDeposits(page = 0, size = 10) {
+/** GET /api/v1/wallet/deposit/my — lịch sử nạp tiền của user hiện tại (0-indexed page). */
+export async function getMyDeposits(
+  page = 0,
+  size = 10,
+  filters?: { status?: string; from?: string; to?: string },
+) {
+  const q = new URLSearchParams();
+  q.set("page", String(page));
+  q.set("size", String(size));
+  if (filters?.status) q.set("status", filters.status);
+  if (filters?.from)   q.set("from",   filters.from);
+  if (filters?.to)     q.set("to",     filters.to);
   return api.get<{
-    content: DepositLogResponse[];
-    totalElements: number;
+    items: DepositLogResponse[];
+    total: number;
     totalPages: number;
-    number: number;
+    page: number;
     size: number;
-  }>(`/api/v1/wallet/deposit/my?page=${page}&size=${size}`);
+  }>(`/api/v1/wallet/deposit/my?${q.toString()}`);
 }

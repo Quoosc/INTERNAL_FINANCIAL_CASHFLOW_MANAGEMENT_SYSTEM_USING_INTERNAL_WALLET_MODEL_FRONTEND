@@ -10,6 +10,13 @@ import { DepositLogResponse, DepositStatus } from "@/types";
 
 const PAGE_SIZE = 10;
 
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: "",                      label: "Tất cả" },
+  { value: DepositStatus.COMPLETED, label: "Thành công" },
+  { value: DepositStatus.PENDING,   label: "Đang chờ" },
+  { value: DepositStatus.FAILED,    label: "Thất bại" },
+];
+
 function getStatusLabel(status: DepositStatus): string {
   switch (status) {
     case DepositStatus.COMPLETED:
@@ -44,21 +51,25 @@ export default function DepositHistoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const loadDeposits = useCallback(async (nextPage: number) => {
-    let cancelled = false;
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+
+  const loadDeposits = useCallback(async (nextPage: number, status: string, from: string, to: string) => {
     setLoading(true);
 
     try {
-      const res = await getMyDeposits(nextPage, PAGE_SIZE);
-      if (cancelled) return;
+      const res = await getMyDeposits(nextPage, PAGE_SIZE, {
+        status: status || undefined,
+        from: from || undefined,
+        to: to || undefined,
+      });
 
-      setDeposits(res.data.content);
-      setTotal(res.data.totalElements);
+      setDeposits(res.data.items ?? []);
+      setTotal(res.data.total);
       setTotalPages(Math.max(1, res.data.totalPages));
-      setPage(res.data.number);
+      setPage(res.data.page);
     } catch (err) {
-      if (cancelled) return;
-
       setDeposits([]);
       setTotal(0);
       setTotalPages(1);
@@ -69,29 +80,49 @@ export default function DepositHistoryPage() {
         toast.error("Không thể tải lịch sử nạp tiền.");
       }
     } finally {
-      if (!cancelled) setLoading(false);
+      setLoading(false);
     }
-
-    return () => {
-      cancelled = true;
-    };
   }, [toast]);
 
   useEffect(() => {
-    void loadDeposits(0);
+    void loadDeposits(0, filterStatus, filterFrom, filterTo);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadDeposits]);
+
+  const applyFilters = () => {
+    void loadDeposits(0, filterStatus, filterFrom, filterTo);
+  };
+
+  const resetFilters = () => {
+    setFilterStatus("");
+    setFilterFrom("");
+    setFilterTo("");
+    void loadDeposits(0, "", "", "");
+  };
 
   const handlePageChange = (nextPage: number) => {
     if (nextPage < 0 || nextPage >= totalPages || nextPage === page) return;
-    void loadDeposits(nextPage);
+    void loadDeposits(nextPage, filterStatus, filterFrom, filterTo);
   };
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Deposit history</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Filter VNPay top-up transactions by status and payment date.</p>
+          </div>
+        </div>
+      </section>
+
       <div className="flex items-center gap-3">
         <Link
           href="/wallet/deposit"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -105,27 +136,83 @@ export default function DepositHistoryPage() {
         <p className="text-slate-500 mt-1">Toàn bộ các lần nạp tiền VNPay của bạn.</p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      {/* Filters */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Trạng thái</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Từ ngày</label>
+            <input
+              type="date"
+              value={filterFrom}
+              onChange={(e) => setFilterFrom(e.target.value)}
+              className="px-3 py-2 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Đến ngày</label>
+            <input
+              type="date"
+              value={filterTo}
+              onChange={(e) => setFilterTo(e.target.value)}
+              className="px-3 py-2 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={applyFilters}
+            disabled={loading}
+            className="px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+          >
+            Lọc
+          </button>
+
+          <button
+            type="button"
+            onClick={resetFilters}
+            disabled={loading}
+            className="px-4 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-700 text-sm font-medium transition-colors"
+          >
+            Xóa lọc
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-200">
-            <thead>
-              <tr className="border-b border-slate-200 bg-white/40">
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-200 bg-blue-50/60">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Mã nạp tiền
                 </th>
-                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                   Số tiền
                 </th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Trạng thái
                 </th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Mã giao dịch VNPay
                 </th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Thời gian thanh toán
                 </th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Ngày tạo
                 </th>
               </tr>
@@ -169,7 +256,7 @@ export default function DepositHistoryPage() {
                           <button
                             type="button"
                             onClick={() => window.open(deposit.paymentUrl!, "_blank", "noopener,noreferrer")}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -209,7 +296,7 @@ export default function DepositHistoryPage() {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 0 || loading}
-              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Trước
             </button>
@@ -217,14 +304,13 @@ export default function DepositHistoryPage() {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages - 1 || loading}
-              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Sau
             </button>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

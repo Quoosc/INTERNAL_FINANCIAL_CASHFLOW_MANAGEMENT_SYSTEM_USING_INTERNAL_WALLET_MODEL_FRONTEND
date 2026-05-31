@@ -258,7 +258,12 @@ export default function AccountantDisbursementDetailPage({
       // Pre-verify PIN trước khi thực hiện giải ngân
       const verifyRes = await api.post<VerifyPinResponse>("/api/v1/users/me/pin/verify", { pin });
       if (!verifyRes.data.valid) {
-        setPinError("Mã PIN không đúng. Vui lòng kiểm tra lại.");
+        const remaining = verifyRes.data.attemptsRemaining;
+        setPinError(
+          remaining !== undefined && remaining > 0
+            ? `Mã PIN không đúng. Còn ${remaining} lần thử.`
+            : "Mã PIN không đúng. Vui lòng kiểm tra lại.",
+        );
         setSubmitting(false);
         return;
       }
@@ -318,6 +323,18 @@ export default function AccountantDisbursementDetailPage({
   if (loading) {
     return (
       <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Disbursement detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Process payout, verify OTP, inspect evidence and approval timeline.</p>
+          </div>
+        </div>
+      </section>
+
         <div className="h-8 w-60 rounded bg-white animate-pulse" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="h-120 rounded-2xl bg-white animate-pulse" />
@@ -349,7 +366,7 @@ export default function AccountantDisbursementDetailPage({
           </svg>
           Quay lại danh sách
         </Link>
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-500">
           Không tìm thấy yêu cầu giải ngân.
         </div>
       </div>
@@ -358,6 +375,18 @@ export default function AccountantDisbursementDetailPage({
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Disbursement detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Process payout, verify OTP, inspect evidence and approval timeline.</p>
+          </div>
+        </div>
+      </section>
+
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link
           href="/accountant/disbursements"
@@ -371,7 +400,7 @@ export default function AccountantDisbursementDetailPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
                 <p className="text-xs text-slate-500">Mã yêu cầu</p>
@@ -395,7 +424,7 @@ export default function AccountantDisbursementDetailPage({
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
               Approval chain
             </h2>
@@ -429,13 +458,13 @@ export default function AccountantDisbursementDetailPage({
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
               Thông tin người nhận
             </h2>
 
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-900 flex items-center justify-center text-sm font-semibold">
+              <div className="w-11 h-11 rounded-full border border-slate-200 bg-white text-slate-900 flex items-center justify-center text-sm font-semibold">
                 {getInitials(detail.requester.fullName)}
               </div>
               <div>
@@ -467,7 +496,7 @@ export default function AccountantDisbursementDetailPage({
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
               Thông tin yêu cầu
             </h2>
@@ -491,7 +520,7 @@ export default function AccountantDisbursementDetailPage({
               />
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">Mô tả</p>
               <p className="text-sm text-slate-700 mt-1 whitespace-pre-line">
                 {detail.description ?? "Không có mô tả"}
@@ -499,7 +528,7 @@ export default function AccountantDisbursementDetailPage({
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
               Compliance checklist
             </h2>
@@ -542,7 +571,7 @@ export default function AccountantDisbursementDetailPage({
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
               Receipt Viewer
             </h2>
@@ -556,7 +585,7 @@ export default function AccountantDisbursementDetailPage({
                 {detail.attachments.map((file) => (
                   <div
                     key={file.fileId}
-                    className="rounded-xl border border-slate-200 bg-white p-3 space-y-2"
+                    className="rounded-2xl border border-slate-200 bg-white p-3 space-y-2"
                   >
                     <div className="flex items-start gap-2">
                       <span className="mt-0.5">
@@ -599,7 +628,7 @@ export default function AccountantDisbursementDetailPage({
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
               Xác nhận giải ngân
             </h2>
@@ -608,7 +637,7 @@ export default function AccountantDisbursementDetailPage({
             </p>
 
             <div
-              className={`rounded-xl border p-4 ${allChecked ? "border-emerald-200 bg-emerald-500/5" : "border-slate-200 bg-white"}`}
+              className={`rounded-2xl border p-4 ${allChecked ? "border-emerald-200 bg-emerald-500/5" : "border-slate-200 bg-white"}`}
             >
               <label className="block text-sm text-slate-600 mb-2">
                 Mã PIN (5 chữ số)
@@ -621,7 +650,7 @@ export default function AccountantDisbursementDetailPage({
                 onChange={(event) => handlePinChange(event.target.value)}
                 disabled={!allChecked || submitting}
                 placeholder="•••••"
-                className="w-full px-4 py-3 rounded-xl bg-blue-50 border border-slate-200 text-slate-900 tracking-[0.35em] text-center text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                className="w-full px-4 py-3 rounded-2xl bg-blue-50 border border-slate-200 text-slate-900 tracking-[0.35em] text-center text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
               />
               <textarea
                 rows={2}
@@ -629,7 +658,7 @@ export default function AccountantDisbursementDetailPage({
                 onChange={(event) => setDisburseNote(event.target.value)}
                 disabled={submitting}
                 placeholder="Ghi chú giải ngân (không bắt buộc)"
-                className="mt-3 w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                className="mt-3 w-full px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
               />
               {!allChecked && (
                 <p className="text-xs text-amber-700 mt-2">
@@ -645,7 +674,7 @@ export default function AccountantDisbursementDetailPage({
               type="button"
               onClick={handleDisburse}
               disabled={pin.length < 5 || submitting || !allChecked}
-              className="w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+              className="w-full px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
               {submitting
                 ? "Đang giải ngân..."
@@ -660,7 +689,7 @@ export default function AccountantDisbursementDetailPage({
                   setRejectReason("");
                   setRejectError(null);
                 }}
-                className="w-full px-4 py-3 rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 text-sm font-semibold transition-colors"
+                className="w-full px-4 py-3 rounded-2xl border border-rose-300 text-rose-700 hover:bg-rose-50 text-sm font-semibold transition-colors"
               >
                 Từ chối giải ngân
               </button>
@@ -678,7 +707,7 @@ export default function AccountantDisbursementDetailPage({
             aria-label="Đóng modal từ chối"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-slate-200 bg-white p-6 space-y-4">
             <h3 className="text-xl font-bold text-slate-900">
               Từ chối giải ngân - {detail.requestCode}
             </h3>
@@ -691,7 +720,7 @@ export default function AccountantDisbursementDetailPage({
                 rows={4}
                 value={rejectReason}
                 onChange={(event) => setRejectReason(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-rose-500/40"
               />
             </div>
 
@@ -712,7 +741,7 @@ export default function AccountantDisbursementDetailPage({
                         : reasonChip,
                     )
                   }
-                  className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-600 hover:bg-blue-100"
+                  className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-600 hover:bg-blue-50"
                 >
                   {reasonChip}
                 </button>
@@ -729,7 +758,7 @@ export default function AccountantDisbursementDetailPage({
               <button
                 type="button"
                 onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -737,7 +766,7 @@ export default function AccountantDisbursementDetailPage({
                 type="button"
                 onClick={() => void handleReject()}
                 disabled={rejectReason.trim().length < 10 || rejectSubmitting}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
               >
                 {rejectSubmitting ? "Đang xử lý..." : "Xác nhận từ chối"}
               </button>
@@ -771,7 +800,7 @@ export default function AccountantDisbursementDetailPage({
               </h3>
             </div>
 
-            <div className="space-y-2 rounded-xl border border-slate-200 bg-blue-50 p-4">
+            <div className="space-y-2 rounded-2xl border border-slate-200 bg-blue-50 p-4">
               <p className="text-sm text-slate-600">
                 Mã giao dịch:{" "}
                 <span className="font-mono text-slate-900">
@@ -789,7 +818,7 @@ export default function AccountantDisbursementDetailPage({
             <button
               type="button"
               onClick={() => router.push("/accountant/disbursements")}
-              className="w-full px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
+              className="w-full px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
             >
               Quay lại danh sách
             </button>
@@ -844,7 +873,7 @@ function TimelineStep({
           <span className="w-1.5 h-1.5 rounded-full bg-current" />
         )}
       </span>
-      <div className="rounded-xl border border-slate-200 bg-white p-3">
+      <div className="rounded-2xl border border-slate-200 bg-white p-3">
         <p className="text-sm font-medium text-slate-900">{title}</p>
         <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
         {note && <p className="text-xs text-slate-600 mt-1">{note}</p>}
@@ -866,7 +895,7 @@ function InfoCard({
   mono?: boolean;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p
         className={`text-sm mt-1 ${tone ?? "text-slate-900"} ${mono ? "font-mono" : ""}`}
@@ -889,7 +918,7 @@ function ChecklistItem({
   hint?: string;
 }) {
   return (
-    <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 cursor-pointer hover:border-slate-200 transition-colors">
+    <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 cursor-pointer hover:border-slate-200 transition-colors">
       <input
         type="checkbox"
         checked={checked}

@@ -69,10 +69,22 @@ export default function DepositPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">VNPay deposit</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Create a wallet top-up payment and keep the payment code ready for tracking.</p>
+          </div>
+        </div>
+      </section>
+
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -89,7 +101,7 @@ export default function DepositPage() {
         </div>
         <Link
           href="/wallet/deposit/my"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors shrink-0"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors shrink-0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -98,7 +110,7 @@ export default function DepositPage() {
         </Link>
       </div>
 
-      <form onSubmit={handleGeneratePayment} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+      <form onSubmit={handleGeneratePayment} className="rounded-3xl border border-slate-200 bg-white p-6 space-y-4">
         <div>
           <label htmlFor="amount" className="block text-sm font-medium text-slate-600 mb-2">
             Số tiền nạp
@@ -107,10 +119,10 @@ export default function DepositPage() {
             id="amount"
             type="text"
             inputMode="numeric"
-            placeholder="Nhập số tiền"
             value={amount}
-            onChange={(e) => handleAmountChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            onChange={(event) => handleAmountChange(event.target.value)}
+            placeholder="Nhập số tiền"
+            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
           <div className="flex items-center justify-between gap-3 mt-2 text-xs">
             <p className="text-slate-500">Tối thiểu: {formatCurrency(MIN_AMOUNT)}</p>
@@ -123,7 +135,7 @@ export default function DepositPage() {
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
         >
           {loading ? (
             <>
@@ -140,7 +152,7 @@ export default function DepositPage() {
       </form>
 
       {paymentData && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Thông tin thanh toán</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -150,7 +162,7 @@ export default function DepositPage() {
           </div>
 
           {paymentData.paymentUrl && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3 text-sm text-blue-700">
               Nhấn nút bên dưới để thanh toán qua VNPay. Số dư ví sẽ tự động cập nhật sau khi giao dịch thành công.
             </div>
           )}
@@ -160,7 +172,7 @@ export default function DepositPage() {
               type="button"
               onClick={handleOpenVnpay}
               disabled={!paymentData.paymentUrl}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
               Thanh toán qua VNPay
             </button>
@@ -168,7 +180,7 @@ export default function DepositPage() {
             <button
               type="button"
               onClick={() => void handleCopyCode()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
             >
               {copied ? "Đã sao chép mã" : "Sao chép mã nạp tiền"}
             </button>
@@ -189,7 +201,7 @@ function InfoRow({
   mono?: boolean;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm text-slate-900 mt-1 ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>

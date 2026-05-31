@@ -182,6 +182,8 @@ export default function NewRequestPage() {
   const [advanceOptions, setAdvanceOptions] = useState<AdvanceBalanceItem[]>([]);
   const [advanceBalanceId, setAdvanceBalanceId] = useState<number | undefined>(undefined);
   const [loadingAdvances, setLoadingAdvances] = useState(false);
+  const [loadingPhases, setLoadingPhases] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const [files, setFiles] = useState<UploadFileItem[]>([]);
 
@@ -253,7 +255,7 @@ export default function NewRequestPage() {
     let cancelled = false;
 
     const loadPhases = async () => {
-      setLoading(true);
+      setLoadingPhases(true);
 
       try {
         const phasesRes = await api.get<ProjectPhasesResponse>(
@@ -273,7 +275,7 @@ export default function NewRequestPage() {
           toast.error("Không thể tải phase dự án.");
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingPhases(false);
       }
     };
 
@@ -300,7 +302,7 @@ export default function NewRequestPage() {
     let cancelled = false;
 
     const loadCategories = async () => {
-      setLoading(true);
+      setLoadingCategories(true);
 
       try {
         const res = await api.get<{ items: ExpenseCategoryResponse[] } | ExpenseCategoryResponse[]>(
@@ -322,7 +324,7 @@ export default function NewRequestPage() {
           toast.error("Không thể tải danh sách hạng mục chi phí.");
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingCategories(false);
       }
     };
 
@@ -686,10 +688,10 @@ export default function NewRequestPage() {
                 setForm((prev) => ({ ...prev, phaseId: Number.isFinite(value) && value > 0 ? value : undefined, categoryId: undefined }));
                 if (fieldErrors.phaseId) setFieldErrors((p) => ({ ...p, phaseId: undefined }));
               }}
-              disabled={!isProjectBasedType || !form.projectId || loading}
+              disabled={!isProjectBasedType || !form.projectId || loadingPhases}
               className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.phaseId ? "border-rose-300" : "border-slate-200"}`}
             >
-              <option value="">{form.projectId ? "Chọn phase" : "Chọn dự án trước"}</option>
+              <option value="">{loadingPhases ? "Đang tải phase..." : form.projectId ? "Chọn phase" : "Chọn dự án trước"}</option>
               {(phases?.phases ?? []).map((phase) => (
                 <option key={phase.id} value={phase.id}>
                   [{phase.phaseCode}] {phase.name}
@@ -708,10 +710,10 @@ export default function NewRequestPage() {
                 setForm((prev) => ({ ...prev, categoryId: Number.isFinite(value) && value > 0 ? value : undefined }));
                 if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: undefined }));
               }}
-              disabled={!isProjectBasedType || !form.phaseId}
+              disabled={!isProjectBasedType || !form.phaseId || loadingCategories}
               className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.categoryId ? "border-rose-300" : "border-slate-200"}`}
             >
-              <option value="">{form.phaseId ? "Chọn hạng mục" : "Chọn phase trước"}</option>
+              <option value="">{loadingCategories ? "Đang tải hạng mục..." : form.phaseId ? "Chọn hạng mục" : "Chọn phase trước"}</option>
               {categoryOptions.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}

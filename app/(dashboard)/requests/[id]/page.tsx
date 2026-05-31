@@ -228,6 +228,7 @@ export default function RequestDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [sseVersion, setSseVersion] = useState(0);
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
     message: string;
@@ -238,6 +239,16 @@ export default function RequestDetailPage({ params }: PageProps) {
   const [editTitle, setEditTitle] = useState("");
   const [editExpenseDate, setEditExpenseDate] = useState("");
   const [editDescription, setEditDescription] = useState("");
+
+  useEffect(() => {
+    const numId = Number(id);
+    const handleNotification = (event: Event) => {
+      const n = (event as CustomEvent).detail as { refType?: string | null; refId?: number | null };
+      if (n?.refType === "REQUEST" && n?.refId === numId) setSseVersion((v) => v + 1);
+    };
+    window.addEventListener("notifications:new", handleNotification);
+    return () => window.removeEventListener("notifications:new", handleNotification);
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -270,7 +281,7 @@ export default function RequestDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, [id, toast]);
+  }, [id, toast, sseVersion]);
 
   const parsed = useMemo(
     () => parseDescription(request?.description ?? ""),

@@ -22,6 +22,13 @@ interface PageProps {
 }
 
 
+const REJECT_REASON_SUGGESTIONS = [
+  "Thiếu căn cứ sử dụng vốn",
+  "Mức đề xuất chưa phù hợp",
+  "Cần bổ sung kế hoạch chi tiết",
+  "Quỹ PB chưa đủ",
+];
+
 function statusClass(status: RequestStatus): string {
   switch (status) {
     case RequestStatus.PENDING:
@@ -501,8 +508,9 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleApprove}
                 disabled={submitting || maxApprovable <= 0}
-                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                {submitting && <svg className="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
                 {submitting ? "Đang xử lý..." : "Xác nhận duyệt"}
               </button>
             </div>
@@ -536,7 +544,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {["Thiếu căn cứ sử dụng vốn", "Mức đề xuất chưa phù hợp", "Cần bổ sung kế hoạch chi tiết", "Quỹ PB chưa đủ"].map(
+              {REJECT_REASON_SUGGESTIONS.map(
                 (chip) => (
                   <button
                     key={chip}
@@ -570,8 +578,9 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleReject}
                 disabled={rejectReason.trim().length < 10 || submitting}
-                className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                {submitting && <svg className="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
                 {submitting ? "Đang xử lý..." : "Xác nhận từ chối"}
               </button>
             </div>

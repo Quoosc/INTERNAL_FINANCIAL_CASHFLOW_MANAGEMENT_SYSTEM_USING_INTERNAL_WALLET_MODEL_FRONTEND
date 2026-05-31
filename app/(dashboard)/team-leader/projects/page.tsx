@@ -8,7 +8,7 @@ import {
   ProjectStatus,
   TLProjectListItem,
 } from "@/types";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, getBurnClass } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 
 const PAGE_LIMIT = 12;
@@ -60,13 +60,6 @@ function getBurnPercent(project: TLProjectListItem): number {
   if (project.totalBudget <= 0) return 0;
   return Math.min(100, Math.round((project.totalSpent / project.totalBudget) * 100));
 }
-
-function getBurnClass(percent: number): string {
-  if (percent >= 85) return "bg-rose-500";
-  if (percent >= 65) return "bg-amber-500";
-  return "bg-emerald-500";
-}
-
 
 export default function TLProjectsPage() {
   const router = useRouter();

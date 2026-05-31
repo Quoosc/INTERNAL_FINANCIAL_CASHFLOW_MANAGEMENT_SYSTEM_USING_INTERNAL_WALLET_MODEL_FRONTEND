@@ -2,241 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
-import { createWithdrawRequest, createDeposit } from "@/lib/api";
-import { withdrawSchema, depositSchema } from "@/lib/schemas";
-import { formatCurrency, formatDateTime, parseAmountInput } from "@/lib/format";
-import { ErrorAlert } from "@/components/ui/error-alert";
-import { CurrencyInput } from "@/components/ui/currency-input";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 import {
-  DepositLogResponse,
   LedgerEntryResponse,
   TransactionDirection,
-  WithdrawRequestResponse,
 } from "@/types";
 
 
-function DepositModal({ onClose }: { onClose: () => void }) {
-  const toast = useToast();
-  const [amount, setAmount] = useState("");
-  const [qrData, setQrData] = useState<DepositLogResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
-  const amountNum = useMemo(() => Number(amount || 0), [amount]);
-  const handleAmountChange = (value: string) => {
-    setAmount(parseAmountInput(value));
-  };
-
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const validation = depositSchema.safeParse({ amount: amountNum });
-    if (!validation.success) {
-      setError(validation.error.flatten().fieldErrors.amount?.[0] ?? "Số tiền không hợp lệ.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await createDeposit({ amount: amountNum });
-      setQrData(res.data);
-      toast.success("Tạo liên kết thanh toán thành công!");
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.apiMessage);
-      else setError("Không thể tạo liên kết thanh toán VNPay.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} aria-label="Đóng" />
-      <div className="relative w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-900">Nạp tiền qua VNPay</h2>
-          <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-
-        <div className="p-6 space-y-4">
-          {!qrData ? (
-            <form onSubmit={handleGenerate} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền nạp</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={amount}
-                  onChange={(event) => handleAmountChange(event.target.value)}
-                  placeholder="Nhập số tiền"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                />
-                <div className="flex items-center justify-between gap-3 mt-1 text-xs">
-                  <p className="text-slate-500">Tối thiểu: 10.000 ₫</p>
-                  {amountNum > 0 && (
-                    <p className="font-medium text-slate-700">{formatCurrency(amountNum)}</p>
-                  )}
-                </div>
-              </div>
-              {error && <ErrorAlert message={error} />}
-              <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold transition-colors">
-                {loading ? "Đang tạo..." : "Tạo thanh toán"}
-              </button>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <button type="button" onClick={() => { setQrData(null); setAmount(""); setError(null); }} className="text-xs text-blue-700 hover:text-blue-600">
-                  Tạo mới
-                </button>
-              </div>
-
-              <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-slate-500">Mã nạp tiền</span><span className="font-mono text-slate-900 text-xs">{qrData.depositCode}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(qrData.amount)}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Trạng thái</span><span className="text-slate-900">{qrData.status}</span></div>
-              </div>
-
-              {qrData.paymentUrl && (
-                <p className="text-xs text-blue-600">Số dư ví sẽ tự động cập nhật sau khi giao dịch thành công.</p>
-              )}
-
-              <button
-                type="button"
-                disabled={!qrData.paymentUrl}
-                onClick={() => { if (qrData.paymentUrl) window.open(qrData.paymentUrl, "_blank", "noopener,noreferrer"); }}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
-              >
-                Thanh toán VNPay
-              </button>
-
-              <button
-                type="button"
-                onClick={async () => { await navigator.clipboard.writeText(qrData.depositCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
-              >
-                {copied ? "Đã sao chép mã" : "Sao chép mã nạp tiền"}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBalance: number; balance: number } | null; onClose: () => void }) {
-  const { fetchWallet } = useWallet();
-  const toast = useToast();
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<WithdrawRequestResponse | null>(null);
-
-  const amountNum = useMemo(() => Number(amount || 0), [amount]);
-  const available = walletProp?.availableBalance ?? walletProp?.balance ?? 0;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const validation = withdrawSchema.safeParse({ amount: amountNum, note: note.trim() || undefined });
-    if (!validation.success) {
-      setError(validation.error.flatten().fieldErrors.amount?.[0] ?? "Số tiền không hợp lệ.");
-      return;
-    }
-    if (amountNum > available) {
-      setError("Số tiền rút không được vượt quá số dư khả dụng.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await createWithdrawRequest({ amount: amountNum, userNote: note.trim() || undefined });
-      setResult(res.data);
-      void fetchWallet();
-      toast.success("Yêu cầu rút tiền đã được tạo thành công!");
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.apiMessage);
-      else setError("Không thể kết nối API. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} aria-label="Đóng" />
-      <div className="relative w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-900">Rút tiền</h2>
-          <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-
-        <div className="p-6 space-y-4">
-          {!result ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="bg-slate-50 rounded-xl px-4 py-3">
-                <p className="text-xs text-slate-500">Số dư khả dụng</p>
-                <p className="text-xl font-bold text-slate-900 mt-0.5">{formatCurrency(available)}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền rút</label>
-                <CurrencyInput
-                  value={amountNum || null}
-                  onChange={(value) => setAmount(value ? String(value) : "")}
-                  placeholder="Nhập số tiền"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-2">Ghi chú (không bắt buộc)</label>
-                <textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ví dụ: Rút tiền chi tiêu cá nhân" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
-              </div>
-
-              {error && <ErrorAlert message={error} />}
-
-              <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-semibold transition-colors">
-                {loading ? "Đang gửi..." : "Gửi yêu cầu rút tiền"}
-              </button>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                </span>
-                <div>
-                  <p className="font-semibold text-slate-900">Đã tạo yêu cầu rút tiền</p>
-                  <p className="text-xs text-slate-500">Yêu cầu đang chờ xử lý bởi kế toán.</p>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-slate-500">Mã yêu cầu</span><span className="font-mono text-slate-900">{result.withdrawCode}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Số tiền</span><span className="font-semibold text-slate-900">{formatCurrency(result.amount)}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Trạng thái</span><span className="text-amber-700">{result.status}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Ngân hàng</span><span className="text-slate-900">{result.creditBankName}</span></div>
-              </div>
-
-              <button type="button" onClick={onClose} className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold transition-colors">
-                Đóng
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 type WalletTransactionsResponse =
   | { items: LedgerEntryResponse[]; total?: number }
@@ -270,8 +47,6 @@ export default function WalletPage() {
   const router = useRouter();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
-  const [showDeposit, setShowDeposit] = useState(false);
-  const [showWithdraw, setShowWithdraw] = useState(false);
   const [transactions, setTransactions] = useState<LedgerEntryResponse[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const toast = useToast();
@@ -380,9 +155,8 @@ export default function WalletPage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowWithdraw(true)}
+                <Link
+                  href="/wallet/withdraw"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-900 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,17 +164,16 @@ export default function WalletPage() {
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   Rút tiền
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeposit(true)}
+                </Link>
+                <Link
+                  href="/wallet/deposit"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-all text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
                   </svg>
                   Nạp tiền
-                </button>
+                </Link>
                 <Link
                   href="/wallet/deposit/my"
                   className="inline-flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-sm text-white/80 border border-white/10 rounded-xl text-sm hover:bg-white/15 transition-all"
@@ -504,8 +277,6 @@ export default function WalletPage() {
 
       </div>
 
-      {showDeposit && <DepositModal onClose={() => setShowDeposit(false)} />}
-      {showWithdraw && <WithdrawModal wallet={wallet} onClose={() => setShowWithdraw(false)} />}
     </div>
   );
 }

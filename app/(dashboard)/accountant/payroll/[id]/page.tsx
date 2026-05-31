@@ -369,37 +369,45 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       </div>
 
       {/* Step navigator */}
-      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm px-6 py-5">
+        <div className="flex items-center justify-between gap-2">
           {([
-            { step: 1 as const, title: "Upload Excel", done: hasEntries },
-            { step: 2 as const, title: "Review entries", done: hasEntries },
-            { step: 3 as const, title: "Auto-netting", done: hasNetting || isCompleted },
-            { step: 4 as const, title: "Chạy lương", done: isCompleted },
-          ] as const).map((item) => {
+            { step: 1 as const, title: "Nhập liệu", sub: "Import Excel", done: hasEntries },
+            { step: 2 as const, title: "Kiểm tra", sub: "Xem phiếu lương", done: hasEntries },
+            { step: 3 as const, title: "Khấu trừ", sub: "Auto-netting", done: hasNetting || isCompleted },
+            { step: 4 as const, title: "Chạy lương", sub: "Kết thúc", done: isCompleted },
+          ] as const).map((item, index, arr) => {
             const active = activeStep === item.step;
             const enabled = canOpenStep(item.step);
+            const isLast = index === arr.length - 1;
             return (
-              <button
-                key={item.step}
-                type="button"
-                disabled={!enabled}
-                onClick={() => setActiveStep(item.step)}
-                className={`rounded-2xl border px-3 py-3 text-left transition-colors ${
-                  active
-                    ? "border-blue-300 bg-blue-50 shadow-sm shadow-blue-500/10"
-                    : enabled
-                    ? "border-slate-200 bg-white hover:border-slate-300"
-                    : "border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className={`w-6 h-6 rounded-full border text-xs font-semibold flex items-center justify-center ${item.done ? "border-emerald-300 bg-emerald-50 text-emerald-700" : active ? "border-blue-300 bg-blue-50 text-blue-700" : "border-slate-500/40 bg-slate-100 text-slate-600"}`}>
-                    {item.done ? "✓" : item.step}
+              <div key={item.step} className="flex items-center flex-1">
+                <button
+                  type="button"
+                  disabled={!enabled}
+                  onClick={() => setActiveStep(item.step)}
+                  className="flex flex-col items-center gap-1.5 min-w-0 flex-1 group disabled:cursor-not-allowed"
+                >
+                  <span className={`w-9 h-9 rounded-full border-2 text-sm font-bold flex items-center justify-center transition-all ${
+                    item.done
+                      ? "border-emerald-400 bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
+                      : active
+                        ? "border-blue-400 bg-blue-500 text-white shadow-sm shadow-blue-500/30"
+                        : enabled
+                          ? "border-slate-300 bg-white text-slate-500 group-hover:border-slate-400"
+                          : "border-slate-200 bg-slate-50 text-slate-400"
+                  }`}>
+                    {item.done ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                    ) : item.step}
                   </span>
-                  <span className="text-sm text-slate-900">{item.title}</span>
-                </div>
-              </button>
+                  <span className={`text-xs font-semibold text-center leading-tight ${active ? "text-blue-700" : item.done ? "text-emerald-700" : "text-slate-500"}`}>{item.title}</span>
+                  <span className="text-[10px] text-slate-400 text-center hidden sm:block">{item.sub}</span>
+                </button>
+                {!isLast && (
+                  <div className={`h-0.5 flex-1 mx-2 rounded-full transition-colors ${item.done ? "bg-emerald-300" : "bg-slate-200"}`} />
+                )}
+              </div>
             );
           })}
         </div>

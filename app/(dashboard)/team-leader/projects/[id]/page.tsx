@@ -4,7 +4,7 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, getBurnClass } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SideDrawer } from "@/components/ui/side-drawer";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -39,11 +39,6 @@ function burn(spent: number, budget: number): number {
   return Math.min(100, Math.round((spent / budget) * 100));
 }
 
-function burnColor(percent: number): string {
-  if (percent >= 85) return "bg-rose-500";
-  if (percent >= 65) return "bg-amber-500";
-  return "bg-emerald-500";
-}
 
 function initials(name: string): string {
   return name
@@ -745,7 +740,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             <span>{overallBurn}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-            <div className={`h-full rounded-full ${burnColor(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
+            <div className={`h-full rounded-full ${getBurnClass(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
           </div>
         </div>
       </div>
@@ -817,7 +812,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className={`h-full rounded-full ${burnColor(pct)}`}
+                    className={`h-full rounded-full ${getBurnClass(pct)}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

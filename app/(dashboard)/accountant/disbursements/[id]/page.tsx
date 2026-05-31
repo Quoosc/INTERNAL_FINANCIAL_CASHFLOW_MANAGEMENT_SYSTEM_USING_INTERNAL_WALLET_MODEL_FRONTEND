@@ -148,6 +148,7 @@ export default function AccountantDisbursementDetailPage({
   const [disburseNote, setDisburseNote] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [disburseStage, setDisburseStage] = useState<"verifying" | "disbursing" | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successData, setSuccessData] = useState<DisburseSuccessView | null>(
     null,
@@ -252,6 +253,7 @@ export default function AccountantDisbursementDetailPage({
     }
 
     setSubmitting(true);
+    setDisburseStage("verifying");
     setPinError(null);
 
     try {
@@ -265,9 +267,11 @@ export default function AccountantDisbursementDetailPage({
             : "Mã PIN không đúng. Vui lòng kiểm tra lại.",
         );
         setSubmitting(false);
+        setDisburseStage(null);
         return;
       }
 
+      setDisburseStage("disbursing");
       const body: DisburseBody = {
         pin,
         note: disburseNote.trim() || undefined,
@@ -291,6 +295,7 @@ export default function AccountantDisbursementDetailPage({
       }
     } finally {
       setSubmitting(false);
+      setDisburseStage(null);
     }
   }
 
@@ -674,11 +679,14 @@ export default function AccountantDisbursementDetailPage({
               type="button"
               onClick={handleDisburse}
               disabled={pin.length < 5 || submitting || !allChecked}
-              className="w-full px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
-              {submitting
-                ? "Đang giải ngân..."
-                : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
+              {submitting && <svg className="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+              {disburseStage === "verifying"
+                ? "Đang xác thực PIN..."
+                : disburseStage === "disbursing"
+                  ? "Đang giải ngân..."
+                  : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
             </button>
 
             {canProcessDisbursement && (
@@ -766,8 +774,9 @@ export default function AccountantDisbursementDetailPage({
                 type="button"
                 onClick={() => void handleReject()}
                 disabled={rejectReason.trim().length < 10 || rejectSubmitting}
-                className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
               >
+                {rejectSubmitting && <svg className="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
                 {rejectSubmitting ? "Đang xử lý..." : "Xác nhận từ chối"}
               </button>
             </div>

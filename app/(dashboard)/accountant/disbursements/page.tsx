@@ -11,7 +11,7 @@ import {
   PaginatedResponse,
   RequestType,
 } from "@/types";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, getFundHealth, getFundHealthClass } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
 import { toApiPage } from "@/lib/adapters/pagination";
@@ -45,25 +45,6 @@ function parseTypeQuery(value: string | null): RequestType | undefined {
 
 function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
-}
-
-function getFundHealth(balance: number): "HEALTHY" | "LOW" | "CRITICAL" {
-  if (balance >= 500_000_000) return "HEALTHY";
-  if (balance >= 100_000_000) return "LOW";
-  return "CRITICAL";
-}
-
-function getFundHealthClass(health: "HEALTHY" | "LOW" | "CRITICAL"): string {
-  switch (health) {
-    case "HEALTHY":
-      return "bg-emerald-100 border-emerald-200 text-emerald-700";
-    case "LOW":
-      return "bg-amber-100 border-amber-200 text-amber-700";
-    case "CRITICAL":
-      return "bg-rose-100 border-rose-200 text-rose-700";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-  }
 }
 
 function getRequestTypeLabel(type: RequestType): string {

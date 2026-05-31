@@ -12,7 +12,7 @@ import {
   ProjectStatus,
   TeamLeaderOptionResponse,
 } from "@/types";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, getBurnClass } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { SideDrawer } from "@/components/ui/side-drawer";
 
@@ -98,12 +98,6 @@ function MetricCard({
       <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
-}
-
-function burnClass(percent: number): string {
-  if (percent >= 85) return "bg-rose-500";
-  if (percent >= 65) return "bg-amber-500";
-  return "bg-emerald-500";
 }
 
 function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
@@ -532,7 +526,7 @@ export default function ManagerProjectsPage() {
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                     <div
-                      className={`h-full rounded-full ${burnClass(burn)}`}
+                      className={`h-full rounded-full ${getBurnClass(burn)}`}
                       style={{ width: `${burn}%` }}
                     />
                   </div>

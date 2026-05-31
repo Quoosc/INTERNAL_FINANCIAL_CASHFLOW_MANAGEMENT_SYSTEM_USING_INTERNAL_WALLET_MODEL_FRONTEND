@@ -11,7 +11,7 @@ import {
   TeamLeaderOptionResponse,
   UpdateProjectBody,
 } from "@/types";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, getBurnClass } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
@@ -54,11 +54,6 @@ function burnPercent(totalSpent: number, totalBudget: number): number {
   return Math.min(100, Math.round((totalSpent / totalBudget) * 100));
 }
 
-function burnClass(percent: number): string {
-  if (percent >= 85) return "bg-rose-500";
-  if (percent >= 65) return "bg-amber-500";
-  return "bg-emerald-500";
-}
 
 
 export default function ManagerProjectDetailPage({ params }: PageProps) {
@@ -300,7 +295,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             <span>{overallBurn}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-            <div className={`h-full rounded-full ${burnClass(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
+            <div className={`h-full rounded-full ${getBurnClass(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
           </div>
         </div>
       </div>
@@ -349,7 +344,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                   </div>
 
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className={`h-full rounded-full ${burnClass(phaseBurn)}`} style={{ width: `${phaseBurn}%` }} />
+                    <div className={`h-full rounded-full ${getBurnClass(phaseBurn)}`} style={{ width: `${phaseBurn}%` }} />
                   </div>
 
                   <div className="mt-3 flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">

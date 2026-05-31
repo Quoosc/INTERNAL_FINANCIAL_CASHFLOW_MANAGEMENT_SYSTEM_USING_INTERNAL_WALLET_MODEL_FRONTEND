@@ -97,6 +97,8 @@ export default function AccountantLedgerPage() {
 
   const [summary, setSummary] = useState<LedgerSummaryResponse | null>(null);
   const [items, setItems]     = useState<AccountantLedgerItemResponse[]>([]);
+  const [sortBy, setSortBy]   = useState<"amount" | "timestamp" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [total, setTotal]     = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -203,6 +205,26 @@ export default function AccountantLedgerPage() {
   const pageOutflow = useMemo(
     () => items.filter((item) => item.direction === TransactionDirection.DEBIT).reduce((sum, item) => sum + item.amount, 0),
     [items],
+  );
+
+  const sortedItems = useMemo(() => {
+    if (!sortBy) return items;
+    return [...items].sort((a, b) => {
+      const av = sortBy === "amount" ? a.amount : new Date(a.timestamp).getTime();
+      const bv = sortBy === "amount" ? b.amount : new Date(b.timestamp).getTime();
+      return sortDir === "asc" ? av - bv : bv - av;
+    });
+  }, [items, sortBy, sortDir]);
+
+  const handleSort = (col: "amount" | "timestamp") => {
+    if (sortBy === col) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortBy(col); setSortDir("desc"); }
+  };
+
+  const SortIcon = ({ col }: { col: "amount" | "timestamp" }) => (
+    <span className="ml-1 inline-flex opacity-50">
+      {sortBy === col ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
+    </span>
   );
 
   return (
@@ -316,10 +338,10 @@ export default function AccountantLedgerPage() {
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã GD</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Loại</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Chiều</th>
-                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số tiền</th>
+                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none hover:text-slate-600" onClick={() => handleSort("amount")}>Số tiền<SortIcon col="amount" /></th>
                 <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số dư sau</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ví chủ thể</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Thời gian</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none hover:text-slate-600" onClick={() => handleSort("timestamp")}>Thời gian<SortIcon col="timestamp" /></th>
               </tr>
             </thead>
             <tbody>
@@ -336,7 +358,7 @@ export default function AccountantLedgerPage() {
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
+                sortedItems.map((item) => (
                   <tr
                     key={item.id}
                     className="border-b border-slate-100 last:border-b-0 hover:bg-blue-50/60 transition-colors cursor-pointer"

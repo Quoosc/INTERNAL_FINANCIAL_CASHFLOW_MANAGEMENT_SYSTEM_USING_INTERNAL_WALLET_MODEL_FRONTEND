@@ -107,6 +107,13 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(false);
   const seenSseNotificationIds = useRef<Set<number>>(new Set());
 
+  useEffect(() => {
+    void markAllAsRead().then(() => {
+      setUnreadCount(0);
+      window.dispatchEvent(new Event("notifications:changed"));
+    }).catch(() => {});
+  }, []);
+
   const prependNotificationFromSse = useCallback(
     (incoming: NotificationResponse) => {
       if (!incoming || typeof incoming.id !== "number") return;

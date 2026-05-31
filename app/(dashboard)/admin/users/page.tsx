@@ -114,6 +114,8 @@ export default function AdminUsersPage() {
 
   const [items, setItems] = useState<AdminUserListItem[]>([]);
   const [departments, setDepartments] = useState<DepartmentListItem[]>([]);
+  const [sortBy, setSortBy] = useState<"fullName" | "role" | "status" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -367,6 +369,27 @@ export default function AdminUsersPage() {
   const lockedOnPage = items.filter((user) => user.status === UserStatus.LOCKED).length;
   const filtered = Boolean(roleFilter || statusFilter || search);
 
+  const sortedItems = useMemo(() => {
+    if (!sortBy) return items;
+    return [...items].sort((a, b) => {
+      const av = a[sortBy] ?? "";
+      const bv = b[sortBy] ?? "";
+      const cmp = String(av).localeCompare(String(bv), "vi");
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [items, sortBy, sortDir]);
+
+  const handleSort = (col: "fullName" | "role" | "status") => {
+    if (sortBy === col) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortBy(col); setSortDir("asc"); }
+  };
+
+  const SortIcon = ({ col }: { col: "fullName" | "role" | "status" }) => (
+    <span className="ml-1 inline-flex opacity-50">
+      {sortBy === col ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
+    </span>
+  );
+
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
@@ -478,11 +501,11 @@ export default function AdminUsersPage() {
           <table className="w-full min-w-[1040px]">
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-slate-200 bg-white">
-                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Nhân sự</th>
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none hover:text-slate-600" onClick={() => handleSort("fullName")}>Nhân sự<SortIcon col="fullName" /></th>
                 <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
-                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Vai trò</th>
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none hover:text-slate-600" onClick={() => handleSort("role")}>Vai trò<SortIcon col="role" /></th>
                 <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Phòng ban</th>
-                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Trạng thái</th>
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none hover:text-slate-600" onClick={() => handleSort("status")}>Trạng thái<SortIcon col="status" /></th>
                 <th className="px-5 py-4 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Thao tác</th>
               </tr>
             </thead>
@@ -496,7 +519,7 @@ export default function AdminUsersPage() {
                   </td>
                 </tr>
               ) : (
-                items.map((user) => (
+                sortedItems.map((user) => (
                   <tr key={user.id} className="border-b border-slate-100 last:border-b-0 transition hover:bg-blue-50/40">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -522,26 +545,31 @@ export default function AdminUsersPage() {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <KebabMenu
-                        items={[
-                          {
-                            label: "Xem chi tiết",
-                            onClick: () => router.push(`/admin/users/${user.id}`),
-                          },
-                          {
-                            label: user.status === UserStatus.LOCKED ? "Mở khóa" : "Khóa tài khoản",
-                            onClick: () => handleToggleLock(user),
-                            disabled: processingUserId === user.id,
-                            tone: user.status === UserStatus.LOCKED ? "default" : "danger",
-                          },
-                          {
-                            label: "Reset mật khẩu",
-                            onClick: () => handleResetPassword(user),
-                            disabled: processingUserId === user.id,
-                            tone: "warning",
-                          },
-                        ]}
-                      />
+                      {processingUserId === user.id ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 px-2">
+                          <svg className="animate-spin h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                          Đang xử lý...
+                        </span>
+                      ) : (
+                        <KebabMenu
+                          items={[
+                            {
+                              label: "Xem chi tiết",
+                              onClick: () => router.push(`/admin/users/${user.id}`),
+                            },
+                            {
+                              label: user.status === UserStatus.LOCKED ? "Mở khóa" : "Khóa tài khoản",
+                              onClick: () => handleToggleLock(user),
+                              tone: user.status === UserStatus.LOCKED ? "default" : "danger",
+                            },
+                            {
+                              label: "Reset mật khẩu",
+                              onClick: () => handleResetPassword(user),
+                              tone: "warning",
+                            },
+                          ]}
+                        />
+                      )}
                     </td>
                   </tr>
                 ))

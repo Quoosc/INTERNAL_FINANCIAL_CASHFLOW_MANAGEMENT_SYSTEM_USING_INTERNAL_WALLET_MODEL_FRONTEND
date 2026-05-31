@@ -86,6 +86,7 @@ export default function RequestsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(initial.page);
   const [totalPages, setTotalPages] = useState(1);
+  const [sseVersion, setSseVersion] = useState(0);
   const [filters, setFilters] = useState<RequestFilterParams>(initial.filters);
   const [fromDate, setFromDate] = useState(initial.fromDate);
   const [toDate, setToDate] = useState(initial.toDate);
@@ -119,6 +120,15 @@ export default function RequestsPage() {
     },
     [router],
   );
+
+  useEffect(() => {
+    const handleNotification = (event: Event) => {
+      const n = (event as CustomEvent).detail as { refType?: string | null };
+      if (n?.refType === "REQUEST") setSseVersion((v) => v + 1);
+    };
+    window.addEventListener("notifications:new", handleNotification);
+    return () => window.removeEventListener("notifications:new", handleNotification);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -171,7 +181,7 @@ export default function RequestsPage() {
     return () => {
       cancelled = true;
     };
-  }, [filters, page, fromDate, toDate, syncUrl, toast]);
+  }, [filters, page, fromDate, toDate, syncUrl, toast, sseVersion]);
 
   const handleStatusChange = (value: string) => {
     const nextFilters: RequestFilterParams = {

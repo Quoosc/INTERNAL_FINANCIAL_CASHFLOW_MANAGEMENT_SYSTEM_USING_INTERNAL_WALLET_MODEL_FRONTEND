@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { PaginatedResponse, ProjectListItem, ProjectStatus } from "@/types";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, getBurnClass } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 
 const PAGE_LIMIT = 9;
@@ -40,11 +40,6 @@ function getStatusClass(status: ProjectStatus): string {
   }
 }
 
-function getProgressBarClass(percent: number): string {
-  if (percent >= 90) return "bg-rose-500";
-  if (percent >= 70) return "bg-amber-500";
-  return "bg-blue-500";
-}
 
 type StatusFilter = "ALL" | ProjectStatus;
 type ProjectListPayload =
@@ -349,7 +344,7 @@ export default function ProjectsPage() {
                   </div>
                   <div className="h-2 rounded-full border border-slate-200 bg-white overflow-hidden">
                     <div
-                      className={`h-full transition-all ${getProgressBarClass(spentPercent)}`}
+                      className={`h-full transition-all ${getBurnClass(spentPercent)}`}
                       style={{ width: `${spentPercent}%` }}
                     />
                   </div>

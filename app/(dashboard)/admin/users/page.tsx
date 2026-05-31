@@ -17,8 +17,9 @@ import {
   UserStatus,
 } from "@/types";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { MOCK_DEPARTMENTS } from "@/lib/mocks/departments";
 import { TableRowSkeleton } from "@/components/ui/skeleton";
+import { KebabMenu } from "@/components/ui/kebab-menu";
+import { SideDrawer } from "@/components/ui/side-drawer";
 
 const PAGE_LIMIT = 10;
 
@@ -29,65 +30,6 @@ const ROLE_OPTIONS: { value: RoleName; label: string; roleId: number }[] = [
   { value: RoleName.ACCOUNTANT, label: "Kế toán", roleId: 4 },
   { value: RoleName.CFO, label: "CFO", roleId: 5 },
   { value: RoleName.ADMIN, label: "Admin", roleId: 6 },
-];
-
-const MOCK_USERS: AdminUserListItem[] = [
-  {
-    id: 1,
-    fullName: "Trần Quang Minh",
-    email: "admin@ifms.vn",
-    employeeCode: "ADM001",
-    role: RoleName.ADMIN,
-    departmentId: null,
-    departmentName: null,
-    jobTitle: "System Administrator",
-    avatar: null,
-    debtBalance: 0,
-    status: UserStatus.ACTIVE,
-    createdAt: "2026-01-01T08:00:00",
-  },
-  {
-    id: 2,
-    fullName: "Nguyễn Văn Tùng",
-    email: "manager.sales@ifms.vn",
-    employeeCode: "MGR002",
-    role: RoleName.MANAGER,
-    departmentId: 2,
-    departmentName: "Phòng Kinh doanh",
-    jobTitle: "Manager Sales",
-    avatar: null,
-    debtBalance: 0,
-    status: UserStatus.ACTIVE,
-    createdAt: "2026-01-03T08:00:00",
-  },
-  {
-    id: 3,
-    fullName: "Lê Thu Trang",
-    email: "tl.it@ifms.vn",
-    employeeCode: "TL002",
-    role: RoleName.TEAM_LEADER,
-    departmentId: 1,
-    departmentName: "Phòng CNTT",
-    jobTitle: "Team Leader IT",
-    avatar: null,
-    debtBalance: 0,
-    status: UserStatus.ACTIVE,
-    createdAt: "2026-01-05T08:00:00",
-  },
-  {
-    id: 4,
-    fullName: "Đỗ Quốc Bảo",
-    email: "emp.it1@ifms.vn",
-    employeeCode: "EMP001",
-    role: RoleName.EMPLOYEE,
-    departmentId: 1,
-    departmentName: "Phòng CNTT",
-    jobTitle: "Frontend Developer",
-    avatar: null,
-    debtBalance: 2_500_000,
-    status: UserStatus.LOCKED,
-    createdAt: "2026-01-08T08:00:00",
-  },
 ];
 
 function parsePage(value: string | null): number {
@@ -138,23 +80,24 @@ function statusBadgeClass(status: string): string {
   }
 }
 
-function filterMockUsers(
-  users: AdminUserListItem[],
-  role?: string,
-  status?: string,
-  search = ""
-): AdminUserListItem[] {
-  const q = search.trim().toLowerCase();
+function statusLabel(status: string): string {
+  switch (status) {
+    case UserStatus.ACTIVE:
+      return "Đang hoạt động";
+    case UserStatus.LOCKED:
+      return "Đã khóa";
+    case UserStatus.PENDING:
+      return "Chờ kích hoạt";
+    default:
+      return status;
+  }
+}
 
-  return users.filter((user) => {
-    if (role && user.role !== role) return false;
-    if (status && user.status !== status) return false;
-
-    if (!q) return true;
-
-    const haystack = `${user.fullName} ${user.email} ${user.employeeCode ?? ""}`.toLowerCase();
-    return haystack.includes(q);
-  });
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? "U";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return `${first}${last}`.toUpperCase();
 }
 
 export default function AdminUsersPage() {
@@ -253,7 +196,7 @@ export default function AdminUsersPage() {
         setDepartments(pickItems(res.data));
       } catch {
         if (cancelled) return;
-        setDepartments(MOCK_DEPARTMENTS);
+        setDepartments([]);
       }
     };
 
@@ -297,24 +240,10 @@ export default function AdminUsersPage() {
         setTotalPages(Array.isArray(res.data) ? Math.max(1, Math.ceil(getTotal(res.data) / PAGE_LIMIT)) : res.data.totalPages);
       } catch (err) {
         if (cancelled) return;
-
-        const filtered = filterMockUsers(MOCK_USERS, roleFilter || undefined, statusFilter || undefined, search);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const safePage = Math.min(page, mockTotalPages);
-        const start = (safePage - 1) * PAGE_LIMIT;
-
-        setItems(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-
-        if (safePage !== page) goToPage(safePage);
-
-        if (err instanceof ApiError) {
-          toast.error(err.apiMessage);
-        } else {
-          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
-        }
+        setItems([]);
+        setTotal(0);
+        setTotalPages(1);
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải danh sách người dùng.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -325,7 +254,7 @@ export default function AdminUsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, roleFilter, search, statusFilter, toast]);
+  }, [page, roleFilter, search, statusFilter, toast]);
 
   const handleCreateUser = async () => {
     const selectedRole = ROLE_OPTIONS.find((option) => option.value === newRole);
@@ -376,28 +305,8 @@ export default function AdminUsersPage() {
       setItems((prev) => [createdItem, ...prev].slice(0, PAGE_LIMIT));
       setTotal((prev) => prev + 1);
       toast.success("Đã tạo user mới và gửi email onboarding.");
-    } catch {
-      const mockId = Date.now();
-      const selectedDepartment = departments.find((department) => department.id === body.departmentId);
-
-      const createdItem: AdminUserListItem = {
-        id: mockId,
-        fullName: body.fullName,
-        email: body.email,
-        employeeCode: null,
-        role: newRole,
-        departmentId: body.departmentId ?? null,
-        departmentName: selectedDepartment?.name ?? null,
-        jobTitle: null,
-        avatar: null,
-        debtBalance: 0,
-        status: UserStatus.PENDING,
-        createdAt: new Date().toISOString(),
-      };
-
-      setItems((prev) => [createdItem, ...prev].slice(0, PAGE_LIMIT));
-      setTotal((prev) => prev + 1);
-      toast.info("API chưa sẵn sàng, đã mô phỏng tạo user mới.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tạo người dùng. Vui lòng thử lại.");
     } finally {
       setCreating(false);
       setShowCreateModal(false);
@@ -426,15 +335,8 @@ export default function AdminUsersPage() {
             setItems((prev) => prev.map((item) => (item.id === user.id ? { ...item, status: res.data.status } : item)));
             toast.success(`Đã khóa ${user.fullName}.`);
           }
-        } catch {
-          setItems((prev) =>
-            prev.map((item) =>
-              item.id === user.id
-                ? { ...item, status: isLocked ? UserStatus.ACTIVE : UserStatus.LOCKED }
-                : item
-            )
-          );
-          toast.info("API chưa sẵn sàng, đã mô phỏng thao tác lock/unlock.");
+        } catch (err) {
+          toast.error(err instanceof ApiError ? err.apiMessage : "Không thể thực hiện thao tác. Vui lòng thử lại.");
         } finally {
           setProcessingUserId(null);
         }
@@ -452,8 +354,8 @@ export default function AdminUsersPage() {
         try {
           await api.post<{ message: string }>(`/api/v1/admin/users/${user.id}/reset-password`);
           toast.success(`Đã reset mật khẩu và gửi email cho ${user.email}.`);
-        } catch {
-          toast.info("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
+        } catch (err) {
+          toast.error(err instanceof ApiError ? err.apiMessage : "Không thể reset mật khẩu. Vui lòng thử lại.");
         } finally {
           setProcessingUserId(null);
         }
@@ -461,29 +363,64 @@ export default function AdminUsersPage() {
     });
   };
 
+  const activeOnPage = items.filter((user) => user.status === UserStatus.ACTIVE).length;
+  const lockedOnPage = items.filter((user) => user.status === UserStatus.LOCKED).length;
+  const filtered = Boolean(roleFilter || statusFilter || search);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quản lý nhân sự</h1>
-          <p className="text-slate-500 mt-1">Danh sách nhân sự, tạo tài khoản và quản lý trạng thái truy cập.</p>
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Admin workspace
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Quản lý nhân sự</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Theo dõi tài khoản, phân quyền truy cập và trạng thái vận hành của toàn bộ nhân sự trong hệ thống IFMS.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50"
+          >
+            Tạo người dùng
+          </button>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <MetricCard label="Tổng người dùng" value={total.toLocaleString("vi-VN")} tone="blue" />
+        <MetricCard label="Đang hoạt động" value={String(activeOnPage)} tone="emerald" />
+        <MetricCard label="Đã khóa" value={String(lockedOnPage)} tone="rose" />
+        <MetricCard label="Bộ lọc" value={filtered ? "Đang áp dụng" : "Tất cả"} tone="indigo" />
+      </section>
+
+      <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Bộ lọc nhân sự</h2>
+            <p className="mt-1 text-sm text-slate-500">Lọc nhanh theo vai trò, trạng thái hoặc thông tin định danh.</p>
+          </div>
+          {filtered && (
+            <button
+              type="button"
+              onClick={() => pushWithParams(new URLSearchParams())}
+              className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
-        >
-          Tạo người dùng
-        </button>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <select
             value={roleFilter}
             onChange={(event) => updateParam("role", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả vai trò</option>
             {ROLE_OPTIONS.map((role) => (
@@ -496,17 +433,17 @@ export default function AdminUsersPage() {
           <select
             value={statusFilter}
             onChange={(event) => updateParam("status", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả trạng thái</option>
-            <option value={UserStatus.ACTIVE}>ACTIVE</option>
-            <option value={UserStatus.LOCKED}>LOCKED</option>
-            <option value={UserStatus.PENDING}>PENDING</option>
+            <option value={UserStatus.ACTIVE}>Đang hoạt động</option>
+            <option value={UserStatus.LOCKED}>Đã khóa</option>
+            <option value={UserStatus.PENDING}>Chờ kích hoạt</option>
           </select>
 
-          <div className="md:col-span-2 relative">
+          <div className="relative md:col-span-2">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
+              className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -522,23 +459,31 @@ export default function AdminUsersPage() {
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Tìm theo tên, email, mã nhân viên..."
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-1 border-b border-slate-200 bg-blue-50/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Danh sách người dùng</h2>
+            <p className="text-sm text-slate-500">Mỗi dòng có menu thao tác nhanh ở cột cuối.</p>
+          </div>
+          <span className="text-sm font-medium text-blue-700">Trang {page}/{totalPages}</span>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Mã NV</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Họ tên</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Vai trò</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Phòng ban</th>
-                <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Trạng thái</th>
-                <th className="text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Thao tác</th>
+          <table className="w-full min-w-[1040px]">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-slate-200 bg-white">
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Nhân sự</th>
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Vai trò</th>
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Phòng ban</th>
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Trạng thái</th>
+                <th className="px-5 py-4 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -546,61 +491,57 @@ export default function AdminUsersPage() {
                 <TableRowSkeleton colSpan={6} rows={6} />
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center text-slate-500 text-sm py-12">
-                    Không có user phù hợp bộ lọc.
+                  <td colSpan={6} className="px-5 py-14 text-center text-sm text-slate-500">
+                    Không có người dùng phù hợp bộ lọc hiện tại.
                   </td>
                 </tr>
               ) : (
                 items.map((user) => (
-                  <tr key={user.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-slate-600">{user.employeeCode ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{user.fullName}</p>
-                        <p className="text-xs text-slate-500 mt-1">{user.email}</p>
+                  <tr key={user.id} className="border-b border-slate-100 last:border-b-0 transition hover:bg-blue-50/40">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-bold text-blue-700">
+                          {initials(user.fullName)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{user.fullName}</p>
+                          <p className="mt-1 text-xs text-slate-500">{user.email}</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${roleBadgeClass(user.role)}`}>
+                    <td className="px-5 py-4 text-sm font-medium text-slate-600">{user.employeeCode ?? "Chưa gán"}</td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${roleBadgeClass(user.role)}`}>
                         {roleLabel(user.role)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{user.departmentName ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${statusBadgeClass(user.status)}`}>
-                        {user.status}
+                    <td className="px-5 py-4 text-sm text-slate-600">{user.departmentName ?? "Chưa gán"}</td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(user.status)}`}>
+                        {statusLabel(user.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => router.push(`/admin/users/${user.id}`)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs"
-                        >
-                          Chi tiết
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleLock(user)}
-                          disabled={processingUserId === user.id}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs text-slate-900 disabled:opacity-60 ${
-                            user.status === UserStatus.LOCKED
-                              ? "bg-emerald-600 hover:bg-emerald-500"
-                              : "bg-rose-600 hover:bg-rose-500"
-                          }`}
-                        >
-                          {user.status === UserStatus.LOCKED ? "Mở khóa" : "Khóa"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleResetPassword(user)}
-                          disabled={processingUserId === user.id}
-                          className="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs disabled:opacity-60"
-                        >
-                          Reset MK
-                        </button>
-                      </div>
+                    <td className="px-5 py-4 text-right">
+                      <KebabMenu
+                        items={[
+                          {
+                            label: "Xem chi tiết",
+                            onClick: () => router.push(`/admin/users/${user.id}`),
+                          },
+                          {
+                            label: user.status === UserStatus.LOCKED ? "Mở khóa" : "Khóa tài khoản",
+                            onClick: () => handleToggleLock(user),
+                            disabled: processingUserId === user.id,
+                            tone: user.status === UserStatus.LOCKED ? "default" : "danger",
+                          },
+                          {
+                            label: "Reset mật khẩu",
+                            onClick: () => handleResetPassword(user),
+                            disabled: processingUserId === user.id,
+                            tone: "warning",
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))
@@ -608,11 +549,11 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-500">
-          Trang {page}/{totalPages} • Tổng {total} user
+          Hiển thị {items.length} trong tổng {total.toLocaleString("vi-VN")} người dùng
         </p>
 
         <div className="flex items-center gap-2">
@@ -620,7 +561,7 @@ export default function AdminUsersPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Trước
           </button>
@@ -628,108 +569,130 @@ export default function AdminUsersPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Sau
           </button>
         </div>
       </div>
 
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setShowCreateModal(false)}
-            aria-label="Đóng modal tạo user"
-          />
+      <SideDrawer
+        open={showCreateModal}
+        title="Tạo người dùng mới"
+        description="Hệ thống sẽ tạo mật khẩu tạm và gửi email onboarding cho người dùng."
+        onClose={() => setShowCreateModal(false)}
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(false)}
+              className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleCreateUser}
+              disabled={creating}
+              className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {creating ? "Đang tạo..." : "Tạo user"}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-sm text-blue-800">
+            Tài khoản mới cần email công ty hợp lệ. Phòng ban có thể để trống nếu nhân sự chưa được phân công.
+          </div>
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Tạo người dùng mới</h3>
-            <p className="text-sm text-slate-500">
-              Hệ thống sẽ tạo mật khẩu tạm và gửi email onboarding cho người dùng.
-            </p>
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Họ tên</label>
+            <input
+              value={newFullName}
+              onChange={(event) => setNewFullName(event.target.value)}
+              placeholder="Nhập họ tên"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Email công ty</label>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(event) => setNewEmail(event.target.value)}
+              placeholder="name@ifms.vn"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">Vai trò</label>
+              <select
+                value={newRole}
+                onChange={(event) => setNewRole(event.target.value as RoleName)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+              >
+                {ROLE_OPTIONS.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Họ tên</label>
-              <input
-                value={newFullName}
-                onChange={(event) => setNewFullName(event.target.value)}
-                placeholder="Nhập họ tên"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-slate-600 mb-2">Email công ty</label>
-              <input
-                type="email"
-                value={newEmail}
-                onChange={(event) => setNewEmail(event.target.value)}
-                placeholder="name@ifms.vn"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm text-slate-600 mb-2">Vai trò</label>
-                <select
-                  value={newRole}
-                  onChange={(event) => setNewRole(event.target.value as RoleName)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                >
-                  {ROLE_OPTIONS.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm text-slate-600 mb-2">Phòng ban</label>
-                <select
-                  value={newDepartmentId}
-                  onChange={(event) => setNewDepartmentId(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                >
-                  <option value="">Không gán phòng ban</option>
-                  {departments.map((department) => (
-                    <option key={department.id} value={String(department.id)}>
-                      {department.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+              <label className="mb-2 block text-sm font-semibold text-slate-700">Phòng ban</label>
+              <select
+                value={newDepartmentId}
+                onChange={(event) => setNewDepartmentId(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateUser}
-                disabled={creating}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
-              >
-                {creating ? "Đang tạo..." : "Tạo user"}
-              </button>
+                <option value="">Không gán phòng ban</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={String(department.id)}>
+                    {department.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
-      )}
+      </SideDrawer>
+
       <ConfirmModal
         open={confirmState.open}
         message={confirmState.message}
         onConfirm={confirmState.onConfirm}
         onCancel={() => setConfirmState((prev) => ({ ...prev, open: false }))}
       />
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "blue" | "emerald" | "rose" | "indigo";
+}) {
+  const toneClassName = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
+  }[tone];
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full border ${toneClassName}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
     </div>
   );
 }

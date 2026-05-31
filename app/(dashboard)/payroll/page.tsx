@@ -231,7 +231,26 @@ export default function PayrollPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Personal payroll
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Phiếu lương</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Xem lịch sử chi lương cá nhân, số tiền đã nhận và trạng thái từng kỳ lương.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">Đã nhận</p>
+            <p className="mt-2 text-2xl font-bold">{formatCurrency(totalEarned)}</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="hidden">
         <h1 className="text-2xl font-bold text-slate-900">Phiếu lương</h1>
         <p className="text-slate-500 mt-1">
           Danh sách phiếu lương cá nhân theo từng kỳ.
@@ -239,7 +258,7 @@ export default function PayrollPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <span className="w-9 h-9 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
@@ -251,7 +270,7 @@ export default function PayrollPage() {
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <span className="w-9 h-9 rounded-lg bg-linear-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-sm">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -264,12 +283,16 @@ export default function PayrollPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-4">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-base font-bold text-slate-900">Bộ lọc phiếu lương</h2>
+          <p className="mt-1 text-sm text-slate-500">Lọc theo năm phát sinh và trạng thái chi trả.</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <select
             value={filters.year ?? ""}
             onChange={(e) => handleFilterChange("year", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả năm</option>
             {yearOptions.map((year) => (
@@ -282,7 +305,7 @@ export default function PayrollPage() {
           <select
             value={filters.status ?? ""}
             onChange={(e) => handleFilterChange("status", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả trạng thái</option>
             <option value={PayslipStatus.DRAFT}>DRAFT</option>
@@ -291,11 +314,11 @@ export default function PayrollPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-230">
-            <thead>
-              <tr className="border-b border-slate-200 bg-blue-50">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-200 bg-blue-50/80">
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Kỳ lương
                 </th>
@@ -358,7 +381,7 @@ export default function PayrollPage() {
                 payslips.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-slate-200 hover:bg-blue-50 transition-colors cursor-pointer"
+                    className="border-b border-slate-100 hover:bg-blue-50/60 transition-colors cursor-pointer"
                     onClick={() => router.push(`/payroll/${item.id}`)}
                   >
                     <td className="px-4 py-3">

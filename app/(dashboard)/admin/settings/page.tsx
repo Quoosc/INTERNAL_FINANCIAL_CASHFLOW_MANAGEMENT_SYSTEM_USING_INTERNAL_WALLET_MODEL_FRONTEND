@@ -8,6 +8,100 @@ import { SystemConfigItem, SystemConfigResponse } from "@/types";
 
 type SettingsCategory = SystemConfigItem["category"];
 
+type SettingDisplayMeta = {
+  label: string;
+  description: string;
+};
+
+const VISIBLE_SETTING_META: Record<string, SettingDisplayMeta> = {
+  PIN_MAX_RETRY: {
+    label: "Số lần nhập sai PIN tối đa",
+    description: "Số lần người dùng được nhập sai PIN trước khi hệ thống khóa PIN giao dịch.",
+  },
+  PIN_LOCK_MINUTES: {
+    label: "Thời gian khóa PIN",
+    description: "Số phút khóa PIN sau khi người dùng nhập sai quá số lần cho phép.",
+  },
+  SYSTEM_MAINTENANCE_MODE: {
+    label: "Chế độ bảo trì hệ thống",
+    description: "Bật chế độ này để tạm dừng các giao dịch trong thời gian bảo trì.",
+  },
+  MAX_ATTACHMENT_SIZE_MB: {
+    label: "Dung lượng tối đa mỗi tệp đính kèm",
+    description: "Giới hạn dung lượng cho từng tệp chứng từ được tải lên trong yêu cầu.",
+  },
+  MAX_ATTACHMENT_COUNT: {
+    label: "Số tệp đính kèm tối đa",
+    description: "Số lượng tệp chứng từ tối đa cho một yêu cầu.",
+  },
+  JWT_REFRESH_EXPIRY_DAYS: {
+    label: "Thời hạn phiên đăng nhập",
+    description: "Số ngày refresh token còn hiệu lực trước khi người dùng cần đăng nhập lại.",
+  },
+  NOTIFICATION_RETAIN_DAYS: {
+    label: "Thời gian lưu thông báo",
+    description: "Số ngày hệ thống giữ thông báo trước khi tự động dọn dẹp.",
+  },
+  WITHDRAW_LIMIT_EMPLOYEE: {
+    label: "Hạn mức rút tự động của Nhân viên",
+    description: "Giao dịch rút tiền của Nhân viên không vượt hạn mức này sẽ được xử lý tự động.",
+  },
+  WITHDRAW_LIMIT_TEAM_LEADER: {
+    label: "Hạn mức rút tự động của Team Leader",
+    description: "Giao dịch rút tiền của Team Leader không vượt hạn mức này sẽ được xử lý tự động.",
+  },
+  WITHDRAW_LIMIT_MANAGER: {
+    label: "Hạn mức rút tự động của Manager",
+    description: "Giao dịch rút tiền của Manager không vượt hạn mức này sẽ được xử lý tự động.",
+  },
+  WITHDRAW_LIMIT_ACCOUNTANT: {
+    label: "Hạn mức rút tự động của Kế toán",
+    description: "Giao dịch rút tiền của Kế toán không vượt hạn mức này sẽ được xử lý tự động.",
+  },
+  WITHDRAW_LIMIT_CFO: {
+    label: "Hạn mức rút tự động của CFO",
+    description: "Giao dịch rút tiền của CFO không vượt hạn mức này sẽ được xử lý tự động.",
+  },
+  WITHDRAW_LIMIT_ADMIN: {
+    label: "Hạn mức rút tự động của Admin",
+    description: "Giá trị 0 nghĩa là Admin không được rút tự động và luôn cần quy trình kiểm soát.",
+  },
+};
+
+const CATEGORY_META: Record<SettingsCategory, { label: string; description: string; tone: string }> = {
+  SECURITY: {
+    label: "Bảo mật",
+    description: "PIN, OTP, giới hạn giao dịch và chính sách xác thực.",
+    tone: "border-rose-100 bg-rose-50 text-rose-700",
+  },
+  MAIL: {
+    label: "Email",
+    description: "SMTP và thông báo email hệ thống.",
+    tone: "border-amber-100 bg-amber-50 text-amber-700",
+  },
+  SYSTEM: {
+    label: "Vận hành",
+    description: "Các tham số vận hành chung của hệ thống.",
+    tone: "border-blue-100 bg-blue-50 text-blue-700",
+  },
+};
+
+function getSettingMeta(key: string): SettingDisplayMeta {
+  return (
+    VISIBLE_SETTING_META[key] ?? {
+      label: key
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/^\w/, (char) => char.toUpperCase()),
+      description: "Cấu hình hệ thống.",
+    }
+  );
+}
+
+function isVisibleSetting(item: SystemConfigItem): boolean {
+  return Object.prototype.hasOwnProperty.call(VISIBLE_SETTING_META, item.key);
+}
+
 function inferCategory(key: string): SettingsCategory {
   const upper = key.toUpperCase();
 
@@ -54,7 +148,7 @@ export default function AdminSettingsPage() {
 
     try {
       const res = await getAdminSettings();
-      setItems(res.data.items.map(normalizeItem));
+      setItems(res.data.items.map(normalizeItem).filter(isVisibleSetting));
     } catch (err) {
       if (err instanceof ApiError) {
         toast.error(err.apiMessage);
@@ -91,7 +185,7 @@ export default function AdminSettingsPage() {
 
     try {
       await updateAdminSettings({ configs: [{ key: item.key, value: item.value }] });
-      toast.success(`Đã cập nhật cấu hình ${item.key}.`);
+      toast.success(`Đã cập nhật ${getSettingMeta(item.key).label}.`);
     } catch (err) {
       if (err instanceof ApiError) {
         toast.error(`Lỗi API: ${err.apiMessage}`);
@@ -122,126 +216,176 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Cấu hình hệ thống</h1>
-        <p className="text-slate-500 mt-1">Quản trị thông số vận hành và bảo mật hệ thống.</p>
-      </div>
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Quản trị cấu hình
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Cấu hình hệ thống</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Quản trị các tham số vận hành cần thiết bằng nhãn tiếng Việt, không hiển thị các key kỹ thuật hoặc key test.
+            </p>
+          </div>
 
-      <div className="px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
-        Thay đổi cấu hình có hiệu lực ngay lập tức. Kiểm tra kỹ trước khi lưu.
-      </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => void loadSettings()}
+              disabled={loading}
+              className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Tải lại
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleEvictAllCache()}
+              disabled={evictingCache || loading}
+              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {evictingCache ? "Đang làm mới..." : "Làm mới cache"}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <MetricCard label="Tổng cấu hình" value={String(items.length)} />
+        <MetricCard label="Bảo mật" value={String(grouped.SECURITY.length)} />
+        <MetricCard label="Vận hành" value={String(grouped.SYSTEM.length)} />
+        <MetricCard label="Hạn mức rút" value={String(items.filter((item) => item.key.startsWith("WITHDRAW_LIMIT_")).length)} />
+      </section>
+
+      <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800 shadow-sm">
+        <div className="flex gap-3">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-amber-100 font-bold text-amber-700">!</span>
+          <div>
+            <p className="font-bold">Kiểm tra kỹ trước khi lưu cấu hình.</p>
+            <p className="mt-1 leading-6">
+              Các giá trị như hạn mức rút tiền, khóa PIN hoặc chế độ bảo trì có thể ảnh hưởng ngay đến toàn bộ người dùng đang hoạt động.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, index) => (
-            <div key={`settings-skeleton-${index}`} className="h-44 rounded-2xl bg-white animate-pulse" />
+            <div key={`settings-skeleton-${index}`} className="h-52 animate-pulse rounded-3xl bg-white" />
           ))}
         </div>
       ) : (
-        <>
+        <div className="space-y-5">
           <SettingsGroup
             title="SECURITY"
-            description="PIN, OTP, giới hạn giao dịch và chính sách bảo mật"
             items={grouped.SECURITY}
             onChange={updateValue}
             onSave={handleSaveItem}
             savingKey={savingKey}
           />
 
-          <SettingsGroup
-            title="MAIL"
-            description="SMTP, gửi thông báo email hệ thống"
-            items={grouped.MAIL}
-            onChange={updateValue}
-            onSave={handleSaveItem}
-            savingKey={savingKey}
-          />
+          {grouped.MAIL.length > 0 && (
+            <SettingsGroup
+              title="MAIL"
+              items={grouped.MAIL}
+              onChange={updateValue}
+              onSave={handleSaveItem}
+              savingKey={savingKey}
+            />
+          )}
 
           <SettingsGroup
             title="SYSTEM"
-            description="Các thông số vận hành chung"
             items={grouped.SYSTEM}
             onChange={updateValue}
             onSave={handleSaveItem}
             savingKey={savingKey}
           />
-        </>
+        </div>
       )}
-
-      <div className="flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => void loadSettings()}
-          disabled={loading}
-          className="px-5 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
-        >
-          Tải lại
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleEvictAllCache()}
-          disabled={evictingCache || loading}
-          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
-        >
-          {evictingCache ? "Đang làm mới cache..." : "Làm mới cache"}
-        </button>
-      </div>
-
     </div>
   );
 }
 
 function SettingsGroup({
   title,
-  description,
   items,
   onChange,
   onSave,
   savingKey,
 }: {
   title: SettingsCategory;
-  description: string;
   items: SystemConfigItem[];
   onChange: (key: string, value: string) => void;
   onSave: (key: string) => Promise<void>;
   savingKey: string | null;
 }) {
+  const meta = CATEGORY_META[title];
+
   return (
-    <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        <p className="text-sm text-slate-500 mt-1">{description}</p>
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-slate-200 bg-blue-50/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${meta.tone}`}>
+            {meta.label}
+          </div>
+          <h2 className="mt-3 text-lg font-bold text-slate-900">{meta.label}</h2>
+          <p className="mt-1 text-sm text-slate-500">{meta.description}</p>
+        </div>
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500">
+          {items.length} tham số
+        </span>
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-slate-500">Không có cấu hình trong nhóm này.</p>
+        <p className="px-5 py-10 text-sm text-slate-500">Không có cấu hình trong nhóm này.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="divide-y divide-slate-100">
           {items.map((item) => (
-            <div key={item.key} className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{item.key}</p>
-                  <p className="text-xs text-slate-500 mt-1">{item.description ?? "Không có mô tả"}</p>
-                </div>
+            <div key={item.key} className="grid grid-cols-1 gap-4 px-5 py-4 xl:grid-cols-[minmax(0,1fr)_360px_auto] xl:items-center">
+              <div>
+                <p className="text-sm font-bold text-slate-900">{getSettingMeta(item.key).label}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{getSettingMeta(item.key).description}</p>
+              </div>
+              {item.value === "true" || item.value === "false" ? (
+                <select
+                  value={item.value}
+                  onChange={(event) => onChange(item.key, event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                >
+                  <option value="false">Tắt</option>
+                  <option value="true">Bật</option>
+                </select>
+              ) : (
                 <input
                   value={item.value}
                   onChange={(event) => onChange(item.key, event.target.value)}
-                  className="w-full md:w-72 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 />
-                <button
-                  type="button"
-                  onClick={() => void onSave(item.key)}
-                  disabled={savingKey !== null}
-                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
-                >
-                  {savingKey === item.key ? "Đang lưu..." : "Lưu"}
-                </button>
-              </div>
+              )}
+              <button
+                type="button"
+                onClick={() => void onSave(item.key)}
+                disabled={savingKey !== null}
+                className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {savingKey === item.key ? "Đang lưu..." : "Lưu"}
+              </button>
             </div>
           ))}
         </div>
       )}
     </section>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 h-2 w-12 rounded-full bg-blue-600" />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+    </div>
   );
 }

@@ -13,29 +13,11 @@ import {
   TransactionDirection,
   TransactionStatus,
   TransactionType,
-  WalletOwnerType,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 const PAGE_LIMIT = 20;
 
-// ─── MOCK fallback (dùng khi API lỗi) ──────────────────────────────────────
-const MOCK_SUMMARY: LedgerSummaryResponse = {
-  currentBalance: 1_248_500_000,
-  totalInflow: 2_500_000_000,
-  totalOutflow: 1_251_500_000,
-  transactionCount: 6,
-};
-
-const MOCK_ITEMS: AccountantLedgerItemResponse[] = [
-  { id: 1, transactionCode: "TXN-2026-0001A", type: TransactionType.REQUEST_PAYMENT,      status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT,  amount: 3_500_000,   balanceAfter: 1_248_500_000, walletOwnerType: WalletOwnerType.COMPANY_FUND, ownerId: 1, timestamp: "2026-04-03T11:00:00" },
-  { id: 2, transactionCode: "TXN-2026-0002B", type: TransactionType.PAYSLIP_PAYMENT,      status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT,  amount: 13_500_000,  balanceAfter: 1_252_000_000, walletOwnerType: WalletOwnerType.COMPANY_FUND, ownerId: 1, timestamp: "2026-04-02T17:05:00" },
-  { id: 3, transactionCode: "TXN-2026-0003C", type: TransactionType.SYSTEM_TOPUP,         status: TransactionStatus.SUCCESS, direction: TransactionDirection.CREDIT, amount: 500_000_000, balanceAfter: 1_265_500_000, walletOwnerType: WalletOwnerType.COMPANY_FUND, ownerId: 1, timestamp: "2026-04-01T09:00:00" },
-  { id: 4, transactionCode: "TXN-2026-0004D", type: TransactionType.DEPT_QUOTA_ALLOCATION, status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT, amount: 200_000_000, balanceAfter: 765_500_000,  walletOwnerType: WalletOwnerType.DEPARTMENT,   ownerId: 2, timestamp: "2026-04-01T10:30:00" },
-  { id: 5, transactionCode: "TXN-2026-0005E", type: TransactionType.PROJECT_QUOTA_ALLOCATION, status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT, amount: 50_000_000, balanceAfter: 565_500_000, walletOwnerType: WalletOwnerType.PROJECT, ownerId: 10, timestamp: "2026-04-01T10:35:00" },
-  { id: 6, transactionCode: "TXN-2026-0006F", type: TransactionType.WITHDRAW,             status: TransactionStatus.SUCCESS, direction: TransactionDirection.DEBIT,  amount: 2_000_000,   balanceAfter: 515_500_000,  walletOwnerType: WalletOwnerType.USER,         ownerId: 11, timestamp: "2026-03-30T14:00:00" },
-];
-// ────────────────────────────────────────────────────────────────────────────
 
 function parsePage(value: string | null): number {
   const p = Number(value ?? "1");
@@ -197,27 +179,11 @@ export default function AccountantLedgerPage() {
         if (safePage !== page) goToPage(safePage);
       } catch (err) {
         if (cancelled) return;
-
-        // Defensive fallback: hiển thị mock khi API lỗi
-        const filtered = MOCK_ITEMS.filter((item) => {
-          if (type && item.type !== type) return false;
-          if (txStatus && item.status !== txStatus) return false;
-          if (from && item.timestamp < `${from}T00:00:00`) return false;
-          if (to   && item.timestamp > `${to}T23:59:59`)   return false;
-          return true;
-        });
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const safePage = Math.min(page, mockTotalPages);
-        const start = (safePage - 1) * PAGE_LIMIT;
-
-        setSummary(MOCK_SUMMARY);
-        setItems(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-        if (safePage !== page) goToPage(safePage);
-
-        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu sổ cái, đang hiển thị dữ liệu mẫu.");
+        setSummary(null);
+        setItems([]);
+        setTotal(0);
+        setTotalPages(1);
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu sổ cái.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -230,11 +196,44 @@ export default function AccountantLedgerPage() {
   const typeOptions = Object.values(TransactionType);
   const statusOptions = Object.values(TransactionStatus);
   const refTypeOptions = Object.values(ReferenceType);
+  const pageInflow = useMemo(
+    () => items.filter((item) => item.direction === TransactionDirection.CREDIT).reduce((sum, item) => sum + item.amount, 0),
+    [items],
+  );
+  const pageOutflow = useMemo(
+    () => items.filter((item) => item.direction === TransactionDirection.DEBIT).reduce((sum, item) => sum + item.amount, 0),
+    [items],
+  );
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Immutable ledger
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Sổ cái</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Tra cứu giao dịch hệ thống, theo dõi dòng tiền vào ra và đối chiếu từng bút toán kế toán.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">Giao dịch</p>
+            <p className="mt-2 text-3xl font-bold">{total}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <LedgerMetric label="Dòng tiền vào trang này" value={formatCurrency(pageInflow)} helper="Các bút toán CREDIT" tone="emerald" />
+        <LedgerMetric label="Dòng tiền ra trang này" value={formatCurrency(pageOutflow)} helper="Các bút toán DEBIT" tone="rose" />
+        <LedgerMetric label="Bộ lọc" value={type ? getTypeLabel(type) : "Tất cả"} helper={from || to ? `${from || "..."} - ${to || "..."}` : "Toàn bộ thời gian"} tone="blue" />
+      </section>
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Sổ cái</h1>
           <p className="text-slate-500 mt-1">Tất cả giao dịch hệ thống — immutable, chỉ đọc.</p>
@@ -253,12 +252,16 @@ export default function AccountantLedgerPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-base font-bold text-slate-900">Bộ lọc sổ cái</h2>
+          <p className="mt-1 text-sm text-slate-500">Kết hợp loại giao dịch, trạng thái, nguồn tham chiếu và khoảng thời gian.</p>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
           <select
             value={type ?? ""}
             onChange={(e) => updateParam("type", e.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả loại</option>
             {typeOptions.map((v) => (
@@ -269,7 +272,7 @@ export default function AccountantLedgerPage() {
           <select
             value={txStatus ?? ""}
             onChange={(e) => updateParam("status", e.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả trạng thái</option>
             {statusOptions.map((v) => (
@@ -280,7 +283,7 @@ export default function AccountantLedgerPage() {
           <select
             value={refType ?? ""}
             onChange={(e) => updateParam("referenceType", e.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả nguồn</option>
             {refTypeOptions.map((v) => (
@@ -292,24 +295,24 @@ export default function AccountantLedgerPage() {
             type="date"
             value={from}
             onChange={(e) => updateParam("from", e.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
 
           <input
             type="date"
             value={to}
             onChange={(e) => updateParam("to", e.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead>
-              <tr className="bg-white/70 border-b border-slate-200">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="bg-blue-50/80 border-b border-slate-200">
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã GD</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Loại</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Chiều</th>
@@ -336,7 +339,7 @@ export default function AccountantLedgerPage() {
                 items.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-slate-200 last:border-b-0 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                    className="border-b border-slate-100 last:border-b-0 hover:bg-blue-50/60 transition-colors cursor-pointer"
                     onClick={() => router.push(`/accountant/ledger/${item.id}`)}
                   >
                     <td className="px-4 py-3 text-sm text-slate-900 font-mono">{item.transactionCode}</td>
@@ -397,9 +400,35 @@ export default function AccountantLedgerPage() {
 
 function SummaryCard({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+    <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-5">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-2xl font-bold mt-1 ${tone}`}>{value}</p>
+    </div>
+  );
+}
+
+function LedgerMetric({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "emerald" | "rose";
+}) {
+  const toneClass = {
+    blue: "from-blue-50 to-indigo-50 border-blue-100 text-blue-700",
+    emerald: "from-emerald-50 to-teal-50 border-emerald-100 text-emerald-700",
+    rose: "from-rose-50 to-red-50 border-rose-100 text-rose-700",
+  }[tone];
+
+  return (
+    <div className={`rounded-2xl border bg-linear-to-br ${toneClass} p-4 shadow-sm`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-75">{label}</p>
+      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

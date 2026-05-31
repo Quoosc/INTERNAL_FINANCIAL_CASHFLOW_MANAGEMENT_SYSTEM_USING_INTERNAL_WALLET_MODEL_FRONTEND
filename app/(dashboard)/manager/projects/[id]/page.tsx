@@ -12,7 +12,7 @@ import {
   UpdateProjectBody,
 } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { MOCK_TL_OPTIONS } from "@/lib/mocks/projects";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -75,7 +75,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [editTotalBudget, setEditTotalBudget] = useState("");
+  const [editTotalBudget, setEditTotalBudget] = useState<number | null>(null);
   const [editStatus, setEditStatus] = useState<ProjectStatus>(ProjectStatus.PLANNING);
   const [editTeamLeaderId, setEditTeamLeaderId] = useState("");
 
@@ -116,9 +116,14 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         const res = await api.get<TeamLeaderOptionResponse[]>("/api/v1/manager/department/team-leaders");
         if (cancelled) return;
         setTeamLeaders(res.data);
-      } catch {
+      } catch (err) {
         if (cancelled) return;
-        setTeamLeaders(MOCK_TL_OPTIONS);
+        setTeamLeaders([]);
+        if (err instanceof ApiError) {
+          toast.error(err.apiMessage);
+        } else {
+          toast.error("Không thể tải danh sách Team Leader.");
+        }
       }
     };
 
@@ -127,7 +132,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [toast]);
 
   const leader = useMemo(
     () => project?.members.find((member) => member.projectRole === ProjectRole.LEADER) ?? null,
@@ -144,7 +149,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
     setEditName(project.name);
     setEditDescription(project.description ?? "");
-    setEditTotalBudget(String(project.totalBudget));
+    setEditTotalBudget(project.totalBudget);
     setEditStatus(project.status);
     setEditTeamLeaderId(leader ? String(leader.userId) : "");
     setShowEditModal(true);
@@ -153,7 +158,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
   const handleSaveChanges = async () => {
     if (!project) return;
 
-    const totalBudgetNumber = Number(editTotalBudget);
+    const totalBudgetNumber = editTotalBudget ?? 0;
     const teamLeaderId = Number(editTeamLeaderId);
 
     if (!editName.trim()) {
@@ -161,7 +166,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       return;
     }
 
-    if (!Number.isFinite(totalBudgetNumber) || totalBudgetNumber <= 0) {
+    if (totalBudgetNumber <= 0) {
       toast.error("Tổng ngân sách phải lớn hơn 0.");
       return;
     }
@@ -200,55 +205,88 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 rounded bg-white animate-pulse" />
-        <div className="h-40 rounded-2xl bg-white animate-pulse" />
-        <div className="h-80 rounded-2xl bg-white animate-pulse" />
+        <div className="h-48 animate-pulse rounded-3xl bg-white" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="h-28 animate-pulse rounded-3xl bg-white" />
+          ))}
+        </div>
+        <div className="h-96 animate-pulse rounded-3xl bg-white" />
       </div>
     );
   }
 
   if (!project) {
-    return <div className="text-slate-600">Không tìm thấy dự án.</div>;
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+          <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7h18M3 12h18M3 17h18" />
+          </svg>
+        </div>
+        <h2 className="mt-4 text-base font-bold text-slate-900">Không tìm thấy dự án</h2>
+        <p className="mt-1 text-sm text-slate-500">Dự án có thể đã bị xóa hoặc bạn không còn quyền truy cập.</p>
+      </div>
+    );
   }
+
+  const remainingPercent = project.totalBudget > 0
+    ? Math.round((project.availableBudget / project.totalBudget) * 100)
+    : 0;
 
   return (
     <div className="space-y-6">
-      <button
-        type="button"
-        onClick={() => router.push("/manager/projects")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-        </svg>
-        Quay lại
-      </button>
-
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-          <div>
-            <p className="text-xs text-slate-500 font-mono">{project.projectCode}</p>
-            <h1 className="text-2xl font-bold text-slate-900 mt-1">{project.name}</h1>
-            <p className="text-slate-500 mt-1">{project.description ?? "Không có mô tả"}</p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusClass(project.status)}`}>
-              {statusLabel(project.status)}
-            </span>
+      <section className="overflow-hidden rounded-3xl border border-indigo-200 bg-linear-to-br from-indigo-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-indigo-900/15">
+        <div className="relative px-6 py-7 sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
+          <div className="relative">
             <button
               type="button"
-              onClick={openEditModal}
-              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold"
+              onClick={() => router.push("/manager/projects")}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
             >
-              Sửa thông tin
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 19l-7-7 7-7" />
+              </svg>
+              Quay lại danh sách
             </button>
+
+            <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">{project.projectCode}</p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{project.name}</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">{project.description ?? "Không có mô tả"}</p>
+              </div>
+
+              <div className="flex flex-col items-start gap-3 lg:items-end">
+                <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-semibold ${statusClass(project.status)}`}>
+                  {statusLabel(project.status)}
+                </span>
+                <button
+                  type="button"
+                  onClick={openEditModal}
+                  className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/20 transition hover:bg-blue-50"
+                >
+                  Sửa thông tin
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-        <h2 className="text-lg font-semibold text-slate-900">Tổng quan ngân sách</h2>
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} helper="Ngân sách được phê duyệt" tone="blue" />
+        <MetricCard label="Đã chi" value={formatCurrency(project.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
+        <MetricCard label="Còn lại" value={formatCurrency(project.availableBudget)} helper={`${remainingPercent}% khả dụng`} tone="emerald" />
+        <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} phase`} tone="cyan" />
+      </section>
+
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-900">Tổng quan ngân sách</h2>
+          <p className="mt-1 text-sm text-slate-500">Theo dõi mức tiêu hao ngân sách tổng thể của dự án.</p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <InfoCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} tone="text-slate-900" />
@@ -261,14 +299,17 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             <span>Budget burn</span>
             <span>{overallBurn}%</span>
           </div>
-          <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
-            <div className={`h-full ${burnClass(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className={`h-full rounded-full ${burnClass(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Thông tin dự án</h2>
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-900">Thông tin dự án</h2>
+          <p className="mt-1 text-sm text-slate-500">Thông tin quản trị và người phụ trách.</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <InfoCard label="Trưởng nhóm" value={leader?.fullName ?? "Chưa gán"} />
           <InfoCard label="Phòng ban" value={`Phòng ban #${project.departmentId}`} />
@@ -277,8 +318,11 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Phases (read-only)</h2>
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-900">Phases</h2>
+          <p className="mt-1 text-sm text-slate-500">Các giai đoạn triển khai của dự án.</p>
+        </div>
 
         {project.phases.length === 0 ? (
           <p className="text-sm text-slate-500">Dự án chưa có phase.</p>
@@ -287,7 +331,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             {project.phases.map((phase) => {
               const phaseBurn = burnPercent(phase.currentSpent, phase.budgetLimit);
               return (
-                <div key={phase.id} className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+                <div key={phase.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-xs text-slate-500 font-mono">{phase.phaseCode}</p>
@@ -304,11 +348,11 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                     </span>
                   </div>
 
-                  <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
-                    <div className={`h-full ${burnClass(phaseBurn)}`} style={{ width: `${phaseBurn}%` }} />
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className={`h-full rounded-full ${burnClass(phaseBurn)}`} style={{ width: `${phaseBurn}%` }} />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 gap-2">
+                  <div className="mt-3 flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                     <span>
                       {formatCurrency(phase.currentSpent)} / {formatCurrency(phase.budgetLimit)}
                     </span>
@@ -323,8 +367,11 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Members (read-only)</h2>
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-900">Members</h2>
+          <p className="mt-1 text-sm text-slate-500">Thành viên đang tham gia dự án.</p>
+        </div>
 
         {project.members.length === 0 ? (
           <p className="text-sm text-slate-500">Dự án chưa có thành viên.</p>
@@ -333,7 +380,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             {project.members.map((member) => (
               <div
                 key={member.userId}
-                className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-3"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-900 truncate">{member.fullName}</p>
@@ -366,15 +413,19 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
             aria-label="Đóng modal chỉnh sửa dự án"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Sửa thông tin dự án</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl shadow-slate-950/20">
+            <div className="mb-5">
+              <h3 className="text-xl font-bold text-slate-900">Sửa thông tin dự án</h3>
+              <p className="mt-1 text-sm text-slate-500">Cập nhật cấu hình quản trị, ngân sách và Team Leader phụ trách.</p>
+            </div>
 
+            <div className="space-y-5">
             <div>
               <label className="block text-sm text-slate-600 mb-2">Tên dự án</label>
               <input
                 value={editName}
                 onChange={(event) => setEditName(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               />
             </div>
 
@@ -384,20 +435,14 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                 rows={4}
                 value={editDescription}
                 onChange={(event) => setEditDescription(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm text-slate-600 mb-2">Tổng ngân sách (VND)</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={editTotalBudget}
-                  onChange={(event) => setEditTotalBudget(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                />
+                <CurrencyInput value={editTotalBudget} onChange={setEditTotalBudget} />
               </div>
 
               <div>
@@ -405,7 +450,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                 <select
                   value={editStatus}
                   onChange={(event) => setEditStatus(event.target.value as ProjectStatus)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
                 >
                   <option value={ProjectStatus.PLANNING}>PLANNING</option>
                   <option value={ProjectStatus.ACTIVE}>ACTIVE</option>
@@ -420,7 +465,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
               <select
                 value={editTeamLeaderId}
                 onChange={(event) => setEditTeamLeaderId(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               >
                 <option value="">Chọn Team Leader</option>
                 {teamLeaders.map((option) => (
@@ -430,12 +475,13 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                 ))}
               </select>
             </div>
+            </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex items-center justify-end gap-3 pt-5">
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
               >
                 Hủy
               </button>
@@ -443,7 +489,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleSaveChanges}
                 disabled={saving}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? "Đang lưu..." : "Lưu thay đổi"}
               </button>
@@ -451,6 +497,35 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "emerald" | "indigo" | "cyan" | "rose";
+}) {
+  const toneClassName = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    cyan: "bg-cyan-50 text-cyan-700 border-cyan-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+  }[tone];
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full border ${toneClassName}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }
@@ -465,9 +540,9 @@ function InfoCard({
   tone?: string;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className={`text-sm mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      <p className={`mt-2 text-sm font-semibold ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>
   );
 }

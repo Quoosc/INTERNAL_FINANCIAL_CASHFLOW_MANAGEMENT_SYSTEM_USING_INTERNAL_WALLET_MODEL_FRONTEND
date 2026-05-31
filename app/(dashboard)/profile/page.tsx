@@ -56,29 +56,39 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function TextInput({
   value,
   onChange,
+  onBlur,
   disabled,
   type = "text",
   placeholder,
+  error,
 }: {
   value: string;
   onChange?: (v: string) => void;
+  onBlur?: () => void;
   disabled?: boolean;
   type?: string;
   placeholder?: string;
+  error?: string;
 }) {
   return (
-    <input
-      type={type}
-      value={value}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-      disabled={disabled}
-      placeholder={placeholder}
-      className={`w-full px-4 py-2.5 rounded-xl border text-slate-900 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 ${
-        disabled
-          ? "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed"
-          : "bg-white border-slate-200 hover:border-slate-300"
-      }`}
-    />
+    <>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+        onBlur={onBlur}
+        disabled={disabled}
+        placeholder={placeholder}
+        className={`w-full px-4 py-2.5 rounded-xl border text-slate-900 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 ${
+          disabled
+            ? "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed"
+            : error
+              ? "border-rose-300 bg-white"
+              : "bg-white border-slate-200 hover:border-slate-300"
+        }`}
+      />
+      {error && <p className="text-xs text-rose-600 mt-1">{error}</p>}
+    </>
   );
 }
 
@@ -113,6 +123,16 @@ function SaveBtn({
   );
 }
 
+function SummaryCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 h-2 w-12 rounded-full bg-blue-600" />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 truncate text-lg font-bold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 type Tab = "profile" | "bank";
@@ -130,6 +150,7 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState<UpdateProfileRequest>({
     fullName: "", phoneNumber: "", address: "", dateOfBirth: "", citizenId: "",
   });
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
 
   const [bankForm, setBankForm] = useState<UpdateBankInfoRequest>({
     bankName: "", accountNumber: "", accountOwner: "",
@@ -311,15 +332,48 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="mx-auto max-w-6xl space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Hồ sơ cá nhân</h1>
-        <p className="text-slate-500 mt-0.5 text-sm">Quản lý thông tin, ngân hàng và bảo mật tài khoản.</p>
-      </div>
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-20 w-20 overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-lg">
+              {avatarSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarSrc} alt={profile?.fullName ?? ""} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-white/10 text-3xl font-bold text-white">
+                  {initials}
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                Personal profile
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight">{profile?.fullName ?? user?.fullName ?? "Hồ sơ cá nhân"}</h1>
+              <p className="mt-2 text-sm leading-6 text-blue-100">
+                Quản lý thông tin cá nhân, tài khoản ngân hàng và PIN giao dịch của bạn.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-blue-50 backdrop-blur">
+            <p className="text-xs text-blue-100">Vai trò</p>
+            <p className="mt-1 font-bold text-white">{roleLabel}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <SummaryCard label="Mã nhân viên" value={profile?.employeeCode ?? "Chưa có"} />
+        <SummaryCard label="Phòng ban" value={profile?.departmentName ?? user?.departmentName ?? "Chưa gán"} />
+        <SummaryCard label="Email" value={profile?.email ?? user?.email ?? "Chưa có"} />
+      </section>
 
       {/* ── Tab switcher ── */}
-      <div className="flex gap-1 p-1 bg-slate-100 rounded-2xl">
+      <div className="flex gap-1 rounded-3xl border border-blue-100 bg-white p-1 shadow-sm">
         {(
           [
             { key: "profile", label: "Thông tin cá nhân", icon: "M5.121 17.804A9 9 0 1118.88 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z" },
@@ -332,8 +386,8 @@ export default function ProfilePage() {
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.key
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-blue-600 text-white shadow-sm shadow-blue-900/10"
+                : "text-slate-500 hover:bg-blue-50 hover:text-blue-700"
             }`}
           >
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,9 +400,9 @@ export default function ProfilePage() {
 
       {/* ── Tab 1: Thông tin cá nhân + Ảnh đại diện ── */}
       {activeTab === "profile" && (
-        <section className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           {/* Header */}
-          <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+          <div className="flex items-center gap-3 border-b border-slate-200 bg-blue-50/50 px-6 py-4">
             <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5.121 17.804A9 9 0 1118.88 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -366,12 +420,12 @@ export default function ProfilePage() {
               {/* Avatar column */}
               <div className="flex flex-col items-center gap-3 sm:w-40 shrink-0">
                 <div className="relative">
-                  <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-slate-100 shadow-md">
+                  <div className="h-28 w-28 overflow-hidden rounded-3xl ring-4 ring-blue-50 shadow-md">
                     {avatarSrc ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={avatarSrc} alt={profile?.fullName ?? ""} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold">
+                      <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-blue-600 to-indigo-700 text-3xl font-bold text-white">
                         {initials}
                       </div>
                     )}
@@ -449,7 +503,9 @@ export default function ProfilePage() {
                 <Field label="Họ và tên">
                   <TextInput
                     value={profileForm.fullName}
-                    onChange={(v) => setProfileForm((p) => ({ ...p, fullName: v }))}
+                    onChange={(v) => { setProfileForm((p) => ({ ...p, fullName: v })); if (profileErrors.fullName) setProfileErrors((p) => ({ ...p, fullName: "" })); }}
+                    onBlur={() => { if (!profileForm.fullName.trim()) setProfileErrors((p) => ({ ...p, fullName: "Họ và tên là bắt buộc." })); }}
+                    error={profileErrors.fullName}
                   />
                 </Field>
                 <Field label="Email">
@@ -458,8 +514,10 @@ export default function ProfilePage() {
                 <Field label="Số điện thoại">
                   <TextInput
                     value={profileForm.phoneNumber ?? ""}
-                    onChange={(v) => setProfileForm((p) => ({ ...p, phoneNumber: v }))}
+                    onChange={(v) => { setProfileForm((p) => ({ ...p, phoneNumber: v })); if (profileErrors.phoneNumber) setProfileErrors((p) => ({ ...p, phoneNumber: "" })); }}
+                    onBlur={() => { const v = profileForm.phoneNumber?.trim() ?? ""; if (v && !/^0\d{9}$/.test(v)) setProfileErrors((p) => ({ ...p, phoneNumber: "Số điện thoại không hợp lệ (VD: 0912345678)." })); }}
                     placeholder="0912 345 678"
+                    error={profileErrors.phoneNumber}
                   />
                 </Field>
                 <Field label="Ngày sinh">
@@ -508,8 +566,8 @@ export default function ProfilePage() {
       {activeTab === "bank" && (
         <div className="space-y-5">
           {/* Bank section */}
-          <section className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-slate-200 bg-blue-50/50 px-6 py-4">
               <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -618,8 +676,8 @@ export default function ProfilePage() {
           </section>
 
           {/* Security / PIN section */}
-          <section className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-slate-200 bg-blue-50/50 px-6 py-4">
               <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />

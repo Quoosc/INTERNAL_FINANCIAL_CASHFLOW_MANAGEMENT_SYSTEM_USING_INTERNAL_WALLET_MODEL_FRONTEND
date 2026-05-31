@@ -40,11 +40,6 @@ function getStatusClass(status: ProjectStatus): string {
   }
 }
 
-function getSpentPercent(item: ProjectListItem): number {
-  if (!item.totalBudget || item.totalBudget <= 0) return 0;
-  return Math.min(100, Math.round((item.totalSpent / item.totalBudget) * 100));
-}
-
 function getProgressBarClass(percent: number): string {
   if (percent >= 90) return "bg-rose-500";
   if (percent >= 70) return "bg-amber-500";
@@ -52,6 +47,62 @@ function getProgressBarClass(percent: number): string {
 }
 
 type StatusFilter = "ALL" | ProjectStatus;
+type ProjectListPayload =
+  | PaginatedResponse<ProjectListItem>
+  | { content?: ProjectListItem[]; totalElements?: number; totalPages?: number }
+  | ProjectListItem[];
+type ProjectMoneyFields = ProjectListItem & {
+  budget?: number | string | null;
+  budgetLimit?: number | string | null;
+  allocatedBudget?: number | string | null;
+  totalAmount?: number | string | null;
+  spentAmount?: number | string | null;
+  usedBudget?: number | string | null;
+  remainingBudget?: number | string | null;
+  availableBudget?: number | string | null;
+};
+
+function asMoney(value: unknown): number | null {
+  const numeric = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function getProjectBudget(item: ProjectListItem): number {
+  const project = item as ProjectMoneyFields;
+  return (
+    asMoney(project.totalBudget) ??
+    asMoney(project.budget) ??
+    asMoney(project.budgetLimit) ??
+    asMoney(project.allocatedBudget) ??
+    asMoney(project.totalAmount) ??
+    0
+  );
+}
+
+function getProjectSpent(item: ProjectListItem): number {
+  const project = item as ProjectMoneyFields;
+  return (
+    asMoney(project.totalSpent) ??
+    asMoney(project.spentAmount) ??
+    asMoney(project.usedBudget) ??
+    0
+  );
+}
+
+function getProjectRemaining(item: ProjectListItem): number {
+  const project = item as ProjectMoneyFields;
+  return (
+    asMoney(project.availableBudget) ??
+    asMoney(project.remainingBudget) ??
+    Math.max(0, getProjectBudget(item) - getProjectSpent(item))
+  );
+}
+
+function getSpentPercent(item: ProjectListItem): number {
+  const budget = getProjectBudget(item);
+  if (budget <= 0) return 0;
+  return Math.min(100, Math.round((getProjectSpent(item) / budget) * 100));
+}
 
 function parseStatus(value: string | null): StatusFilter {
   if (!value) return "ALL";
@@ -66,6 +117,27 @@ function parseSearch(value: string | null): string {
 function parsePage(value: string | null): number {
   const n = Number(value ?? "1");
   return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+function getProjectItems(payload: ProjectListPayload): ProjectListItem[] {
+  if (Array.isArray(payload)) return payload;
+  if ("items" in payload && Array.isArray(payload.items)) return payload.items;
+  if ("content" in payload && Array.isArray(payload.content)) return payload.content;
+  return [];
+}
+
+function getProjectTotal(payload: ProjectListPayload, itemCount: number): number {
+  if (Array.isArray(payload)) return itemCount;
+  if ("total" in payload && typeof payload.total === "number") return payload.total;
+  if ("totalElements" in payload && typeof payload.totalElements === "number") return payload.totalElements;
+  return itemCount;
+}
+
+function getProjectTotalPages(payload: ProjectListPayload, totalItems: number): number {
+  if (!Array.isArray(payload) && typeof payload.totalPages === "number") {
+    return Math.max(1, payload.totalPages);
+  }
+  return Math.max(1, Math.ceil(totalItems / PAGE_LIMIT));
 }
 
 export default function ProjectsPage() {
@@ -110,14 +182,16 @@ export default function ProjectsPage() {
         query.set("page", String(page));
         query.set("limit", String(PAGE_LIMIT));
 
-        const res = await api.get<PaginatedResponse<ProjectListItem>>(
+        const res = await api.get<ProjectListPayload>(
           `/api/v1/projects?${query.toString()}`
         );
 
         if (cancelled) return;
-        setProjects(res.data.items);
-        setTotal(res.data.total);
-        setTotalPages(res.data.totalPages);
+        const items = getProjectItems(res.data);
+        const nextTotal = getProjectTotal(res.data, items.length);
+        setProjects(items);
+        setTotal(nextTotal);
+        setTotalPages(getProjectTotalPages(res.data, nextTotal));
       } catch (err) {
         if (cancelled) return;
 
@@ -175,6 +249,18 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">My projects</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Track budget, current phase and progress for projects you are involved in.</p>
+          </div>
+        </div>
+      </section>
+
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Dự án</h1>
         <p className="text-slate-500 mt-1">Xem danh sách và tiến độ các dự án.</p>
@@ -189,7 +275,7 @@ export default function ProjectsPage() {
             className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
               statusFilter === tab.value
                 ? "bg-blue-100 border-blue-300 text-blue-700"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-blue-50"
             }`}
           >
             {tab.label}
@@ -203,11 +289,11 @@ export default function ProjectsPage() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Tìm theo mã hoặc tên dự án..."
-          className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+          className="flex-1 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         <button
           type="submit"
-          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+          className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
         >
           Tìm
         </button>
@@ -221,21 +307,22 @@ export default function ProjectsPage() {
           </svg>
         </div>
       ) : projects.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500 text-sm">
+        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 text-sm">
           Không có dự án phù hợp bộ lọc.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {projects.map((project) => {
             const spentPercent = getSpentPercent(project);
-            const remaining = Math.max(0, project.totalBudget - project.totalSpent);
+            const budget = getProjectBudget(project);
+            const remaining = getProjectRemaining(project);
 
             return (
               <button
                 key={project.id}
                 type="button"
                 onClick={() => router.push(`/projects/${project.id}`)}
-                className="bg-white border border-slate-200 hover:border-slate-200 rounded-2xl p-5 text-left transition-all hover:bg-blue-100/50 space-y-4"
+                className="border border-slate-200 bg-white hover:border-slate-200 rounded-3xl p-5 text-left transition-all hover:bg-blue-50/50 space-y-4"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -260,7 +347,7 @@ export default function ProjectsPage() {
                     <span className="text-slate-500">Tiến độ ngân sách</span>
                     <span className="text-slate-600 font-medium">{spentPercent}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
+                  <div className="h-2 rounded-full border border-slate-200 bg-white overflow-hidden">
                     <div
                       className={`h-full transition-all ${getProgressBarClass(spentPercent)}`}
                       style={{ width: `${spentPercent}%` }}
@@ -269,11 +356,11 @@ export default function ProjectsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white border border-slate-200 rounded-xl px-3 py-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
                     <p className="text-[11px] text-slate-500">Ngân sách</p>
-                    <p className="text-xs font-semibold text-slate-900 mt-0.5">{formatCurrency(project.totalBudget)}</p>
+                    <p className="text-xs font-semibold text-slate-900 mt-0.5">{formatCurrency(budget)}</p>
                   </div>
-                  <div className="bg-white border border-slate-200 rounded-xl px-3 py-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
                     <p className="text-[11px] text-slate-500">Còn lại</p>
                     <p className="text-xs font-semibold text-emerald-700 mt-0.5">{formatCurrency(remaining)}</p>
                   </div>
@@ -294,7 +381,7 @@ export default function ProjectsPage() {
             type="button"
             onClick={() => handlePageChange(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Trước
           </button>
@@ -302,7 +389,7 @@ export default function ProjectsPage() {
             type="button"
             onClick={() => handlePageChange(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
           >
             Sau
           </button>

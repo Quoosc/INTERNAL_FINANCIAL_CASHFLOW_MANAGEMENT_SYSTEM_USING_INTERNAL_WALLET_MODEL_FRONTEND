@@ -7,8 +7,9 @@ import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
 import { createWithdrawRequest, createDeposit } from "@/lib/api";
 import { withdrawSchema, depositSchema } from "@/lib/schemas";
-import { formatCurrency, formatDateTime, formatInputAmount, parseAmountInput } from "@/lib/format";
+import { formatCurrency, formatDateTime, parseAmountInput } from "@/lib/format";
 import { ErrorAlert } from "@/components/ui/error-alert";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { useToast } from "@/contexts/toast-context";
 import {
   DepositLogResponse,
@@ -29,6 +30,9 @@ function DepositModal({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
 
   const amountNum = useMemo(() => Number(amount || 0), [amount]);
+  const handleAmountChange = (value: string) => {
+    setAmount(parseAmountInput(value));
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,10 +72,12 @@ function DepositModal({ onClose }: { onClose: () => void }) {
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền nạp</label>
                 <input
-                  type="text" inputMode="numeric" placeholder="Nhập số tiền"
+                  type="text"
+                  inputMode="numeric"
                   value={amount}
-                  onChange={(e) => setAmount(parseAmountInput(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  onChange={(event) => handleAmountChange(event.target.value)}
+                  placeholder="Nhập số tiền"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
                 <div className="flex items-center justify-between gap-3 mt-1 text-xs">
                   <p className="text-slate-500">Tối thiểu: 10.000 ₫</p>
@@ -137,7 +143,6 @@ function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBal
   const [result, setResult] = useState<WithdrawRequestResponse | null>(null);
 
   const amountNum = useMemo(() => Number(amount || 0), [amount]);
-  const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
   const available = walletProp?.availableBalance ?? walletProp?.balance ?? 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -187,11 +192,10 @@ function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBal
 
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền rút</label>
-                <input
-                  type="text" inputMode="numeric" placeholder="Nhập số tiền"
-                  value={amountDisplay}
-                  onChange={(e) => setAmount(parseAmountInput(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                <CurrencyInput
+                  value={amountNum || null}
+                  onChange={(value) => setAmount(value ? String(value) : "")}
+                  placeholder="Nhập số tiền"
                 />
               </div>
 
@@ -304,6 +308,22 @@ function getTransactionStatusClass(status: TransactionStatus): string {
   }
 }
 
+function MetricCard({ label, value, tone = "blue" }: { label: string; value: string; tone?: "blue" | "amber" | "emerald" }) {
+  const toneClass = {
+    blue: "bg-blue-600",
+    amber: "bg-amber-500",
+    emerald: "bg-emerald-500",
+  }[tone];
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full ${toneClass}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
 export default function WalletPage() {
   const router = useRouter();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
@@ -341,15 +361,47 @@ export default function WalletPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page title */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Ví của tôi</h1>
-        <p className="text-slate-500 mt-1">Theo dõi số dư và giao dịch cá nhân</p>
-      </div>
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Personal wallet
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Ví của tôi</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Theo dõi số dư, giao dịch cá nhân và thực hiện nạp/rút tiền từ một màn hình thống nhất.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {/* <button
+              type="button"
+              onClick={() => setShowWithdraw(true)}
+              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50"
+            >
+              Rút tiền
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeposit(true)}
+              className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+            >
+              Nạp tiền
+            </button> */}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <MetricCard label="Số dư khả dụng" value={walletLoading ? "Đang tải..." : formatCurrency(wallet?.availableBalance ?? 0)} tone="blue" />
+        <MetricCard label="Tổng số dư" value={walletLoading ? "Đang tải..." : formatCurrency(wallet?.balance ?? 0)} tone="emerald" />
+        <MetricCard label="Đang khóa" value={walletLoading ? "Đang tải..." : formatCurrency(wallet?.lockedBalance ?? 0)} tone="amber" />
+      </section>
 
       {/* Hero wallet card */}
       <div
-        className="relative rounded-2xl overflow-hidden shadow-2xl"
+        className="relative overflow-hidden rounded-3xl border border-blue-200 shadow-xl shadow-blue-900/10"
         style={{
           background: "linear-gradient(135deg, rgba(30,58,138,0.95) 0%, rgba(30,64,175,0.85) 100%), linear-gradient(180deg, #1e3a8a 0%, #1d4ed8 100%)",
         }}
@@ -466,17 +518,21 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900">Giao dịch gần đây</h2>
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-blue-50/50 px-6 py-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Giao dịch gần đây</h2>
+            <p className="mt-1 text-sm text-slate-500">5 giao dịch mới nhất trên ví cá nhân của bạn.</p>
+          </div>
           <Link
             href="/wallet/transactions"
-            className="text-sm text-blue-700 hover:text-blue-700 transition-colors"
+            className="text-sm font-semibold text-blue-700 transition-colors hover:text-blue-600"
           >
-            Xem tất cả →
+            Xem tất cả
           </Link>
         </div>
 
+        <div className="p-6">
         {transactionsLoading ? (
           <div className="flex items-center justify-center py-10">
             <svg className="animate-spin h-7 w-7 text-blue-500" viewBox="0 0 24 24" fill="none">
@@ -522,6 +578,7 @@ export default function WalletPage() {
             })}
           </div>
         )}
+        </div>
 
       </div>
 

@@ -107,6 +107,18 @@ export default function ProjectDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Project detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Review phase budgets, delivery status and spending progress for this project.</p>
+          </div>
+        </div>
+      </section>
+
         <div className="h-9 w-40 rounded bg-white animate-pulse" />
         <div className="h-28 rounded-2xl bg-white animate-pulse" />
         <div className="h-64 rounded-2xl bg-white animate-pulse" />
@@ -120,7 +132,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
         <button
           type="button"
           onClick={() => router.push("/projects")}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
         >
           <svg
             className="w-4 h-4"
@@ -138,7 +150,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
           Quay lại danh sách dự án
         </button>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500">
           Không tìm thấy dự án hoặc bạn không có quyền truy cập.
         </div>
       </div>
@@ -147,10 +159,22 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Project detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Review phase budgets, delivery status and spending progress for this project.</p>
+          </div>
+        </div>
+      </section>
+
       <button
         type="button"
         onClick={() => router.push("/projects")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg
           className="w-4 h-4"
@@ -168,7 +192,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
         Quay lại
       </button>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-5">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500">Dự án #{data.projectId}</p>
@@ -183,7 +207,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
         <h2 className="text-lg font-semibold text-slate-900">
           Tổng quan ngân sách
         </h2>
@@ -211,7 +235,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
             <span>Tỉ lệ đã chi</span>
             <span>{budgetStats.spentPercent}%</span>
           </div>
-          <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
+          <div className="h-2 rounded-full border border-slate-200 bg-white overflow-hidden">
             <div
               className="h-full bg-rose-500"
               style={{ width: `${budgetStats.spentPercent}%` }}
@@ -220,7 +244,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900">
             Danh sách phase
@@ -234,24 +258,24 @@ export default function ProjectDetailPage({ params }: PageProps) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-215">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-white">
                 <tr className="bg-blue-50 border-b border-slate-200">
-                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                     Phase
                   </th>
-                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                     Thời gian
                   </th>
-                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                     Ngân sách
                   </th>
-                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                     Đã chi
                   </th>
-                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                     Còn lại
                   </th>
-                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                     Trạng thái
                   </th>
                 </tr>
@@ -318,7 +342,7 @@ function BudgetCard({
   tone: string;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <p className="text-xs text-slate-500 uppercase tracking-wide">{title}</p>
       <p className={`text-lg font-bold mt-2 ${tone}`}>
         {formatCurrency(value)}

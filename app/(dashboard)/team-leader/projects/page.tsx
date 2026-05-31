@@ -13,60 +13,6 @@ import { useToast } from "@/contexts/toast-context";
 
 const PAGE_LIMIT = 12;
 
-const MOCK_PROJECTS: TLProjectListItem[] = [
-  {
-    id: 1,
-    projectCode: "PRJ-IT-001",
-    name: "Hệ thống quản lý nội bộ",
-    status: "ACTIVE",
-    totalBudget: 150_000_000,
-    availableBudget: 88_500_000,
-    totalSpent: 61_500_000,
-    memberCount: 5,
-    currentPhaseId: 1,
-    currentPhaseName: "Phase 1 - Phân tích",
-    createdAt: "2026-01-10T08:00:00",
-  },
-  {
-    id: 2,
-    projectCode: "PRJ-IT-002",
-    name: "Nâng cấp hạ tầng mạng",
-    status: "ACTIVE",
-    totalBudget: 80_000_000,
-    availableBudget: 62_500_000,
-    totalSpent: 17_500_000,
-    memberCount: 3,
-    currentPhaseId: 3,
-    currentPhaseName: "Phase 1 - Triển khai",
-    createdAt: "2026-02-15T08:00:00",
-  },
-  {
-    id: 3,
-    projectCode: "PRJ-IT-003",
-    name: "Nghiên cứu AI integration",
-    status: "PLANNING",
-    totalBudget: 50_000_000,
-    availableBudget: 50_000_000,
-    totalSpent: 0,
-    memberCount: 2,
-    currentPhaseId: null,
-    currentPhaseName: null,
-    createdAt: "2026-03-20T08:00:00",
-  },
-  {
-    id: 4,
-    projectCode: "PRJ-IT-004",
-    name: "Migration legacy system",
-    status: "PAUSED",
-    totalBudget: 120_000_000,
-    availableBudget: 45_000_000,
-    totalSpent: 75_000_000,
-    memberCount: 4,
-    currentPhaseId: 5,
-    currentPhaseName: "Phase 2 - Migration",
-    createdAt: "2025-11-01T08:00:00",
-  },
-];
 
 
 function parseStatus(value: string | null): ProjectStatus | undefined {
@@ -121,18 +67,6 @@ function getBurnClass(percent: number): string {
   return "bg-emerald-500";
 }
 
-function filterMock(source: TLProjectListItem[], status?: ProjectStatus, search = ""): TLProjectListItem[] {
-  const q = search.trim().toLowerCase();
-
-  return source.filter((item) => {
-    if (status && item.status !== status) return false;
-    if (q) {
-      const haystack = `${item.projectCode} ${item.name}`.toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
-    return true;
-  });
-}
 
 export default function TLProjectsPage() {
   const router = useRouter();
@@ -223,25 +157,13 @@ export default function TLProjectsPage() {
         setTotalPages(res.data.totalPages);
       } catch (err) {
         if (cancelled) return;
-
-        const filtered = filterMock(MOCK_PROJECTS, statusFilter, search);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const safePage = Math.min(page, mockTotalPages);
-        const start = (safePage - 1) * PAGE_LIMIT;
-
-        setItems(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-
-        if (safePage !== page) {
-          goToPage(safePage);
-        }
-
+        setItems([]);
+        setTotal(0);
+        setTotalPages(1);
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải danh sách dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -262,20 +184,63 @@ export default function TLProjectsPage() {
     { label: "Tạm dừng", value: ProjectStatus.PAUSED },
     { label: "Đã đóng", value: ProjectStatus.CLOSED },
   ];
+  const filtered = Boolean(statusFilter || search);
+  const activeOnPage = items.filter((project) => project.status === ProjectStatus.ACTIVE).length;
+  const atRiskOnPage = items.filter((project) => getBurnPercent(project) >= 85).length;
+  const availableOnPage = items.reduce((sum, project) => sum + project.availableBudget, 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dự án của tôi</h1>
-          <p className="text-slate-500 mt-1">Danh sách dự án bạn đang phụ trách và mức tiêu hao ngân sách.</p>
-        </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-700 text-sm font-medium">
-          {total} dự án
-        </span>
-      </div>
+      <section className="overflow-hidden rounded-3xl border border-indigo-200 bg-linear-to-br from-indigo-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-indigo-900/15">
+        <div className="relative px-6 py-7 sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Team Leader workspace</p>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Dự án của tôi</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
+                Theo dõi danh sách dự án đang phụ trách, sức khỏe ngân sách và phase hiện tại trong một màn hình.
+              </p>
+            </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
+            <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-emerald-300" />
+              {total.toLocaleString("vi-VN")} dự án
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Tổng dự án" value={total.toLocaleString("vi-VN")} helper={`${items.length} đang hiển thị`} tone="blue" />
+        <MetricCard label="Đang chạy" value={String(activeOnPage)} helper="Dự án active trên trang" tone="emerald" />
+        <MetricCard label="Ngân sách còn lại" value={formatCurrency(availableOnPage)} helper="Tổng khả dụng trên trang" tone="cyan" />
+        <MetricCard label="Cần chú ý" value={String(atRiskOnPage)} helper="Burn rate từ 85% trở lên" tone="rose" />
+      </section>
+
+      <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Bộ lọc dự án</h2>
+            <p className="mt-1 text-sm text-slate-500">Lọc theo trạng thái hoặc tìm nhanh bằng mã và tên dự án.</p>
+          </div>
+          {filtered && (
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams(searchParamsString);
+                params.delete("status");
+                params.delete("search");
+                params.delete("page");
+                pushWithParams(params);
+              }}
+              className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
             const active = statusFilter === tab.value || (!statusFilter && !tab.value);
@@ -284,10 +249,10 @@ export default function TLProjectsPage() {
                 key={tab.label}
                 type="button"
                 onClick={() => updateParam("status", tab.value)}
-                className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
+                className={`rounded-2xl border px-4 py-2.5 text-sm font-semibold transition ${
                   active
-                    ? "bg-blue-100 border-blue-300 text-blue-700"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+                    ? "border-blue-200 bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
                 }`}
               >
                 {tab.label}
@@ -296,9 +261,9 @@ export default function TLProjectsPage() {
           })}
         </div>
 
-        <div className="relative">
+        <div className="relative mt-4">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
+            className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -309,25 +274,26 @@ export default function TLProjectsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm mã hoặc tên dự án..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
           />
         </div>
-      </div>
+      </section>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
-            <div key={`skeleton-${index}`} className="h-52 rounded-2xl bg-white animate-pulse" />
+            <div key={`skeleton-${index}`} className="h-56 animate-pulse rounded-3xl bg-white" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h6l2 2h10v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
             </svg>
           </div>
-          <p className="text-slate-600 mt-4">Bạn chưa được phân công dự án nào</p>
+          <h3 className="mt-4 text-base font-bold text-slate-900">Bạn chưa được phân công dự án nào</h3>
+          <p className="mt-1 text-sm text-slate-500">Thử thay đổi bộ lọc hoặc kiểm tra lại phân công dự án.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -339,29 +305,29 @@ export default function TLProjectsPage() {
                 key={project.id}
                 type="button"
                 onClick={() => router.push(`/team-leader/projects/${project.id}`)}
-                className="bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all space-y-4"
+                className="group rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/10"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs text-slate-500 font-mono">{project.projectCode}</p>
-                    <p className="text-base font-semibold text-slate-900 mt-1 truncate">{project.name}</p>
+                    <p className="font-mono text-xs font-semibold text-blue-600">{project.projectCode}</p>
+                    <p className="mt-2 truncate text-base font-bold text-slate-950">{project.name}</p>
                   </div>
-                  <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(project.status)}`}>
+                  <span className={`inline-flex shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusClass(project.status)}`}>
                     {getStatusLabel(project.status)}
                   </span>
                 </div>
 
-                <p className="text-sm text-slate-500">
+                <p className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-600">
                   {project.currentPhaseName ? project.currentPhaseName : "Chưa có phase"}
                 </p>
 
-                <div className="space-y-2">
+                <div className="mt-5 space-y-2">
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>Budget burn</span>
-                    <span>{burn}%</span>
+                    <span className="font-semibold text-slate-700">Budget burn</span>
+                    <span>{burn}% sử dụng</span>
                   </div>
-                  <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
-                    <div className={`h-full ${getBurnClass(burn)}`} style={{ width: `${burn}%` }} />
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className={`h-full rounded-full ${getBurnClass(burn)}`} style={{ width: `${burn}%` }} />
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-500">
@@ -371,9 +337,12 @@ export default function TLProjectsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-emerald-700 font-medium">{formatCurrency(project.availableBudget)}</span>
-                  <span className="inline-flex items-center gap-1 text-slate-500">
+                <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
+                  <div>
+                    <p className="text-xs text-slate-500">Khả dụng</p>
+                    <p className="mt-1 font-bold text-emerald-700">{formatCurrency(project.availableBudget)}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20h10M12 7a3 3 0 110 6 3 3 0 010-6z" />
                     </svg>
@@ -386,9 +355,10 @@ export default function TLProjectsPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-500">
-          Trang {page}/{totalPages} • Tổng {total} dự án
+          Hiển thị <span className="font-semibold text-slate-900">{items.length}</span> trong tổng{" "}
+          <span className="font-semibold text-slate-900">{total.toLocaleString("vi-VN")}</span> dự án
         </p>
 
         <div className="flex items-center gap-2">
@@ -396,7 +366,7 @@ export default function TLProjectsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Trước
           </button>
@@ -404,13 +374,41 @@ export default function TLProjectsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Sau
           </button>
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "emerald" | "cyan" | "rose";
+}) {
+  const toneClassName = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    cyan: "bg-cyan-50 text-cyan-700 border-cyan-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+  }[tone];
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full border ${toneClassName}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

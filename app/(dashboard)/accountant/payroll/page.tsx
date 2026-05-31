@@ -13,69 +13,10 @@ import {
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
+import { SideDrawer } from "@/components/ui/side-drawer";
 
 const PAGE_LIMIT = 8;
 
-// ─── MOCK (xóa khi backend sẵn sàng) ───────────────────────────────────────
-const MOCK_PERIODS: PayrollPeriodListItem[] = [
-  {
-    id: 6,
-    periodCode: "PR-2026-04",
-    name: "Lương tháng 04/2026",
-    month: 4,
-    year: 2026,
-    startDate: "2026-04-01",
-    endDate: "2026-04-30",
-    status: PayrollStatus.PROCESSING,
-    employeeCount: 12,
-    totalNetPayroll: 0,
-    createdAt: "2026-04-04T08:00:00",
-    updatedAt: "2026-04-04T09:30:00",
-  },
-  {
-    id: 5,
-    periodCode: "PR-2026-03",
-    name: "Lương tháng 03/2026",
-    month: 3,
-    year: 2026,
-    startDate: "2026-03-01",
-    endDate: "2026-03-31",
-    status: PayrollStatus.COMPLETED,
-    employeeCount: 12,
-    totalNetPayroll: 162_500_000,
-    createdAt: "2026-03-28T08:00:00",
-    updatedAt: "2026-04-02T17:00:00",
-  },
-  {
-    id: 4,
-    periodCode: "PR-2026-02",
-    name: "Lương tháng 02/2026",
-    month: 2,
-    year: 2026,
-    startDate: "2026-02-01",
-    endDate: "2026-02-28",
-    status: PayrollStatus.COMPLETED,
-    employeeCount: 12,
-    totalNetPayroll: 159_750_000,
-    createdAt: "2026-02-25T08:00:00",
-    updatedAt: "2026-03-03T16:00:00",
-  },
-  {
-    id: 3,
-    periodCode: "PR-2026-01",
-    name: "Lương tháng 01/2026",
-    month: 1,
-    year: 2026,
-    startDate: "2026-01-01",
-    endDate: "2026-01-31",
-    status: PayrollStatus.COMPLETED,
-    employeeCount: 11,
-    totalNetPayroll: 154_000_000,
-    createdAt: "2026-01-28T08:00:00",
-    updatedAt: "2026-02-02T15:00:00",
-  },
-];
-// ────────────────────────────────────────────────────────────────────────────
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
@@ -157,7 +98,6 @@ export default function AccountantPayrollPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
 
   const currentDate = new Date();
   const [periodMonth, setPeriodMonth] = useState(currentDate.getMonth() + 1);
@@ -234,24 +174,10 @@ export default function AccountantPayrollPage() {
         if (safePage !== page) goToPage(safePage);
       } catch (err) {
         if (cancelled) return;
-
-        // Defensive fallback: hiển thị mock khi API lỗi
-        const filtered = MOCK_PERIODS.filter((item) => {
-          if (status && item.status !== status) return false;
-          if (year && item.year !== year) return false;
-          return true;
-        });
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const safePage = Math.min(page, mockTotalPages);
-        const start = (safePage - 1) * PAGE_LIMIT;
-
-        setItems(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-        if (safePage !== page) goToPage(safePage);
-
-        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu, đang hiển thị dữ liệu mẫu.");
+        setItems([]);
+        setTotal(0);
+        setTotalPages(1);
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải danh sách kỳ lương.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -271,26 +197,24 @@ export default function AccountantPayrollPage() {
     setPeriodYear(nextYear);
     setPeriodName(buildPeriodName(month, nextYear));
     setNameTouched(false);
-    setCreateError(null);
     setShowCreateModal(true);
   };
 
   const handleCreatePeriod = async () => {
     if (periodMonth < 1 || periodMonth > 12) {
-      setCreateError("Tháng phải nằm trong khoảng 1–12.");
+      toast.error("Tháng phải nằm trong khoảng 1–12.");
       return;
     }
     if (periodYear < 2000 || periodYear > 2100) {
-      setCreateError("Năm không hợp lệ.");
+      toast.error("Năm không hợp lệ.");
       return;
     }
     if (!periodName.trim()) {
-      setCreateError("Tên kỳ lương là bắt buộc.");
+      toast.error("Tên kỳ lương là bắt buộc.");
       return;
     }
 
     setCreating(true);
-    setCreateError(null);
 
     const { startDate, endDate } = getMonthRange(periodMonth, periodYear);
     const body: CreatePayrollPeriodBody = {
@@ -313,6 +237,15 @@ export default function AccountantPayrollPage() {
     }
   };
 
+  const totalNetOnPage = useMemo(
+    () => items.reduce((sum, item) => sum + item.totalNetPayroll, 0),
+    [items],
+  );
+  const completedCount = useMemo(
+    () => items.filter((item) => item.status === PayrollStatus.COMPLETED).length,
+    [items],
+  );
+
   const statusTabs: Array<{ label: string; value?: PayrollStatus }> = [
     { label: "Tất cả" },
     { label: "Nháp", value: PayrollStatus.DRAFT },
@@ -322,7 +255,45 @@ export default function AccountantPayrollPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Payroll operations
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Quản lý bảng lương</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Tạo kỳ lương, import dữ liệu, rà soát khấu trừ tạm ứng và chạy payroll cho toàn bộ nhân viên.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="/api/v1/accountant/payroll/template"
+              download="payroll_template.xlsx"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+            >
+              Tải template
+            </a>
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50"
+            >
+              Tạo kỳ lương
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <PayrollMetric label="Tổng kỳ lương" value={String(total)} helper={`Trang ${page}/${totalPages}`} tone="blue" />
+        <PayrollMetric label="Đã hoàn tất trên trang" value={String(completedCount)} helper={`${items.length} kỳ đang hiển thị`} tone="emerald" />
+        <PayrollMetric label="Tổng net trên trang" value={formatCurrency(totalNetOnPage)} helper={year ? `Năm ${year}` : "Tất cả năm"} tone="violet" />
+      </section>
+
+      <div className="hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Quản lý bảng lương</h1>
           <p className="text-slate-500 mt-1">Danh sách kỳ lương và quy trình xử lý payroll cho toàn bộ nhân viên.</p>
@@ -352,7 +323,11 @@ export default function AccountantPayrollPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Bộ lọc kỳ lương</h2>
+          <p className="mt-1 text-sm text-slate-500">Theo dõi trạng thái xử lý và lọc nhanh theo năm.</p>
+        </div>
         {/* Status filter tabs */}
         <div className="flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
@@ -364,8 +339,8 @@ export default function AccountantPayrollPage() {
                 onClick={() => updateParam("status", tab.value)}
                 className={`px-3 py-1.5 rounded-xl border text-sm transition-colors ${
                   active
-                    ? "bg-blue-50 border-blue-300 text-blue-700"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+                    ? "bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-600/20"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-700"
                 }`}
               >
                 {tab.label}
@@ -380,7 +355,7 @@ export default function AccountantPayrollPage() {
           <select
             value={year ?? ""}
             onChange={(e) => updateParam("year", e.target.value || undefined)}
-            className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả</option>
             {[2025, 2026, 2027].map((y) => (
@@ -393,7 +368,7 @@ export default function AccountantPayrollPage() {
       {loading ? (
         <CardListSkeleton rows={4} height="h-40" />
       ) : items.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-12 text-center">
           <p className="text-slate-600">Không có kỳ lương phù hợp bộ lọc hiện tại.</p>
         </div>
       ) : (
@@ -403,7 +378,7 @@ export default function AccountantPayrollPage() {
               key={item.id}
               type="button"
               onClick={() => router.push(`/accountant/payroll/${item.id}`)}
-              className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
+              className="w-full rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
             >
               <div className="space-y-3">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -432,7 +407,7 @@ export default function AccountantPayrollPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
+                  <span className="inline-flex w-fit rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-600/20">
                     Xem chi tiết →
                   </span>
                 </div>
@@ -466,88 +441,106 @@ export default function AccountantPayrollPage() {
         </div>
       </div>
 
-      {/* Create modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setShowCreateModal(false)}
-            aria-label="Đóng"
-          />
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Tạo kỳ lương mới</h3>
+      <SideDrawer
+        open={showCreateModal}
+        title="Tạo kỳ lương mới"
+        description="Thiết lập kỳ payroll trước khi import file Excel và chạy quy trình chi lương."
+        onClose={() => setShowCreateModal(false)}
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(false)}
+              className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleCreatePeriod()}
+              disabled={creating}
+              className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {creating ? "Đang tạo..." : "Tạo kỳ lương"}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Tên kỳ lương</span>
+            <input
+              value={periodName}
+              onChange={(event) => {
+                setPeriodName(event.target.value);
+                setNameTouched(true);
+              }}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+            />
+          </label>
 
-            <div>
-              <label className="block text-sm text-slate-600 mb-2">Tên kỳ lương</label>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Tháng</span>
+              <select
+                value={periodMonth}
+                onChange={(event) => setPeriodMonth(Number(event.target.value))}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+              >
+                {Array.from({ length: 12 }).map((_, index) => (
+                  <option key={index + 1} value={index + 1}>Tháng {index + 1}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Năm</span>
               <input
-                value={periodName}
-                onChange={(e) => { setPeriodName(e.target.value); setNameTouched(true); }}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                type="number"
+                min={2000}
+                max={2100}
+                value={periodYear}
+                onChange={(event) => setPeriodYear(Number(event.target.value))}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm text-slate-600 mb-2">Tháng</label>
-                <select
-                  value={periodMonth}
-                  onChange={(e) => setPeriodMonth(Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                >
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm text-slate-600 mb-2">Năm</label>
-                <input
-                  type="number"
-                  min={2000}
-                  max={2100}
-                  value={periodYear}
-                  onChange={(e) => setPeriodYear(Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                />
-              </div>
-            </div>
-
-            {createError && (
-              <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">
-                {createError}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleCreatePeriod()}
-                disabled={creating}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
-              >
-                {creating ? "Đang tạo..." : "Tạo kỳ lương"}
-              </button>
-            </div>
+            </label>
           </div>
         </div>
-      )}
+      </SideDrawer>
     </div>
   );
 }
 
 function InfoCell({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm font-medium mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
+    </div>
+  );
+}
+
+function PayrollMetric({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "emerald" | "violet";
+}) {
+  const toneClass = {
+    blue: "from-blue-50 to-indigo-50 border-blue-100 text-blue-700",
+    emerald: "from-emerald-50 to-teal-50 border-emerald-100 text-emerald-700",
+    violet: "from-violet-50 to-fuchsia-50 border-violet-100 text-violet-700",
+  }[tone];
+
+  return (
+    <div className={`rounded-2xl border bg-linear-to-br ${toneClass} p-4 shadow-sm`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-75">{label}</p>
+      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

@@ -94,9 +94,21 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
 
   return (
     <div className="max-w-3xl space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Transaction detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Inspect transaction code, amount, type and processing timestamp.</p>
+          </div>
+        </div>
+      </section>
+
       <Link
         href="/wallet/transactions"
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -112,7 +124,7 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
       {loading ? (
         <div className="h-64 rounded-2xl bg-white animate-pulse" />
       ) : transaction ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-3">
           <DetailRow label="Ma giao dich" value={transaction.transactionCode} />
           <DetailRow label="Loai" value={getTypeLabel(transaction.type)} />
           <DetailRow label="Trang thai" value={getStatusLabel(transaction.status)} />
@@ -122,7 +134,7 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
           <DetailRow label="Reference ID" value={String(transaction.referenceId)} />
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-slate-600">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600">
           Khong tim thay giao dich.
         </div>
       )}
@@ -133,7 +145,7 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="text-sm text-slate-900 font-medium mt-1 break-all">{value}</p>
     </div>

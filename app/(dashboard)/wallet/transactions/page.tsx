@@ -335,6 +335,18 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Wallet transactions</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Track every wallet movement, status and transaction reference.</p>
+          </div>
+        </div>
+      </section>
+
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Lịch sử giao dịch</h1>
         <p className="text-slate-500 mt-1">
@@ -342,12 +354,12 @@ export default function TransactionsPage() {
         </p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 space-y-3">
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 md:p-5 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <select
             value={filters.type ?? "ALL"}
             onChange={(e) => handleTypeChange(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="ALL">Tất cả loại</option>
             {Object.values(TransactionType).map((type) => (
@@ -361,20 +373,20 @@ export default function TransactionsPage() {
             type="date"
             value={filters.from ?? ""}
             onChange={(e) => handleDateChange("from", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
 
           <input
             type="date"
             value={filters.to ?? ""}
             onChange={(e) => handleDateChange("to", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
 
           <button
             type="button"
             onClick={handleResetFilters}
-            className="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+            className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
           >
             Xóa bộ lọc
           </button>
@@ -386,38 +398,38 @@ export default function TransactionsPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm theo mã giao dịch hoặc mô tả..."
-            className="flex-1 px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="flex-1 px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
           <button
             type="submit"
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
           >
             Tìm
           </button>
         </form>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-215">
-            <thead>
-              <tr className="border-b border-slate-200 bg-white/40">
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-200 bg-blue-50/60">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Ngày
                 </th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Loại
                 </th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Mô tả
                 </th>
-                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                   Số tiền
                 </th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                   Trạng thái
                 </th>
-                <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                   Chi tiết
                 </th>
               </tr>
@@ -482,7 +494,7 @@ export default function TransactionsPage() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/wallet/transactions/${tx.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium hover:bg-blue-100 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium hover:bg-blue-50 transition-colors"
                       >
                         Xem chi tiết
                       </Link>
@@ -504,7 +516,7 @@ export default function TransactionsPage() {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 0}
-              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Trước
             </button>
@@ -512,7 +524,7 @@ export default function TransactionsPage() {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
             >
               Sau
             </button>

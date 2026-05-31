@@ -6,6 +6,7 @@ import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   AutoNettingResponse,
   PayrollDetailResponse,
@@ -21,23 +22,6 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// ─── MOCK fallback (dùng khi API lỗi) ──────────────────────────────────────
-const MOCK_PERIOD: PayrollDetailResponse = {
-  id: 0,
-  periodCode: "PR-XXXX-XX",
-  name: "Dữ liệu mẫu",
-  month: 1,
-  year: 2026,
-  startDate: "2026-01-01",
-  endDate: "2026-01-31",
-  status: PayrollStatus.DRAFT,
-  employeeCount: 0,
-  totalNetPayroll: 0,
-  entries: [],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
-// ────────────────────────────────────────────────────────────────────────────
 
 function getStatusLabel(status: PayrollStatus): string {
   if (status === PayrollStatus.DRAFT) return "Nháp";
@@ -57,12 +41,6 @@ function sumNet(entries: PayrollEntry[]): number {
 
 function recalcNet(entry: Pick<PayrollEntry, "baseSalary" | "bonus" | "allowance" | "deduction" | "advanceDeduct">): number {
   return Math.max(0, entry.baseSalary + entry.bonus + entry.allowance - entry.deduction - entry.advanceDeduct);
-}
-
-function n(value: string, fallback = 0): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
-  return parsed;
 }
 
 function applyNetting(entries: PayrollEntry[], netting: AutoNettingResponse): PayrollEntry[] {
@@ -100,11 +78,11 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   }>({ open: false, message: "", onConfirm: () => {} });
 
   const [editingEntry, setEditingEntry] = useState<PayrollEntry | null>(null);
-  const [baseSalary, setBaseSalary] = useState("0");
-  const [bonus, setBonus] = useState("0");
-  const [allowance, setAllowance] = useState("0");
-  const [deduction, setDeduction] = useState("0");
-  const [advanceDeduct, setAdvanceDeduct] = useState("0");
+  const [baseSalary, setBaseSalary] = useState<number | null>(0);
+  const [bonus, setBonus] = useState<number | null>(0);
+  const [allowance, setAllowance] = useState<number | null>(0);
+  const [deduction, setDeduction] = useState<number | null>(0);
+  const [advanceDeduct, setAdvanceDeduct] = useState<number | null>(0);
   const [entryError, setEntryError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,9 +96,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
         setActiveStep(res.data.status === PayrollStatus.COMPLETED ? 4 : res.data.entries.length > 0 ? 2 : 1);
       } catch (err) {
         if (cancelled) return;
-        const safeId = Number(id);
-        setPeriod({ ...MOCK_PERIOD, id: Number.isFinite(safeId) && safeId > 0 ? safeId : 0 });
-        setActiveStep(1);
+        setPeriod(null);
         toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải dữ liệu kỳ lương.");
       } finally {
         if (!cancelled) setLoading(false);
@@ -145,11 +121,11 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
   const openEdit = (entry: PayrollEntry) => {
     setEditingEntry(entry);
-    setBaseSalary(String(entry.baseSalary));
-    setBonus(String(entry.bonus));
-    setAllowance(String(entry.allowance));
-    setDeduction(String(entry.deduction));
-    setAdvanceDeduct(String(entry.advanceDeduct));
+    setBaseSalary(entry.baseSalary);
+    setBonus(entry.bonus);
+    setAllowance(entry.allowance);
+    setDeduction(entry.deduction);
+    setAdvanceDeduct(entry.advanceDeduct);
     setEntryError(null);
   };
 
@@ -229,11 +205,11 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
   const handleSaveEntry = async () => {
     if (!period || !editingEntry) return;
-    const nextBase = n(baseSalary, editingEntry.baseSalary);
-    const nextBonus = n(bonus, editingEntry.bonus);
-    const nextAllowance = n(allowance, editingEntry.allowance);
-    const nextDeduction = n(deduction, editingEntry.deduction);
-    const nextAdvance = n(advanceDeduct, editingEntry.advanceDeduct);
+    const nextBase = baseSalary ?? editingEntry.baseSalary;
+    const nextBonus = bonus ?? editingEntry.bonus;
+    const nextAllowance = allowance ?? editingEntry.allowance;
+    const nextDeduction = deduction ?? editingEntry.deduction;
+    const nextAdvance = advanceDeduct ?? editingEntry.advanceDeduct;
 
     if (nextBase + nextBonus + nextAllowance < nextDeduction + nextAdvance) {
       setEntryError("Tổng lương không thể nhỏ hơn tổng khấu trừ.");
@@ -342,6 +318,32 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className={`h-1.5 w-1.5 rounded-full ${isCompleted ? "bg-emerald-300" : "bg-amber-300"}`} />
+              Payroll runbook
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">{period.periodCode}</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">{period.name}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Quản lý import Excel, rà soát từng dòng lương, khấu trừ tạm ứng và xác nhận chạy lương.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">Tổng thực lĩnh</p>
+            <p className="mt-2 text-2xl font-bold">{formatCurrency(netTotal)}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <SummaryStat label="Nhân viên" value={`${totalEmployees} người`} />
+        <SummaryStat label="Trạng thái" value={getStatusLabel(period.status)} tone={isCompleted ? "text-emerald-700" : "text-amber-700"} />
+        <SummaryStat label="Cập nhật gần nhất" value={formatDateTime(period.updatedAt)} />
+      </section>
+
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link href="/accountant/payroll" className="hover:text-slate-900 transition-colors">Bảng lương</Link>
@@ -350,7 +352,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       </div>
 
       {/* Header */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+      <div className="hidden">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500 font-mono">{period.periodCode}</p>
@@ -367,7 +369,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       </div>
 
       {/* Step navigator */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {([
             { step: 1 as const, title: "Upload Excel", done: hasEntries },
@@ -383,9 +385,9 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                 type="button"
                 disabled={!enabled}
                 onClick={() => setActiveStep(item.step)}
-                className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                className={`rounded-2xl border px-3 py-3 text-left transition-colors ${
                   active
-                    ? "border-blue-300 bg-blue-50"
+                    ? "border-blue-300 bg-blue-50 shadow-sm shadow-blue-500/10"
                     : enabled
                     ? "border-slate-200 bg-white hover:border-slate-300"
                     : "border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed"
@@ -405,7 +407,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
       {/* Step 1: Upload */}
       {activeStep === 1 && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h2 className="text-lg font-semibold text-slate-900">Bước 1: Upload Excel</h2>
             <a
@@ -420,7 +422,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             </a>
           </div>
 
-          <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-6 text-center cursor-pointer hover:border-blue-400/50 transition-colors">
+          <label className="block rounded-3xl border border-dashed border-blue-200 bg-blue-50/40 p-8 text-center cursor-pointer hover:border-blue-400/70 transition-colors">
             <input
               type="file"
               accept=".xlsx,.xls"
@@ -480,13 +482,13 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
       {/* Step 2: Review entries */}
       {activeStep === 2 && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Bước 2: Xem &amp; Sửa danh sách</h2>
 
           <div className="rounded-xl border border-slate-200 overflow-x-auto">
             <table className="w-full min-w-[980px]">
-              <thead>
-                <tr className="bg-white/70 border-b border-slate-200">
+              <thead className="sticky top-0 z-10 bg-white">
+                <tr className="bg-blue-50/80 border-b border-slate-200">
                   <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
                   <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Họ tên</th>
                   <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Lương cơ bản</th>
@@ -498,7 +500,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               </thead>
               <tbody>
                 {period.entries.map((entry) => (
-                  <tr key={entry.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                  <tr key={entry.id} className="border-b border-slate-100 last:border-b-0 hover:bg-blue-50/60 transition-colors">
                     <td className="px-4 py-3 text-sm text-slate-900 font-mono">{entry.employeeCode}</td>
                     <td className="px-4 py-3 text-sm text-slate-900">{entry.fullName}</td>
                     <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(entry.baseSalary)}</td>
@@ -544,7 +546,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
       {/* Step 3: Auto-netting */}
       {activeStep === 3 && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Bước 3: Auto-netting</h2>
 
           <div className="flex justify-end">
@@ -566,8 +568,8 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             <>
               <div className="rounded-xl border border-slate-200 overflow-x-auto">
                 <table className="w-full min-w-[920px]">
-                  <thead>
-                    <tr className="bg-white/70 border-b border-slate-200">
+                  <thead className="sticky top-0 z-10 bg-white">
+                    <tr className="bg-blue-50/80 border-b border-slate-200">
                       <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
                       <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Họ tên</th>
                       <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Dư nợ tạm ứng</th>
@@ -582,7 +584,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
                       return (
                         <tr
                           key={item.userId}
-                          className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${item.deductedAmount > 0 ? "bg-amber-50" : ""}`}
+                          className={`border-b border-slate-100 last:border-b-0 hover:bg-blue-50/60 transition-colors ${item.deductedAmount > 0 ? "bg-amber-50" : ""}`}
                         >
                           <td className="px-4 py-3 text-sm text-slate-900 font-mono">{item.employeeCode}</td>
                           <td className="px-4 py-3 text-sm text-slate-900">{item.fullName}</td>
@@ -621,7 +623,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
 
       {/* Step 4: Run */}
       {activeStep === 4 && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Bước 4: Chạy lương</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -664,14 +666,29 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
       {editingEntry && (
         <div className="fixed inset-0 z-50">
           <button type="button" className="absolute inset-0 bg-black/70" onClick={closeEdit} aria-label="Đóng" />
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col overflow-y-auto bg-white border-l border-slate-200 p-6 shadow-2xl">
             <h3 className="text-xl font-bold text-slate-900">Sửa dòng lương — {editingEntry.employeeCode}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <NumberInput label="Lương cơ bản" value={baseSalary} onChange={setBaseSalary} />
-              <NumberInput label="Thưởng" value={bonus} onChange={setBonus} />
-              <NumberInput label="Phụ cấp" value={allowance} onChange={setAllowance} />
-              <NumberInput label="Khấu trừ" value={deduction} onChange={setDeduction} />
-              <NumberInput label="Khấu trừ tạm ứng" value={advanceDeduct} onChange={setAdvanceDeduct} />
+              <div>
+                <label className="block text-sm text-slate-600 mb-2">Lương cơ bản</label>
+                <CurrencyInput value={baseSalary} onChange={setBaseSalary} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-2">Thưởng</label>
+                <CurrencyInput value={bonus} onChange={setBonus} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-2">Phụ cấp</label>
+                <CurrencyInput value={allowance} onChange={setAllowance} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-2">Khấu trừ</label>
+                <CurrencyInput value={deduction} onChange={setDeduction} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-2">Khấu trừ tạm ứng</label>
+                <CurrencyInput value={advanceDeduct} onChange={setAdvanceDeduct} />
+              </div>
             </div>
             {entryError && (
               <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">
@@ -734,24 +751,9 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   );
 }
 
-function NumberInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      <label className="block text-sm text-slate-600 mb-2">{label}</label>
-      <input
-        type="number"
-        min={0}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-      />
-    </div>
-  );
-}
-
 function SummaryStat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm font-semibold mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>

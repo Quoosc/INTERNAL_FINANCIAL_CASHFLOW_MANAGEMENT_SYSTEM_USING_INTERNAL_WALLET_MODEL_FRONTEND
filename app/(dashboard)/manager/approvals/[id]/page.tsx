@@ -13,60 +13,13 @@ import {
   ManagerRejectResponse,
   RequestAction,
   RequestStatus,
-  RequestType,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
-
-const MOCK_DETAIL: ManagerApprovalDetailResponse = {
-  id: 10,
-  requestCode: "REQ-2026-0050",
-  type: RequestType.PROJECT_TOPUP,
-  status: RequestStatus.PENDING,
-  amount: 50_000_000,
-  approvedAmount: null,
-  description:
-    "Xin cấp vốn bổ sung Phase 2 - nhóm IT thiếu ngân sách phát triển module báo cáo tài chính. Dự kiến dùng cho: nhân công outsource (30M) + infrastructure (20M).",
-  rejectReason: null,
-  requester: {
-    id: 4,
-    fullName: "Hoàng Minh Tuấn",
-    avatar: null,
-    employeeCode: "TL001",
-    jobTitle: "Team Leader IT",
-    email: "tl.it@ifms.vn",
-    departmentName: "Phòng CNTT",
-  },
-  project: {
-    id: 1,
-    projectCode: "PRJ-IT-001",
-    name: "Hệ thống quản lý nội bộ",
-    totalBudget: 150_000_000,
-    availableBudget: 12_000_000,
-  },
-  department: {
-    id: 1,
-    name: "Phòng CNTT",
-    totalAvailableBalance: 245_000_000,
-  },
-  timeline: [
-    {
-      id: 1,
-      action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.PENDING,
-      actorId: 4,
-      actorName: "Hoàng Minh Tuấn",
-      comment: "Tạo yêu cầu cấp vốn",
-      createdAt: "2026-04-03T10:00:00",
-    },
-  ],
-  createdAt: "2026-04-03T10:00:00",
-  updatedAt: "2026-04-03T10:00:00",
-};
-
 
 
 function statusClass(status: RequestStatus): string {
@@ -171,17 +124,12 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
       } catch (err) {
         if (cancelled) return;
 
-        const safeId = Number(id);
-        setRequest({
-          ...MOCK_DETAIL,
-          id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_DETAIL.id,
-          requestCode: `REQ-2026-${String(id).padStart(4, "0")}`,
-        });
+        setRequest(null);
 
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải chi tiết yêu cầu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -252,9 +200,14 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
 
     try {
       await api.post<ManagerApproveResponse>(`/api/v1/manager/approvals/${id}/approve`, body);
+      toast.success("Đã duyệt yêu cầu thành công.");
       router.push("/manager/approvals");
-    } catch {
-      router.push("/manager/approvals");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setActionError(err.apiMessage);
+      } else {
+        setActionError("Không thể duyệt yêu cầu. Vui lòng thử lại.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -275,9 +228,14 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
 
     try {
       await api.post<ManagerRejectResponse>(`/api/v1/manager/approvals/${id}/reject`, body);
+      toast.success("Đã từ chối yêu cầu.");
       router.push("/manager/approvals");
-    } catch {
-      router.push("/manager/approvals");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setActionError(err.apiMessage);
+      } else {
+        setActionError("Không thể từ chối yêu cầu. Vui lòng thử lại.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -314,47 +272,68 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
   const sortedTimeline = [...request.timeline].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
+  const remainingDeptBudget = Math.max(0, request.department.totalAvailableBalance - previewApprovedAmount);
+  const projectAfterApproval = request.project.availableBudget + previewApprovedAmount;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/manager/approvals" className="hover:text-slate-900 transition-colors">
-          Duyệt cấp vốn dự án
-        </Link>
-        <span>/</span>
-        <span className="text-slate-600 font-mono">{request.requestCode}</span>
-      </div>
+      <section className="overflow-hidden rounded-3xl border border-indigo-200 bg-linear-to-br from-indigo-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-indigo-900/15">
+        <div className="relative px-6 py-7 sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
+          <div className="relative">
+            <Link
+              href="/manager/approvals"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 19l-7-7 7-7" />
+              </svg>
+              Quay lại danh sách
+            </Link>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <p className="text-xs text-slate-500">Mã yêu cầu</p>
-            <h1 className="text-2xl font-bold text-slate-900 font-mono mt-1">{request.requestCode}</h1>
-            <p className="text-sm text-slate-500 mt-1">Tạo lúc {formatDateTime(request.createdAt)}</p>
-          </div>
+            <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">{request.requestCode}</p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết cấp vốn dự án</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">
+                  Xem xét nhu cầu cấp vốn, ngân sách phòng ban và tác động sau phê duyệt.
+                </p>
+              </div>
 
-          <div className="flex flex-col items-start lg:items-end gap-2">
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex px-3 py-1.5 rounded-full border text-sm bg-blue-50 border-blue-200 text-blue-700">
-                Cấp vốn DA
-              </span>
-              <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusClass(request.status)}`}>
-                {statusLabel(request.status)}
-              </span>
+              <div className="flex flex-col items-start gap-3 lg:items-end">
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700">
+                    Cấp vốn DA
+                  </span>
+                  <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-semibold ${statusClass(request.status)}`}>
+                    {statusLabel(request.status)}
+                  </span>
+                </div>
+                <p className="text-3xl font-bold">{formatCurrency(request.amount)}</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{formatCurrency(request.amount)}</p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Số tiền yêu cầu" value={formatCurrency(request.amount)} helper={`Tạo lúc ${formatDateTime(request.createdAt)}`} tone="blue" />
+        <MetricCard label="Có thể duyệt" value={formatCurrency(maxApprovable)} helper="Theo quỹ phòng ban khả dụng" tone="emerald" />
+        <MetricCard label="Quỹ PB còn lại" value={formatCurrency(remainingDeptBudget)} helper="Sau giá trị preview duyệt" tone={overDeptBudget ? "rose" : "indigo"} />
+        <MetricCard label="Dự án sau duyệt" value={formatCurrency(projectAfterApproval)} helper={request.project.projectCode} tone="cyan" />
+      </section>
+
+      <div className="rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm font-medium text-blue-800">
         Phê duyệt sẽ tự động trích {formatCurrency(previewApprovedAmount)} từ Quỹ Phòng ban sang Dự án, không qua Kế toán.
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Người gửi yêu cầu</h2>
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-slate-900">Người gửi yêu cầu</h2>
+              <p className="mt-1 text-sm text-slate-500">Thông tin Team Leader tạo đề xuất cấp vốn.</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <InfoCard label="Họ tên" value={request.requester.fullName} />
               <InfoCard label="Mã nhân viên" value={request.requester.employeeCode} />
@@ -362,8 +341,11 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Ngân sách dự án</h2>
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-slate-900">Ngân sách dự án</h2>
+              <p className="mt-1 text-sm text-slate-500">So sánh ngân sách hiện tại và ngân sách sau khi duyệt.</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard
                 label="Dự án"
@@ -380,7 +362,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
           </div>
 
           <div
-            className={`rounded-2xl border p-5 ${
+            className={`rounded-3xl border p-5 ${
               overDeptBudget
                 ? "border-rose-200 bg-rose-50"
                 : "border-emerald-200 bg-emerald-50"
@@ -394,19 +376,20 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
-            <h2 className="text-lg font-semibold text-slate-900">Nội dung yêu cầu</h2>
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900">Nội dung yêu cầu</h2>
             <p className="text-sm text-slate-600 whitespace-pre-line">{request.description || "Không có mô tả"}</p>
           </div>
 
           {canTakeAction && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-              <h2 className="text-lg font-semibold text-slate-900">Thao tác phê duyệt</h2>
+            <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5">
+              <h2 className="text-lg font-bold text-slate-900">Thao tác phê duyệt</h2>
+              <p className="mt-1 text-sm text-slate-500">Sau khi duyệt, quỹ sẽ được chuyển sang dự án ngay.</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={openApproveModal}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+                  className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-500"
                 >
                   Duyệt
                 </button>
@@ -414,7 +397,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                 <button
                   type="button"
                   onClick={openRejectModal}
-                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors"
+                  className="rounded-2xl border border-rose-200 bg-white px-5 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-50"
                 >
                   Từ chối
                 </button>
@@ -423,8 +406,11 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Timeline</h2>
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Timeline</h2>
+            <p className="mt-1 text-sm text-slate-500">Lịch sử xử lý cấp vốn.</p>
+          </div>
 
           {sortedTimeline.length === 0 ? (
             <p className="text-sm text-slate-500">Chưa có lịch sử xử lý.</p>
@@ -436,12 +422,12 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                     <span className="absolute left-3 top-7 bottom-[-10px] w-px bg-slate-200" />
                   )}
 
-                  <span className="absolute left-0 top-1 w-6 h-6 rounded-full border border-slate-300 bg-white text-slate-600 flex items-center justify-center">
+                  <span className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-700">
                     {timelineIcon(entry.action)}
                   </span>
 
-                  <div className="rounded-xl border border-slate-200 bg-white p-3">
-                    <p className="text-sm font-medium text-slate-900">{timelineActionLabel(entry.action)}</p>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                    <p className="text-sm font-bold text-slate-900">{timelineActionLabel(entry.action)}</p>
                     <p className="text-xs text-slate-500 mt-1">{entry.actorName}</p>
                     {entry.comment && <p className="text-xs text-slate-600 mt-1">{entry.comment}</p>}
                     <p className="text-xs text-slate-500 mt-1">{formatDateTime(entry.createdAt)}</p>
@@ -462,19 +448,20 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
             aria-label="Đóng modal duyệt"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Xác nhận duyệt yêu cầu</h3>
-            <p className="text-sm text-slate-500">{request.requestCode}</p>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl shadow-slate-950/20">
+            <div className="mb-5">
+              <h3 className="text-xl font-bold text-slate-900">Xác nhận duyệt yêu cầu</h3>
+              <p className="mt-1 text-sm text-slate-500">{request.requestCode}</p>
+            </div>
 
             <div>
               <label className="block text-sm text-slate-600 mb-2">Số tiền duyệt</label>
-              <input
-                type="number"
-                min={1}
+              <CurrencyInput
+                value={Number(approvedAmount) || null}
+                onChange={(value) => setApprovedAmount(value ? String(value) : "")}
+                error={actionError ?? undefined}
                 max={maxApprovable}
-                value={approvedAmount}
-                onChange={(event) => setApprovedAmount(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                className="focus:ring-blue-500/40"
               />
               <p className="text-xs text-slate-500 mt-1">Tối đa {formatCurrency(maxApprovable)}</p>
             </div>
@@ -486,7 +473,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                 value={approveComment}
                 onChange={(event) => setApproveComment(event.target.value)}
                 placeholder="Nhận xét của bạn (tuỳ chọn)"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               />
             </div>
 
@@ -500,7 +487,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowApproveModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
               >
                 Hủy
               </button>
@@ -508,7 +495,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleApprove}
                 disabled={submitting || maxApprovable <= 0}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận duyệt"}
               </button>
@@ -526,8 +513,11 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
             aria-label="Đóng modal từ chối"
           />
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Từ chối yêu cầu - {request.requestCode}</h3>
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-rose-100 bg-white p-6 shadow-2xl shadow-slate-950/20">
+            <div className="mb-5">
+              <h3 className="text-xl font-bold text-slate-900">Từ chối yêu cầu - {request.requestCode}</h3>
+              <p className="mt-1 text-sm text-slate-500">Lý do từ chối sẽ được ghi vào timeline xử lý.</p>
+            </div>
 
             <div>
               <label className="block text-sm text-slate-600 mb-2">Lý do từ chối</label>
@@ -535,7 +525,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                 rows={4}
                 value={rejectReason}
                 onChange={(event) => setRejectReason(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10"
               />
             </div>
 
@@ -566,7 +556,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
               >
                 Hủy
               </button>
@@ -574,7 +564,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleReject}
                 disabled={rejectReason.trim().length < 10 || submitting}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận từ chối"}
               </button>
@@ -586,11 +576,40 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
   );
 }
 
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "emerald" | "indigo" | "cyan" | "rose";
+}) {
+  const toneClassName = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    cyan: "bg-cyan-50 text-cyan-700 border-cyan-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+  }[tone];
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full border ${toneClassName}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
+    </div>
+  );
+}
+
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-slate-900 mt-1">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-slate-900">{value}</p>
     </div>
   );
 }

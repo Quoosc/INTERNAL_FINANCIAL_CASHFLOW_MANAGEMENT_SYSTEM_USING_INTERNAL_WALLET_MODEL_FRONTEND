@@ -16,9 +16,7 @@ import {
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { MOCK_DEPARTMENTS } from "@/lib/mocks/departments";
-
-
+import { SideDrawer } from "@/components/ui/side-drawer";
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -31,44 +29,6 @@ const ROLE_OPTIONS: { value: RoleName; label: string; roleId: number }[] = [
   { value: RoleName.CFO, label: "CFO", roleId: 5 },
   { value: RoleName.ADMIN, label: "Admin", roleId: 6 },
 ];
-
-const MOCK_DETAIL: AdminUserDetailResponse = {
-  id: 4,
-  fullName: "Đỗ Quốc Bảo",
-  email: "emp.it1@ifms.vn",
-  employeeCode: "EMP001",
-  role: RoleName.EMPLOYEE,
-  departmentId: 1,
-  departmentName: "Phòng CNTT",
-  jobTitle: "Frontend Developer",
-  phoneNumber: "0901234567",
-  dateOfBirth: "1998-05-12",
-  citizenId: "079098001234",
-  address: "Quận Bình Thạnh, TP.HCM",
-  avatar: null,
-  status: UserStatus.ACTIVE,
-  isFirstLogin: false,
-  bankInfo: {
-    bankName: "Vietcombank",
-    accountNumber: "0123456789",
-    accountOwner: "DO QUOC BAO",
-  },
-  wallet: {
-    balance: 15_250_000,
-    pendingBalance: 2_000_000,
-    debtBalance: 0,
-  },
-  securitySettings: {
-    hasPIN: true,
-    pinLockedUntil: null,
-    retryCount: 0,
-  },
-  createdAt: "2026-01-08T08:00:00",
-  updatedAt: "2026-04-08T09:30:00",
-};
-
-
-
 
 function statusBadgeClass(status: string): string {
   switch (status) {
@@ -147,18 +107,8 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         setUser(res.data);
       } catch (err) {
         if (cancelled) return;
-
-        const safeId = Number(id);
-        setUser({
-          ...MOCK_DETAIL,
-          id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_DETAIL.id,
-        });
-
-        if (err instanceof ApiError) {
-          toast.error(err.apiMessage);
-        } else {
-          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
-        }
+        setUser(null);
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải thông tin user.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -183,7 +133,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         setDepartments(Array.isArray(res.data) ? res.data : res.data.items);
       } catch {
         if (cancelled) return;
-        setDepartments(MOCK_DEPARTMENTS);
+        setDepartments([]);
       }
     };
 
@@ -241,22 +191,8 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       const res = await api.put<AdminUserDetailResponse>(`/api/v1/admin/users/${user.id}`, body);
       setUser(res.data);
       toast.success("Đã cập nhật thông tin user.");
-    } catch {
-      const selectedDepartment = departments.find((department) => department.id === body.departmentId);
-
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              fullName: body.fullName ?? prev.fullName,
-              role: editRole,
-              departmentId: body.departmentId ?? null,
-              departmentName: selectedDepartment?.name ?? null,
-            }
-          : prev
-      );
-
-      toast.info("API chưa sẵn sàng, đã mô phỏng cập nhật user.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể cập nhật thông tin user.");
     } finally {
       setSaving(false);
       setShowEditModal(false);
@@ -284,16 +220,8 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         setUser((prev) => (prev ? { ...prev, status: res.data.status } : prev));
         toast.success("Đã khóa tài khoản.");
       }
-    } catch {
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: isLocked ? UserStatus.ACTIVE : UserStatus.LOCKED,
-            }
-          : prev
-      );
-      toast.info("API chưa sẵn sàng, đã mô phỏng lock/unlock.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể thay đổi trạng thái tài khoản.");
       } finally {
         setProcessing(false);
       }
@@ -314,8 +242,8 @@ export default function AdminUserDetailPage({ params }: PageProps) {
     try {
       await api.post<{ message: string }>(`/api/v1/admin/users/${user.id}/reset-password`);
       toast.success("Đã reset mật khẩu và gửi email onboarding.");
-    } catch {
-      toast.info("API chưa sẵn sàng, đã mô phỏng reset mật khẩu.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể reset mật khẩu.");
       } finally {
         setProcessing(false);
       }
@@ -326,6 +254,18 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">User profile</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Manage employee identity, role, department and account status.</p>
+          </div>
+        </div>
+      </section>
+
         <div className="h-8 w-52 rounded bg-white animate-pulse" />
         <div className="h-32 rounded-2xl bg-white animate-pulse" />
         <div className="h-72 rounded-2xl bg-white animate-pulse" />
@@ -348,10 +288,22 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">User profile</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Manage employee identity, role, department and account status.</p>
+          </div>
+        </div>
+      </section>
+
       <button
         type="button"
         onClick={() => router.push("/admin/users")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -359,10 +311,10 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         Quay lại
       </button>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center font-semibold">
+            <div className="w-14 h-14 rounded-full border border-slate-200 bg-white text-slate-100 flex items-center justify-center font-semibold">
               {initials}
             </div>
             <div>
@@ -384,7 +336,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Thông tin cơ bản</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Mã nhân viên" value={user.employeeCode ?? "—"} />
@@ -398,7 +350,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Thông tin ví</h2>
             {user.wallet ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -413,7 +365,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Bảo mật</h2>
             <InfoCard label="Đã có PIN" value={securitySettings.hasPIN ? "Có" : "Chưa"} />
             <InfoCard label="PIN khóa đến" value={securitySettings.pinLockedUntil ?? "—"} />
@@ -421,12 +373,12 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             <InfoCard label="Đăng nhập lần đầu" value={user.isFirstLogin ? "Có" : "Không"} />
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Thao tác</h2>
             <button
               type="button"
               onClick={openEditModal}
-              className="w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold"
+              className="w-full px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold"
             >
               Sửa thông tin
             </button>
@@ -446,7 +398,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               type="button"
               onClick={handleResetPassword}
               disabled={processing}
-              className="w-full px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold disabled:opacity-60"
+              className="w-full px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold disabled:opacity-60"
             >
               Reset mật khẩu
             </button>
@@ -454,80 +406,74 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {showEditModal && (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setShowEditModal(false)}
-            aria-label="Đóng modal chỉnh sửa user"
-          />
+      <SideDrawer
+        open={showEditModal}
+        title="Sửa thông tin user"
+        onClose={() => setShowEditModal(false)}
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowEditModal(false)}
+              className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+            >
+              {saving ? "Đang lưu..." : "Lưu cập nhật"}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-slate-600 mb-2">Họ tên</label>
+            <input
+              value={editFullName}
+              onChange={(event) => setEditFullName(event.target.value)}
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+          </div>
 
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
-            <h3 className="text-xl font-bold text-slate-900">Sửa thông tin user</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-slate-600 mb-2">Vai trò</label>
+              <select
+                value={editRole}
+                onChange={(event) => setEditRole(event.target.value as RoleName)}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              >
+                {ROLE_OPTIONS.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Họ tên</label>
-              <input
-                value={editFullName}
-                onChange={(event) => setEditFullName(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm text-slate-600 mb-2">Vai trò</label>
-                <select
-                  value={editRole}
-                  onChange={(event) => setEditRole(event.target.value as RoleName)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                >
-                  {ROLE_OPTIONS.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm text-slate-600 mb-2">Phòng ban</label>
-                <select
-                  value={editDepartmentId}
-                  onChange={(event) => setEditDepartmentId(event.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                >
-                  <option value="">Không gán phòng ban</option>
-                  {departments.map((department) => (
-                    <option key={department.id} value={String(department.id)}>
-                      {department.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowEditModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+              <label className="block text-sm text-slate-600 mb-2">Phòng ban</label>
+              <select
+                value={editDepartmentId}
+                onChange={(event) => setEditDepartmentId(event.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
-              >
-                {saving ? "Đang lưu..." : "Lưu cập nhật"}
-              </button>
+                <option value="">Không gán phòng ban</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={String(department.id)}>
+                    {department.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
-      )}
+      </SideDrawer>
       <ConfirmModal
         open={confirmState.open}
         message={confirmState.message}
@@ -548,7 +494,7 @@ function InfoCard({
   tone?: string;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>

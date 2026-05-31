@@ -86,13 +86,25 @@ export default function AccountantWithdrawalsPage() {
   const [rejectError, setRejectError] = useState<string | null>(null);
 
   const statusFilter = useMemo(() => mapTabToStatus(filterTab), [filterTab]);
+  const pendingCount = useMemo(
+    () => items.filter((item) => item.status === WithdrawStatus.PENDING || item.status === WithdrawStatus.PROCESSING).length,
+    [items],
+  );
+  const completedCount = useMemo(
+    () => items.filter((item) => item.status === WithdrawStatus.COMPLETED).length,
+    [items],
+  );
+  const totalAmount = useMemo(
+    () => items.reduce((sum, item) => sum + item.amount, 0),
+    [items],
+  );
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
 
     try {
       const res = await getAllWithdrawRequests(statusFilter, 0, 20);
-      setItems(res.data.content as WithdrawRequestListItem[]);
+      setItems((res.data.items ?? []) as WithdrawRequestListItem[]);
     } catch (err) {
       setItems([]);
       if (err instanceof ApiError) {
@@ -168,12 +180,46 @@ export default function AccountantWithdrawalsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+              Withdrawal processing
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Yêu cầu rút tiền</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Kiểm tra thông tin ngân hàng, thực hiện hoặc từ chối các yêu cầu rút tiền của nhân viên.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadRequests()}
+            disabled={loading}
+            className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Tải lại
+          </button>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <WithdrawMetric label="Đang chờ" value={String(pendingCount)} helper="Cần kế toán xử lý" tone="amber" />
+        <WithdrawMetric label="Hoàn tất" value={String(completedCount)} helper={`${items.length} yêu cầu đang hiển thị`} tone="emerald" />
+        <WithdrawMetric label="Tổng giá trị" value={formatCurrency(totalAmount)} helper={TAB_LABELS[filterTab]} tone="blue" />
+      </section>
+
+      <div className="hidden">
         <h1 className="text-2xl font-bold text-slate-900">Yêu cầu rút tiền</h1>
         <p className="text-slate-500 mt-1">Quản lý và xử lý yêu cầu rút tiền của nhân viên.</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-base font-bold text-slate-900">Bộ lọc rút tiền</h2>
+          <p className="mt-1 text-sm text-slate-500">Theo dõi nhanh các nhóm yêu cầu theo trạng thái xử lý.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
         {(["ALL", "PENDING", "COMPLETED", "REJECTED"] as WithdrawFilterTab[]).map((tab) => (
           <button
             key={tab}
@@ -181,8 +227,8 @@ export default function AccountantWithdrawalsPage() {
             onClick={() => setFilterTab(tab)}
             className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
               filterTab === tab
-                ? "bg-blue-100 border-blue-300 text-blue-700"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-blue-100"
+                ? "bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-600/20"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-700"
             }`}
           >
             {TAB_LABELS[tab]}
@@ -193,17 +239,18 @@ export default function AccountantWithdrawalsPage() {
           type="button"
           onClick={() => void loadRequests()}
           disabled={loading}
-          className="ml-auto px-4 py-2 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm"
+            className="ml-auto rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Tải lại
         </button>
+        </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-245">
-            <thead>
-              <tr className="bg-white/40 border-b border-slate-200">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="bg-blue-50/80 border-b border-slate-200">
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Người yêu cầu</th>
                 <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số tiền</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Tài khoản ngân hàng</th>
@@ -229,7 +276,7 @@ export default function AccountantWithdrawalsPage() {
                 </tr>
               ) : (
                 items.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-200">
+                  <tr key={item.id} className="border-b border-slate-100 hover:bg-blue-50/60 transition-colors">
                     <td className="px-4 py-3 text-sm text-slate-900">
                       {item.requester?.fullName ?? `User #${item.userId}`}
                     </td>
@@ -326,6 +373,32 @@ export default function AccountantWithdrawalsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function WithdrawMetric({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "emerald" | "amber";
+}) {
+  const toneClass = {
+    blue: "from-blue-50 to-indigo-50 border-blue-100 text-blue-700",
+    emerald: "from-emerald-50 to-teal-50 border-emerald-100 text-emerald-700",
+    amber: "from-amber-50 to-orange-50 border-amber-100 text-amber-700",
+  }[tone];
+
+  return (
+    <div className={`rounded-2xl border bg-linear-to-br ${toneClass} p-4 shadow-sm`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-75">{label}</p>
+      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

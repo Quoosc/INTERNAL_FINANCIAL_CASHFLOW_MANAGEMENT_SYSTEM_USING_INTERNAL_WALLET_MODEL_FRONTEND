@@ -5,17 +5,16 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api-client";
-import { formatCurrency, parseAmountInput } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   CreateRequestBody,
   ExpenseCategoryResponse,
   FileStorageRequest,
-  PhaseStatus,
   PaginatedResponse,
   ProjectListItem,
   ProjectPhasesResponse,
-  ProjectStatus,
   RequestDetailResponse,
   RequestType,
 } from "@/types";
@@ -48,78 +47,6 @@ interface CloudinaryUploadResponse {
   bytes: number;
 }
 
-const MOCK_PROJECTS: ProjectListItem[] = [
-  {
-    id: 1,
-    projectCode: "PRJ-IT-001",
-    name: "Hệ thống quản lý nội bộ",
-    status: ProjectStatus.ACTIVE,
-    departmentId: 10,
-    totalBudget: 500_000_000,
-    totalSpent: 180_000_000,
-    currentPhaseId: 11,
-    currentPhaseName: "Phase 2 - Development",
-  },
-  {
-    id: 2,
-    projectCode: "PRJ-IT-002",
-    name: "Ứng dụng mobile nhân sự",
-    status: ProjectStatus.ACTIVE,
-    departmentId: 10,
-    totalBudget: 350_000_000,
-    totalSpent: 90_000_000,
-    currentPhaseId: 21,
-    currentPhaseName: "Phase 1 - Planning",
-  },
-  {
-    id: 3,
-    projectCode: "PRJ-IT-003",
-    name: "Nâng cấp BI Dashboard",
-    status: ProjectStatus.ACTIVE,
-    departmentId: 10,
-    totalBudget: 280_000_000,
-    totalSpent: 120_000_000,
-    currentPhaseId: 31,
-    currentPhaseName: "Phase 3 - UAT",
-  },
-];
-
-const MOCK_PHASES: ProjectPhasesResponse = {
-  projectId: 1,
-  projectName: "Hệ thống quản lý nội bộ",
-  phases: [
-    {
-      id: 11,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Analysis",
-      budgetLimit: 120_000_000,
-      currentSpent: 70_000_000,
-      status: PhaseStatus.ACTIVE,
-      startDate: "2026-01-01",
-      endDate: "2026-02-28",
-    },
-    {
-      id: 12,
-      phaseCode: "PH-002",
-      name: "Phase 2 - Development",
-      budgetLimit: 220_000_000,
-      currentSpent: 80_000_000,
-      status: PhaseStatus.ACTIVE,
-      startDate: "2026-03-01",
-      endDate: "2026-06-30",
-    },
-    {
-      id: 13,
-      phaseCode: "PH-003",
-      name: "Phase 3 - UAT",
-      budgetLimit: 80_000_000,
-      currentSpent: 30_000_000,
-      status: PhaseStatus.ACTIVE,
-      startDate: "2026-07-01",
-      endDate: "2026-08-31",
-    },
-  ],
-};
 
 const REQUEST_TYPE_CONFIG = [
   {
@@ -169,11 +96,6 @@ const REQUEST_TYPE_CONFIG = [
   },
 ] as const;
 
-
-function formatInputAmount(raw?: number): string {
-  if (!raw || raw <= 0) return "";
-  return `${raw.toLocaleString("vi-VN")} ₫`;
-}
 
 function isImage(file: File): boolean {
   return file.type.startsWith("image/");
@@ -281,12 +203,12 @@ export default function NewRequestPage() {
         setProjects(projectsRes.data.items);
       } catch (err) {
         if (cancelled) return;
-        setProjects(MOCK_PROJECTS);
+        setProjects([]);
 
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Không thể tải danh sách dự án, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải danh sách dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -330,17 +252,12 @@ export default function NewRequestPage() {
       } catch (err) {
         if (cancelled) return;
 
-        setPhases({
-          ...MOCK_PHASES,
-          projectId,
-          projectName:
-            projects.find((p) => p.id === projectId)?.name ?? MOCK_PHASES.projectName,
-        });
+        setPhases(null);
 
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Không thể tải phase dự án, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải phase dự án.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -411,11 +328,38 @@ export default function NewRequestPage() {
     };
   }, [files]);
 
-  const handleAmountChange = (value: string) => {
-    const digitsOnly = parseAmountInput(value);
-    const amount = digitsOnly ? Number(digitsOnly) : undefined;
-    setForm((prev) => ({ ...prev, amount }));
+  const handleAmountChange = (amount: number | null) => {
+    setForm((prev) => ({ ...prev, amount: amount ?? undefined }));
     if (fieldErrors.amount) setFieldErrors((prev) => ({ ...prev, amount: undefined }));
+  };
+
+  const handleAmountBlur = () => {
+    const amt = form.amount;
+    if (amt !== undefined && amt < 1_000) {
+      setFieldErrors((p) => ({ ...p, amount: "Số tiền tối thiểu là 1.000 ₫." }));
+    }
+  };
+
+  const handleTitleBlur = () => {
+    const t = title.trim();
+    if (t.length > 0 && t.length < 3) {
+      setFieldErrors((p) => ({ ...p, title: "Tiêu đề cần ít nhất 3 ký tự." }));
+    } else if (t.length > 200) {
+      setFieldErrors((p) => ({ ...p, title: "Tiêu đề quá dài." }));
+    }
+  };
+
+  const handleDescriptionBlur = () => {
+    const d = (form.description ?? "").trim();
+    if (d.length > 0 && d.length < 10) {
+      setFieldErrors((p) => ({ ...p, description: "Mô tả cần ít nhất 10 ký tự." }));
+    }
+  };
+
+  const handleExpenseDateBlur = () => {
+    if (!expenseDate) {
+      setFieldErrors((p) => ({ ...p, expenseDate: "Vui lòng chọn ngày chi tiêu." }));
+    }
   };
 
   const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -540,10 +484,22 @@ export default function NewRequestPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Create request</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Submit advance, expense or reimbursement requests with project context and evidence files.</p>
+          </div>
+        </div>
+      </section>
+
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -561,7 +517,7 @@ export default function NewRequestPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-slate-600 mb-3">Loại yêu cầu</label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -572,7 +528,7 @@ export default function NewRequestPage() {
                     key={type}
                     type="button"
                     onClick={() => setForm((prev) => ({ ...prev, type }))}
-                    className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${selected ? cardSelected : `border-slate-200 bg-white ${cardHover}`}`}
+                    className={`flex items-start gap-3 p-4 rounded-2xl border-2 text-left transition-all ${selected ? cardSelected : `border-slate-200 bg-white ${cardHover}`}`}
                   >
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${selected ? iconSelected : iconDefault}`}>
                       {icon}
@@ -589,18 +545,16 @@ export default function NewRequestPage() {
 
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền (VND)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={formatInputAmount(form.amount)}
-              onChange={(e) => handleAmountChange(e.target.value)}
+            <CurrencyInput
+              value={form.amount ?? null}
+              onChange={handleAmountChange}
+              onBlur={handleAmountBlur}
               placeholder="Nhập số tiền"
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.amount ? "border-rose-300" : "border-slate-200"}`}
+              error={fieldErrors.amount}
             />
-            {fieldErrors.amount
-              ? <p className="text-xs text-rose-600 mt-1">{fieldErrors.amount}</p>
-              : <p className="text-xs text-slate-500 mt-1">{form.amount ? `Giá trị: ${formatCurrency(form.amount)}` : ""}</p>
-            }
+            {!fieldErrors.amount && (
+              <p className="text-xs text-slate-500 mt-1">{form.amount ? `Giá trị: ${formatCurrency(form.amount)}` : ""}</p>
+            )}
           </div>
 
           <div className="md:col-span-2">
@@ -609,8 +563,9 @@ export default function NewRequestPage() {
               type="text"
               value={title}
               onChange={(e) => { setTitle(e.target.value); if (fieldErrors.title) setFieldErrors((p) => ({ ...p, title: undefined })); }}
+              onBlur={handleTitleBlur}
               placeholder="Ví dụ: Tạm ứng công tác tháng 4"
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.title ? "border-rose-300" : "border-slate-200"}`}
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.title ? "border-rose-300" : "border-slate-200"}`}
             />
             {fieldErrors.title && <p className="text-xs text-rose-600 mt-1">{fieldErrors.title}</p>}
           </div>
@@ -624,8 +579,9 @@ export default function NewRequestPage() {
                 setForm((prev) => ({ ...prev, description: e.target.value }));
                 if (fieldErrors.description) setFieldErrors((p) => ({ ...p, description: undefined }));
               }}
+              onBlur={handleDescriptionBlur}
               placeholder="Mô tả nội dung chi tiêu..."
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.description ? "border-rose-300" : "border-slate-200"}`}
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.description ? "border-rose-300" : "border-slate-200"}`}
             />
             {fieldErrors.description && <p className="text-xs text-rose-600 mt-1">{fieldErrors.description}</p>}
           </div>
@@ -640,7 +596,7 @@ export default function NewRequestPage() {
                 if (fieldErrors.projectId) setFieldErrors((p) => ({ ...p, projectId: undefined }));
               }}
               disabled={!isProjectBasedType || loading}
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.projectId ? "border-rose-300" : "border-slate-200"}`}
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.projectId ? "border-rose-300" : "border-slate-200"}`}
             >
               <option value="">Chọn dự án</option>
               {projects.map((project) => (
@@ -662,7 +618,7 @@ export default function NewRequestPage() {
                 if (fieldErrors.phaseId) setFieldErrors((p) => ({ ...p, phaseId: undefined }));
               }}
               disabled={!isProjectBasedType || !form.projectId || loading}
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.phaseId ? "border-rose-300" : "border-slate-200"}`}
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.phaseId ? "border-rose-300" : "border-slate-200"}`}
             >
               <option value="">{form.projectId ? "Chọn phase" : "Chọn dự án trước"}</option>
               {(phases?.phases ?? []).map((phase) => (
@@ -684,7 +640,7 @@ export default function NewRequestPage() {
                 if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: undefined }));
               }}
               disabled={!isProjectBasedType || !form.phaseId}
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.categoryId ? "border-rose-300" : "border-slate-200"}`}
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.categoryId ? "border-rose-300" : "border-slate-200"}`}
             >
               <option value="">{form.phaseId ? "Chọn hạng mục" : "Chọn phase trước"}</option>
               {categoryOptions.map((category) => (
@@ -702,16 +658,17 @@ export default function NewRequestPage() {
               type="date"
               value={expenseDate}
               onChange={(e) => { setExpenseDate(e.target.value); if (fieldErrors.expenseDate) setFieldErrors((p) => ({ ...p, expenseDate: undefined })); }}
-              className={`w-full px-4 py-3 rounded-xl bg-white border text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.expenseDate ? "border-rose-300" : "border-slate-200"}`}
+              onBlur={handleExpenseDateBlur}
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.expenseDate ? "border-rose-300" : "border-slate-200"}`}
             />
             {fieldErrors.expenseDate && <p className="text-xs text-rose-600 mt-1">{fieldErrors.expenseDate}</p>}
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5">
           <label className="block text-sm font-medium text-slate-600 mb-2">Đính kèm chứng từ (image/pdf)</label>
 
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-blue-50">
+          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center bg-blue-50">
             <input
               type="file"
               multiple
@@ -729,7 +686,7 @@ export default function NewRequestPage() {
               {files.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {item.previewUrl ? (
@@ -760,7 +717,7 @@ export default function NewRequestPage() {
                   <button
                     type="button"
                     onClick={() => removeFile(item.id)}
-                    className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-medium transition-colors"
+                    className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-medium transition-colors"
                   >
                     Xóa
                   </button>
@@ -774,7 +731,7 @@ export default function NewRequestPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+            className="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
           >
             Hủy
           </button>
@@ -782,7 +739,7 @@ export default function NewRequestPage() {
           <button
             type="submit"
             disabled={submitting || loading}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
           >
             {submitting ? (
               <>

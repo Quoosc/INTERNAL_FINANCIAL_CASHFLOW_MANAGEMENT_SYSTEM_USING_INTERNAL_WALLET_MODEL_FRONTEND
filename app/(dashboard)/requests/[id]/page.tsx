@@ -15,7 +15,6 @@ import {
   RequestAction,
   RequestDetailResponse,
   RequestStatus,
-  RequestType,
   UpdateRequestBody,
 } from "@/types";
 
@@ -36,56 +35,6 @@ interface TimelineRow {
   tone: "done" | "current" | "pending" | "rejected" | "cancelled";
 }
 
-const MOCK_REQUEST: RequestDetailResponse = {
-  id: 501,
-  requestCode: "REQ-EMP-0426-001",
-  type: RequestType.ADVANCE,
-  status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-  amount: 1_500_000,
-  approvedAmount: 1_300_000,
-  description:
-    "Tiêu đề: Tạm ứng công tác khách hàng\nNgày chi tiêu: 2026-04-02\nChi phí đi lại và lưu trú cho buổi workshop.",
-  rejectReason: null,
-  projectId: 1,
-  projectName: "Hệ thống quản lý nội bộ",
-  phaseId: 12,
-  phaseName: "Phase 2 - Development",
-  categoryId: 103,
-  categoryName: "Di chuyển",
-  createdAt: "2026-04-02T09:15:00",
-  updatedAt: "2026-04-02T16:40:00",
-  projectCode: "PRJ-IT-001",
-  phaseCode: "PH-002",
-  requesterId: 17,
-  requesterName: "Nguyễn Văn A",
-  attachments: [
-    {
-      fileId: 901,
-      fileName: "ve_may_bay.pdf",
-      url: "https://example.com/files/ve_may_bay.pdf",
-      fileType: "application/pdf",
-      size: 254000,
-    },
-    {
-      fileId: 902,
-      fileName: "hoa_don_khach_san.jpg",
-      url: "https://example.com/files/hoa_don_khach_san.jpg",
-      fileType: "image/jpeg",
-      size: 368000,
-    },
-  ],
-  timeline: [
-    {
-      id: 1,
-      action: RequestAction.APPROVE,
-      statusAfterAction: RequestStatus.APPROVED_BY_TEAM_LEADER,
-      actorId: 23,
-      actorName: "Trần Thị B - Team Leader",
-      comment: "Duyệt với mức phù hợp ngân sách.",
-      createdAt: "2026-04-02T16:40:00",
-    },
-  ],
-};
 
 function parseDescription(description: string | null): ParsedDescription {
   if (!description) {
@@ -305,17 +254,11 @@ export default function RequestDetailPage({ params }: PageProps) {
         setRequest(res.data);
       } catch (err) {
         if (cancelled) return;
-
-        setRequest({
-          ...MOCK_REQUEST,
-          id: Number(id),
-          requestCode: `REQ-EMP-0426-${String(id).padStart(3, "0")}`,
-        });
-
-        if (err instanceof ApiError) {
-          toast.error(err.apiMessage);
+        setRequest(null);
+        if (err instanceof ApiError && err.status === 404) {
+          toast.error("Yêu cầu không tồn tại hoặc không thuộc về bạn.");
         } else {
-          toast.error("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
+          toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải chi tiết yêu cầu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -488,7 +431,7 @@ export default function RequestDetailPage({ params }: PageProps) {
           </svg>
           Quay lại danh sách
         </button>
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 text-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-6 text-center text-slate-500">
           Không tìm thấy yêu cầu.
         </div>
       </div>
@@ -497,10 +440,22 @@ export default function RequestDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Request detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Review amount, evidence, approval timeline and request status in one view.</p>
+          </div>
+        </div>
+      </section>
+
       <button
         type="button"
         onClick={() => router.push("/requests")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg
           className="w-4 h-4"
@@ -518,7 +473,7 @@ export default function RequestDetailPage({ params }: PageProps) {
         Quay lại danh sách
       </button>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
             {request.requestCode}
@@ -536,7 +491,7 @@ export default function RequestDetailPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-5">
             <h2 className="text-lg font-semibold text-slate-900">
               Chi tiết yêu cầu
             </h2>
@@ -573,7 +528,7 @@ export default function RequestDetailPage({ params }: PageProps) {
               />
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
               <p className="text-xs text-slate-500">Mô tả</p>
               <p className="text-sm text-slate-900 mt-1 whitespace-pre-line">
                 {parsed.body || request.description || "Không có mô tả"}
@@ -581,7 +536,7 @@ export default function RequestDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">
               Tệp đính kèm
             </h2>
@@ -593,7 +548,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                 {request.attachments.map((file) => (
                   <div
                     key={file.fileId}
-                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-white"
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-3 rounded-2xl border border-slate-200 bg-white"
                   >
                     <div className="min-w-0">
                       <p className="text-sm text-slate-900 truncate">
@@ -608,14 +563,14 @@ export default function RequestDetailPage({ params }: PageProps) {
                         href={file.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
+                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
                       >
                         Xem trước
                       </a>
                       <a
                         href={file.url}
                         download
-                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+                        className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
                       >
                         Tải xuống
                       </a>
@@ -627,7 +582,7 @@ export default function RequestDetailPage({ params }: PageProps) {
           </div>
 
           {canEditOrCancel && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 Thao tác
               </h2>
@@ -636,7 +591,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   type="button"
                   onClick={openEdit}
                   disabled={actionLoading}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
                 >
                   Chỉnh sửa
                 </button>
@@ -645,7 +600,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   type="button"
                   onClick={handleCancelRequest}
                   disabled={actionLoading}
-                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
                 >
                   Hủy yêu cầu
                 </button>
@@ -654,7 +609,7 @@ export default function RequestDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">
             Timeline xử lý
           </h2>
@@ -669,7 +624,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   className={`absolute left-0 top-1 w-[22px] h-[22px] rounded-full border-2 ${getTimelineToneClass(row.tone)}`}
                 />
                 <div
-                  className={`rounded-xl border p-3 ${getTimelineCardClass(row.tone)}`}
+                  className={`rounded-2xl border p-3 ${getTimelineCardClass(row.tone)}`}
                 >
                   <p className="text-sm font-semibold text-slate-900">
                     {row.title}
@@ -692,7 +647,7 @@ export default function RequestDetailPage({ params }: PageProps) {
             aria-label="Đóng form chỉnh sửa"
           />
 
-          <div className="absolute inset-x-0 top-8 mx-auto w-[calc(100%-2rem)] max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-sm shadow-2xl p-6">
+          <div className="absolute inset-x-0 top-8 mx-auto w-[calc(100%-2rem)] max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-sm shadow-2xl p-6">
             <h3 className="text-xl font-bold text-slate-900 mb-4">
               Chỉnh sửa yêu cầu
             </h3>
@@ -713,7 +668,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   onChange={(e) =>
                     setEditAmount(e.target.value.replace(/\D/g, ""))
                   }
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
@@ -725,7 +680,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
@@ -737,7 +692,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   type="date"
                   value={editExpenseDate}
                   onChange={(e) => setEditExpenseDate(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
@@ -749,7 +704,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                   rows={4}
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
@@ -757,7 +712,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                 <button
                   type="button"
                   onClick={() => setEditing(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+                  className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
                 >
                   Hủy
                 </button>
@@ -765,7 +720,7 @@ export default function RequestDetailPage({ params }: PageProps) {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
                 >
                   {actionLoading ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
@@ -786,7 +741,7 @@ export default function RequestDetailPage({ params }: PageProps) {
 
 function DetailCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="text-sm text-slate-900 font-medium mt-1">{value}</p>
     </div>

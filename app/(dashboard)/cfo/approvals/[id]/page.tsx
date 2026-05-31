@@ -16,46 +16,13 @@ import {
   RequestType,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 const LIST_PATH = "/cfo/approvals";
-
-const MOCK_DETAIL: AdminApprovalDetailResponse = {
-  id: 20,
-  requestCode: "REQ-2026-0060",
-  type: "DEPARTMENT_TOPUP",
-  status: RequestStatus.PENDING,
-  amount: 200_000_000,
-  approvedAmount: null,
-  description:
-    "Xin cấp thêm quota ngân sách cho phòng IT Q2/2026. Lý do: mở rộng team thêm 3 headcount và nâng cấp hạ tầng cloud phục vụ roadmap sản phẩm.",
-  rejectReason: null,
-  requester: {
-    id: 5,
-    fullName: "Trần Thị Bích",
-    avatar: null,
-    employeeCode: "MGR001",
-    jobTitle: "Manager IT",
-    email: "manager.it@ifms.vn",
-    departmentName: "Phòng Công nghệ thông tin",
-  },
-  department: {
-    id: 1,
-    name: "Phòng Công nghệ thông tin",
-    code: "IT",
-    totalProjectQuota: 800_000_000,
-    totalAvailableBalance: 80_000_000,
-  },
-  systemFund: {
-    totalBalance: 1_248_500_000,
-  },
-  timeline: [],
-  createdAt: "2026-04-02T09:00:00",
-  updatedAt: "2026-04-02T09:00:00",
-};
 
 const REJECT_REASON_SUGGESTIONS = [
   "Ngân sách đề xuất chưa phù hợp với kế hoạch quý",
@@ -141,7 +108,6 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
   const [request, setRequest] = useState<AdminApprovalDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
 
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -166,22 +132,15 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
         if (cancelled) return;
 
         setRequest(res.data);
-        setUsingMockData(false);
       } catch (err) {
         if (cancelled) return;
 
-        const safeId = Number(id);
-        setRequest({
-          ...MOCK_DETAIL,
-          id: Number.isFinite(safeId) && safeId > 0 ? safeId : MOCK_DETAIL.id,
-          requestCode: `REQ-2026-${String(id).padStart(4, "0")}`,
-        });
-        setUsingMockData(true);
+        setRequest(null);
 
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Không thể tải chi tiết từ API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải chi tiết yêu cầu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -268,9 +227,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     };
 
     try {
-      if (!usingMockData) {
-        await api.post<AdminApproveResponse>(`/api/v1/cfo/approvals/${id}/approve`, body);
-      }
+      await api.post<AdminApproveResponse>(`/api/v1/cfo/approvals/${id}/approve`, body);
       router.push(LIST_PATH);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -297,9 +254,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     const body: AdminRejectBody = { reason: rejectReason.trim() };
 
     try {
-      if (!usingMockData) {
-        await api.post<AdminRejectResponse>(`/api/v1/cfo/approvals/${id}/reject`, body);
-      }
+      await api.post<AdminRejectResponse>(`/api/v1/cfo/approvals/${id}/reject`, body);
       router.push(LIST_PATH);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -315,6 +270,18 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Budget approval detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Review department top-up proposal, system fund impact and approval decision.</p>
+          </div>
+        </div>
+      </section>
+
         <div className="h-8 w-64 rounded bg-white animate-pulse" />
         <div className="h-36 rounded-2xl bg-white animate-pulse" />
         <div className="h-72 rounded-2xl bg-white animate-pulse" />
@@ -331,7 +298,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           </svg>
           Quay lại danh sách
         </Link>
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-8 text-center text-slate-500">
           Không tìm thấy yêu cầu.
         </div>
       </div>
@@ -340,6 +307,18 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Budget approval detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Review department top-up proposal, system fund impact and approval decision.</p>
+          </div>
+        </div>
+      </section>
+
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link href={LIST_PATH} className="hover:text-slate-900 transition-colors">
           Duyệt cấp quota ngân sách
@@ -348,7 +327,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
         <span className="text-slate-600 font-mono">{request.requestCode}</span>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500">Mã yêu cầu</p>
@@ -376,7 +355,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
         <h2 className="text-lg font-semibold text-slate-900">Tác động Flow 3</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -386,7 +365,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
         </div>
 
         {overSystemFund && (
-          <div className="px-4 py-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
+          <div className="px-4 py-3 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 text-sm">
             Cảnh báo: số tiền yêu cầu đang vượt Quỹ hệ thống khả dụng.
           </div>
         )}
@@ -394,7 +373,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">Thông tin người gửi yêu cầu</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Họ tên" value={request.requester.fullName} />
@@ -404,7 +383,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">Thông tin phòng ban</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Phòng ban" value={request.department.name} />
@@ -414,14 +393,14 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-2">
             <h2 className="text-lg font-semibold text-slate-900">Nội dung yêu cầu</h2>
             <p className="text-sm text-slate-600 whitespace-pre-line">
               {request.description || "Không có mô tả."}
             </p>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Tiến trình Flow 3</h2>
 
             {sortedTimeline.length > 0 ? (
@@ -434,7 +413,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                     <span className="absolute left-0 top-1 w-6 h-6 rounded-full border border-slate-300 bg-white text-slate-600 flex items-center justify-center">
                       {timelineIcon(entry.action)}
                     </span>
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-3">
                       <p className="text-sm font-medium text-slate-900">{timelineActionLabel(entry.action)}</p>
                       <p className="text-xs text-slate-500 mt-1">{entry.actorName}</p>
                       {entry.comment && (
@@ -447,12 +426,12 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3">
                   <p className="text-sm font-medium text-slate-900">Manager gửi yêu cầu</p>
                   <p className="text-xs text-slate-500 mt-1">{request.requester.fullName}</p>
                   <p className="text-xs text-slate-500 mt-1">{formatDateTime(request.createdAt)}</p>
                 </div>
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
                   <p className="text-sm font-medium text-amber-700">Đang chờ CFO phê duyệt</p>
                   <p className="text-xs text-amber-200/80 mt-1">
                     Sau khi duyệt, hệ thống sẽ tự động chuyển quỹ và cập nhật trạng thái.
@@ -463,20 +442,20 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           </div>
 
           {canTakeAction && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
               <h2 className="text-lg font-semibold text-slate-900">Thao tác phê duyệt</h2>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={openApproveModal}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
                 >
                   Duyệt
                 </button>
                 <button
                   type="button"
                   onClick={openRejectModal}
-                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors"
+                  className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors"
                 >
                   Từ chối
                 </button>
@@ -485,7 +464,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Tóm tắt quyết định</h2>
           <InfoCard label="Loại yêu cầu" value={RequestType.DEPARTMENT_TOPUP} />
           <InfoCard label="Số tiền yêu cầu" value={formatCurrency(request.amount)} />
@@ -502,19 +481,18 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             onClick={() => setShowApproveModal(false)}
             aria-label="Đóng modal duyệt"
           />
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-slate-200 bg-white p-6 space-y-4">
             <h3 className="text-xl font-bold text-slate-900">Xác nhận duyệt yêu cầu</h3>
             <p className="text-sm text-slate-500">{request.requestCode}</p>
 
             <div>
               <label className="block text-sm text-slate-600 mb-2">Số tiền duyệt</label>
-              <input
-                type="number"
-                min={1}
+              <CurrencyInput
+                value={Number(approvedAmount) || null}
+                onChange={(value) => setApprovedAmount(value ? String(value) : "")}
+                error={actionError ?? undefined}
                 max={request.amount}
-                value={approvedAmount}
-                onChange={(event) => setApprovedAmount(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                className="focus:ring-emerald-500/40"
               />
               <p className="text-xs text-slate-500 mt-1">
                 Tối đa theo yêu cầu: {formatCurrency(request.amount)} • Quỹ hệ thống: {formatCurrency(systemFundBalance)}
@@ -528,7 +506,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                 value={approveComment}
                 onChange={(event) => setApproveComment(event.target.value)}
                 placeholder="Nhận xét của CFO (tuỳ chọn)"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
               />
             </div>
 
@@ -542,7 +520,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowApproveModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -550,7 +528,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleApprove}
                 disabled={submitting || maxApprovable <= 0}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận duyệt"}
               </button>
@@ -567,7 +545,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             onClick={() => setShowRejectModal(false)}
             aria-label="Đóng modal từ chối"
           />
-          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white border border-slate-200 p-6 space-y-4">
+          <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-slate-200 bg-white p-6 space-y-4">
             <h3 className="text-xl font-bold text-slate-900">Từ chối yêu cầu — {request.requestCode}</h3>
 
             <div>
@@ -576,7 +554,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                 rows={4}
                 value={rejectReason}
                 onChange={(event) => setRejectReason(event.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-rose-500/40"
               />
             </div>
 
@@ -607,7 +585,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
               >
                 Hủy
               </button>
@@ -615,7 +593,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handleReject}
                 disabled={rejectReason.trim().length < 10 || submitting}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận từ chối"}
               </button>
@@ -637,7 +615,7 @@ function InfoCard({
   tone?: string;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm mt-1 ${tone}`}>{value}</p>
     </div>

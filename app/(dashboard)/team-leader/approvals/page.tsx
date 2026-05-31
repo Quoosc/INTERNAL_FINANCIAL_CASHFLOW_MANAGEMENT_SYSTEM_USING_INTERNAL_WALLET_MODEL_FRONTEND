@@ -16,163 +16,6 @@ import { useToast } from "@/contexts/toast-context";
 
 const PAGE_LIMIT = 10;
 
-const MOCK_APPROVALS: TLApprovalListItem[] = [
-  {
-    id: 1,
-    requestCode: "REQ-2026-0041",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING,
-    amount: 3_500_000,
-    description: "Mua vật tư thiết bị thí nghiệm",
-    requester: {
-      id: 11,
-      fullName: "Đỗ Quốc Bảo",
-      avatar: null,
-      employeeCode: "EMP001",
-      jobTitle: "Frontend Developer",
-      email: "emp.it1@ifms.vn",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 1,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Phân tích",
-      budgetLimit: 50_000_000,
-      currentSpent: 47_000_000,
-    },
-    category: { id: 1, name: "Thiết bị & Phần cứng" },
-    attachments: [],
-    createdAt: "2026-04-03T09:15:00",
-  },
-  {
-    id: 2,
-    requestCode: "REQ-2026-0042",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING,
-    amount: 850_000,
-    description: "Chi phí di chuyển gặp khách hàng",
-    requester: {
-      id: 12,
-      fullName: "Vũ Thị Lan",
-      avatar: null,
-      employeeCode: "EMP002",
-      jobTitle: "Backend Developer",
-      email: "emp.it2@ifms.vn",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 2,
-      phaseCode: "PH-002",
-      name: "Phase 2 - Phát triển",
-      budgetLimit: 80_000_000,
-      currentSpent: 31_000_000,
-    },
-    category: { id: 2, name: "Di chuyển & Công tác" },
-    attachments: [],
-    createdAt: "2026-04-02T14:30:00",
-  },
-  {
-    id: 3,
-    requestCode: "REQ-2026-0043",
-    type: RequestType.REIMBURSE,
-    status: RequestStatus.PENDING,
-    amount: 1_200_000,
-    description: "Hoàn ứng chi phí ăn uống team",
-    requester: {
-      id: 11,
-      fullName: "Đỗ Quốc Bảo",
-      avatar: null,
-      employeeCode: "EMP001",
-      jobTitle: "Frontend Developer",
-      email: "emp.it1@ifms.vn",
-    },
-    project: {
-      id: 2,
-      projectCode: "PRJ-IT-002",
-      name: "Nâng cấp hạ tầng mạng",
-    },
-    phase: {
-      id: 3,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Triển khai",
-      budgetLimit: 30_000_000,
-      currentSpent: 8_500_000,
-    },
-    category: { id: 3, name: "Ăn uống & Tiếp khách" },
-    attachments: [],
-    createdAt: "2026-04-01T10:00:00",
-  },
-  {
-    id: 4,
-    requestCode: "REQ-2026-0038",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING,
-    amount: 5_000_000,
-    description: "Ứng trước chi phí đào tạo nội bộ",
-    requester: {
-      id: 13,
-      fullName: "Phạm Văn Đức",
-      avatar: null,
-      employeeCode: "EMP003",
-      jobTitle: "QA Engineer",
-      email: "emp.sales1@ifms.vn",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 2,
-      phaseCode: "PH-002",
-      name: "Phase 2 - Phát triển",
-      budgetLimit: 80_000_000,
-      currentSpent: 31_000_000,
-    },
-    category: { id: 4, name: "Đào tạo & Phát triển" },
-    attachments: [],
-    createdAt: "2026-03-31T11:00:00",
-  },
-  {
-    id: 5,
-    requestCode: "REQ-2026-0035",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.PENDING,
-    amount: 2_300_000,
-    description: "Mua sách tham khảo kỹ thuật",
-    requester: {
-      id: 12,
-      fullName: "Vũ Thị Lan",
-      avatar: null,
-      employeeCode: "EMP002",
-      jobTitle: "Backend Developer",
-      email: "emp.it2@ifms.vn",
-    },
-    project: {
-      id: 2,
-      projectCode: "PRJ-IT-002",
-      name: "Nâng cấp hạ tầng mạng",
-    },
-    phase: {
-      id: 3,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Triển khai",
-      budgetLimit: 30_000_000,
-      currentSpent: 8_500_000,
-    },
-    category: { id: 5, name: "Tài liệu & In ấn" },
-    attachments: [],
-    createdAt: "2026-03-29T16:45:00",
-  },
-];
 
 function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -237,23 +80,6 @@ function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
 }
 
-function filterMock(
-  source: TLApprovalListItem[],
-  type?: RequestType,
-  search = "",
-): TLApprovalListItem[] {
-  const q = search.trim().toLowerCase();
-  return source.filter((item) => {
-    if (item.status !== RequestStatus.PENDING) return false;
-    if (type && item.type !== type) return false;
-    if (q) {
-      const haystack =
-        `${item.requestCode} ${item.requester.fullName}`.toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
-    return true;
-  });
-}
 
 export default function TLApprovalsPage() {
   const router = useRouter();
@@ -367,26 +193,10 @@ export default function TLApprovalsPage() {
         setTotalPages(apiTotalPages);
       } catch (err) {
         if (cancelled) return;
-
-        const filtered = filterMock(MOCK_APPROVALS, typeFilter, search);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const safePage = Math.min(page, mockTotalPages);
-        const start = (safePage - 1) * PAGE_LIMIT;
-
-        setItems(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-
-        if (safePage !== page) {
-          goToPage(safePage);
-        }
-
-        if (err instanceof ApiError) {
-          toast.error(err.apiMessage);
-        } else {
-          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
-        }
+        setItems([]);
+        setTotal(0);
+        setTotalPages(1);
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải danh sách yêu cầu.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -405,22 +215,67 @@ export default function TLApprovalsPage() {
     { label: "Chi phí", value: RequestType.EXPENSE },
     { label: "Hoàn ứng", value: RequestType.REIMBURSE },
   ];
+  const filtered = Boolean(typeFilter || search);
+  const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+  const overBudgetCount = items.filter((item) => {
+    const phaseCurrentSpent = item.phase.currentSpent ?? 0;
+    const phaseBudgetLimit = item.phase.budgetLimit ?? 0;
+    return phaseBudgetLimit > 0 && phaseCurrentSpent + item.amount > phaseBudgetLimit;
+  }).length;
+  const uniqueRequesters = new Set(items.map((item) => item.requester.id)).size;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Duyệt yêu cầu</h1>
-          <p className="text-slate-500 mt-1">
-            Danh sách yêu cầu Flow 1 đang chờ Trưởng nhóm phê duyệt.
-          </p>
-        </div>
-        <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-300 bg-amber-100 text-amber-700 text-sm font-medium">
-          {total} chờ duyệt
-        </span>
-      </div>
+      <section className="overflow-hidden rounded-3xl border border-indigo-200 bg-linear-to-br from-indigo-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-indigo-900/15">
+        <div className="relative px-6 py-7 sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Approval queue</p>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Duyệt yêu cầu</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
+                Rà soát yêu cầu Flow 1, kiểm tra ngân sách phase và xử lý các đề xuất từ thành viên trong nhóm.
+              </p>
+            </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
+            <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-white" />
+              {total.toLocaleString("vi-VN")} chờ duyệt
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Hàng chờ" value={total.toLocaleString("vi-VN")} helper={`${items.length} yêu cầu đang hiển thị`} tone="blue" />
+        <MetricCard label="Tổng tiền" value={formatCurrency(totalAmount)} helper="Giá trị trên trang hiện tại" tone="blue" />
+        <MetricCard label="Nhân sự gửi" value={String(uniqueRequesters)} helper="Người đang chờ phê duyệt" tone="indigo" />
+        <MetricCard label="Cần kiểm tra" value={String(overBudgetCount)} helper="Có nguy cơ vượt phase" tone="rose" />
+      </section>
+
+      <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Bộ lọc duyệt yêu cầu</h2>
+            <p className="mt-1 text-sm text-slate-500">Lọc theo loại yêu cầu hoặc tìm nhanh theo mã và nhân viên.</p>
+          </div>
+          {filtered && (
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams(searchParamsString);
+                params.delete("type");
+                params.delete("search");
+                params.delete("page");
+                pushWithParams(params);
+              }}
+              className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {typeTabs.map((tab) => {
             const active =
@@ -430,10 +285,10 @@ export default function TLApprovalsPage() {
                 key={tab.label}
                 type="button"
                 onClick={() => updateParam("type", tab.value)}
-                className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
+                className={`rounded-2xl border px-4 py-2.5 text-sm font-semibold transition ${
                   active
-                    ? "bg-blue-100 border-blue-300 text-blue-700"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+                    ? "border-blue-200 bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
                 }`}
               >
                 {tab.label}
@@ -442,9 +297,9 @@ export default function TLApprovalsPage() {
           })}
         </div>
 
-        <div className="relative">
+        <div className="relative mt-4">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
+            className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -460,16 +315,16 @@ export default function TLApprovalsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm mã YC, tên nhân viên..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
           />
         </div>
-      </div>
+      </section>
 
       {loading ? (
         <CardListSkeleton rows={5} height="h-36" />
       ) : items.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
             <svg
               className="w-7 h-7"
               fill="none"
@@ -484,9 +339,10 @@ export default function TLApprovalsPage() {
               />
             </svg>
           </div>
-          <p className="text-slate-600 mt-4">
+          <h3 className="mt-4 text-base font-bold text-slate-900">
             Không có yêu cầu nào đang chờ duyệt
-          </p>
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">Hàng chờ đang trống hoặc bộ lọc chưa có dữ liệu phù hợp.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -506,16 +362,16 @@ export default function TLApprovalsPage() {
                 key={item.id}
                 type="button"
                 onClick={() => router.push(`/team-leader/approvals/${item.id}`)}
-                className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
+                className="group w-full rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/10"
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span
-                      className={`inline-flex px-2 py-1 rounded-full border ${getTypeClass(item.type)}`}
+                      className={`inline-flex rounded-full border px-2.5 py-1 font-semibold ${getTypeClass(item.type)}`}
                     >
                       {getTypeLabel(item.type)}
                     </span>
-                    <span className="font-mono text-slate-600">
+                    <span className="font-mono font-semibold text-slate-600">
                       {item.requestCode}
                     </span>
                     <span className="text-slate-500">
@@ -524,7 +380,7 @@ export default function TLApprovalsPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-white border border-slate-200 text-slate-900 flex items-center justify-center text-xs font-semibold">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-xs font-bold text-white">
                       {getInitials(item.requester.fullName)}
                     </div>
                     <div>
@@ -537,13 +393,13 @@ export default function TLApprovalsPage() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-slate-600">
+                  <p className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-600">
                     {projectLabel} <span className="text-slate-500">/</span>{" "}
                     {phaseLabel} <span className="text-slate-500">/</span>{" "}
                     {categoryLabel}
                   </p>
 
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex flex-col gap-3 border-t border-slate-100 pt-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       {phaseBudgetLimit <= 0 ? (
                         <p className="text-sm text-slate-500">
@@ -569,7 +425,7 @@ export default function TLApprovalsPage() {
                       <p className="text-lg font-semibold text-slate-900">
                         {formatCurrency(item.amount)}
                       </p>
-                      <span className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
+                      <span className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition group-hover:border-blue-200">
                         Chi tiết →
                       </span>
                     </div>
@@ -581,9 +437,10 @@ export default function TLApprovalsPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-500">
-          Trang {page}/{totalPages} • Tổng {total} yêu cầu
+          Hiển thị <span className="font-semibold text-slate-900">{items.length}</span> trong tổng{" "}
+          <span className="font-semibold text-slate-900">{total.toLocaleString("vi-VN")}</span> yêu cầu
         </p>
 
         <div className="flex items-center gap-2">
@@ -591,7 +448,7 @@ export default function TLApprovalsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Trước
           </button>
@@ -599,13 +456,40 @@ export default function TLApprovalsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Sau
           </button>
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "indigo" | "rose";
+}) {
+  const toneClassName = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+  }[tone];
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full border ${toneClassName}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

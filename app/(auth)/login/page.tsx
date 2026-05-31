@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/auth";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/contexts/toast-context";
 import { ApiError } from "@/lib/api-client";
 import type { LoginRequest } from "@/types";
 
@@ -184,6 +185,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser } = useAuth();
+  const toast = useToast();
 
   const passwordReset = searchParams.get("reset") === "success";
 
@@ -194,6 +196,14 @@ function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
 
   const activeConfig = ROLE_CONFIGS.find((c) => c.role === selectedRole)!;
+
+  React.useEffect(() => {
+    const authToast = sessionStorage.getItem("auth_toast");
+    if (authToast === "logout") {
+      toast.success("Đã đăng xuất khỏi hệ thống.");
+      sessionStorage.removeItem("auth_toast");
+    }
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -207,16 +217,20 @@ function LoginContent() {
         if (response.setupToken) {
           sessionStorage.setItem("setup_token", response.setupToken);
         }
+        toast.info("Vui lòng hoàn tất thiết lập tài khoản lần đầu.");
         router.push("/change-password");
       } else if (response.user) {
         setUser(response.user);
+        toast.success("Đăng nhập thành công.");
         router.push("/dashboard");
       }
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.apiMessage);
+        toast.error(err.apiMessage);
       } else {
         setError("Đăng nhập thất bại. Vui lòng thử lại.");
+        toast.error("Đăng nhập thất bại. Vui lòng thử lại.");
       }
     } finally {
       setIsLoading(false);

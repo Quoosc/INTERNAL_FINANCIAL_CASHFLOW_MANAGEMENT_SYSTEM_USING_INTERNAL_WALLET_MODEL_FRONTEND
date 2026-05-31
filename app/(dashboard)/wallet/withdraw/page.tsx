@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError } from "@/lib/api-client";
 import { cancelWithdrawRequest, createWithdrawRequest, getMyWithdrawRequests } from "@/lib/api";
-import { formatCurrency, formatDateTime, formatInputAmount, parseAmountInput } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { EmptyState } from "@/components/ui/loading-skeleton";
 import { useToast } from "@/contexts/toast-context";
@@ -67,7 +68,6 @@ export default function WithdrawPage() {
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const amountNumber = useMemo(() => Number(amount || 0), [amount]);
-  const amountDisplay = useMemo(() => formatInputAmount(amount), [amount]);
   const currentBalance = wallet?.balance ?? 0;
   const availableBalance = wallet?.availableBalance ?? wallet?.balance ?? 0;
 
@@ -77,7 +77,7 @@ export default function WithdrawPage() {
 
     try {
       const res = await getMyWithdrawRequests(0, 10);
-      setHistory(res.data.content);
+      setHistory(res.data.items ?? []);
     } catch (err) {
       setHistory([]);
       if (err instanceof ApiError) {
@@ -117,10 +117,6 @@ export default function WithdrawPage() {
     }
 
     return true;
-  };
-
-  const handleAmountChange = (value: string) => {
-    setAmount(parseAmountInput(value));
   };
 
   const handleSubmitWithdraw = async (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -174,10 +170,22 @@ export default function WithdrawPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Withdraw funds</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Create a wallet withdrawal request and follow accounting processing history.</p>
+          </div>
+        </div>
+      </section>
+
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -190,7 +198,7 @@ export default function WithdrawPage() {
         <p className="text-slate-500 mt-1">Tạo yêu cầu rút tiền từ ví nội bộ về tài khoản ngân hàng.</p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-6">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6">
         <p className="text-sm text-slate-500">Số dư hiện tại</p>
         {walletLoading ? (
           <div className="mt-2 h-9 w-48 rounded bg-slate-100 animate-pulse" />
@@ -203,19 +211,17 @@ export default function WithdrawPage() {
       </div>
 
       {!result ? (
-        <form onSubmit={handleSubmitWithdraw} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <form onSubmit={handleSubmitWithdraw} className="rounded-3xl border border-slate-200 bg-white p-6 space-y-4">
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-slate-600 mb-2">
               Số tiền rút
             </label>
-            <input
+            <CurrencyInput
               id="amount"
-              type="text"
-              inputMode="numeric"
-              value={amountDisplay}
-              onChange={(e) => handleAmountChange(e.target.value)}
+              value={amountNumber || null}
+              onChange={(value) => setAmount(value ? String(value) : "")}
               placeholder="Nhập số tiền"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              className="focus:ring-emerald-500/40"
             />
             <p className="text-xs text-slate-500 mt-1">Tối thiểu: 10.000 ₫ — Khả dụng: {formatCurrency(availableBalance)}</p>
           </div>
@@ -230,7 +236,7 @@ export default function WithdrawPage() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Ví dụ: Rút tiền chi tiêu cá nhân"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             />
           </div>
 
@@ -239,13 +245,13 @@ export default function WithdrawPage() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
           >
             {loading ? "Đang gửi yêu cầu..." : "Gửi yêu cầu rút tiền"}
           </button>
         </form>
       ) : (
-        <div className="bg-white border border-emerald-200 rounded-2xl p-6 space-y-4">
+        <div className="border border-emerald-200 bg-white rounded-3xl p-6 space-y-4">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,7 +276,7 @@ export default function WithdrawPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/wallet"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
             >
               Về ví
             </Link>
@@ -282,7 +288,7 @@ export default function WithdrawPage() {
                 setNote("");
                 setError(null);
               }}
-              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+              className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
             >
               Tạo yêu cầu mới
             </button>
@@ -290,14 +296,14 @@ export default function WithdrawPage() {
         </div>
       )}
 
-      <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900">Lịch sử yêu cầu rút tiền</h2>
           <button
             type="button"
             onClick={() => void loadWithdrawHistory()}
             disabled={historyLoading}
-            className="px-3 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-xs font-medium"
+            className="px-3 py-2 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-xs font-medium"
           >
             Tải lại
           </button>
@@ -310,18 +316,18 @@ export default function WithdrawPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-180">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/80">
-                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Số tiền</th>
-                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
-                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ghi chú</th>
-                  <th className="px-3 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thời gian tạo</th>
-                  <th className="px-3 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
+              <thead className="sticky top-0 z-10 bg-white">
+                <tr className="border-b border-slate-100 bg-blue-50/60">
+                  <th className="px-3 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Số tiền</th>
+                  <th className="px-3 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-3 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Ghi chú</th>
+                  <th className="px-3 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Thời gian tạo</th>
+                  <th className="px-3 py-3.5 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((request) => (
-                  <tr key={request.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                  <tr key={request.id} className="border-b border-slate-100 hover:bg-blue-50/40 transition-colors">
                     <td className="px-3 py-3.5 text-sm text-slate-900 font-medium">{formatCurrency(request.amount)}</td>
                     <td className="px-3 py-3.5">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getWithdrawStatusClass(request.status)}`}>
@@ -336,7 +342,7 @@ export default function WithdrawPage() {
                           type="button"
                           onClick={() => void handleCancelRequest(request.id)}
                           disabled={cancellingId === request.id}
-                          className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
+                          className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 disabled:opacity-60 disabled:cursor-not-allowed text-xs font-medium"
                         >
                           {cancellingId === request.id ? "Đang hủy..." : "Hủy"}
                         </button>
@@ -359,7 +365,7 @@ export default function WithdrawPage() {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="text-sm text-slate-900 font-medium mt-1">{value}</p>
     </div>

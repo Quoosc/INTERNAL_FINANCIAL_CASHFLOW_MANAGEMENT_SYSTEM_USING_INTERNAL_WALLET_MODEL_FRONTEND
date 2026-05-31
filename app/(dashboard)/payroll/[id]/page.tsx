@@ -117,6 +117,18 @@ export default function PayslipDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Payslip detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Review salary components, deductions, payment status and payroll period.</p>
+          </div>
+        </div>
+      </section>
+
         <div className="h-9 w-36 rounded bg-white animate-pulse" />
         <div className="h-28 rounded-2xl bg-white animate-pulse" />
         <div className="h-64 rounded-2xl bg-white animate-pulse" />
@@ -138,7 +150,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
           Quay lại danh sách
         </button>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500">
           Không tìm thấy phiếu lương.
         </div>
       </div>
@@ -148,11 +160,23 @@ export default function PayslipDetailPage({ params }: PageProps) {
   return (
     <>
       <div className="max-w-5xl mx-auto space-y-6 print:p-0 print:m-0 print:bg-white">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Payslip detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Review salary components, deductions, payment status and payroll period.</p>
+          </div>
+        </div>
+      </section>
+
         <div className="print:hidden">
           <button
             type="button"
             onClick={() => router.push("/payroll")}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -161,7 +185,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
           </button>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 print:bg-white print:border-gray-300">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 print:bg-white print:border-gray-300">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 print:text-gray-900">{payslip.employee.fullName}</h1>
@@ -183,7 +207,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="print:hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+                className="print:hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -200,7 +224,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 print:bg-white print:border-gray-300">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-3 print:bg-white print:border-gray-300">
             <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Earnings</h2>
 
             <LineRow label="Lương cơ bản" value={payslip.baseSalary} positive />
@@ -216,7 +240,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 print:bg-white print:border-gray-300">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-3 print:bg-white print:border-gray-300">
             <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Deductions</h2>
 
             {deductionItems.length > 0 ? (
@@ -235,7 +259,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 print:bg-white print:border-gray-300">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4 print:bg-white print:border-gray-300">
           <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Tổng hợp thanh toán</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -246,7 +270,7 @@ export default function PayslipDetailPage({ params }: PageProps) {
         </div>
 
         {payslip.advanceDeduct > 0 && (
-          <div className="bg-white border border-blue-200 rounded-2xl p-5 print:bg-white print:border-gray-300">
+          <div className="border bg-white border-blue-200 rounded-3xl p-5 print:bg-white print:border-gray-300">
             <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Netting</h2>
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
               <MetricCard title="Debt Offset Applied" value={payslip.advanceDeduct} tone="negative" />
@@ -306,7 +330,7 @@ function MetricCard({
         : "text-slate-100 print:text-gray-900";
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 print:bg-white print:border-gray-300">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 print:bg-white print:border-gray-300">
       <p className="text-xs text-slate-500 print:text-gray-600">{title}</p>
       <p className={`text-xl font-bold mt-1 ${toneClass}`}>{formatCurrency(value)}</p>
     </div>

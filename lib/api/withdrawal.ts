@@ -9,12 +9,12 @@ import type {
   WithdrawStatus,
 } from "@/types";
 
-// Spring Data Page<T> response format
-interface SpringPage<T> {
-  content: T[];
-  totalElements: number;
+// Backend PageResponse<T> format (com.mkwang.backend.common.dto.PageResponse)
+interface BackendPage<T> {
+  items: T[];
+  total: number;
   totalPages: number;
-  number: number;   // 0-indexed page
+  page: number;
   size: number;
 }
 
@@ -32,7 +32,7 @@ export async function cancelWithdrawRequest(id: number) {
 
 /** GET /api/v1/wallet/withdraw/my — Lịch sử rút tiền cá nhân */
 export async function getMyWithdrawRequests(page = 0, size = 10) {
-  return api.get<SpringPage<WithdrawRequestResponse>>(
+  return api.get<BackendPage<WithdrawRequestResponse>>(
     `/api/v1/wallet/withdraw/my?page=${page}&size=${size}`
   );
 }
@@ -49,7 +49,7 @@ export async function getAllWithdrawRequests(
   if (status) params.set("status", status);
   params.set("page", String(page));
   params.set("size", String(size));
-  return api.get<SpringPage<WithdrawRequestResponse>>(
+  return api.get<BackendPage<WithdrawRequestResponse>>(
     `/api/v1/wallet/withdraw?${params.toString()}`
   );
 }

@@ -2,10 +2,12 @@
 
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api-client";
+import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
 import { formatCurrency } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { SideDrawer } from "@/components/ui/side-drawer";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   AddMemberBody,
   AvailableMemberResponse,
@@ -31,149 +33,6 @@ interface PageProps {
 
 type TabKey = "phases" | "budget" | "members";
 
-const MOCK_PROJECT: TLProjectDetailResponse = {
-  id: 1,
-  projectCode: "PRJ-IT-001",
-  name: "Hệ thống quản lý nội bộ",
-  description: "Quản lý tài chính nội bộ theo phase và workflow duyệt.",
-  status: ProjectStatus.ACTIVE,
-  totalBudget: 150_000_000,
-  availableBudget: 88_500_000,
-  totalSpent: 61_500_000,
-  departmentId: 1,
-  managerId: 5,
-  currentPhaseId: 1,
-  phases: [
-    {
-      id: 1,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Phân tích",
-      budgetLimit: 50_000_000,
-      currentSpent: 47_000_000,
-      status: PhaseStatus.ACTIVE,
-      startDate: "2026-01-10",
-      endDate: "2026-03-31",
-    },
-    {
-      id: 2,
-      phaseCode: "PH-002",
-      name: "Phase 2 - Phát triển",
-      budgetLimit: 80_000_000,
-      currentSpent: 14_500_000,
-      status: PhaseStatus.ACTIVE,
-      startDate: "2026-04-01",
-      endDate: "2026-07-31",
-    },
-  ],
-  members: [
-    {
-      userId: 11,
-      fullName: "Đỗ Quốc Bảo",
-      avatar: null,
-      employeeCode: "EMP001",
-      projectRole: ProjectRole.LEADER,
-      position: "Tech Lead",
-      joinedAt: "2026-01-10T08:00:00",
-    },
-    {
-      userId: 12,
-      fullName: "Vũ Thị Lan",
-      avatar: null,
-      employeeCode: "EMP002",
-      projectRole: ProjectRole.MEMBER,
-      position: "Backend Developer",
-      joinedAt: "2026-01-15T08:00:00",
-    },
-  ],
-  createdAt: "2026-01-10T08:00:00",
-  updatedAt: "2026-04-01T08:00:00",
-};
-
-const MOCK_PHASE_CATEGORIES: Record<number, PhaseCategoriesResponse> = {
-  1: {
-    projectId: 1,
-    phaseId: 1,
-    phaseName: "Phase 1 - Phân tích",
-    categories: [
-      {
-        categoryId: 1,
-        categoryName: "Thiết bị",
-        budgetLimit: 20_000_000,
-        currentSpent: 18_500_000,
-        remaining: 1_500_000,
-      },
-      {
-        categoryId: 2,
-        categoryName: "Công tác",
-        budgetLimit: 10_000_000,
-        currentSpent: 8_200_000,
-        remaining: 1_800_000,
-      },
-      {
-        categoryId: 3,
-        categoryName: "Đào tạo",
-        budgetLimit: 15_000_000,
-        currentSpent: 14_300_000,
-        remaining: 700_000,
-      },
-    ],
-  },
-  2: {
-    projectId: 1,
-    phaseId: 2,
-    phaseName: "Phase 2 - Phát triển",
-    categories: [
-      {
-        categoryId: 4,
-        categoryName: "Cloud",
-        budgetLimit: 30_000_000,
-        currentSpent: 7_500_000,
-        remaining: 22_500_000,
-      },
-      {
-        categoryId: 5,
-        categoryName: "Tools",
-        budgetLimit: 25_000_000,
-        currentSpent: 2_000_000,
-        remaining: 23_000_000,
-      },
-      {
-        categoryId: 1,
-        categoryName: "Thiết bị",
-        budgetLimit: 25_000_000,
-        currentSpent: 5_000_000,
-        remaining: 20_000_000,
-      },
-    ],
-  },
-};
-
-const MOCK_AVAILABLE_MEMBERS: AvailableMemberResponse[] = [
-  {
-    id: 14,
-    fullName: "Nguyễn Thị Minh",
-    employeeCode: "EMP004",
-    avatar: null,
-    email: "emp.fin1@ifms.vn",
-    jobTitle: "Business Analyst",
-  },
-  {
-    id: 15,
-    fullName: "Trần Văn Nam",
-    employeeCode: "EMP005",
-    avatar: null,
-    email: "emp.it5@ifms.vn",
-    jobTitle: "DevOps Engineer",
-  },
-];
-
-const MOCK_EXPENSE_CATEGORIES: ExpenseCategoryResponse[] = [
-  { id: 1, name: "Thiết bị", description: null, isSystemDefault: true },
-  { id: 2, name: "Công tác", description: null, isSystemDefault: true },
-  { id: 3, name: "Đào tạo", description: null, isSystemDefault: true },
-  { id: 4, name: "Cloud", description: null, isSystemDefault: true },
-  { id: 5, name: "Tools", description: null, isSystemDefault: true },
-];
 
 function burn(spent: number, budget: number): number {
   if (budget <= 0) return 0;
@@ -204,9 +63,17 @@ function statusBadge(status: ProjectStatus): string {
   return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
+function statusLabel(status: ProjectStatus): string {
+  if (status === ProjectStatus.ACTIVE) return "Đang hoạt động";
+  if (status === ProjectStatus.PLANNING) return "Lập kế hoạch";
+  if (status === ProjectStatus.PAUSED) return "Tạm dừng";
+  if (status === ProjectStatus.CLOSED) return "Đã đóng";
+  return status;
+}
+
 function roleBadge(role: ProjectRole): string {
   return role === ProjectRole.LEADER
-    ? "bg-amber-100 border-amber-200 text-amber-700"
+    ? "bg-indigo-100 border-indigo-200 text-indigo-700"
     : "bg-slate-100 border-slate-200 text-slate-600";
 }
 
@@ -230,26 +97,26 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const [showTopup, setShowTopup] = useState(false);
-  const [topupAmount, setTopupAmount] = useState("");
+  const [topupAmount, setTopupAmount] = useState<number | null>(null);
   const [topupNote, setTopupNote] = useState("");
 
   const [showCreatePhase, setShowCreatePhase] = useState(false);
   const [phaseName, setPhaseName] = useState("");
-  const [phaseBudget, setPhaseBudget] = useState("");
+  const [phaseBudget, setPhaseBudget] = useState<number | null>(null);
   const [phaseStart, setPhaseStart] = useState("");
   const [phaseEnd, setPhaseEnd] = useState("");
 
   const [showEditPhase, setShowEditPhase] = useState(false);
   const [editingPhaseId, setEditingPhaseId] = useState<number | null>(null);
   const [editPhaseName, setEditPhaseName] = useState("");
-  const [editPhaseBudget, setEditPhaseBudget] = useState("");
+  const [editPhaseBudget, setEditPhaseBudget] = useState<number | null>(null);
   const [editPhaseEnd, setEditPhaseEnd] = useState("");
   const [editPhaseStatus, setEditPhaseStatus] = useState<PhaseStatus>(
     PhaseStatus.ACTIVE,
   );
 
   const [editingBudget, setEditingBudget] = useState(false);
-  const [budgetDraft, setBudgetDraft] = useState<Record<number, string>>({});
+  const [budgetDraft, setBudgetDraft] = useState<Record<number, number | null>>({});
 
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
@@ -263,7 +130,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatDesc, setNewCatDesc] = useState("");
-  const [newCatBudget, setNewCatBudget] = useState("");
+  const [newCatBudget, setNewCatBudget] = useState<number | null>(null);
 
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
@@ -284,19 +151,10 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         setSelectedPhaseId(
           res.data.currentPhaseId ?? res.data.phases[0]?.id ?? null,
         );
-      } catch {
+      } catch (err) {
         if (cancelled) return;
-        const safe = Number(id);
-        const fallback = {
-          ...MOCK_PROJECT,
-          id: Number.isFinite(safe) && safe > 0 ? safe : MOCK_PROJECT.id,
-          projectCode: `PRJ-TL-${String(id).padStart(3, "0")}`,
-        };
-        setProject(fallback);
-        setSelectedPhaseId(
-          fallback.currentPhaseId ?? fallback.phases[0]?.id ?? null,
-        );
-        toast.error("Không thể tải API, đang dùng dữ liệu mẫu.");
+        setProject(null);
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải thông tin dự án.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -325,8 +183,8 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         setExpenseCategories(cRes.data);
       } catch {
         if (cancelled) return;
-        setAvailableMembers(MOCK_AVAILABLE_MEMBERS);
-        setExpenseCategories(MOCK_EXPENSE_CATEGORIES);
+        setAvailableMembers([]);
+        setExpenseCategories([]);
       }
     };
     void loadAux();
@@ -349,33 +207,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         if (!cancelled) setPhaseCategories(res.data);
       } catch {
         if (cancelled) return;
-        const mapped = MOCK_PHASE_CATEGORIES[selectedPhaseId];
-        if (mapped) {
-          setPhaseCategories({
-            ...mapped,
-            projectId: project.id,
-            phaseId: selectedPhaseId,
-          });
-        } else {
-          const phase = project.phases.find((p) => p.id === selectedPhaseId);
-          setPhaseCategories({
-            projectId: project.id,
-            phaseId: selectedPhaseId,
-            phaseName: phase?.name ?? `Phase ${selectedPhaseId}`,
-            categories: (expenseCategories.length
-              ? expenseCategories
-              : MOCK_EXPENSE_CATEGORIES
-            )
-              .slice(0, 3)
-              .map((c) => ({
-                categoryId: c.id,
-                categoryName: c.name,
-                budgetLimit: 5_000_000,
-                currentSpent: 0,
-                remaining: 5_000_000,
-              })),
-          });
-        }
+        setPhaseCategories(null);
       }
     };
     void load();
@@ -400,7 +232,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   const openEditPhase = (phase: ProjectPhaseResponse) => {
     setEditingPhaseId(phase.id);
     setEditPhaseName(phase.name);
-    setEditPhaseBudget(String(phase.budgetLimit));
+    setEditPhaseBudget(phase.budgetLimit);
     setEditPhaseEnd(phase.endDate ?? "");
     setEditPhaseStatus(phase.status);
     setShowEditPhase(true);
@@ -418,7 +250,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       !phaseName.trim() ||
       !phaseStart ||
       !phaseEnd ||
-      Number(phaseBudget) <= 0
+      (phaseBudget ?? 0) <= 0
     ) {
       toast.error("Vui lòng nhập đủ thông tin phase hợp lệ.");
       return;
@@ -426,7 +258,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     setSubmitting(true);
     const body: CreatePhaseBody = {
       name: phaseName.trim(),
-      budgetLimit: Number(phaseBudget),
+      budgetLimit: phaseBudget ?? 0,
       startDate: phaseStart,
       endDate: phaseEnd,
     };
@@ -439,29 +271,16 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         prev ? { ...prev, phases: [...prev.phases, res.data] } : prev,
       );
       setSelectedPhaseId(res.data.id);
-    } catch {
-      const mock: ProjectPhaseResponse = {
-        id: Date.now(),
-        phaseCode: `PH-${String(Date.now()).slice(-3)}`,
-        name: body.name,
-        budgetLimit: body.budgetLimit,
-        currentSpent: 0,
-        status: PhaseStatus.ACTIVE,
-        startDate: body.startDate,
-        endDate: body.endDate,
-      };
-      setProject((prev) =>
-        prev ? { ...prev, phases: [...prev.phases, mock] } : prev,
-      );
-      setSelectedPhaseId(mock.id);
-    } finally {
-      setSubmitting(false);
       setShowCreatePhase(false);
       setPhaseName("");
-      setPhaseBudget("");
+      setPhaseBudget(null);
       setPhaseStart("");
       setPhaseEnd("");
       toast.success("Đã tạo phase mới.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tạo phase. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -470,7 +289,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       !project ||
       !editingPhaseId ||
       !editPhaseName.trim() ||
-      Number(editPhaseBudget) <= 0
+      (editPhaseBudget ?? 0) <= 0
     ) {
       toast.error("Thông tin cập nhật phase chưa hợp lệ.");
       return;
@@ -478,7 +297,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     setSubmitting(true);
     const body: UpdatePhaseBody = {
       name: editPhaseName.trim(),
-      budgetLimit: Number(editPhaseBudget),
+      budgetLimit: editPhaseBudget ?? 0,
       endDate: editPhaseEnd || undefined,
       status: editPhaseStatus,
     };
@@ -497,38 +316,21 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             }
           : prev,
       );
-    } catch {
-      setProject((prev) =>
-        prev
-          ? {
-              ...prev,
-              phases: prev.phases.map((p) =>
-                p.id === editingPhaseId
-                  ? {
-                      ...p,
-                      name: body.name ?? p.name,
-                      budgetLimit: body.budgetLimit ?? p.budgetLimit,
-                      endDate: body.endDate ?? p.endDate,
-                      status: body.status ?? p.status,
-                    }
-                  : p,
-              ),
-            }
-          : prev,
-      );
-    } finally {
-      setSubmitting(false);
       setShowEditPhase(false);
       setEditingPhaseId(null);
       toast.success("Đã cập nhật phase.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể cập nhật phase. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const startEditBudget = () => {
     if (!phaseCategories) return;
-    const next: Record<number, string> = {};
+    const next: Record<number, number | null> = {};
     phaseCategories.categories.forEach((c) => {
-      next[c.categoryId] = String(c.budgetLimit);
+      next[c.categoryId] = c.budgetLimit;
     });
     setBudgetDraft(next);
     setEditingBudget(true);
@@ -542,8 +344,8 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         phaseId: selectedPhaseId,
         categoryId: c.categoryId,
         budgetLimit:
-          Number(budgetDraft[c.categoryId]) > 0
-            ? Number(budgetDraft[c.categoryId])
+          (budgetDraft[c.categoryId] ?? 0) > 0
+            ? (budgetDraft[c.categoryId] as number)
             : c.budgetLimit,
       }),
     );
@@ -636,9 +438,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         `/api/v1/team-leader/projects/${project.id}/members`,
         body,
       );
-    } catch {
-      // mock-first
-    } finally {
       setProject((prev) =>
         prev
           ? {
@@ -659,12 +458,15 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           : prev,
       );
       setAvailableMembers((prev) => prev.filter((m) => m.id !== selected.id));
-      setSubmitting(false);
       setShowAddMember(false);
       setSelectedMemberId(null);
       setMemberSearch("");
       setMemberPosition("");
       toast.success("Đã thêm thành viên.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể thêm thành viên. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -680,9 +482,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         `/api/v1/team-leader/projects/${project.id}/members/${editingMemberId}`,
         body,
       );
-    } catch {
-      // mock-first
-    } finally {
       setProject((prev) =>
         prev
           ? {
@@ -695,10 +494,13 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             }
           : prev,
       );
-      setSubmitting(false);
       setShowEditMember(false);
       setEditingMemberId(null);
       toast.success("Đã cập nhật vị trí.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể cập nhật vị trí. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -720,9 +522,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           await api.delete(
             `/api/v1/team-leader/projects/${project.id}/members/${userId}`,
           );
-        } catch {
-          // mock-first
-        } finally {
           setProject((prev) =>
             prev
               ? {
@@ -731,15 +530,18 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                 }
               : prev,
           );
-          setSubmitting(false);
           toast.success("Đã xóa thành viên.");
+        } catch (err) {
+          toast.error(err instanceof ApiError ? err.apiMessage : "Không thể xóa thành viên. Vui lòng thử lại.");
+        } finally {
+          setSubmitting(false);
         }
       },
     });
   };
 
   const onTopup = async () => {
-    if (!project || Number(topupAmount) <= 0) {
+    if (!project || (topupAmount ?? 0) <= 0) {
       toast.error("Số tiền xin cấp vốn không hợp lệ.");
       return;
     }
@@ -748,18 +550,18 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       await api.post("/api/v1/requests", {
         type: RequestType.PROJECT_TOPUP,
         projectId: project.id,
-        amount: Number(topupAmount),
+        amount: topupAmount ?? 0,
         description:
           topupNote.trim() || `Xin cấp vốn cho ${project.projectCode}`,
       });
-    } catch {
-      // mock-first
-    } finally {
-      setSubmitting(false);
       setShowTopup(false);
-      setTopupAmount("");
+      setTopupAmount(null);
       setTopupNote("");
       toast.success("Đã gửi yêu cầu xin cấp vốn.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể gửi yêu cầu. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -799,7 +601,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       toast.error("Tên danh mục không được để trống.");
       return;
     }
-    if (Number(newCatBudget) <= 0) {
+    if ((newCatBudget ?? 0) <= 0) {
       toast.error("Ngân sách danh mục phải lớn hơn 0.");
       return;
     }
@@ -808,7 +610,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       name: newCatName.trim(),
       description: newCatDesc.trim() || undefined,
       phaseId: selectedPhaseId,
-      budgetLimit: Number(newCatBudget),
+      budgetLimit: newCatBudget ?? 0,
     };
     try {
       await api.post<ExpenseCategoryResponse>(
@@ -831,7 +633,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setShowCreateCategory(false);
       setNewCatName("");
       setNewCatDesc("");
-      setNewCatBudget("");
+      setNewCatBudget(null);
     }
   };
 
@@ -846,122 +648,124 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   }
 
   if (!project) {
-    return <div className="text-slate-600">Không tìm thấy dự án.</div>;
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <p className="text-lg font-bold text-slate-900">Không tìm thấy dự án</p>
+        <p className="mt-2 text-sm text-slate-500">Dự án này không tồn tại hoặc bạn không có quyền truy cập.</p>
+        <button
+          type="button"
+          onClick={() => router.push("/team-leader/projects")}
+          className="mt-5 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
+        >
+          Quay lại danh sách
+        </button>
+      </div>
+    );
   }
+
+  const currentPhase =
+    project.phases.find((p) => p.id === project.currentPhaseId) ??
+    project.phases[0] ??
+    null;
+  const remainingPercent =
+    project.totalBudget > 0
+      ? Math.max(0, Math.round((project.availableBudget / project.totalBudget) * 100))
+      : 0;
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => router.push("/team-leader/projects")}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white"
-      >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        Quay lại
-      </button>
+      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-cyan-600 text-white shadow-xl shadow-blue-950/20">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-28 w-28 rounded-full bg-cyan-300/20 blur-2xl" />
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-          <div>
-            <p className="text-xs text-slate-500 font-mono">
-              {project.projectCode}
-            </p>
-            <h1 className="text-2xl font-bold text-slate-900 mt-1">
-              {project.name}
-            </h1>
-            <p className="text-slate-500 mt-1">
-              {project.description ?? "Không có mô tả"}
-            </p>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => router.push("/team-leader/projects")}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 19l-7-7 7-7" />
+              </svg>
+              Quay lại danh sách
+            </button>
+
+            <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">{project.projectCode}</p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{project.name}</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">{project.description ?? "Không có mô tả"}</p>
+              </div>
+
+              <div className="flex flex-col items-start gap-3 lg:items-end">
+                <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-semibold ${statusBadge(project.status)}`}>
+                  {statusLabel(project.status)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowTopup(true)}
+                  className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/20 transition hover:bg-blue-50"
+                >
+                  Xin cấp vốn
+                </button>
+              </div>
+            </div>
           </div>
-          <span
-            className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusBadge(project.status)}`}
-          >
-            {project.status}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} helper="Ngân sách được cấp" tone="blue" />
+        <MetricCard label="Đã chi" value={formatCurrency(project.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
+        <MetricCard label="Còn lại" value={formatCurrency(project.availableBudget)} helper={`${remainingPercent}% khả dụng`} tone="emerald" />
+        <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} phase`} tone="cyan" />
+      </section>
+
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Tổng quan ngân sách</h2>
+            <p className="mt-1 text-sm text-slate-500">Theo dõi mức tiêu hao và phần ngân sách còn khả dụng của dự án.</p>
+          </div>
+          <span className="inline-flex w-fit rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
+            Phase hiện tại: {currentPhase?.name ?? "Chưa có"}
           </span>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-        <Card
-          title="Tổng ngân sách"
-          value={formatCurrency(project.totalBudget)}
-          tone="text-slate-900"
-        />
-        <Card
-          title="Đã chi"
-          value={formatCurrency(project.totalSpent)}
-          tone="text-rose-700"
-        />
-        <Card
-          title="Còn lại"
-          value={formatCurrency(project.availableBudget)}
-          tone="text-emerald-700"
-        />
-        <Card
-          title="Phase hiện tại"
-          value={
-            project.phases.find((p) => p.id === project.currentPhaseId)?.name ??
-            "Chưa có"
-          }
-          tone="text-slate-900"
-        />
-        <Card
-          title="Thành viên"
-          value={String(project.members.length)}
-          tone="text-indigo-700"
-        />
-      </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <InfoCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} />
+          <InfoCard label="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-700" />
+          <InfoCard label="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-700" />
+        </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Tổng quan ngân sách
-          </h2>
-          <button
-            onClick={() => setShowTopup(true)}
-            className="px-4 py-2 rounded-xl border border-blue-300 text-blue-700 hover:bg-blue-50 text-sm"
-          >
-            Xin cấp vốn
-          </button>
-        </div>
-        <div className="h-3 rounded-full bg-white border border-slate-200 overflow-hidden">
-          <div
-            className={`h-full ${burnColor(overallBurn)}`}
-            style={{ width: `${overallBurn}%` }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-500">
-            {formatCurrency(project.totalSpent)} /{" "}
-            {formatCurrency(project.totalBudget)}
-          </span>
-          <span className="text-slate-900">{overallBurn}%</span>
+        <div className="mt-5 space-y-2">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+            <span>Budget burn</span>
+            <span>{overallBurn}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className={`h-full rounded-full ${burnColor(overallBurn)}`} style={{ width: `${overallBurn}%` }} />
+          </div>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-3 flex gap-2 flex-wrap">
+      <div className="flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
         {(
           [
             ["phases", "Phases"],
-            ["budget", "Ngân sách"],
+            ["budget", "Ngân sách danh mục"],
             ["members", "Thành viên"],
           ] as [TabKey, string][]
         ).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`px-4 py-2 rounded-xl text-sm border ${tab === key ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}
+            className={`rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
+              tab === key
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            }`}
           >
             {label}
           </button>
@@ -969,14 +773,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       </div>
 
       {tab === "phases" && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-lg font-bold text-slate-900">
               Danh sách phase
             </h3>
             <button
               onClick={() => setShowCreatePhase(true)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm"
+              className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-500"
             >
               + Tạo phase
             </button>
@@ -986,14 +790,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             return (
               <div
                 key={p.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 space-y-2"
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md space-y-3"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs text-slate-500 font-mono">
                       {p.phaseCode}
                     </p>
-                    <p className="text-sm text-slate-900 font-semibold mt-1">
+                    <p className="text-base text-slate-900 font-bold mt-1">
                       {p.name}
                     </p>
                   </div>
@@ -1005,15 +809,15 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                     </span>
                     <button
                       onClick={() => openEditPhase(p)}
-                      className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs"
+                      className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200"
                     >
                       Sửa
                     </button>
                   </div>
                 </div>
-                <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className={`h-full ${burnColor(pct)}`}
+                    className={`h-full rounded-full ${burnColor(pct)}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -1033,16 +837,16 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       )}
 
       {tab === "budget" && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <div className="flex items-center gap-3 flex-wrap">
-              <h3 className="text-lg font-semibold text-slate-900">
+              <h3 className="text-lg font-bold text-slate-900">
                 Ngân sách theo danh mục
               </h3>
               <select
                 value={selectedPhaseId ?? ""}
                 onChange={(e) => setSelectedPhaseId(Number(e.target.value))}
-                className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm"
+                className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               >
                 {project.phases.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -1055,7 +859,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               <button
                 onClick={() => setShowCreateCategory(true)}
                 disabled={!selectedPhaseId || editingBudget}
-                className="px-3 py-2 rounded-lg border border-emerald-300 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 text-sm"
+                className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
               >
                 + Thêm danh mục
               </button>
@@ -1063,14 +867,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                 <>
                   <button
                     onClick={() => setEditingBudget(false)}
-                    className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
+                    className="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200"
                   >
                     Hủy
                   </button>
                   <button
                     onClick={onSaveBudget}
                     disabled={submitting}
-                    className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-sm"
+                    className="rounded-2xl bg-blue-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-500 disabled:opacity-60"
                   >
                     Lưu
                   </button>
@@ -1078,7 +882,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               ) : (
                 <button
                   onClick={startEditBudget}
-                  className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm"
+                  className="rounded-2xl bg-blue-600 px-3 py-2 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-500"
                 >
                   Cập nhật ngân sách
                 </button>
@@ -1091,26 +895,26 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               Không có dữ liệu danh mục cho phase này.
             </p>
           ) : (
-            <div className="rounded-xl border border-slate-200 overflow-x-auto">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full min-w-[860px]">
-                <thead>
-                  <tr className="bg-white/70 border-b border-slate-200">
-                    <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <thead className="sticky top-0 z-10 bg-slate-50">
+                  <tr className="border-b border-slate-200">
+                    <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                       Danh mục
                     </th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                       Ngân sách
                     </th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                       Đã dùng
                     </th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                       Còn lại
                     </th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                       Burn %
                     </th>
-                    <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                       Xóa
                     </th>
                   </tr>
@@ -1121,24 +925,22 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                     return (
                       <tr
                         key={c.categoryId}
-                        className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors"
+                        className="border-b border-slate-100 transition-colors last:border-b-0 hover:bg-blue-50/40"
                       >
                         <td className="px-4 py-3 text-sm text-slate-900">
                           {c.categoryName}
                         </td>
                         <td className="px-4 py-3 text-right text-sm text-slate-900">
                           {editingBudget ? (
-                            <input
-                              type="number"
-                              min={0}
-                              value={budgetDraft[c.categoryId] ?? ""}
-                              onChange={(e) =>
+                            <CurrencyInput
+                              value={budgetDraft[c.categoryId] ?? null}
+                              onChange={(val) =>
                                 setBudgetDraft((prev) => ({
                                   ...prev,
-                                  [c.categoryId]: e.target.value,
+                                  [c.categoryId]: val,
                                 }))
                               }
-                              className="w-32 px-2 py-1 rounded bg-white border border-slate-200 text-right"
+                              className="w-32 text-right"
                             />
                           ) : (
                             formatCurrency(c.budgetLimit)
@@ -1160,7 +962,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                             onClick={() => onDeleteCategory(c.categoryId, c.categoryName, c.currentSpent)}
                             disabled={submitting || editingBudget}
                             title={c.currentSpent > 0 ? "Không thể xóa khi đã có chi tiêu" : "Xóa danh mục"}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 disabled:opacity-40 disabled:cursor-not-allowed text-rose-700 border border-rose-200 text-xs"
+                            className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             Xóa
                           </button>
@@ -1176,14 +978,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       )}
 
       {tab === "members" && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-lg font-bold text-slate-900">
               Thành viên dự án
             </h3>
             <button
               onClick={() => setShowAddMember(true)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm"
+              className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-500"
             >
               Thêm thành viên
             </button>
@@ -1192,14 +994,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             {project.members.map((m) => (
               <div
                 key={m.userId}
-                className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-3"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-100 flex items-center justify-center text-xs font-semibold">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 text-sm font-bold text-white shadow-sm">
                     {initials(m.fullName)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">
+                    <p className="text-sm font-bold text-slate-900 truncate">
                       {m.fullName}
                     </p>
                     <p className="text-xs text-slate-500 truncate">
@@ -1215,14 +1017,14 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                   </span>
                   <button
                     onClick={() => openEditMember(m.userId, m.position)}
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs"
+                    className="rounded-xl bg-slate-100 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200"
                   >
                     Sửa
                   </button>
                   <button
                     onClick={() => onRemoveMember(m.userId)}
                     disabled={submitting}
-                    className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs"
+                    className="rounded-xl bg-rose-600 px-2.5 py-1.5 text-xs font-bold text-white transition hover:bg-rose-500 disabled:opacity-60"
                   >
                     Xóa
                   </button>
@@ -1233,219 +1035,234 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {showTopup && (
-        <Modal title="Xin cấp vốn dự án" onClose={() => setShowTopup(false)}>
-          <div className="space-y-3">
+      <SideDrawer
+        open={showTopup}
+        title="Xin cấp vốn dự án"
+        onClose={() => setShowTopup(false)}
+        footer={
+          <ModalActions
+            onClose={() => setShowTopup(false)}
+            onConfirm={onTopup}
+            confirmText={submitting ? "Đang gửi..." : "Gửi yêu cầu"}
+          />
+        }
+      >
+        <div className="space-y-4">
+          <CurrencyInput
+            value={topupAmount}
+            onChange={setTopupAmount}
+            placeholder="Số tiền cần cấp"
+          />
+          <textarea
+            rows={4}
+            value={topupNote}
+            onChange={(e) => setTopupNote(e.target.value)}
+            placeholder="Lý do (tuỳ chọn)"
+            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none"
+          />
+        </div>
+      </SideDrawer>
+
+      <SideDrawer
+        open={showCreatePhase}
+        title="Tạo phase mới"
+        onClose={() => setShowCreatePhase(false)}
+        footer={
+          <ModalActions
+            onClose={() => setShowCreatePhase(false)}
+            onConfirm={onCreatePhase}
+            confirmText={submitting ? "Đang lưu..." : "Tạo phase"}
+          />
+        }
+      >
+        <div className="space-y-4">
+          <input
+            value={phaseName}
+            onChange={(e) => setPhaseName(e.target.value)}
+            placeholder="Tên phase"
+            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+          />
+          <CurrencyInput
+            value={phaseBudget}
+            onChange={setPhaseBudget}
+            placeholder="Ngân sách"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
-              type="number"
-              value={topupAmount}
-              onChange={(e) => setTopupAmount(e.target.value)}
-              placeholder="Số tiền cần cấp"
+              type="date"
+              value={phaseStart}
+              onChange={(e) => setPhaseStart(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             />
+            <input
+              type="date"
+              value={phaseEnd}
+              onChange={(e) => setPhaseEnd(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+          </div>
+        </div>
+      </SideDrawer>
+
+      <SideDrawer
+        open={showEditPhase}
+        title="Cập nhật phase"
+        onClose={() => setShowEditPhase(false)}
+        footer={
+          <ModalActions
+            onClose={() => setShowEditPhase(false)}
+            onConfirm={onUpdatePhase}
+            confirmText={submitting ? "Đang lưu..." : "Lưu cập nhật"}
+          />
+        }
+      >
+        <div className="space-y-4">
+          <input
+            value={editPhaseName}
+            onChange={(e) => setEditPhaseName(e.target.value)}
+            placeholder="Tên phase"
+            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+          />
+          <CurrencyInput
+            value={editPhaseBudget}
+            onChange={setEditPhaseBudget}
+            placeholder="Ngân sách"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              type="date"
+              value={editPhaseEnd}
+              onChange={(e) => setEditPhaseEnd(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+            <select
+              value={editPhaseStatus}
+              onChange={(e) =>
+                setEditPhaseStatus(e.target.value as PhaseStatus)
+              }
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            >
+              <option value={PhaseStatus.ACTIVE}>ACTIVE</option>
+              <option value={PhaseStatus.CLOSED}>CLOSED</option>
+            </select>
+          </div>
+        </div>
+      </SideDrawer>
+
+      <SideDrawer
+        open={showAddMember}
+        title="Thêm thành viên"
+        onClose={() => setShowAddMember(false)}
+        footer={
+          <ModalActions
+            onClose={() => setShowAddMember(false)}
+            onConfirm={onAddMember}
+            confirmText={submitting ? "Đang thêm..." : "Thêm"}
+            disabled={!selectedMemberId}
+          />
+        }
+      >
+        <div className="space-y-4">
+          <input
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            placeholder="Tìm theo tên hoặc mã..."
+            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+          />
+          <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white">
+            {filteredAvailable.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-slate-500">
+                Không có thành viên phù hợp.
+              </p>
+            ) : (
+              filteredAvailable.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setSelectedMemberId(m.id)}
+                  className={`w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${selectedMemberId === m.id ? "bg-blue-100 text-blue-700" : "text-slate-900 hover:bg-slate-100"}`}
+                >
+                  <p className="text-sm font-medium">{m.fullName}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {m.employeeCode}
+                  </p>
+                </button>
+              ))
+            )}
+          </div>
+          <input
+            value={memberPosition}
+            onChange={(e) => setMemberPosition(e.target.value)}
+            placeholder="Vị trí trong dự án"
+            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+          />
+        </div>
+      </SideDrawer>
+
+      <SideDrawer
+        open={showEditMember}
+        title="Cập nhật vị trí"
+        onClose={() => setShowEditMember(false)}
+        footer={
+          <ModalActions
+            onClose={() => setShowEditMember(false)}
+            onConfirm={onUpdateMember}
+            confirmText={submitting ? "Đang lưu..." : "Lưu"}
+          />
+        }
+      >
+        <div className="space-y-4">
+          <input
+            value={editingPosition}
+            onChange={(e) => setEditingPosition(e.target.value)}
+            placeholder="Vị trí"
+            className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+          />
+        </div>
+      </SideDrawer>
+      <SideDrawer
+        open={showCreateCategory}
+        title="Thêm danh mục chi phí"
+        onClose={() => setShowCreateCategory(false)}
+        footer={
+          <ModalActions
+            onClose={() => setShowCreateCategory(false)}
+            onConfirm={onCreateCategory}
+            confirmText={submitting ? "Đang tạo..." : "Tạo danh mục"}
+            disabled={submitting || !newCatName.trim() || (newCatBudget ?? 0) <= 0}
+          />
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-slate-600 mb-1">Tên danh mục *</label>
+            <input
+              value={newCatName}
+              onChange={(e) => setNewCatName(e.target.value)}
+              placeholder="VD: Chi phí vận chuyển"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-slate-600 mb-1">Mô tả (tùy chọn)</label>
             <textarea
-              rows={4}
-              value={topupNote}
-              onChange={(e) => setTopupNote(e.target.value)}
-              placeholder="Lý do (tuỳ chọn)"
+              rows={2}
+              value={newCatDesc}
+              onChange={(e) => setNewCatDesc(e.target.value)}
+              placeholder="Mô tả danh mục..."
               className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none"
             />
-            <ModalActions
-              onClose={() => setShowTopup(false)}
-              onConfirm={onTopup}
-              confirmText={submitting ? "Đang gửi..." : "Gửi yêu cầu"}
+          </div>
+          <div>
+            <label className="block text-sm text-slate-600 mb-1">Ngân sách cho phase này *</label>
+            <CurrencyInput
+              value={newCatBudget}
+              onChange={setNewCatBudget}
+              placeholder="Ngân sách (VNĐ)"
             />
           </div>
-        </Modal>
-      )}
-
-      {showCreatePhase && (
-        <Modal title="Tạo phase mới" onClose={() => setShowCreatePhase(false)}>
-          <div className="space-y-3">
-            <input
-              value={phaseName}
-              onChange={(e) => setPhaseName(e.target.value)}
-              placeholder="Tên phase"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-            />
-            <input
-              type="number"
-              value={phaseBudget}
-              onChange={(e) => setPhaseBudget(e.target.value)}
-              placeholder="Ngân sách"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input
-                type="date"
-                value={phaseStart}
-                onChange={(e) => setPhaseStart(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-              />
-              <input
-                type="date"
-                value={phaseEnd}
-                onChange={(e) => setPhaseEnd(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-              />
-            </div>
-            <ModalActions
-              onClose={() => setShowCreatePhase(false)}
-              onConfirm={onCreatePhase}
-              confirmText={submitting ? "Đang lưu..." : "Tạo phase"}
-            />
-          </div>
-        </Modal>
-      )}
-
-      {showEditPhase && (
-        <Modal title="Cập nhật phase" onClose={() => setShowEditPhase(false)}>
-          <div className="space-y-3">
-            <input
-              value={editPhaseName}
-              onChange={(e) => setEditPhaseName(e.target.value)}
-              placeholder="Tên phase"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-            />
-            <input
-              type="number"
-              value={editPhaseBudget}
-              onChange={(e) => setEditPhaseBudget(e.target.value)}
-              placeholder="Ngân sách"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input
-                type="date"
-                value={editPhaseEnd}
-                onChange={(e) => setEditPhaseEnd(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-              />
-              <select
-                value={editPhaseStatus}
-                onChange={(e) =>
-                  setEditPhaseStatus(e.target.value as PhaseStatus)
-                }
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-              >
-                <option value={PhaseStatus.ACTIVE}>ACTIVE</option>
-                <option value={PhaseStatus.CLOSED}>CLOSED</option>
-              </select>
-            </div>
-            <ModalActions
-              onClose={() => setShowEditPhase(false)}
-              onConfirm={onUpdatePhase}
-              confirmText={submitting ? "Đang lưu..." : "Lưu cập nhật"}
-            />
-          </div>
-        </Modal>
-      )}
-
-      {showAddMember && (
-        <Modal title="Thêm thành viên" onClose={() => setShowAddMember(false)}>
-          <div className="space-y-3">
-            <input
-              value={memberSearch}
-              onChange={(e) => setMemberSearch(e.target.value)}
-              placeholder="Tìm theo tên hoặc mã..."
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-            />
-            <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white">
-              {filteredAvailable.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-slate-500">
-                  Không có thành viên phù hợp.
-                </p>
-              ) : (
-                filteredAvailable.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setSelectedMemberId(m.id)}
-                    className={`w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors ${selectedMemberId === m.id ? "bg-blue-100 text-blue-700" : "text-slate-900 hover:bg-slate-100"}`}
-                  >
-                    <p className="text-sm font-medium">{m.fullName}</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {m.employeeCode}
-                    </p>
-                  </button>
-                ))
-              )}
-            </div>
-            <input
-              value={memberPosition}
-              onChange={(e) => setMemberPosition(e.target.value)}
-              placeholder="Vị trí trong dự án"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-            />
-            <ModalActions
-              onClose={() => setShowAddMember(false)}
-              onConfirm={onAddMember}
-              confirmText={submitting ? "Đang thêm..." : "Thêm"}
-              disabled={!selectedMemberId}
-            />
-          </div>
-        </Modal>
-      )}
-
-      {showEditMember && (
-        <Modal title="Cập nhật vị trí" onClose={() => setShowEditMember(false)}>
-          <div className="space-y-3">
-            <input
-              value={editingPosition}
-              onChange={(e) => setEditingPosition(e.target.value)}
-              placeholder="Vị trí"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-            />
-            <ModalActions
-              onClose={() => setShowEditMember(false)}
-              onConfirm={onUpdateMember}
-              confirmText={submitting ? "Đang lưu..." : "Lưu"}
-            />
-          </div>
-        </Modal>
-      )}
-      {showCreateCategory && (
-        <Modal title="Thêm danh mục chi phí" onClose={() => setShowCreateCategory(false)}>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm text-slate-600 mb-1">Tên danh mục *</label>
-              <input
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                placeholder="VD: Chi phí vận chuyển"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-slate-600 mb-1">Mô tả (tùy chọn)</label>
-              <textarea
-                rows={2}
-                value={newCatDesc}
-                onChange={(e) => setNewCatDesc(e.target.value)}
-                placeholder="Mô tả danh mục..."
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-slate-600 mb-1">Ngân sách cho phase này *</label>
-              <input
-                type="number"
-                min={0}
-                value={newCatBudget}
-                onChange={(e) => setNewCatBudget(e.target.value)}
-                placeholder="Ngân sách (VNĐ)"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
-              />
-            </div>
-            <ModalActions
-              onClose={() => setShowCreateCategory(false)}
-              onConfirm={onCreateCategory}
-              confirmText={submitting ? "Đang tạo..." : "Tạo danh mục"}
-              disabled={submitting || !newCatName.trim() || Number(newCatBudget) <= 0}
-            />
-          </div>
-        </Modal>
-      )}
+        </div>
+      </SideDrawer>
 
       <ConfirmModal
         open={confirmState.open}
@@ -1457,44 +1274,48 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   );
 }
 
-function Card({
-  title,
+function MetricCard({
+  label,
   value,
+  helper,
   tone,
 }: {
-  title: string;
+  label: string;
   value: string;
-  tone: string;
+  helper: string;
+  tone: "blue" | "emerald" | "indigo" | "cyan" | "rose";
 }) {
+  const toneClassName = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    cyan: "bg-cyan-50 text-cyan-700 border-cyan-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+  }[tone];
+
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
-      <p className="text-xs text-slate-500">{title}</p>
-      <p className={`text-base font-semibold mt-1 ${tone}`}>{value}</p>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full border ${toneClassName}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }
 
-function Modal({
-  title,
-  onClose,
-  children,
+function InfoCard({
+  label,
+  value,
+  tone,
 }: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: string;
 }) {
   return (
-    <div className="fixed inset-0 z-50">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/70"
-        onClick={onClose}
-        aria-label="Đóng modal"
-      />
-      <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <h3 className="text-xl font-bold text-slate-900 mb-4">{title}</h3>
-        {children}
-      </div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      <p className={`mt-2 text-sm font-semibold ${tone ?? "text-slate-900"}`}>{value}</p>
     </div>
   );
 }

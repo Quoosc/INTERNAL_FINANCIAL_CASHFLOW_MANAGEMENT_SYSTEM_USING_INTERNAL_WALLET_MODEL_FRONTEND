@@ -21,161 +21,6 @@ import {
 
 const PAGE_LIMIT = 8;
 
-const MOCK_SUMMARY: RequestSummaryResponse = {
-  totalPendingApproval: 3,
-  totalApproved: 4,
-  totalRejected: 2,
-  totalPaid: 5,
-  totalCancelled: 1,
-};
-
-const MOCK_REQUESTS: RequestListItem[] = [
-  {
-    id: 101,
-    requestCode: "REQ-EMP-0326-001",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING,
-    amount: 1_200_000,
-    approvedAmount: null,
-    description: "Tạm ứng chi phí công tác Đà Nẵng",
-    rejectReason: null,
-    projectId: 5,
-    projectName: "Hệ thống quản lý nội bộ",
-    phaseId: 12,
-    phaseName: "Phase 2",
-    categoryId: 3,
-    categoryName: "Di chuyển",
-    createdAt: "2026-04-02T09:15:00",
-    updatedAt: "2026-04-02T09:15:00",
-  },
-  {
-    id: 102,
-    requestCode: "REQ-EMP-0326-002",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 700_000,
-    approvedAmount: 700_000,
-    description: "Chi phí mua vật tư văn phòng",
-    rejectReason: null,
-    projectId: 5,
-    projectName: "Hệ thống quản lý nội bộ",
-    phaseId: 12,
-    phaseName: "Phase 2",
-    categoryId: 8,
-    categoryName: "Vật tư",
-    createdAt: "2026-04-01T13:30:00",
-    updatedAt: "2026-04-01T18:00:00",
-  },
-  {
-    id: 103,
-    requestCode: "REQ-EMP-0326-003",
-    type: RequestType.REIMBURSE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 450_000,
-    approvedAmount: 450_000,
-    description: "Hoàn ứng chi phí tiếp khách",
-    rejectReason: null,
-    projectId: 4,
-    projectName: "Ứng dụng mobile",
-    phaseId: 9,
-    phaseName: "Phase 1",
-    categoryId: 6,
-    categoryName: "Tiếp khách",
-    createdAt: "2026-03-31T10:05:00",
-    updatedAt: "2026-03-31T17:12:00",
-  },
-  {
-    id: 104,
-    requestCode: "REQ-EMP-0326-004",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.PAID,
-    amount: 2_000_000,
-    approvedAmount: 1_800_000,
-    description: "Tạm ứng triển khai onsite",
-    rejectReason: null,
-    projectId: 3,
-    projectName: "ERP nâng cấp",
-    phaseId: 6,
-    phaseName: "Go-live",
-    categoryId: 2,
-    categoryName: "Onsite",
-    createdAt: "2026-03-28T08:20:00",
-    updatedAt: "2026-03-29T09:40:00",
-  },
-  {
-    id: 105,
-    requestCode: "REQ-EMP-0326-005",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.REJECTED,
-    amount: 1_150_000,
-    approvedAmount: null,
-    description: "Thanh toán hóa đơn thiết bị",
-    rejectReason: "Thiếu chứng từ hợp lệ",
-    projectId: 5,
-    projectName: "Hệ thống quản lý nội bộ",
-    phaseId: 11,
-    phaseName: "Phase 1",
-    categoryId: 9,
-    categoryName: "Thiết bị",
-    createdAt: "2026-03-27T14:10:00",
-    updatedAt: "2026-03-27T18:22:00",
-  },
-  {
-    id: 106,
-    requestCode: "REQ-EMP-0326-006",
-    type: RequestType.REIMBURSE,
-    status: RequestStatus.CANCELLED,
-    amount: 300_000,
-    approvedAmount: null,
-    description: "Hoàn ứng taxi",
-    rejectReason: null,
-    projectId: 2,
-    projectName: "BI Dashboard",
-    phaseId: 5,
-    phaseName: "UAT",
-    categoryId: 4,
-    categoryName: "Di chuyển",
-    createdAt: "2026-03-25T16:40:00",
-    updatedAt: "2026-03-25T18:00:00",
-  },
-  {
-    id: 107,
-    requestCode: "REQ-EMP-0326-007",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.PENDING,
-    amount: 950_000,
-    approvedAmount: null,
-    description: "Tạm ứng workshop khách hàng",
-    rejectReason: null,
-    projectId: 1,
-    projectName: "CRM Revamp",
-    phaseId: 3,
-    phaseName: "Design",
-    categoryId: 7,
-    categoryName: "Workshop",
-    createdAt: "2026-03-24T09:00:00",
-    updatedAt: "2026-03-24T09:00:00",
-  },
-  {
-    id: 108,
-    requestCode: "REQ-EMP-0326-008",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.PAID,
-    amount: 620_000,
-    approvedAmount: 620_000,
-    description: "Chi phí công cụ làm việc",
-    rejectReason: null,
-    projectId: 4,
-    projectName: "Ứng dụng mobile",
-    phaseId: 9,
-    phaseName: "Phase 1",
-    categoryId: 10,
-    categoryName: "Công cụ",
-    createdAt: "2026-03-21T11:25:00",
-    updatedAt: "2026-03-22T08:15:00",
-  },
-];
-
 function parseStatus(value: string | null): RequestStatus | undefined {
   if (!value) return undefined;
   const valid = new Set<string>(Object.values(RequestStatus));
@@ -216,29 +61,6 @@ function buildInitialState(searchParams: {
   };
 }
 
-function filterMock(
-  source: RequestListItem[],
-  filters: RequestFilterParams,
-  fromDate: string,
-  toDate: string,
-): RequestListItem[] {
-  return source.filter((item) => {
-    if (filters.status && item.status !== filters.status) return false;
-    if (filters.type && item.type !== filters.type) return false;
-
-    if (fromDate) {
-      const fromTs = new Date(`${fromDate}T00:00:00`).getTime();
-      if (new Date(item.createdAt).getTime() < fromTs) return false;
-    }
-
-    if (toDate) {
-      const toTs = new Date(`${toDate}T23:59:59`).getTime();
-      if (new Date(item.createdAt).getTime() > toTs) return false;
-    }
-
-    return true;
-  });
-}
 
 export default function RequestsPage() {
   const router = useRouter();
@@ -319,26 +141,15 @@ export default function RequestsPage() {
       } catch (err) {
         if (cancelled) return;
 
-        const filtered = filterMock(MOCK_REQUESTS, filters, fromDate, toDate);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const currentPage = Math.min(page, mockTotalPages);
-        const start = (currentPage - 1) * PAGE_LIMIT;
-
-        setRequests(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-        setSummary(MOCK_SUMMARY);
-
-        if (currentPage !== page) {
-          setPage(currentPage);
-          syncUrl(filters, currentPage, fromDate, toDate);
-        }
+        setRequests([]);
+        setTotal(0);
+        setTotalPages(1);
+        setSummary(null);
 
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
+          toast.error("Không thể tải danh sách yêu cầu.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -409,79 +220,78 @@ export default function RequestsPage() {
     (summary?.totalPaid ?? 0) +
     (summary?.totalRejected ?? 0) +
     (summary?.totalCancelled ?? 0);
+  const paidCount = summary?.totalPaid ?? 0;
+  const cancelledCount = summary?.totalCancelled ?? 0;
+  const filtered = Boolean(filters.status || filters.type || fromDate || toDate);
+
+  const clearFilters = () => {
+    const nextFilters: RequestFilterParams = {
+      page: 1,
+      limit: PAGE_LIMIT,
+    };
+    setFilters(nextFilters);
+    setFromDate("");
+    setToDate("");
+    setPage(1);
+    syncUrl(nextFilters, 1, "", "");
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Yêu cầu của tôi</h1>
-          <p className="text-slate-500 mt-1">
-            Theo dõi toàn bộ yêu cầu tạm ứng, chi phí, hoàn ứng.
-          </p>
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative px-6 py-7 sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(125,211,252,0.24),_transparent_34%)]" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Personal requests</p>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Yêu cầu của tôi</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-blue-100">
+                Theo dõi toàn bộ tạm ứng, chi phí và hoàn ứng với trạng thái xử lý rõ ràng theo từng bước phê duyệt.
+              </p>
+            </div>
+
+            <Link
+              href="/requests/new"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/20 transition hover:bg-blue-50"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6v12m6-6H6" />
+              </svg>
+              Tạo yêu cầu mới
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Tổng yêu cầu" value={totalCount.toLocaleString("vi-VN")} helper={`${paidCount} đã chi trả`} tone="blue" />
+        <MetricCard label="Đang chờ" value={String(pendingCount)} helper="Cần phê duyệt hoặc giải ngân" tone="amber" />
+        <MetricCard label="Đã duyệt" value={String(approvedCount)} helper="Đã qua bước phê duyệt" tone="emerald" />
+        <MetricCard label="Đóng luồng" value={String(rejectedCount + cancelledCount)} helper={`${rejectedCount} từ chối, ${cancelledCount} hủy`} tone="rose" />
+      </section>
+
+      <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Bộ lọc yêu cầu</h2>
+            <p className="mt-1 text-sm text-slate-500">Lọc nhanh theo trạng thái, loại yêu cầu hoặc khoảng thời gian tạo.</p>
+          </div>
+          {filtered && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
         </div>
 
-        <Link
-          href="/requests/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M12 6v12m6-6H6"
-            />
-          </svg>
-          Tạo yêu cầu mới
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <SummaryCard
-          title="Tổng yêu cầu"
-          value={totalCount}
-          accent="text-slate-900"
-          borderColor="border-slate-200"
-          iconBg="bg-slate-100"
-          iconColor="text-slate-600"
-        />
-        <SummaryCard
-          title="Đang chờ"
-          value={pendingCount}
-          accent="text-amber-700"
-          borderColor="border-amber-200"
-          iconBg="bg-amber-100"
-          iconColor="text-amber-600"
-        />
-        <SummaryCard
-          title="Đã duyệt"
-          value={approvedCount}
-          accent="text-emerald-700"
-          borderColor="border-emerald-200"
-          iconBg="bg-emerald-100"
-          iconColor="text-emerald-600"
-        />
-        <SummaryCard
-          title="Từ chối"
-          value={rejectedCount}
-          accent="text-rose-700"
-          borderColor="border-rose-200"
-          iconBg="bg-rose-100"
-          iconColor="text-rose-600"
-        />
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <select
             value={filters.status ?? "ALL"}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="ALL">Tất cả trạng thái</option>
             {Object.values(RequestStatus).map((status) => (
@@ -494,7 +304,7 @@ export default function RequestsPage() {
           <select
             value={filters.type ?? "ALL"}
             onChange={(e) => handleTypeChange(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="ALL">Tất cả loại</option>
             <option value={RequestType.ADVANCE}>ADVANCE</option>
@@ -506,23 +316,31 @@ export default function RequestsPage() {
             type="date"
             value={fromDate}
             onChange={(e) => handleDateChange("from", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
 
           <input
             type="date"
             value={toDate}
             onChange={(e) => handleDateChange("to", e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
         </div>
-      </div>
+      </section>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-1 border-b border-slate-200 bg-blue-50/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Danh sách yêu cầu</h2>
+            <p className="text-sm text-slate-500">Bấm vào một dòng để xem chi tiết luồng xử lý.</p>
+          </div>
+          <span className="text-sm font-medium text-blue-700">Trang {page}/{totalPages}</span>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-white/30">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-slate-200">
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Mã yêu cầu
                 </th>
@@ -552,7 +370,7 @@ export default function RequestsPage() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-4 py-12 text-center text-slate-500 text-sm"
+                    className="px-4 py-14 text-center text-sm text-slate-500"
                   >
                     <span className="inline-flex items-center gap-2">
                       <svg
@@ -582,7 +400,7 @@ export default function RequestsPage() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-4 py-12 text-center text-slate-500 text-sm"
+                    className="px-4 py-14 text-center text-sm text-slate-500"
                   >
                     Không có yêu cầu phù hợp bộ lọc.
                   </td>
@@ -591,7 +409,7 @@ export default function RequestsPage() {
                 requests.map((request) => (
                   <tr
                     key={request.id}
-                    className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                    className="cursor-pointer border-b border-slate-100 transition hover:bg-blue-50/40 last:border-b-0"
                     onClick={() => router.push(`/requests/${request.id}`)}
                   >
                     <td className="px-4 py-3 text-sm text-slate-900 font-medium">
@@ -619,7 +437,7 @@ export default function RequestsPage() {
                           e.stopPropagation();
                           router.push(`/requests/${request.id}`);
                         }}
-                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50"
                       >
                         Xem chi tiết
                       </button>
@@ -630,10 +448,12 @@ export default function RequestsPage() {
             </tbody>
           </table>
         </div>
+      </section>
 
-        <div className="px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-white/30">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-500">
-            Tổng {total} yêu cầu • Trang {page}/{totalPages}
+            Hiển thị <span className="font-semibold text-slate-900">{requests.length}</span> trong tổng{" "}
+            <span className="font-semibold text-slate-900">{total.toLocaleString("vi-VN")}</span> yêu cầu
           </p>
 
           <div className="flex items-center gap-2">
@@ -641,7 +461,7 @@ export default function RequestsPage() {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Trước
             </button>
@@ -649,58 +469,41 @@ export default function RequestsPage() {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Sau
             </button>
           </div>
         </div>
-      </div>
 
     </div>
   );
 }
 
-function SummaryCard({
-  title,
+function MetricCard({
+  label,
   value,
-  accent,
-  borderColor,
-  iconBg,
-  iconColor,
+  helper,
+  tone,
 }: {
-  title: string;
-  value: number;
-  accent: string;
-  borderColor: string;
-  iconBg: string;
-  iconColor: string;
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "amber" | "emerald" | "rose";
 }) {
+  const toneClassName = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    amber: "bg-amber-50 text-amber-700 border-amber-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+  }[tone];
+
   return (
-    <div
-      className={`bg-white border ${borderColor} rounded-xl shadow-sm p-5 flex items-center justify-between`}
-    >
-      <div>
-        <p className="text-sm text-slate-500">{title}</p>
-        <p className={`text-3xl font-bold mt-1 ${accent}`}>{value}</p>
-      </div>
-      <div
-        className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}
-      >
-        <svg
-          className={`w-6 h-6 ${iconColor}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      </div>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 h-2 w-12 rounded-full border ${toneClassName}`} />
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

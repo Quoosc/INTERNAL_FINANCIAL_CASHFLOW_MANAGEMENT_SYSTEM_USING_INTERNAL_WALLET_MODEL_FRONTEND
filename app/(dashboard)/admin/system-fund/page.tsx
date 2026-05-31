@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/api-client";
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import {
   getCompanyFund,
@@ -10,12 +11,16 @@ import {
   topupCompanyFund,
   updateBankStatement,
 } from "@/lib/api";
-import { CompanyFundResponse, ReconciliationReportResponse } from "@/types";
+import { CompanyFundResponse, ReconciliationReportResponse, RoleName } from "@/types";
 import { formatCurrency } from "@/lib/format";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { SideDrawer } from "@/components/ui/side-drawer";
 
 
 export default function AdminSystemFundPage() {
+  const { hasAnyRole } = useAuth();
   const toast = useToast();
+  const canManageFund = hasAnyRole([RoleName.ACCOUNTANT, RoleName.CFO]);
   const [companyFund, setCompanyFund] = useState<CompanyFundResponse | null>(null);
   const [reconciliation, setReconciliation] = useState<ReconciliationReportResponse | null>(null);
 
@@ -33,6 +38,8 @@ export default function AdminSystemFundPage() {
   const [statementSubmitting, setStatementSubmitting] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!canManageFund) return;
+
     setLoading(true);
 
     try {
@@ -53,14 +60,15 @@ export default function AdminSystemFundPage() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [canManageFund, toast]);
 
   useEffect(() => {
+    if (!canManageFund) return;
     void loadData();
-  }, [loadData]);
+  }, [canManageFund, loadData]);
 
   const handleTopup = async () => {
-    const amount = Number(topupAmount.replace(/\D/g, ""));
+    const amount = Number(topupAmount);
     if (!Number.isFinite(amount) || amount <= 0) {
       toast.error("Số tiền nạp không hợp lệ.");
       return;
@@ -128,10 +136,63 @@ export default function AdminSystemFundPage() {
 
     return raw.entries ?? [];
   }, [reconciliation]);
+  const discrepancy = companyFund?.bankDiscrepancy ?? 0;
+  const reconciled = Math.abs(discrepancy) === 0;
+
+  if (!canManageFund) {
+    return (
+      <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
+        <h1 className="text-lg font-bold">Không có quyền truy cập quỹ hệ thống</h1>
+        <p className="mt-2 text-sm">
+          Màn hình này thuộc nghiệp vụ Kế toán/CFO, không nằm trong nhóm quyền quản trị hệ thống.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className={`h-1.5 w-1.5 rounded-full ${reconciled ? "bg-emerald-300" : "bg-amber-300"}`} />
+              Admin treasury
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Quỹ hệ thống</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Quản trị nguồn quỹ nội bộ, cập nhật sao kê ngân hàng và đối soát chênh lệch toàn hệ thống.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setShowTopupModal(true)}
+              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50"
+            >
+              Nạp tiền từ ngân hàng
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowStatementModal(true)}
+              className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+            >
+              Cập nhật sao kê
+            </button>
+            <button
+              type="button"
+              onClick={() => void loadData()}
+              disabled={loading}
+              className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Tải lại
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Quỹ hệ thống</h1>
           <p className="text-slate-500 mt-1">Quản lý quỹ hệ thống và đối soát ngân hàng.</p>
@@ -181,10 +242,13 @@ export default function AdminSystemFundPage() {
         />
       </div>
 
-      <section className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Báo cáo đối soát</h2>
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-blue-50/50 px-5 py-4">
+          <h2 className="text-base font-bold text-slate-900">Báo cáo đối soát</h2>
+          <p className="mt-1 text-sm text-slate-500">So sánh số dư ví hệ thống với số dư ngân hàng được cập nhật gần nhất.</p>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-5">
           <InfoRow
             label="System balance"
             value={formatCurrency(reconciliation?.companyFundBalance ?? 0)}
@@ -216,7 +280,7 @@ export default function AdminSystemFundPage() {
         )}
       </section>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-5">
+      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Truy cập nhanh</h2>
         <div className="mt-3">
           <Link
@@ -228,84 +292,86 @@ export default function AdminSystemFundPage() {
         </div>
       </div>
 
-      {showTopupModal && (
-        <Modal title="Nạp tiền từ ngân hàng" onClose={() => setShowTopupModal(false)}>
-          <div className="space-y-3">
-            <InputField
-              label="Số tiền"
-              value={topupAmount}
-              onChange={setTopupAmount}
+      <SideDrawer
+        open={showTopupModal}
+        title="Nạp tiền từ ngân hàng"
+        description="Ghi nhận giao dịch nạp tiền vào quỹ hệ thống từ tài khoản ngân hàng đối ứng."
+        onClose={() => setShowTopupModal(false)}
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowTopupModal(false)}
+              className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleTopup()}
+              disabled={topupSubmitting}
+              className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {topupSubmitting ? "Đang xử lý..." : "Xác nhận nạp"}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Số tiền</label>
+            <CurrencyInput
+              value={topupAmount ? Number(topupAmount) : null}
+              onChange={(value) => setTopupAmount(value ? String(value) : "")}
               placeholder="Nhập số tiền"
             />
-            <InputField
-              label="Ghi chú"
-              value={topupDescription}
-              onChange={setTopupDescription}
-              placeholder="Mô tả giao dịch"
-            />
-            <InputField
-              label="Mã tham chiếu ngân hàng"
-              value={topupReferenceCode}
-              onChange={setTopupReferenceCode}
-              placeholder="VD: VCB-2026-001"
-            />
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowTopupModal(false)}
-                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleTopup()}
-                disabled={topupSubmitting}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
-              >
-                {topupSubmitting ? "Đang xử lý..." : "Xác nhận nạp"}
-              </button>
-            </div>
           </div>
-        </Modal>
-      )}
+          <InputField label="Ghi chú" value={topupDescription} onChange={setTopupDescription} placeholder="Mô tả giao dịch" />
+          <InputField label="Mã tham chiếu ngân hàng" value={topupReferenceCode} onChange={setTopupReferenceCode} placeholder="VD: VCB-2026-001" />
+        </div>
+      </SideDrawer>
 
-      {showStatementModal && (
-        <Modal title="Cập nhật số dư ngân hàng" onClose={() => setShowStatementModal(false)}>
-          <div className="space-y-3">
-            <InputField
-              label="Số dư ngân hàng thực tế"
-              value={statementBalance}
-              onChange={setStatementBalance}
-              placeholder="Nhập số dư"
-            />
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowStatementModal(false)}
-                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleUpdateStatement()}
-                disabled={statementSubmitting}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm"
-              >
-                {statementSubmitting ? "Đang cập nhật..." : "Lưu số dư"}
-              </button>
-            </div>
+      <SideDrawer
+        open={showStatementModal}
+        title="Cập nhật số dư ngân hàng"
+        description="Nhập số dư thực tế theo sao kê gần nhất để hệ thống tính chênh lệch đối soát."
+        onClose={() => setShowStatementModal(false)}
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowStatementModal(false)}
+              className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleUpdateStatement()}
+              disabled={statementSubmitting}
+              className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {statementSubmitting ? "Đang cập nhật..." : "Lưu số dư"}
+            </button>
           </div>
-        </Modal>
-      )}
+        }
+      >
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Số dư ngân hàng thực tế</label>
+          <CurrencyInput
+            value={statementBalance ? Number(statementBalance.replace(/\D/g, "")) : null}
+            onChange={(value) => setStatementBalance(value ? String(value) : "")}
+            placeholder="Nhập số dư"
+          />
+        </div>
+      </SideDrawer>
     </div>
   );
 }
 
 function StatCard({ title, value, tone }: { title: string; value: string; tone: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4">
+    <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
       <p className="text-xs text-slate-500">{title}</p>
       <p className={`text-xl font-bold mt-1 ${tone}`}>{value}</p>
     </div>
@@ -314,9 +380,9 @@ function StatCard({ title, value, tone }: { title: string; value: string; tone: 
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-slate-700 mt-1 break-all">{value}</p>
+      <p className="text-sm font-semibold text-slate-900 mt-2 break-all">{value}</p>
     </div>
   );
 }
@@ -334,27 +400,13 @@ function InputField({
 }) {
   return (
     <label className="block">
-      <span className="block text-sm text-slate-600 mb-2">{label}</span>
+      <span className="mb-2 block text-sm font-semibold text-slate-700">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
       />
     </label>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 z-50">
-      <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>
-          {children}
-        </div>
-      </div>
-    </div>
   );
 }

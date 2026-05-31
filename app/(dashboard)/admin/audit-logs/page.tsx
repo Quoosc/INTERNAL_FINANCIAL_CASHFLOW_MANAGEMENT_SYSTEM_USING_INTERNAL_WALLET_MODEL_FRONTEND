@@ -13,6 +13,7 @@ import {
 import { formatDateTime } from "@/lib/format";
 import { TableRowSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/loading-skeleton";
+import { DiffViewer } from "@/components/ui/diff-viewer";
 
 const PAGE_LIMIT = 20;
 
@@ -275,14 +276,6 @@ function toneClass(tone: AuditTone): string {
   }
 }
 
-function formatValue(value: unknown): string {
-  if (value === null || value === undefined || value === "") return "Không có";
-  if (typeof value === "boolean") return value ? "Có" : "Không";
-  if (typeof value === "number") return value.toLocaleString("vi-VN");
-  if (typeof value === "string") return value;
-  return JSON.stringify(value);
-}
-
 function changedFields(log: AuditLogResponse): string[] {
   const keys = new Set<string>();
   Object.keys(log.oldValues ?? {}).forEach((key) => keys.add(key));
@@ -475,29 +468,31 @@ export default function AuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
             Nhật ký chỉ đọc
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Nhật ký kiểm toán</h1>
-            <p className="text-slate-500 mt-1 max-w-3xl">
+            <h1 className="text-3xl font-bold tracking-tight text-white">Nhật ký kiểm toán</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-blue-100">
               Theo dõi các thay đổi quan trọng về tài khoản, phân quyền, ngân sách và cấu hình hệ thống.
               Dữ liệu được trình bày để phục vụ kiểm soát nội bộ và truy vết vận hành.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 min-w-full xl:min-w-[420px]">
+        <div className="grid min-w-full grid-cols-3 gap-2 xl:min-w-[420px]">
           <SummaryCard label="Tổng bản ghi" value={total.toLocaleString("vi-VN")} />
           <SummaryCard label="Trang hiện tại" value={`${items.length}/${PAGE_LIMIT}`} />
           <SummaryCard label="Bộ lọc" value={filtered ? "Đang áp dụng" : "Tất cả"} />
         </div>
+        </div>
       </section>
 
-      <section className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+      <section className="space-y-4 rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Bộ lọc truy vết</h2>
@@ -508,7 +503,7 @@ export default function AuditLogsPage() {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm text-slate-700"
+                className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
               >
                 Xóa bộ lọc
               </button>
@@ -516,7 +511,7 @@ export default function AuditLogsPage() {
             <button
               type="button"
               onClick={handleExport}
-              className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-sm text-white"
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
             >
               Xuất CSV
             </button>
@@ -528,13 +523,13 @@ export default function AuditLogsPage() {
             value={actorInput}
             onChange={(event) => setActorInput(event.target.value)}
             placeholder="Tên hoặc ID người thực hiện"
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
 
           <select
             value={actionFilter}
             onChange={(event) => updateParam("action", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả hành động</option>
             {BACKEND_FILTER_OPTIONS.map((opt) => (
@@ -548,20 +543,20 @@ export default function AuditLogsPage() {
             type="date"
             value={startDate}
             onChange={(event) => updateParam("startDate", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
 
           <input
             type="date"
             value={endDate}
             onChange={(event) => updateParam("endDate", event.target.value || undefined)}
-            className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
         </div>
       </section>
 
-      <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="border-b border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-blue-50/50 px-5 py-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Dòng sự kiện</h2>
             <p className="text-xs text-slate-500 mt-0.5">Bấm vào một bản ghi để xem chi tiết trước và sau thay đổi.</p>
@@ -571,8 +566,8 @@ export default function AuditLogsPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1080px]">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-slate-200 bg-white">
                 <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Thời gian</th>
                 <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Người thực hiện</th>
                 <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Hành động</th>
@@ -596,7 +591,7 @@ export default function AuditLogsPage() {
                   return (
                     <tr
                       key={item.id}
-                      className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70 transition-colors cursor-pointer"
+                      className="cursor-pointer border-b border-slate-100 transition last:border-b-0 hover:bg-blue-50/40"
                       onClick={() => setSelectedLog(item)}
                     >
                       <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">{formatDateTime(item.createdAt)}</td>
@@ -624,7 +619,7 @@ export default function AuditLogsPage() {
                             event.stopPropagation();
                             setSelectedLog(item);
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700"
+                          className="rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
                         >
                           Xem bản ghi
                         </button>
@@ -648,7 +643,7 @@ export default function AuditLogsPage() {
             type="button"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Trước
           </button>
@@ -656,7 +651,7 @@ export default function AuditLogsPage() {
             type="button"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 text-sm transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Sau
           </button>
@@ -672,16 +667,15 @@ export default function AuditLogsPage() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-lg font-bold text-slate-900 mt-1">{value}</p>
+    <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur">
+      <p className="text-xs font-medium text-blue-100">{label}</p>
+      <p className="mt-1 text-lg font-bold text-white">{value}</p>
     </div>
   );
 }
 
 function AuditDetailModal({ log, onClose }: { log: AuditLogResponse; onClose: () => void }) {
   const meta = actionMeta(log.action, log.entityName);
-  const fields = changedFields(log);
 
   return (
     <div className="fixed inset-0 z-50">
@@ -692,22 +686,22 @@ function AuditDetailModal({ log, onClose }: { log: AuditLogResponse; onClose: ()
         aria-label="Đóng chi tiết nhật ký kiểm toán"
       />
 
-      <section className="absolute inset-y-0 right-0 w-full max-w-4xl bg-white shadow-2xl overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-5 flex items-start justify-between gap-4">
+      <section className="absolute inset-y-0 right-0 w-full max-w-4xl overflow-y-auto bg-white shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-blue-200 bg-linear-to-r from-blue-700 to-indigo-700 px-6 py-5 text-white">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-medium ${toneClass(meta.tone)}`}>
                 {meta.label}
               </span>
-              <span className="text-xs text-slate-500">Audit #{log.id}</span>
+              <span className="text-xs text-blue-100">Audit #{log.id}</span>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mt-3">Chi tiết bản ghi kiểm toán</h3>
-            <p className="text-sm text-slate-500 mt-1">{meta.description}</p>
+            <h3 className="mt-3 text-xl font-bold text-white">Chi tiết bản ghi kiểm toán</h3>
+            <p className="mt-1 text-sm text-blue-100">{meta.description}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="h-9 w-9 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900"
+            className="h-9 w-9 rounded-lg text-blue-100 transition hover:bg-white/10 hover:text-white"
             aria-label="Đóng"
           >
             X
@@ -728,32 +722,14 @@ function AuditDetailModal({ log, onClose }: { log: AuditLogResponse; onClose: ()
               <p className="text-xs text-slate-500 mt-1">So sánh giá trị trước và sau khi thao tác được ghi nhận.</p>
             </div>
 
-            {fields.length === 0 ? (
-              <div className="p-4">
-                <EmptyState message="Bản ghi này không có snapshot trước/sau từ backend." />
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px]">
-                  <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trường dữ liệu</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trước thay đổi</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sau thay đổi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fields.map((field) => (
-                      <tr key={field} className="border-b border-slate-100 last:border-b-0">
-                        <td className="px-4 py-3 text-sm font-medium text-slate-900">{fieldLabel(field)}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{formatValue(log.oldValues?.[field])}</td>
-                        <td className="px-4 py-3 text-sm text-slate-900">{formatValue(log.newValues?.[field])}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <div className="p-4">
+              <DiffViewer
+                oldValues={log.oldValues}
+                newValues={log.newValues}
+                fieldLabels={FIELD_LABELS}
+                emptyMessage="Bản ghi này không có snapshot trước/sau từ backend."
+              />
+            </div>
           </div>
 
           <details className="rounded-2xl border border-slate-200 bg-white">

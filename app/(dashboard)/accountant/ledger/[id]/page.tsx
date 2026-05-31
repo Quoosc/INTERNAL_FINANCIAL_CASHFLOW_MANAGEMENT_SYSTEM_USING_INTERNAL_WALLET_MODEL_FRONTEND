@@ -115,6 +115,18 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Ledger entry detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Inspect accounting movement, related entity and reconciliation information.</p>
+          </div>
+        </div>
+      </section>
+
         <div className="h-8 w-60 rounded bg-slate-200 animate-pulse" />
         <div className="h-40 rounded-2xl bg-white animate-pulse" />
         <div className="h-64 rounded-2xl bg-white animate-pulse" />
@@ -131,7 +143,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           </svg>
           Quay lại sổ cái
         </Link>
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-8 text-center text-slate-500">
           Không tìm thấy giao dịch.
         </div>
       </div>
@@ -140,6 +152,18 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Ledger entry detail</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Inspect accounting movement, related entity and reconciliation information.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link href="/accountant/ledger" className="hover:text-slate-900 transition-colors">Sổ cái</Link>
@@ -153,7 +177,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
       </div>
 
       {/* Header card */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
             <p className="text-xs text-slate-500">Mã giao dịch</p>
@@ -181,14 +205,14 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
         </div>
 
         {txn.description && (
-          <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+          <div className="rounded-2xl border border-slate-100 bg-blue-50/60 px-4 py-3">
             <p className="text-xs text-slate-500 mb-1">Mô tả</p>
             <p className="text-sm text-slate-900">{txn.description}</p>
           </div>
         )}
 
         {txn.paymentRef && (
-          <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+          <div className="rounded-2xl border border-slate-100 bg-blue-50/60 px-4 py-3">
             <p className="text-xs text-slate-500 mb-1">Mã thanh toán</p>
             <p className="text-sm text-slate-900 font-mono">{txn.paymentRef}</p>
           </div>
@@ -197,7 +221,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
       {/* Reference / source */}
       {(txn.referenceType ?? refLink) && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Nguồn gốc giao dịch</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -208,7 +232,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
           {refLink?.href ? (
             <Link
               href={refLink.href}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-blue-700 hover:text-blue-600 text-sm"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-blue-700 hover:text-blue-600 text-sm"
             >
               {refLink.label}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,23 +247,23 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
       {/* Ledger entries (double-entry lines) */}
       {txn.ledgerEntries.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Bút toán kép</h2>
 
-          <div className="rounded-xl border border-slate-200 overflow-x-auto">
+          <div className="rounded-2xl border border-slate-200 overflow-x-auto">
             <table className="w-full min-w-[700px]">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-white">
                 <tr className="bg-white/70 border-b border-slate-200">
-                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Chiều</th>
-                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ví chủ thể</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số tiền</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số dư sau</th>
-                  <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Thời gian</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Chiều</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Ví chủ thể</th>
+                  <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">Số tiền</th>
+                  <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">Số dư sau</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Thời gian</th>
                 </tr>
               </thead>
               <tbody>
                 {txn.ledgerEntries.map((entry) => (
-                  <tr key={entry.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                  <tr key={entry.id} className="border-b border-slate-100 last:border-b-0 hover:bg-blue-50/40 transition-colors">
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getDirectionClass(entry.direction)}`}>
                         {entry.direction === TransactionDirection.CREDIT ? "Có (Credit)" : "Nợ (Debit)"}
@@ -267,7 +291,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
       <Link
         href="/accountant/ledger"
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 text-sm"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl border border-slate-200 bg-white text-slate-900 hover:bg-blue-50 text-sm"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -280,7 +304,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
 function InfoCard({ label, value, tone, mono }: { label: string; value: string; tone?: string; mono?: boolean }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm mt-1 ${tone ?? "text-slate-900"} ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>

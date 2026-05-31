@@ -5,14 +5,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
 import {
+  CompanyFundResponse,
   DisbursementFilterParams,
   DisbursementListItem,
   PaginatedResponse,
-  RequestStatus,
   RequestType,
 } from "@/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { MOCK_SYSTEM_FUND_BALANCE } from "@/lib/mocks/system";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
 import { toApiPage } from "@/lib/adapters/pagination";
@@ -28,152 +27,6 @@ interface DisbursementListViewItem extends DisbursementListItem {
 
 const PAGE_LIMIT = 10;
 
-const MOCK_DISBURSEMENTS: DisbursementListViewItem[] = [
-  {
-    id: 1,
-    requestCode: "REQ-2026-0041",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 3_500_000,
-    approvedAmount: 3_500_000,
-    description: "Mua vật tư thiết bị thí nghiệm cho phase 1.",
-    requester: {
-      id: 11,
-      fullName: "Đỗ Quốc Bảo",
-      avatar: null,
-      employeeCode: "EMP001",
-      jobTitle: "Frontend Developer",
-      departmentName: "Phòng IT",
-      bankName: "Vietcombank",
-      bankAccountNum: "001100220011",
-      bankAccountOwner: "DO QUOC BAO",
-    },
-    approver: {
-      fullName: "Hoàng Minh Tuấn",
-      approvedAt: "2026-04-03T10:00:00",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 1,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Phân tích",
-    },
-    attachments: [],
-    createdAt: "2026-04-03T09:15:00",
-  },
-  {
-    id: 2,
-    requestCode: "REQ-2026-0042",
-    type: RequestType.EXPENSE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 850_000,
-    approvedAmount: 850_000,
-    description: "Chi phí mua license công cụ.",
-    requester: {
-      id: 12,
-      fullName: "Vũ Thị Lan",
-      avatar: null,
-      employeeCode: "EMP002",
-      jobTitle: "Backend Developer",
-      departmentName: "Phòng IT",
-      bankName: "BIDV",
-      bankAccountNum: "102030405060",
-      bankAccountOwner: "VU THI LAN",
-    },
-    approver: {
-      fullName: "Hoàng Minh Tuấn",
-      approvedAt: "2026-04-03T09:30:00",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 1,
-      phaseCode: "PH-001",
-      name: "Phase 1 - Phân tích",
-    },
-    attachments: [],
-    createdAt: "2026-04-02T14:30:00",
-  },
-  {
-    id: 3,
-    requestCode: "REQ-2026-0038",
-    type: RequestType.REIMBURSE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 1_200_000,
-    approvedAmount: 1_200_000,
-    description: "Hoàn ứng chi phí kiểm thử QA.",
-    requester: {
-      id: 13,
-      fullName: "Phạm Văn Đức",
-      avatar: null,
-      employeeCode: "EMP003",
-      jobTitle: "QA Engineer",
-      departmentName: "Phòng IT",
-      bankName: "Techcombank",
-      bankAccountNum: "778899665544",
-      bankAccountOwner: "PHAM VAN DUC",
-    },
-    approver: {
-      fullName: "Hoàng Minh Tuấn",
-      approvedAt: "2026-04-02T16:00:00",
-    },
-    project: {
-      id: 2,
-      projectCode: "PRJ-IT-002",
-      name: "Nâng cấp hạ tầng mạng",
-    },
-    phase: {
-      id: 4,
-      phaseCode: "PH-004",
-      name: "Phase 1 - Triển khai",
-    },
-    attachments: [],
-    createdAt: "2026-04-01T10:00:00",
-  },
-  {
-    id: 4,
-    requestCode: "REQ-2026-0035",
-    type: RequestType.ADVANCE,
-    status: RequestStatus.APPROVED_BY_TEAM_LEADER,
-    amount: 5_000_000,
-    approvedAmount: 4_500_000,
-    description: "Tạm ứng chi phí triển khai thiết bị.",
-    requester: {
-      id: 11,
-      fullName: "Đỗ Quốc Bảo",
-      avatar: null,
-      employeeCode: "EMP001",
-      jobTitle: "Frontend Developer",
-      departmentName: "Phòng IT",
-      bankName: "Vietcombank",
-      bankAccountNum: "001100220011",
-      bankAccountOwner: "DO QUOC BAO",
-    },
-    approver: {
-      fullName: "Hoàng Minh Tuấn",
-      approvedAt: "2026-04-01T14:00:00",
-    },
-    project: {
-      id: 1,
-      projectCode: "PRJ-IT-001",
-      name: "Hệ thống quản lý nội bộ",
-    },
-    phase: {
-      id: 2,
-      phaseCode: "PH-002",
-      name: "Phase 2 - Phát triển",
-    },
-    attachments: [],
-    createdAt: "2026-03-31T11:00:00",
-  },
-];
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
@@ -239,34 +92,6 @@ function getRequestTypeClass(type: RequestType): string {
   }
 }
 
-function filterMockData(
-  source: DisbursementListViewItem[],
-  type?: RequestType,
-  search?: string,
-): DisbursementListViewItem[] {
-  const q = search?.trim().toLowerCase() ?? "";
-
-  return source.filter((item) => {
-    if (!isAccountantQueueStatus(item.status)) return false;
-    if (type && item.type !== type) return false;
-
-    if (!q) return true;
-
-    const haystack = [
-      item.requestCode,
-      item.requester.fullName,
-      item.requester.employeeCode,
-      item.project.projectCode,
-      item.project.name,
-      item.phase.name,
-      item.approver?.fullName ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(q);
-  });
-}
 
 export default function AccountantDisbursementsPage() {
   const router = useRouter();
@@ -291,6 +116,7 @@ export default function AccountantDisbursementsPage() {
   const [items, setItems] = useState<DisbursementListViewItem[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [systemFundBalance, setSystemFundBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState(search);
 
@@ -364,9 +190,12 @@ export default function AccountantDisbursementsPage() {
         query.set("page", String(toApiPage(filters.page ?? 1)));
         query.set("size", String(filters.size ?? PAGE_LIMIT));
 
-        const res = await api.get<
-          PaginatedResponse<DisbursementListItem> | DisbursementListItem[]
-        >(`/api/v1/accountant/disbursements?${query.toString()}`);
+        const [res, fundRes] = await Promise.all([
+          api.get<PaginatedResponse<DisbursementListItem> | DisbursementListItem[]>(
+            `/api/v1/accountant/disbursements?${query.toString()}`,
+          ),
+          api.get<CompanyFundResponse>("/api/v1/company-fund"),
+        ]);
 
         if (cancelled) return;
 
@@ -374,9 +203,7 @@ export default function AccountantDisbursementsPage() {
           .filter((item) => isAccountantQueueStatus(item.status))
           .map((item) => ({ ...item }));
 
-        const apiTotal = Array.isArray(res.data)
-          ? apiItems.length
-          : res.data.total;
+        const apiTotal = Array.isArray(res.data) ? apiItems.length : res.data.total;
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
           : res.data.totalPages;
@@ -384,28 +211,14 @@ export default function AccountantDisbursementsPage() {
         setItems(apiItems);
         setTotal(apiTotal);
         setTotalPages(apiTotalPages);
+        setSystemFundBalance(fundRes.data.currentWalletBalance);
       } catch (err) {
         if (cancelled) return;
-
-        const filtered = filterMockData(MOCK_DISBURSEMENTS, type, search);
-        const mockTotal = filtered.length;
-        const mockTotalPages = Math.max(1, Math.ceil(mockTotal / PAGE_LIMIT));
-        const safePage = Math.min(page, mockTotalPages);
-        const start = (safePage - 1) * PAGE_LIMIT;
-
-        setItems(filtered.slice(start, start + PAGE_LIMIT));
-        setTotal(mockTotal);
-        setTotalPages(mockTotalPages);
-
-        if (safePage !== page) {
-          goToPage(safePage);
-        }
-
-        if (err instanceof ApiError) {
-          toast.error(err.apiMessage);
-        } else {
-          toast.error("Không thể tải dữ liệu API, đang hiển thị dữ liệu mẫu.");
-        }
+        setItems([]);
+        setTotal(0);
+        setTotalPages(1);
+        setSystemFundBalance(0);
+        toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải danh sách giải ngân.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -418,7 +231,11 @@ export default function AccountantDisbursementsPage() {
     };
   }, [goToPage, page, search, type, toast]);
 
-  const fundHealth = getFundHealth(MOCK_SYSTEM_FUND_BALANCE);
+  const fundHealth = getFundHealth(systemFundBalance);
+  const pageApprovedTotal = useMemo(
+    () => items.reduce((sum, item) => sum + item.approvedAmount, 0),
+    [items],
+  );
 
   const tabs: Array<{ label: string; value?: RequestType }> = [
     { label: "Tất cả" },
@@ -429,7 +246,32 @@ export default function AccountantDisbursementsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-900/10">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+              Accountant disbursement desk
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Giải ngân</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+              Theo dõi các yêu cầu đã được phê duyệt và chuẩn bị giải ngân từ quỹ hệ thống.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">Đang chờ xử lý</p>
+            <p className="mt-2 text-3xl font-bold">{total}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <MetricCard label="Quỹ hệ thống" value={formatCurrency(systemFundBalance)} helper={`Trạng thái: ${fundHealth}`} tone="blue" />
+        <MetricCard label="Giá trị trang hiện tại" value={formatCurrency(pageApprovedTotal)} helper={`${items.length} yêu cầu đang hiển thị`} tone="emerald" />
+        <MetricCard label="Bộ lọc hiện tại" value={type ? getRequestTypeLabel(type) : "Tất cả"} helper={search ? `Từ khóa: ${search}` : "Không giới hạn từ khóa"} tone="violet" />
+      </section>
+
+      <div className="hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Giải ngân</h1>
           <p className="text-slate-500 mt-1">
@@ -441,11 +283,11 @@ export default function AccountantDisbursementsPage() {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-cyan-200 bg-linear-to-r from-cyan-50 to-blue-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="hidden">
         <p className="text-sm text-slate-900">
           Quỹ hệ thống:{" "}
           <span className="font-semibold text-slate-900">
-            {formatCurrency(MOCK_SYSTEM_FUND_BALANCE)}
+            {formatCurrency(systemFundBalance)}
           </span>
         </p>
         <span
@@ -455,7 +297,11 @@ export default function AccountantDisbursementsPage() {
         </span>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Bộ lọc giải ngân</h2>
+          <p className="mt-1 text-sm text-slate-500">Lọc nhanh theo loại yêu cầu hoặc mã, nhân viên, dự án.</p>
+        </div>
         <div className="flex flex-wrap gap-2">
           {tabs.map((tab) => {
             const active = type === tab.value || (!type && !tab.value);
@@ -466,8 +312,8 @@ export default function AccountantDisbursementsPage() {
                 onClick={() => updateParam("type", tab.value)}
                 className={`px-3 py-1.5 rounded-xl border text-sm transition-colors ${
                   active
-                    ? "bg-blue-50 border-blue-300 text-blue-700"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+                    ? "bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-600/20"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-700"
                 }`}
               >
                 {tab.label}
@@ -494,7 +340,7 @@ export default function AccountantDisbursementsPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Tìm theo mã yêu cầu, nhân viên, dự án..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           />
         </div>
       </div>
@@ -502,8 +348,8 @@ export default function AccountantDisbursementsPage() {
       {loading ? (
         <CardListSkeleton rows={4} height="h-48" />
       ) : items.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-12 text-center">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
             <svg
               className="w-7 h-7"
               fill="none"
@@ -534,7 +380,7 @@ export default function AccountantDisbursementsPage() {
                 onClick={() =>
                   router.push(`/accountant/disbursements/${item.id}`)
                 }
-                className="w-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-2xl p-4 text-left transition-all"
+                className="w-full rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -573,7 +419,7 @@ export default function AccountantDisbursementsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
                       <p className="text-xs text-slate-500">Số tiền yêu cầu</p>
                       <p className="text-sm font-semibold text-slate-900 mt-1">
                         {formatCurrency(item.amount)}
@@ -581,10 +427,10 @@ export default function AccountantDisbursementsPage() {
                     </div>
 
                     <div
-                      className={`rounded-xl border px-3 py-2 ${
+                      className={`rounded-2xl border px-4 py-3 ${
                         changedAmount
                           ? "border-amber-200 bg-amber-50"
-                          : "border-slate-200 bg-white"
+                          : "border-blue-100 bg-blue-50/50"
                       }`}
                     >
                       <p
@@ -593,14 +439,14 @@ export default function AccountantDisbursementsPage() {
                         Số tiền giải ngân
                       </p>
                       <p
-                        className={`text-sm font-semibold mt-1 ${changedAmount ? "text-amber-200" : "text-slate-900"}`}
+                        className={`text-sm font-semibold mt-1 ${changedAmount ? "text-amber-700" : "text-slate-900"}`}
                       >
                         {formatCurrency(item.approvedAmount)}
                       </p>
                     </div>
 
                     <div className="flex items-center md:justify-end">
-                      <span className="inline-flex w-fit px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-sm text-slate-900">
+                      <span className="inline-flex w-fit rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-600/20">
                         Xử lý →
                       </span>
                     </div>
@@ -637,6 +483,32 @@ export default function AccountantDisbursementsPage() {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "blue" | "emerald" | "violet";
+}) {
+  const toneClass = {
+    blue: "from-blue-50 to-indigo-50 border-blue-100 text-blue-700",
+    emerald: "from-emerald-50 to-teal-50 border-emerald-100 text-emerald-700",
+    violet: "from-violet-50 to-fuchsia-50 border-violet-100 text-violet-700",
+  }[tone];
+
+  return (
+    <div className={`rounded-2xl border bg-linear-to-br ${toneClass} p-4 shadow-sm`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-75">{label}</p>
+      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

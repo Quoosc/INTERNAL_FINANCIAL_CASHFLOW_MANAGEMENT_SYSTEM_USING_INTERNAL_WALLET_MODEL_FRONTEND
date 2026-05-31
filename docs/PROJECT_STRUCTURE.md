@@ -1,6 +1,6 @@
 # PROJECT_STRUCTURE.md — Cấu trúc dự án Frontend
 
-> **Cập nhật v3.4 (2026-04-30):** Xóa orphaned pages (`register`, `create-pin`). Thêm `forgot-password`. Thêm `accountant/withdrawals`. Cập nhật `lib/auth.ts` với `verifyPasswordReset()`.
+> **Cập nhật v3.5 (2026-05-31):** Thêm `app/maintenance/page.tsx` (public 503 page). Thêm `lib/api/analytics.ts`. Cập nhật `types/dashboard.ts` với analytics types. Đánh dấu accountant/payroll + ledger là LIVE.
 
 ## Tổng quan
 
@@ -99,6 +99,8 @@ financial-wallet-frontend/
 │   │       ├── settings/page.tsx    # [Client] Cấu hình hệ thống
 │   │       └── audit-logs/page.tsx  # [Client] Nhật ký kiểm toán
 │   │
+│   ├── maintenance/
+│   │   └── page.tsx                 # [Client] Trang bảo trì — public, hiện khi BE trả 503
 │   ├── layout.tsx                   # Root layout (html, body, font, globals.css)
 │   ├── page.tsx                     # Redirect → /dashboard
 │   ├── globals.css                  # Tailwind global styles
@@ -123,7 +125,7 @@ financial-wallet-frontend/
 │   ├── manager.ts                   # ManagerApprovalListItem, ManagerProjectListItem, ManagerDeptMemberListItem, ...
 │   ├── accountant.ts                # DisbursementListItem, DisburseBody, AccountantRequestDetailResponse, ...
 │   ├── admin.ts                     # AdminUserListItem, AdminApprovalListItem, SystemSettingsResponse, ...
-│   ├── dashboard.ts                 # EmployeeDashboardResponse, ManagerDashboardResponse, AccountantDashboardResponse, CfoDashboardResponse, AdminDashboardResponse
+│   ├── dashboard.ts                 # EmployeeDashboardResponse, ManagerDashboardResponse, AccountantDashboardResponse, CfoDashboardResponse, AdminDashboardResponse, CashFlowPoint, CashFlowAnalyticsResponse, AdminAnalyticsResponse, SpendingPoint, EmployeeSpendingAnalyticsResponse
 │   └── index.ts                     # Barrel export — LUÔN import từ đây: import { ... } from "@/types"
 │
 ├── lib/                             # Utilities & API client
@@ -135,7 +137,8 @@ financial-wallet-frontend/
 │   │   ├── company-fund.ts          # getCompanyFund(), topupCompanyFund(), updateBankStatement(), getReconciliationReport()
 │   │   ├── system-config.ts         # getSystemConfigs(), updateSystemConfig(), evictConfigCache()
 │   │   ├── notification.ts          # getNotifications(), getUnreadCount(), markRead(), markAllRead()
-│   │   └── payment.ts               # createPayment(), getPaymentStatus()
+│   │   ├── payment.ts               # createPayment(), getPaymentStatus(), getMyDeposits()
+│   │   └── analytics.ts             # getCashFlowAnalytics(), getAdminAnalytics(), getEmployeeSpendingAnalytics()
 │   ├── hooks/
 │   │   └── use-user-stream.ts       # SSE hook — 1 connection/session, auto-reconnect
 │   ├── adapters/

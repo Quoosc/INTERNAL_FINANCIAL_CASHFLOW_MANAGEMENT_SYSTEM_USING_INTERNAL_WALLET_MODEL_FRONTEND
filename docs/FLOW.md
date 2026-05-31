@@ -1,9 +1,9 @@
 # FLOW.md - Data Flow (Frontend <-> Backend)
 
-> Version: 3.3 (2026-04-25)
+> Version: 3.4 (2026-05-31)
 > Aligned with backend source: 6 roles, 4 financial flows, wallet-first model, SoD
 >
-> **Thay đổi so với 3.2:** Realtime transport STOMP/WebSocket → SSE (xem §11).
+> **Thay đổi so với 3.3:** Thêm §13 Maintenance Mode. Analytics endpoints Sprint 17 (§17 in API_CONTRACT).
 
 ## 1. System Overview
 
@@ -217,7 +217,29 @@ Từ v3.3, backend chuyển từ STOMP/WebSocket sang **SSE** với **1 endpoint
 
 Chi tiết payload + ví dụ đầy đủ: xem [API_CONTRACT §15](./API_CONTRACT.md#15-realtime--server-sent-events-sse).
 
-## 12. Server vs Client Component
+## 12. Maintenance Mode
+
+Khi Admin bật `SYSTEM_MAINTENANCE_MODE = true` qua `PUT /api/v1/admin/settings`:
+
+1. Backend `MaintenanceInterceptor` trả `503 Service Unavailable` cho mọi `/api/v1/**`
+2. Exempt: `/api/v1/auth/**`, `/api/v1/health`
+3. Response body: `{ "success": false, "message": "Hệ thống đang trong chế độ bảo trì..." }`
+
+**FE behavior:**
+
+```
+api-client.ts nhận res.status === 503
+  → window.location.href = "/maintenance"   (nếu chưa ở /maintenance)
+  → throw ApiError(503, message)
+```
+
+- `/maintenance` là public route — `middleware.ts` không yêu cầu JWT
+- Page hiển thị thông báo bảo trì + nút "Thử lại" (reload)
+- Auth routes (`/login`, `/change-password`, `/forgot-password`) vẫn hoạt động bình thường
+
+---
+
+## 13. Server vs Client Component
 
 | Component type                        | Khi nào dùng                                                                         |
 | ------------------------------------- | ------------------------------------------------------------------------------------ |

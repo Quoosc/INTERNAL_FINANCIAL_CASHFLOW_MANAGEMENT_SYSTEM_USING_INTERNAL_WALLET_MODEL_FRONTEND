@@ -40,7 +40,11 @@
 - `lib/api/analytics.ts` — file mới với `getCashFlowAnalytics()` và `getAdminAnalytics()`
 - `types/dashboard.ts` — thêm `CashFlowPoint`, `CashFlowAnalyticsResponse`, `AdminAnalyticsResponse`
 
-**Còn lại chưa có API:** `MOCK_MONTHLY` trong `employee-dashboard.tsx` (chart chi tiêu theo tháng của employee) — backend chưa có endpoint tương ứng.
+**✅ Employee spending analytics (Sprint 17 — 2026-05-31):**
+- Backend: `GET /dashboard/analytics/employee` → `EmployeeSpendingAnalyticsResponse`
+- Frontend: `employee-dashboard.tsx` — xóa `MOCK_MONTHLY`, gọi `GET /dashboard/analytics/employee`, hiện BarChart (recharts) với dữ liệu thực
+- `types/dashboard.ts` — thêm field mới (handled inline với `SpendingPoint` interface)
+- Tất cả mock data đã được xóa khỏi Employee role.
 
 ---
 
@@ -213,55 +217,16 @@ Backend đã thêm 2 endpoint `@GetMapping("/cfo")` và `@GetMapping("/admin")` 
 
 ---
 
-## 7. Employee Dashboard — Chi tiêu cá nhân theo tháng
+## ✅ 7. Employee Dashboard — Chi tiêu cá nhân theo tháng
 
-> **Chưa implement — backend chưa cung cấp endpoint.**
+> **Đã implement hoàn chỉnh — Sprint 17 (2026-05-31).**
 
-**Vấn đề:** `components/dashboard/employee-dashboard.tsx` đang dùng mock `MOCK_MONTHLY` cho biểu đồ chi tiêu cá nhân theo tháng.
+**Backend:** `GET /api/v1/dashboard/analytics/employee` → `EmployeeSpendingAnalyticsResponse`
 
-```typescript
-// Hiện tại — hardcode mock trong employee-dashboard.tsx
-const MOCK_MONTHLY: { month: string; chiTieu: number; tamUng: number }[] = [
-  { month: "T1", chiTieu: 2400000, tamUng: 1200000 },
-  ...
-]
-```
-
-### 7.1 Backend endpoint cần implement
-
-```
-GET /api/v1/dashboard/employee/monthly-spending?year=2026
-```
-
-**Auth:** `WALLET_VIEW` (mọi role đều có)
-
-**Response:**
-```json
-{
-  "year": 2026,
-  "months": [
-    {
-      "month": 1,
-      "label": "T1",
-      "chiTieu": 2400000,
-      "tamUng": 1200000
-    }
-  ]
-}
-```
-
-> `chiTieu` = tổng DEBIT từ USER wallet trong tháng đó (REQUEST_PAYMENT + PAYSLIP netting).
-> `tamUng` = tổng ADVANCE đã được giải ngân trong tháng (status = PAID, type = ADVANCE).
-
-### 7.2 Frontend cần cập nhật
-
-**File:** `components/dashboard/employee-dashboard.tsx`
-
-- Xóa const `MOCK_MONTHLY`
-- Thêm state `monthlyData` + `useEffect` gọi API
-- Thêm API function `getEmployeeMonthlySpending(year)` vào `lib/api/analytics.ts`
-- Thêm type `EmployeeMonthlySpendingResponse` vào `types/dashboard.ts`
-- Chart hiện tại dùng `recharts BarChart` với `dataKey="chiTieu"` và `dataKey="tamUng"` — giữ nguyên structure, chỉ thay data source
+**Frontend đã cập nhật:**
+- `components/dashboard/employee-dashboard.tsx` — xóa `MOCK_MONTHLY`, gọi `getEmployeeSpendingAnalytics()`, render BarChart (recharts) với dữ liệu thực
+- `lib/api/analytics.ts` — thêm `getEmployeeSpendingAnalytics()`
+- `types/dashboard.ts` — thêm `SpendingPoint`, `EmployeeSpendingAnalyticsResponse`
 
 ---
 
@@ -294,6 +259,54 @@ GET /api/v1/dashboard/employee/monthly-spending?year=2026
 
 ---
 
+## ✅ 10. Maintenance Mode — FE 503 handler + page (Sprint 17)
+
+> **Đã implement hoàn chỉnh — Sprint 17 (2026-05-31).**
+
+**Backend:** `MaintenanceInterceptor` trả `503 Service Unavailable` (với body `{ success: false, message: "..." }`) cho tất cả `/api/v1/**` khi `SYSTEM_MAINTENANCE_MODE = true`. Exempt: `/api/v1/auth/**`, `/api/v1/health`.
+
+**Frontend đã cập nhật:**
+- `lib/api-client.ts` — bắt `res.status === 503` → `window.location.href = "/maintenance"` (nếu chưa ở trang maintenance)
+- `app/maintenance/page.tsx` — trang thông báo bảo trì (public route, không cần auth), có nút "Thử lại"
+- `middleware.ts` — `/maintenance` không cần JWT guard (public)
+
+---
+
+## ✅ 11. Admin Settings — Input Validation (Sprint 17)
+
+> **Đã implement hoàn chỉnh — Sprint 17 (2026-05-31).**
+
+**Vấn đề:** Form cài đặt hệ thống không validate min/max trước khi gửi API.
+
+**Frontend đã cập nhật — `app/(dashboard)/admin/settings/page.tsx`:**
+- Thêm `SETTING_VALIDATION` record với rules `{ min, max, isInt }` cho từng key
+- Thêm hàm `validateSetting(key, value)` — trả error string hoặc `null`
+- Inline error message hiện bên dưới input field trước khi submit
+
+| Key | Min | Max | isInt |
+|---|---|---|---|
+| `PIN_MAX_RETRY` | 1 | 10 | ✓ |
+| `PIN_LOCK_MINUTES` | 1 | 1440 | ✓ |
+| `MAX_ATTACHMENT_SIZE_MB` | 1 | 100 | ✓ |
+| `MAX_ATTACHMENT_COUNT` | 1 | 20 | ✓ |
+| `JWT_REFRESH_EXPIRY_DAYS` | 1 | 365 | ✓ |
+| `NOTIFICATION_RETAIN_DAYS` | 1 | 365 | ✓ |
+| `WITHDRAW_LIMIT_*` | 0 | — | ✓ |
+
+---
+
+## ✅ 12. Auto-pay Warning — Manager + CFO Approvals (Sprint 17)
+
+> **Đã implement hoàn chỉnh — Sprint 17 (2026-05-31).**
+
+**Vấn đề:** Sau khi Manager/CFO bấm duyệt, hệ thống tự động giải ngân (~1 phút) nhưng không có cảnh báo rõ ràng.
+
+**Frontend đã cập nhật:**
+- `app/(dashboard)/manager/approvals/[id]/page.tsx` — thêm info box trong modal duyệt: _"Sau khi duyệt, hệ thống sẽ tự động chuyển tiền từ quỹ phòng ban sang quỹ dự án."_
+- `app/(dashboard)/cfo/approvals/[id]/page.tsx` — thêm info box tương tự: _"Sau khi duyệt, hệ thống sẽ tự động cấp ngân sách từ quỹ công ty sang quỹ phòng ban."_
+
+---
+
 ## Ghi chú
 
 | Item | Trạng thái | Blocker |
@@ -304,6 +317,9 @@ GET /api/v1/dashboard/employee/monthly-spending?year=2026
 | 4 — PIN attempts | ✅ Done Sprint 16 | — |
 | 5 — Missing integrations | ✅ Done Sprint 15 | — |
 | 6 — Dashboard URL fix | ✅ Done Sprint 16 | — |
-| 7 — Employee spending chart | ⏳ Pending | Backend chưa có endpoint |
+| 7 — Employee spending chart | ✅ Done Sprint 17 | — |
 | 8 — Withdraw filter | ⏳ Pending | Backend cần thêm params |
 | 9 — Notification dropdown read | ⏳ Pending | FE-only, backend đã có |
+| 10 — Maintenance Mode FE | ✅ Done Sprint 17 | — |
+| 11 — Admin settings validation | ✅ Done Sprint 17 | — |
+| 12 — Auto-pay warning approvals | ✅ Done Sprint 17 | — |

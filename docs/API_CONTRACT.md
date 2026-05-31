@@ -378,14 +378,37 @@ RequestAction: APPROVE | REJECT | PAYOUT | CANCEL
 **CreateRequestBody notes:**
 
 - Flow 1 (`ADVANCE/EXPENSE/REIMBURSE`): cần `projectId`, `phaseId`, `categoryId`
-- `REIMBURSE` cần thêm `advanceBalanceId`
-- `EXPENSE`/`REIMBURSE`: bắt buộc có `attachments[]`
+- `REIMBURSE` cần thêm `advanceBalanceId` — lấy từ `GET /requests/my-advance-balances` (xem §9.1)
+- `EXPENSE`/`REIMBURSE`: bắt buộc có `attachments[]` (FE validate client-side trước khi submit)
 - Flow 2 (`PROJECT_TOPUP`): cần `projectId`; `phaseId`/`categoryId` = null
 - Flow 3 (`DEPARTMENT_TOPUP`): `projectId`/`phaseId`/`categoryId` = null
 
 **PUT `/requests/:id`:** Chỉ được phép khi `status = PENDING`. `attachments` ghi đè toàn bộ.
 
 **DELETE `/requests/:id`:** Chỉ được phép khi `status = PENDING`. Chuyển sang `CANCELLED`.
+
+---
+
+### 9.1 Employee Advance Balances (cho REIMBURSE)
+
+| Method | Endpoint                       | Auth                | Response                      |
+| ------ | ------------------------------ | ------------------- | ----------------------------- |
+| GET    | `/requests/my-advance-balances`| `REQUEST_VIEW_SELF` | `AdvanceBalanceItem[]`        |
+
+Trả về danh sách các khoản tạm ứng **chưa hoàn toàn hoàn trả** (`OUTSTANDING` hoặc `PARTIALLY_SETTLED`) của user hiện tại. Dùng để populate dropdown khi tạo REIMBURSE request.
+
+**`AdvanceBalanceItem`:**
+```json
+{
+  "id": 1,
+  "requestCode": "REQ-IT-0526-001",
+  "originalAmount": 500000,
+  "remainingAmount": 500000,
+  "status": "OUTSTANDING"
+}
+```
+
+⚠ `id` là `AdvanceBalance.id` — dùng trực tiếp làm `advanceBalanceId` trong `CreateRequestBody`.
 
 ---
 
@@ -801,7 +824,7 @@ await fetchEventSource("/api/v1/users/stream", {
 
 | Role | Strategy | Endpoint(s) |
 |---|---|---|
-| EMPLOYEE | Composition | `GET /wallet` + `GET /requests/summary` + `GET /requests?status=PENDING` + `GET /payslips?page=1&limit=1` + `GET /wallet/transactions?page=0&size=5` |
+| EMPLOYEE | Composition | `GET /wallet` + `GET /requests/summary` + `GET /requests?status=PENDING` + `GET /payslips?page=1&limit=1` + `GET /wallet/transactions?page=0&size=5` + `GET /dashboard/analytics/employee` |
 | TEAM_LEADER | Composition | `GET /team-leader/approvals?page=0&size=3&status=PENDING` + `GET /team-leader/projects?page=0&size=3` |
 | MANAGER | Dedicated | `GET /dashboard/manager` + sub-lists |
 | ACCOUNTANT | Dedicated | `GET /dashboard/accountant` + sub-lists |
@@ -870,3 +893,40 @@ await fetchEventSource("/api/v1/users/stream", {
 > `topDebtors`: tổng tạm ứng chưa hoàn (`remainingAmount > 0`, `status != SETTLED`), top 10 sorted by amount desc.
 > `daysSinceDisbursement`: số ngày từ advance cũ nhất của user chưa được settle.
 > FE gán màu từ palette cố định: `["#6366f1","#f59e0b","#0ea5e9","#14b8a6","#8b5cf6","#ec4899",...]`.
+
+---
+
+### `GET /dashboard/analytics/employee`
+
+> Implement Sprint 17 (2026-05-31). Thay thế `MOCK_MONTHLY` trong Employee dashboard.
+
+**Auth:** `REQUEST_VIEW_SELF` (Employee — và tất cả role có permission này)
+
+**Response:** `EmployeeSpendingAnalyticsResponse`
+
+```json
+{
+  "points": [
+    { "label": "T12/25", "chiTieu": 0, "tamUng": 0 },
+    { "label": "T1/26",  "chiTieu": 0, "tamUng": 0 },
+    { "label": "T5/26",  "chiTieu": 0, "tamUng": 1300000 }
+  ]
+}
+```
+
+> `points`: 6 tháng gần nhất (kể cả tháng hiện tại), chronological order.
+> `chiTieu`: tổng `approvedAmount` của EXPENSE + REIMBURSE có `status = PAID` trong tháng.
+> `tamUng`: tổng `approvedAmount` của ADVANCE có `status = PAID` trong tháng.
+> Tháng không có giao dịch → `chiTieu = 0`, `tamUng = 0` (vẫn hiện trong chart).
+
+---
+
+## 18. Maintenance Mode
+
+Khi Admin bật `SYSTEM_MAINTENANCE_MODE = true` (qua `POST /admin/settings`):
+
+- Backend `MaintenanceInterceptor` trả `503 Service Unavailable` cho **tất cả `/api/v1/**`**
+- Exempt: `/api/v1/auth/**`, `/api/v1/health`
+- Response body: `{ "success": false, "message": "Hệ thống đang trong chế độ bảo trì..." }`
+- Frontend `api-client.ts` bắt 503 → redirect tự động sang `/maintenance`
+- Page `/maintenance` là public route (không cần auth)

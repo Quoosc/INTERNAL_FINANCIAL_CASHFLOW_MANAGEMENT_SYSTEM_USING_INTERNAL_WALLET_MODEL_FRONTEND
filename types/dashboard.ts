@@ -18,10 +18,10 @@ export interface EmployeeDashboardResponse {
   pendingRequestsCount: number;
   recentTransactions: {
     id: number;
+    transactionId: number;
     transactionCode: string;
-    type: string;
+    direction: string;
     amount: number;
-    status: string;
     createdAt: string;
   }[];
   recentPayslip: {

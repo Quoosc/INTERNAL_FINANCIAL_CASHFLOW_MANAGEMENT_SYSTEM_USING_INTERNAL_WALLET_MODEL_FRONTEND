@@ -18,14 +18,21 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   PaginatedResponse,
   EmployeeDashboardResponse,
+  LedgerEntryResponse,
+  TransactionDirection,
   PayslipListItem,
   RequestListItem,
   RequestSummaryResponse,
   RequestType,
   RequestStatus,
-  TransactionResponse,
   WalletResponse,
 } from "@/types";
+
+interface SpendingPoint {
+  label: string;
+  chiTieu: number;
+  tamUng: number;
+}
 
 // =============================================================
 // Employee Dashboard Page
@@ -61,16 +68,16 @@ function mapRecentPayslip(
 
 function mapRecentTransactions(
   payload:
-    | PaginatedResponse<TransactionResponse>
-    | { content: TransactionResponse[] }
-    | TransactionResponse[]
+    | PaginatedResponse<LedgerEntryResponse>
+    | { content: LedgerEntryResponse[]; items?: LedgerEntryResponse[] }
+    | LedgerEntryResponse[]
     | null,
 ): EmployeeDashboardResponse["recentTransactions"] {
   const items = Array.isArray(payload)
     ? payload
     : payload && "content" in payload
       ? payload.content
-      : payload?.items;
+      : (payload as PaginatedResponse<LedgerEntryResponse> | null)?.items;
 
   if (!items?.length) {
     return [];
@@ -78,24 +85,14 @@ function mapRecentTransactions(
 
   return items.map((item) => ({
     id: item.id,
+    transactionId: item.transactionId,
     transactionCode: item.transactionCode,
-    type: item.type,
+    direction: item.direction,
     amount: item.amount,
-    status: item.status,
     createdAt: item.createdAt,
   }));
 }
 
-// Mock dữ liệu chi tiêu theo tháng (không có API riêng — tổng hợp từ transactions)
-const MOCK_MONTHLY: { month: string; chiTieu: number; tamUng: number }[] = [
-  { month: "T10/25", chiTieu: 3_500_000, tamUng: 2_800_000 },
-  { month: "T11/25", chiTieu: 4_200_000, tamUng: 3_300_000 },
-  { month: "T12/25", chiTieu: 6_100_000, tamUng: 5_200_000 },
-  { month: "T1/26", chiTieu: 4_800_000, tamUng: 3_600_000 },
-  { month: "T2/26", chiTieu: 5_500_000, tamUng: 4_300_000 },
-  { month: "T3/26", chiTieu: 3_900_000, tamUng: 2_100_000 },
-];
-// ─────────────────────────────────────────────────────────────
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -161,81 +158,6 @@ const REQUEST_STATUS_CONFIG: Record<
   [RequestStatus.CANCELLED]: { label: "Đã hủy", cls: "text-slate-500" },
 };
 
-const TX_TYPE_LABELS: Record<string, { label: string; icon: React.ReactNode }> =
-  {
-    REQUEST_PAYMENT: {
-      label: "Giải ngân yêu cầu",
-      icon: (
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-    },
-    PAYSLIP_PAYMENT: {
-      label: "Nhận lương",
-      icon: (
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-    },
-    WITHDRAW: {
-      label: "Rút tiền",
-      icon: (
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-          />
-        </svg>
-      ),
-    },
-    DEPOSIT: {
-      label: "Nạp tiền",
-      icon: (
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M7 16V12m0 0V8m0 4h4m4 0h-4m4 0V8m0 4v4"
-          />
-        </svg>
-      ),
-    },
-  };
 
 // ─── Sub-components ───────────────────────────────────────────
 
@@ -325,7 +247,7 @@ export function EmployeeDashboard() {
   const { user } = useAuth();
   const [data, setData] = useState<EmployeeDashboardResponse | null>(null);
   const [pendingRequests, setPendingRequests] = useState<RequestListItem[]>([]);
-  const [chartRange, setChartRange] = useState<3 | 6>(6);
+  const [spendingData, setSpendingData] = useState<SpendingPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -338,6 +260,7 @@ export function EmployeeDashboard() {
           requestsResult,
           payslipResult,
           transactionsResult,
+          spendingResult,
         ] =
           await Promise.allSettled([
             api.get<WalletResponse>("/api/v1/wallet"),
@@ -345,10 +268,11 @@ export function EmployeeDashboard() {
             api.get<PaginatedResponse<RequestListItem>>("/api/v1/requests?status=PENDING&page=1&limit=3"),
             api.get<PaginatedResponse<PayslipListItem>>("/api/v1/payslips?page=1&limit=1"),
             api.get<
-              PaginatedResponse<TransactionResponse>
-              | { content: TransactionResponse[] }
-              | TransactionResponse[]
+              PaginatedResponse<LedgerEntryResponse>
+              | { content: LedgerEntryResponse[] }
+              | LedgerEntryResponse[]
             >("/api/v1/wallet/transactions?page=0&size=5"),
+            api.get<{ points: SpendingPoint[] }>("/api/v1/dashboard/analytics/employee"),
           ]);
 
         const wallet = walletResult.status === "fulfilled" ? walletResult.value.data : null;
@@ -360,6 +284,10 @@ export function EmployeeDashboard() {
           transactionsResult.status === "fulfilled"
             ? transactionsResult.value.data
             : null;
+
+        if (spendingResult.status === "fulfilled") {
+          setSpendingData(spendingResult.value.data.points ?? []);
+        }
 
         setData({
           wallet: wallet ? mapWalletResponse(wallet) : { balance: 0, lockedBalance: 0, availableBalance: 0 },
@@ -376,8 +304,6 @@ export function EmployeeDashboard() {
     load();
   }, []);
 
-  const chartData = MOCK_MONTHLY.slice(-chartRange);
-
   const availableBalance = data
     ? (data.wallet.availableBalance ??
       data.wallet.balance -
@@ -386,7 +312,6 @@ export function EmployeeDashboard() {
   const lockedBalance = data
     ? (data.wallet.lockedBalance ?? data.wallet.pendingBalance ?? 0)
     : 0;
-  const debtBalance = data?.wallet.debtBalance ?? 0;
 
   const today = new Date().toLocaleDateString("vi-VN", {
     weekday: "long",
@@ -432,8 +357,12 @@ export function EmployeeDashboard() {
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Employee dashboard</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Track wallet balance, requests, payroll and recent activity in a cleaner workspace.</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+              Xin chào, {user?.fullName || "Bạn"}
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">
+              Hôm nay là {today}. Theo dõi ví cá nhân, yêu cầu, phiếu lương và hoạt động gần đây tại một nơi.
+            </p>
           </div>
         </div>
       </section>
@@ -441,10 +370,12 @@ export function EmployeeDashboard() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Xin chào, {user?.fullName || "Bạn"} 👋
-          </h1>
-          <p className="text-slate-500 text-sm mt-1 capitalize">{today}</p>
+          <h2 className="text-2xl font-bold text-slate-900">
+            Thao tác nhanh
+          </h2>
+          <p className="text-slate-500 text-sm mt-1">
+            Tạo yêu cầu mới hoặc theo dõi các luồng tài chính cá nhân.
+          </p>
         </div>
         <Link
           href="/requests/new"
@@ -468,7 +399,7 @@ export function EmployeeDashboard() {
       </div>
 
       {/* ── Section A: Stats Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <StatCard
           title="Số dư khả dụng"
           value={formatCurrency(availableBalance)}
@@ -494,7 +425,7 @@ export function EmployeeDashboard() {
         <StatCard
           title="Tiền đang khóa"
           value={formatCurrency(lockedBalance)}
-          sub="Dang cho xu ly"
+          sub="Đang chờ xử lý"
           gradient="hover:shadow-amber-500/10 hover:shadow-lg"
           iconBg="bg-linear-to-br from-amber-500 to-orange-500"
           icon={
@@ -509,29 +440,6 @@ export function EmployeeDashboard() {
                 strokeLinejoin="round"
                 strokeWidth={2}
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Dư nợ tạm ứng"
-          value={formatCurrency(debtBalance)}
-          sub="Sẽ trừ vào lương tháng sau"
-          gradient="hover:shadow-rose-500/10 hover:shadow-lg"
-          iconBg="bg-linear-to-br from-rose-500 to-rose-600"
-          tooltip="Khoản tạm ứng chưa hoàn trả sẽ được khấu trừ tự động vào lương kỳ tiếp theo."
-          icon={
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
               />
             </svg>
           }
@@ -564,51 +472,26 @@ export function EmployeeDashboard() {
         />
       </div>
 
-      {/* ── Section B: Charts + Activity ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monthly Spending Bar Chart */}
-        <SectionCard
-          title="Chi tiêu theo tháng"
-          subtitle="So sánh chi phí & tạm ứng"
-          action={
-            <div className="flex rounded-lg overflow-hidden border border-slate-200">
-              {([3, 6] as const).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setChartRange(n)}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                    chartRange === n
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-blue-50"
-                  }`}
-                >
-                  {n} tháng
-                </button>
-              ))}
-            </div>
-          }
-        >
+      {/* ── Section B: Spending Chart ── */}
+      <SectionCard
+        title="Chi tiêu theo tháng"
+        subtitle="6 tháng gần nhất — chi phí & tạm ứng đã thanh toán"
+      >
+        {spendingData.length === 0 ? (
+          <div className="flex items-center justify-center h-40 text-slate-400 text-sm">
+            Chưa có dữ liệu chi tiêu.
+          </div>
+        ) : (
           <ResponsiveContainer width="100%" height={240} debounce={100}>
-            <BarChart data={chartData} barGap={4}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#f1f5f9"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="month"
-                stroke="#64748b"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-              />
+            <BarChart data={spendingData} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
               <YAxis
                 stroke="#64748b"
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}M`}
+                tickFormatter={(v: number) => `${(v / 1_000_000).toFixed(0)}M`}
               />
               <Tooltip
                 contentStyle={{
@@ -617,32 +500,27 @@ export function EmployeeDashboard() {
                   borderRadius: "8px",
                   color: "#1e293b",
                   fontSize: "12px",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 }}
-                formatter={(value, name) => {
-                  const numericValue = typeof value === "number" ? value : 0;
-                  const label = name === "chiTieu" ? "Chi phí" : "Tạm ứng";
-                  return [formatCurrency(numericValue), label];
-                }}
+                formatter={(value: number, name: string) => [
+                  formatCurrency(value),
+                  name === "chiTieu" ? "Chi phí" : "Tạm ứng",
+                ]}
                 labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
               />
               <Legend
-                wrapperStyle={{
-                  paddingTop: 16,
-                  fontSize: 12,
-                  color: "#94a3b8",
-                }}
-                formatter={(value) =>
-                  value === "chiTieu" ? "Chi phí" : "Tạm ứng"
-                }
+                wrapperStyle={{ paddingTop: 16, fontSize: 12, color: "#94a3b8" }}
+                formatter={(value: string) => (value === "chiTieu" ? "Chi phí" : "Tạm ứng")}
                 iconType="circle"
               />
               <Bar dataKey="chiTieu" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               <Bar dataKey="tamUng" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </SectionCard>
+        )}
+      </SectionCard>
 
+      {/* ── Section C: Activity ── */}
+      <div>
         {/* Recent Transactions Activity Feed */}
         <SectionCard
           title="Hoạt động gần đây"
@@ -658,11 +536,7 @@ export function EmployeeDashboard() {
         >
           <div className="space-y-3">
             {(data?.recentTransactions ?? []).map((tx) => {
-              const isPositive = tx.amount > 0;
-              const txInfo = TX_TYPE_LABELS[tx.type] ?? {
-                label: tx.type,
-                icon: null,
-              };
+              const isCredit = tx.direction === TransactionDirection.CREDIT;
               return (
                 <div
                   key={tx.id}
@@ -671,28 +545,31 @@ export function EmployeeDashboard() {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                        isPositive
+                        isCredit
                           ? "bg-emerald-50 text-emerald-700"
                           : "bg-rose-50 text-rose-700"
                       }`}
                     >
-                      {txInfo.icon}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {isCredit
+                          ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
+                          : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />}
+                      </svg>
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-slate-900 truncate">
-                        {txInfo.label}
+                        {isCredit ? "Tiền vào" : "Tiền ra"}
                       </p>
-                      <p className="text-xs text-slate-500">
-                        {timeAgo(tx.createdAt)}
-                      </p>
+                      <p className="text-xs text-slate-500 truncate">{tx.transactionCode}</p>
+                      <p className="text-xs text-slate-500">{timeAgo(tx.createdAt)}</p>
                     </div>
                   </div>
                   <span
                     className={`text-sm font-bold shrink-0 ${
-                      isPositive ? "text-emerald-700" : "text-rose-700"
+                      isCredit ? "text-emerald-700" : "text-rose-700"
                     }`}
                   >
-                    {isPositive ? "+" : ""}
+                    {isCredit ? "+" : "-"}
                     {formatCurrency(tx.amount)}
                   </span>
                 </div>

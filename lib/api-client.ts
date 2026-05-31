@@ -121,6 +121,13 @@ export async function apiClient<T>(
 
   let res = await fetch(url, { headers, ...rest });
 
+  if (res.status === 503) {
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/maintenance")) {
+      window.location.href = "/maintenance";
+    }
+    throw new ApiError(503, "Hệ thống đang bảo trì. Vui lòng thử lại sau.");
+  }
+
   if (res.status === 401 && !skipAuth) {
     const newToken = await refreshAccessToken();
     if (newToken) {

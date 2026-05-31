@@ -49,11 +49,11 @@ const ROLE_CONFIGS: RoleConfig[] = [
     role: "TEAM_LEADER",
     label: "Team Leader",
     hint: "Duyệt chi tiêu & quản lý DA",
-    textColor: "text-amber-600",
-    border: "border-amber-500",
-    bg: "bg-amber-50",
-    dot: "bg-amber-500",
-    buttonBg: "bg-amber-500 hover:bg-amber-600 focus:ring-amber-500",
+    textColor: "text-blue-600",
+    border: "border-blue-500",
+    bg: "bg-blue-50",
+    dot: "bg-blue-500",
+    buttonBg: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -81,11 +81,11 @@ const ROLE_CONFIGS: RoleConfig[] = [
     role: "ACCOUNTANT",
     label: "Kế toán",
     hint: "Giải ngân & bảng lương",
-    textColor: "text-teal-600",
-    border: "border-teal-500",
-    bg: "bg-teal-50",
-    dot: "bg-teal-500",
-    buttonBg: "bg-teal-600 hover:bg-teal-700 focus:ring-teal-500",
+    textColor: "text-cyan-600",
+    border: "border-cyan-500",
+    bg: "bg-cyan-50",
+    dot: "bg-cyan-500",
+    buttonBg: "bg-cyan-600 hover:bg-cyan-700 focus:ring-cyan-500",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -145,13 +145,13 @@ function RoleCard({
       type="button"
       onClick={onClick}
       className={[
-        "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer text-center w-full",
+        "flex min-h-[112px] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 p-3 text-center transition-all duration-200 cursor-pointer w-full",
         selected
-          ? `${config.border} ${config.bg}`
-          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
+          ? `${config.border} ${config.bg} shadow-sm`
+          : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40",
       ].join(" ")}
     >
-      <div className={["p-2 rounded-lg", selected ? config.bg : "bg-slate-100"].join(" ")}>
+      <div className={["p-2 rounded-xl", selected ? config.bg : "bg-slate-100"].join(" ")}>
         <span className={selected ? config.textColor : "text-slate-400"}>
           {config.icon}
         </span>
@@ -238,38 +238,35 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-slate-950">
 
       {/* ── Left Panel: Branding ─────────────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-950 relative overflow-hidden items-center justify-center">
+      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-blue-800 via-blue-700 to-cyan-700 relative overflow-hidden items-center justify-center">
 
-        <div className="absolute inset-0 opacity-10 text-white">
+        <div className="absolute inset-0 opacity-22 text-white">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="cube-pattern" x="0" y="0" width="60" height="105" patternUnits="userSpaceOnUse">
-                <path d="M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                <path d="M30 60 L30 90 L0 75 L0 45 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                <path d="M30 60 L30 90 L60 75 L60 45 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
+                <path d="M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z" fill="none" stroke="currentColor" strokeWidth="0.9" />
+                <path d="M30 60 L30 90 L0 75 L0 45 Z" fill="none" stroke="currentColor" strokeWidth="0.9" />
+                <path d="M30 60 L30 90 L60 75 L60 45 Z" fill="none" stroke="currentColor" strokeWidth="0.9" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#cube-pattern)" />
           </svg>
         </div>
 
-        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-
-        <div className="relative z-10 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-10 max-w-sm w-full mx-8 shadow-2xl text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-5">
-            <svg className="w-11 h-11 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="relative z-10 w-full max-w-md rounded-[2rem] border border-white/20 bg-white/10 px-12 py-14 text-center shadow-2xl backdrop-blur-lg mx-8">
+          <div className="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-[1.75rem] bg-linear-to-br from-blue-500 to-cyan-500 shadow-lg shadow-cyan-900/20">
+            <svg className="h-12 w-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">IFMS Finance</h1>
-          <p className="text-blue-200 text-sm">Precision in every transaction</p>
+          <h1 className="mb-2 text-4xl font-bold text-white">IFMS Finance</h1>
+          <p className="text-base text-blue-200">Precision in every transaction</p>
 
-          <div className="mt-10 pt-8 border-t border-white/20 space-y-4 text-left">
+          <div className="mt-14 space-y-5 border-t border-white/20 pt-9 text-left">
             <BrandFeature
               icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,12 +299,14 @@ function LoginContent() {
       </div>
 
       {/* ── Right Panel: Form ─────────────────────────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center bg-slate-50 px-6 py-12">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center bg-linear-to-br from-slate-50 via-white to-blue-50 px-6 py-12">
+        <div className="w-full max-w-xl rounded-[2rem] bg-linear-to-br from-blue-400 via-cyan-300 to-indigo-400 p-[1.5px] shadow-[0_34px_90px_rgba(37,99,235,0.22)]">
+        <div className="relative overflow-hidden rounded-[calc(2rem-2px)] border border-white/80 bg-white/95 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur sm:p-8">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-cyan-400 to-indigo-500" />
 
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow mb-3">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-linear-to-br from-blue-600 to-cyan-500 rounded-2xl shadow mb-3">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -317,7 +316,7 @@ function LoginContent() {
           </div>
 
           {passwordReset && (
-            <div className="mb-5 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm flex items-center gap-2">
+            <div className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -371,7 +370,7 @@ function LoginContent() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="your.name@ifms.vn"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-colors"
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
             </div>
@@ -396,7 +395,7 @@ function LoginContent() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="Nhập mật khẩu"
-                  className="w-full pl-10 pr-11 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-colors"
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-11 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
                 />
                 <button
                   type="button"
@@ -424,7 +423,7 @@ function LoginContent() {
 
             {/* Error */}
             {error && (
-              <div className="bg-rose-50 border border-rose-200 rounded-lg px-4 py-3 text-sm text-rose-700">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
               </div>
             )}
@@ -434,7 +433,7 @@ function LoginContent() {
               type="submit"
               disabled={isLoading}
               className={[
-                "w-full py-2.5 px-4 rounded-lg text-white font-semibold text-sm transition-colors duration-200",
+                "w-full rounded-2xl px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/10 transition-colors duration-200",
                 "focus:outline-none focus:ring-2 focus:ring-offset-2",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 activeConfig.buttonBg,
@@ -462,6 +461,7 @@ function LoginContent() {
               </Link>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </div>

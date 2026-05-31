@@ -55,3 +55,49 @@ export function formatRelativeTime(iso: string): string {
 export function parseAmountInput(raw: string): string {
   return raw.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
 }
+
+// ─── Fund Health ────────────────────────────────────────────────────────────
+
+export type FundHealth = "HEALTHY" | "LOW" | "CRITICAL";
+
+/** Classify company/system fund balance into a health tier. */
+export function getFundHealth(balance: number): FundHealth {
+  if (balance >= 500_000_000) return "HEALTHY";
+  if (balance >= 100_000_000) return "LOW";
+  return "CRITICAL";
+}
+
+/** Tailwind badge classes for fund health (inline badge pattern). */
+export function getFundHealthClass(health: FundHealth): string {
+  switch (health) {
+    case "HEALTHY": return "bg-emerald-100 border-emerald-200 text-emerald-700";
+    case "LOW":     return "bg-amber-100 border-amber-200 text-amber-700";
+    case "CRITICAL":return "bg-rose-100 border-rose-200 text-rose-700";
+  }
+}
+
+/** Structured style object for fund health (card/panel pattern used by CFO dashboard). */
+export function getFundHealthStyle(health: FundHealth): {
+  label: string;
+  tone: string;
+  borderTone: string;
+  bgTone: string;
+} {
+  switch (health) {
+    case "HEALTHY":
+      return { label: "HEALTHY", tone: "text-emerald-700", borderTone: "border-emerald-300", bgTone: "bg-emerald-50" };
+    case "LOW":
+      return { label: "LOW", tone: "text-amber-700", borderTone: "border-amber-300", bgTone: "bg-amber-50" };
+    case "CRITICAL":
+      return { label: "CRITICAL", tone: "text-rose-700", borderTone: "border-rose-300", bgTone: "bg-rose-50" };
+  }
+}
+
+// ─── Budget Burn ─────────────────────────────────────────────────────────────
+
+/** Tailwind progress-bar color for budget burn percentage (85 % = critical, 65 % = warning). */
+export function getBurnClass(percent: number): string {
+  if (percent >= 85) return "bg-rose-500";
+  if (percent >= 65) return "bg-amber-500";
+  return "bg-emerald-500";
+}

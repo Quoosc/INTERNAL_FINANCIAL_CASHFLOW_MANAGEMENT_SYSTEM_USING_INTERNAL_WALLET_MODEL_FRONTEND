@@ -14,7 +14,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
 import { getCashFlowAnalytics, PeriodKey } from "@/lib/api";
-import { formatCurrency, formatRelativeTime } from "@/lib/format";
+import { formatCurrency, formatRelativeTime, getFundHealth, getFundHealthClass } from "@/lib/format";
 import {
   AccountantDashboardResponse,
   CashFlowPoint,
@@ -26,9 +26,6 @@ import {
   RoleName,
 } from "@/types";
 import { isAccountantQueueStatus } from "@/lib/adapters/request-status";
-
-type FundHealth = "HEALTHY" | "LOW" | "CRITICAL";
-
 
 function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.items;
@@ -94,29 +91,6 @@ function parsePayrollStatus(value: string | null): PayrollStatus | null {
   return null;
 }
 
-function getFundHealth(balance: number): FundHealth {
-  if (balance >= 500_000_000) return "HEALTHY";
-  if (balance >= 100_000_000) return "LOW";
-  return "CRITICAL";
-}
-
-function getFundHealthClass(health: FundHealth): string {
-  switch (health) {
-    case "HEALTHY":
-      return "bg-emerald-100 border-emerald-200 text-emerald-700";
-    case "LOW":
-      return "bg-amber-100 border-amber-200 text-amber-700";
-    case "CRITICAL":
-      return "bg-rose-100 border-rose-200 text-rose-700";
-    default:
-      return "bg-slate-100 border-slate-200 text-slate-600";
-  }
-}
-
-function getFundProgress(balance: number): number {
-  const safe = Math.max(0, balance);
-  return Math.min(100, Math.round((safe / 1_500_000_000) * 100));
-}
 
 const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
   { key: "ytd",    label: "Năm nay" },
@@ -267,7 +241,6 @@ export function AccountantDashboard() {
 
   const fundBalance = dashboard?.systemFundBalance ?? 0;
   const health = getFundHealth(fundBalance);
-  const fundProgress = getFundProgress(fundBalance);
 
   const payrollStatus = useMemo(() => {
     if (latestPayroll) return latestPayroll.status;
@@ -332,23 +305,16 @@ export function AccountantDashboard() {
           </span>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-600">
-            <span>Mức quỹ hiện tại</span>
-            <span>{fundProgress}%</span>
-          </div>
-          <div className="h-3 rounded-full border border-slate-200 bg-white overflow-hidden">
-            <div
-              className={`h-full ${
-                health === "HEALTHY"
-                  ? "bg-emerald-500"
-                  : health === "LOW"
-                    ? "bg-amber-500"
-                    : "bg-rose-500"
-              }`}
-              style={{ width: `${fundProgress}%` }}
-            />
-          </div>
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className={`w-2 h-2 rounded-full ${
+            health === "HEALTHY" ? "bg-emerald-500" :
+            health === "LOW"     ? "bg-amber-500"   : "bg-rose-500"
+          }`} />
+          <span>
+            {health === "HEALTHY" ? "Quỹ ổn định — đủ khả năng thanh toán" :
+             health === "LOW"     ? "Quỹ thấp — nên xem xét nạp thêm"      :
+                                    "Quỹ nguy hiểm — cần nạp ngay"}
+          </span>
         </div>
       </div>
 

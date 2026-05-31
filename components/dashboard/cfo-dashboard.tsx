@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiError, api } from "@/lib/api-client";
-import { formatCurrency, formatRelativeTime } from "@/lib/format";
+import { formatCurrency, formatRelativeTime, getFundHealth, getFundHealthStyle } from "@/lib/format";
 import {
   AdminApprovalListItem,
   CfoDashboardResponse,
@@ -12,35 +12,6 @@ import {
   PaginatedResponse,
 } from "@/types";
 
-function getFundHealth(balance: number): {
-  label: string;
-  tone: string;
-  borderTone: string;
-  bgTone: string;
-} {
-  if (balance >= 500_000_000) {
-    return {
-      label: "HEALTHY",
-      tone: "text-emerald-700",
-      borderTone: "border-emerald-300",
-      bgTone: "bg-emerald-50",
-    };
-  }
-  if (balance >= 100_000_000) {
-    return {
-      label: "LOW",
-      tone: "text-amber-700",
-      borderTone: "border-amber-300",
-      bgTone: "bg-amber-50",
-    };
-  }
-  return {
-    label: "CRITICAL",
-    tone: "text-rose-700",
-    borderTone: "border-rose-300",
-    bgTone: "bg-rose-50",
-  };
-}
 
 function StatCard({
   title,
@@ -188,7 +159,7 @@ export function CfoDashboard() {
   );
 
   const health = useMemo(
-    () => getFundHealth(dashboard?.companyFundBalance ?? 0),
+    () => getFundHealthStyle(getFundHealth(dashboard?.companyFundBalance ?? 0)),
     [dashboard?.companyFundBalance],
   );
 

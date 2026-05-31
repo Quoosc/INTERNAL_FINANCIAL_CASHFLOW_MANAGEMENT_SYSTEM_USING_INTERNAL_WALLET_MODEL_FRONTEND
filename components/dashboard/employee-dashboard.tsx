@@ -34,12 +34,6 @@ interface SpendingPoint {
   tamUng: number;
 }
 
-// =============================================================
-// Employee Dashboard Page
-// API: GET /dashboard/employee  (Sprint 9 — chưa sẵn sàng)
-//      GET /requests?status=PENDING&limit=3  (Sprint 5)
-// =============================================================
-
 function mapWalletResponse(wallet: WalletResponse): EmployeeDashboardResponse["wallet"] {
   return {
     balance: wallet.balance,
@@ -501,8 +495,8 @@ export function EmployeeDashboard() {
                   color: "#1e293b",
                   fontSize: "12px",
                 }}
-                formatter={(value: number, name: string) => [
-                  formatCurrency(value),
+                formatter={(value, name) => [
+                  formatCurrency(Number(value)),
                   name === "chiTieu" ? "Chi phí" : "Tạm ứng",
                 ]}
                 labelStyle={{ color: "#94a3b8", marginBottom: 4 }}

@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
-import { formatCurrency, formatRelativeTime } from "@/lib/format";
+import { formatCurrency, formatRelativeTime, getBurnClass } from "@/lib/format";
 import {
   PaginatedResponse,
   RequestType,
@@ -76,12 +76,6 @@ function getBurnPercent(project: TLProjectListItem): number {
     100,
     Math.round((project.totalSpent / project.totalBudget) * 100),
   );
-}
-
-function getBurnBarClass(percent: number): string {
-  if (percent >= 85) return "bg-rose-500";
-  if (percent >= 65) return "bg-amber-500";
-  return "bg-emerald-500";
 }
 
 function pickItems<T>(payload: PaginatedResponse<T> | T[]): T[] {
@@ -475,7 +469,7 @@ export function TeamLeaderDashboard() {
                       </div>
                       <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
                         <div
-                          className={`h-full ${getBurnBarClass(burn)}`}
+                          className={`h-full ${getBurnClass(burn)}`}
                           style={{ width: `${burn}%` }}
                         />
                       </div>

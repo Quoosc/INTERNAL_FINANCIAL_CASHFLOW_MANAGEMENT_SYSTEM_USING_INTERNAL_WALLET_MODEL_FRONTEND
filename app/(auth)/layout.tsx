@@ -2,6 +2,8 @@
 
 import React from "react";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ToastProvider } from "@/contexts/toast-context";
+import { ToastStack } from "@/components/ui/toast";
 
 // =============================================================
 // Auth Layout - Wrapper for Login / Change-password / Create-pin
@@ -15,7 +17,12 @@ export default function AuthLayout({
 }) {
   return (
     <AuthProvider>
-      <div className="min-h-screen">{children}</div>
+      <ToastProvider>
+        <div className="min-h-screen">
+          {children}
+          <ToastStack />
+        </div>
+      </ToastProvider>
     </AuthProvider>
   );
 }

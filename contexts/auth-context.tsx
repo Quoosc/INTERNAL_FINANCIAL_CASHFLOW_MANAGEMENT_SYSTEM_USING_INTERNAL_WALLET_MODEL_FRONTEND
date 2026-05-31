@@ -95,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     await authLogout();
     localStorage.removeItem("user_info");
+    sessionStorage.setItem("auth_toast", "logout");
     setState({ user: null, isAuthenticated: false, isLoading: false });
     window.location.href = "/login";
   }, []);

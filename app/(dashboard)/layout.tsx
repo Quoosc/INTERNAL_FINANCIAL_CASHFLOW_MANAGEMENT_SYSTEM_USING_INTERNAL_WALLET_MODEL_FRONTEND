@@ -422,7 +422,7 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
             },
             {
               label: "Quỹ hệ thống",
-              href: "/admin/system-fund",
+              href: "/accountant/system-fund",
               icon: icons.systemFund,
             },
           ],
@@ -487,12 +487,6 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
               label: "Quỹ hệ thống",
               href: "/cfo/system-fund",
               icon: icons.systemFund,
-            },
-            { label: "Cấu hình", href: "/cfo/settings", icon: icons.settings },
-            {
-              label: "Nhật ký hệ thống",
-              href: "/cfo/audit-logs",
-              icon: icons.auditLogs,
             },
           ],
         },
@@ -612,7 +606,7 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
           {navGroups.map((group) => (
             <div key={group.label}>
               {!isCollapsed && (
-                <p className="text-[10px] uppercase tracking-wider text-blue-200/50 font-semibold mb-1.5 px-3">
+                <p className="text-[11px] uppercase tracking-wider text-blue-200/60 font-bold mb-1.5 px-3">
                   {group.label}
                 </p>
               )}
@@ -625,7 +619,7 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
                       key={item.href}
                       href={item.href}
                       title={isCollapsed ? item.label : undefined}
-                      className={`relative flex items-center rounded-lg text-sm font-medium transition-all duration-150 ${isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3"} ${
+                      className={`relative flex items-center rounded-xl text-base font-semibold transition-all duration-150 [&>svg]:h-6 [&>svg]:w-6 ${isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3.5"} ${
                         active
                           ? "bg-white/15 text-white"
                           : "text-blue-100 hover:text-white hover:bg-white/10"
@@ -636,8 +630,8 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
                       )}
                       {item.icon}
                       {!isCollapsed && (
-                        <span className="flex items-center gap-2">
-                          <span>{item.label}</span>
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="truncate">{item.label}</span>
                           {item.href === "/notifications" && unreadCount > 0 && (
                             <span className="inline-flex min-w-5 h-5 px-1.5 items-center justify-center rounded-full bg-rose-500 text-white text-[11px] font-semibold leading-none">
                               {unreadCount > 99 ? "99+" : unreadCount}
@@ -674,17 +668,17 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: ()
             {!isCollapsed && (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.fullName ?? "User"}</p>
-                  <p className="text-xs text-blue-200/70 truncate">
+                  <p className="text-base font-semibold text-white truncate">{user?.fullName ?? "User"}</p>
+                  <p className="text-sm text-blue-100/80 truncate">
                     {user?.role ? (ROLE_LABELS[user.role as RoleName] ?? user.role) : "—"}
                   </p>
                 </div>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="text-blue-200/70 hover:text-rose-300 transition-colors p-1 shrink-0"
+                  className="rounded-xl border border-rose-300/40 bg-rose-500/20 p-2 text-rose-100 shadow-sm shadow-rose-950/20 transition-colors hover:bg-rose-500 hover:text-white shrink-0"
                   title="Đăng xuất"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                 </button>

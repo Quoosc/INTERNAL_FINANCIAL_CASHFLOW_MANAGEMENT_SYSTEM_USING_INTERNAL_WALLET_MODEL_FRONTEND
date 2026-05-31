@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
+  AdvanceBalanceItem,
   CreateRequestBody,
   ExpenseCategoryResponse,
   FileStorageRequest,
@@ -29,6 +30,7 @@ interface CategoryOption {
   id: number;
   name: string;
 }
+
 
 interface UploadSignatureResponse {
   signature: string;
@@ -177,14 +179,22 @@ export default function NewRequestPage() {
   const [phases, setPhases] = useState<ProjectPhasesResponse | null>(null);
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
 
+  const [advanceOptions, setAdvanceOptions] = useState<AdvanceBalanceItem[]>([]);
+  const [advanceBalanceId, setAdvanceBalanceId] = useState<number | undefined>(undefined);
+  const [loadingAdvances, setLoadingAdvances] = useState(false);
+
   const [files, setFiles] = useState<UploadFileItem[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
 
+  const isReimburseType = form.type === RequestType.REIMBURSE;
   const isProjectBasedType = useMemo(
-    () => form.type === RequestType.ADVANCE || form.type === RequestType.EXPENSE,
+    () =>
+      form.type === RequestType.ADVANCE ||
+      form.type === RequestType.EXPENSE ||
+      form.type === RequestType.REIMBURSE,
     [form.type]
   );
 
@@ -195,12 +205,15 @@ export default function NewRequestPage() {
       setLoading(true);
 
       try {
-        const projectsRes = await api.get<PaginatedResponse<ProjectListItem>>(
-          "/api/v1/projects?page=1&limit=100"
+        const projectsRes = await api.get<ProjectListItem[] | PaginatedResponse<ProjectListItem>>(
+          "/api/v1/projects"
         );
 
         if (cancelled) return;
-        setProjects(projectsRes.data.items);
+        const projectList = Array.isArray(projectsRes.data)
+          ? projectsRes.data
+          : (projectsRes.data as PaginatedResponse<ProjectListItem>).items ?? [];
+        setProjects(projectList);
       } catch (err) {
         if (cancelled) return;
         setProjects([]);
@@ -321,6 +334,46 @@ export default function NewRequestPage() {
   }, [form.phaseId, isProjectBasedType, toast]);
 
   useEffect(() => {
+    if (!isReimburseType) {
+      setAdvanceOptions([]);
+      setAdvanceBalanceId(undefined);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadAdvanceBalances = async () => {
+      setLoadingAdvances(true);
+
+      try {
+        const res = await api.get<AdvanceBalanceItem[]>("/api/v1/requests/my-advance-balances");
+
+        if (cancelled) return;
+
+        setAdvanceOptions(res.data);
+      } catch (err) {
+        if (cancelled) return;
+
+        setAdvanceOptions([]);
+
+        if (err instanceof ApiError) {
+          toast.error(err.apiMessage);
+        } else {
+          toast.error("Không thể tải danh sách tạm ứng.");
+        }
+      } finally {
+        if (!cancelled) setLoadingAdvances(false);
+      }
+    };
+
+    void loadAdvanceBalances();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isReimburseType, toast]);
+
+  useEffect(() => {
     return () => {
       files.forEach((item) => {
         if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
@@ -436,6 +489,21 @@ export default function NewRequestPage() {
       return false;
     }
 
+    if (isReimburseType && !advanceBalanceId) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        advanceBalanceId: "Vui lòng chọn khoản tạm ứng cần hoàn.",
+      }));
+      return false;
+    }
+
+    const requiresAttachment =
+      form.type === RequestType.EXPENSE || form.type === RequestType.REIMBURSE;
+    if (requiresAttachment && files.length === 0) {
+      toast.error("Yêu cầu Chi phí và Hoàn ứng bắt buộc phải đính kèm ít nhất 1 chứng từ.");
+      return false;
+    }
+
     setFieldErrors({});
     return true;
   };
@@ -462,6 +530,7 @@ export default function NewRequestPage() {
         projectId: form.projectId,
         phaseId: form.phaseId,
         categoryId: form.categoryId,
+        advanceBalanceId: isReimburseType ? advanceBalanceId : undefined,
         description: descriptionParts.join("\n"),
         attachments: uploadedFiles.length > 0 ? uploadedFiles : undefined,
       };
@@ -651,6 +720,40 @@ export default function NewRequestPage() {
             </select>
             {fieldErrors.categoryId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.categoryId}</p>}
           </div>
+
+          {isReimburseType && (
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-2">
+                Khoản tạm ứng cần hoàn <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={advanceBalanceId?.toString() ?? ""}
+                onChange={(e) => {
+                  const id = Number(e.target.value) || undefined;
+                  setAdvanceBalanceId(id);
+                  setFieldErrors((p) => ({ ...p, advanceBalanceId: undefined }));
+                }}
+                disabled={loadingAdvances}
+                className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500/40 ${fieldErrors.advanceBalanceId ? "border-rose-300" : "border-slate-200"}`}
+              >
+                <option value="">
+                  {loadingAdvances ? "Đang tải..." : advanceOptions.length === 0 ? "Không có khoản tạm ứng chưa hoàn" : "Chọn khoản tạm ứng"}
+                </option>
+                {advanceOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.requestCode} — còn {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(opt.remainingAmount)}
+                    {opt.status === "PARTIALLY_SETTLED" ? " (hoàn một phần)" : ""}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.advanceBalanceId && (
+                <p className="text-xs text-rose-600 mt-1">{fieldErrors.advanceBalanceId}</p>
+              )}
+              {advanceBalanceId && (
+                <p className="text-xs text-teal-600 mt-1">✓ Đã chọn khoản tạm ứng</p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-2">Ngày chi tiêu</label>

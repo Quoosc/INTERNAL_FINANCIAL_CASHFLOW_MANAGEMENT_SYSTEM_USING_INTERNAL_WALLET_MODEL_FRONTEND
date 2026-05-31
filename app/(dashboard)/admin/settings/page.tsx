@@ -98,6 +98,39 @@ function getSettingMeta(key: string): SettingDisplayMeta {
   );
 }
 
+type SettingValidation = { min?: number; max?: number; isInt?: boolean };
+
+const SETTING_VALIDATION: Record<string, SettingValidation> = {
+  PIN_MAX_RETRY:           { min: 1, max: 10, isInt: true },
+  PIN_LOCK_MINUTES:        { min: 1, max: 1440, isInt: true },
+  MAX_ATTACHMENT_SIZE_MB:  { min: 1, max: 100, isInt: true },
+  MAX_ATTACHMENT_COUNT:    { min: 1, max: 20, isInt: true },
+  JWT_REFRESH_EXPIRY_DAYS: { min: 1, max: 365, isInt: true },
+  NOTIFICATION_RETAIN_DAYS:{ min: 1, max: 365, isInt: true },
+  WITHDRAW_LIMIT_EMPLOYEE: { min: 0, isInt: true },
+  WITHDRAW_LIMIT_TEAM_LEADER:{ min: 0, isInt: true },
+  WITHDRAW_LIMIT_MANAGER:  { min: 0, isInt: true },
+  WITHDRAW_LIMIT_ACCOUNTANT:{ min: 0, isInt: true },
+  WITHDRAW_LIMIT_CFO:      { min: 0, isInt: true },
+  WITHDRAW_LIMIT_ADMIN:    { min: 0, isInt: true },
+};
+
+function validateSetting(key: string, value: string): string | null {
+  const rules = SETTING_VALIDATION[key];
+  if (!rules) return null;
+
+  if (rules.isInt) {
+    if (!/^-?\d+$/.test(value.trim())) return "Giá trị phải là số nguyên.";
+    const n = parseInt(value, 10);
+    if (rules.min !== undefined && n < rules.min)
+      return `Giá trị tối thiểu là ${rules.min}.`;
+    if (rules.max !== undefined && n > rules.max)
+      return `Giá trị tối đa là ${rules.max}.`;
+  }
+
+  return null;
+}
+
 function isVisibleSetting(item: SystemConfigItem): boolean {
   return Object.prototype.hasOwnProperty.call(VISIBLE_SETTING_META, item.key);
 }
@@ -180,6 +213,12 @@ export default function AdminSettingsPage() {
   const handleSaveItem = async (key: string) => {
     const item = items.find((entry) => entry.key === key);
     if (!item) return;
+
+    const validationError = validateSetting(item.key, item.value);
+    if (validationError) {
+      toast.error(`${getSettingMeta(item.key).label}: ${validationError}`);
+      return;
+    }
 
     setSavingKey(key);
 
@@ -358,11 +397,29 @@ function SettingsGroup({
                   <option value="true">Bật</option>
                 </select>
               ) : (
-                <input
-                  value={item.value}
-                  onChange={(event) => onChange(item.key, event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
+                <div className="space-y-1">
+                  <input
+                    value={item.value}
+                    onChange={(event) => onChange(item.key, event.target.value)}
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
+                      validateSetting(item.key, item.value)
+                        ? "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+                        : "border-slate-200 focus:border-blue-400 focus:ring-blue-100"
+                    }`}
+                  />
+                  {(() => {
+                    const rules = SETTING_VALIDATION[item.key];
+                    const err = validateSetting(item.key, item.value);
+                    if (err) return <p className="text-xs text-rose-600">{err}</p>;
+                    if (rules?.min !== undefined || rules?.max !== undefined) {
+                      const parts = [];
+                      if (rules.min !== undefined) parts.push(`≥ ${rules.min}`);
+                      if (rules.max !== undefined) parts.push(`≤ ${rules.max}`);
+                      return <p className="text-xs text-slate-400">Cho phép: {parts.join(", ")}</p>;
+                    }
+                    return null;
+                  })()}
+                </div>
               )}
               <button
                 type="button"

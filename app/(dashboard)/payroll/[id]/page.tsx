@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/format";
@@ -11,13 +11,8 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-interface BreakdownItem {
-  label: string;
-  amount: number;
-}
-
 function statusLabel(status: PayslipStatus): string {
-  return status === PayslipStatus.PAID ? "PAID" : "DRAFT";
+  return status === PayslipStatus.PAID ? "Đã thanh toán" : "Chờ thanh toán";
 }
 
 function statusClass(status: PayslipStatus): string {
@@ -28,41 +23,7 @@ function statusClass(status: PayslipStatus): string {
 
 function getPayDate(payslip: PayslipDetailResponse): string {
   if (payslip.status !== PayslipStatus.PAID) return "—";
-
-  const date = new Date(payslip.year, payslip.month - 1, 28);
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-}
-
-function buildAllowanceBreakdown(totalAllowance: number): BreakdownItem[] {
-  if (totalAllowance <= 0) return [];
-
-  const transport = Math.round(totalAllowance * 0.45);
-  const meal = Math.round(totalAllowance * 0.35);
-  const other = totalAllowance - transport - meal;
-
-  return [
-    { label: "Phụ cấp đi lại", amount: transport },
-    { label: "Phụ cấp ăn trưa", amount: meal },
-    { label: "Phụ cấp khác", amount: other },
-  ];
-}
-
-function buildDeductionBreakdown(totalDeduction: number): BreakdownItem[] {
-  if (totalDeduction <= 0) return [];
-
-  const tax = Math.round(totalDeduction * 0.5);
-  const insurance = Math.round(totalDeduction * 0.3);
-  const other = totalDeduction - tax - insurance;
-
-  return [
-    { label: "Thuế TNCN", amount: tax },
-    { label: "Bảo hiểm", amount: insurance },
-    { label: "Khấu trừ khác", amount: other },
-  ];
+  return `Tháng ${payslip.month}/${payslip.year}`;
 }
 
 export default function PayslipDetailPage({ params }: PageProps) {
@@ -103,16 +64,6 @@ export default function PayslipDetailPage({ params }: PageProps) {
       cancelled = true;
     };
   }, [id, toast]);
-
-  const allowanceItems = useMemo(
-    () => buildAllowanceBreakdown(payslip?.allowance ?? 0),
-    [payslip?.allowance]
-  );
-
-  const deductionItems = useMemo(
-    () => buildDeductionBreakdown(payslip?.deduction ?? 0),
-    [payslip?.deduction]
-  );
 
   if (loading) {
     return (
@@ -228,11 +179,9 @@ export default function PayslipDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Earnings</h2>
 
             <LineRow label="Lương cơ bản" value={payslip.baseSalary} positive />
-
-            {allowanceItems.map((item) => (
-              <LineRow key={item.label} label={item.label} value={item.amount} positive />
-            ))}
-
+            {payslip.allowance > 0 && (
+              <LineRow label="Phụ cấp" value={payslip.allowance} positive />
+            )}
             <LineRow label="Thưởng" value={payslip.bonus} positive />
 
             <div className="pt-2 border-t border-slate-200 print:border-gray-300">
@@ -243,10 +192,8 @@ export default function PayslipDetailPage({ params }: PageProps) {
           <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-3 print:bg-white print:border-gray-300">
             <h2 className="text-lg font-semibold text-slate-900 print:text-gray-900">Deductions</h2>
 
-            {deductionItems.length > 0 ? (
-              deductionItems.map((item) => (
-                <LineRow key={item.label} label={item.label} value={item.amount} negative />
-              ))
+            {payslip.deduction > 0 ? (
+              <LineRow label="Khấu trừ cố định" value={payslip.deduction} negative />
             ) : (
               <p className="text-sm text-slate-500 print:text-gray-600">Không có khấu trừ cố định.</p>
             )}

@@ -348,24 +348,10 @@ export default function RequestDetailPage({ params }: PageProps) {
       setEditing(false);
       toast.success("Yêu cầu đã được cập nhật thành công!");
     } catch (err) {
-      setRequest((prev) =>
-        prev
-          ? {
-              ...prev,
-              amount: amountNumber,
-              description: mergedDescription,
-              updatedAt: new Date().toISOString(),
-            }
-          : prev,
-      );
-      setEditing(false);
-
       if (err instanceof ApiError) {
         toast.error(err.apiMessage);
       } else {
-        toast.error(
-          "Không thể cập nhật qua API, đã cập nhật dữ liệu mẫu trên giao diện.",
-        );
+        toast.error("Không thể cập nhật yêu cầu. Vui lòng thử lại.");
       }
     } finally {
       setActionLoading(false);

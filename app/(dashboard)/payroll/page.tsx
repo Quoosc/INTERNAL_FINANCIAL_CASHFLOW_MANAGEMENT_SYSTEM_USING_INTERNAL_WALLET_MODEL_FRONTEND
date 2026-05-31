@@ -14,13 +14,6 @@ interface PayrollFilters {
 
 const PAGE_LIMIT = 12;
 
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-}
 
 function getStatusClass(status: PayslipStatus): string {
   if (status === PayslipStatus.PAID) {
@@ -35,11 +28,7 @@ function getStatusLabel(status: PayslipStatus): string {
 
 function getPayDate(item: PayslipListItem): string {
   if (item.status !== PayslipStatus.PAID) return "—";
-  return formatDate(new Date(item.year, item.month - 1, 28));
-}
-
-function getGrossSalary(item: PayslipListItem): number {
-  return Math.round(item.finalNetSalary * 1.15);
+  return `Tháng ${item.month}/${item.year}`;
 }
 
 const MONTH_COLORS = [
@@ -264,7 +253,7 @@ export default function PayrollPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             </span>
           </div>
-          <p className="text-sm text-slate-500">Tổng đã nhận (PAID)</p>
+          <p className="text-sm text-slate-500">Tổng đã nhận</p>
           <p className="text-3xl font-bold text-emerald-700 mt-1">
             {formatCurrency(totalEarned)}
           </p>
@@ -308,8 +297,8 @@ export default function PayrollPage() {
             className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="">Tất cả trạng thái</option>
-            <option value={PayslipStatus.DRAFT}>DRAFT</option>
-            <option value={PayslipStatus.PAID}>PAID</option>
+            <option value={PayslipStatus.DRAFT}>Chờ thanh toán</option>
+            <option value={PayslipStatus.PAID}>Đã thanh toán</option>
           </select>
         </div>
       </div>
@@ -323,10 +312,7 @@ export default function PayrollPage() {
                   Kỳ lương
                 </th>
                 <th className="px-4 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Gross Salary
-                </th>
-                <th className="px-4 py-3.5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Net Salary
+                  Thực lĩnh (Net)
                 </th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Trạng thái
@@ -398,9 +384,6 @@ export default function PayrollPage() {
                           </p>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm text-slate-700 font-medium">
-                      {formatCurrency(getGrossSalary(item))}
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-slate-900 font-semibold">
                       {formatCurrency(item.finalNetSalary)}

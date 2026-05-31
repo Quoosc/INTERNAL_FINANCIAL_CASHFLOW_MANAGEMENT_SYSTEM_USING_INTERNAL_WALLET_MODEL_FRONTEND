@@ -7,9 +7,8 @@ import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 import {
-  TransactionResponse,
-  TransactionStatus,
-  TransactionType,
+  LedgerEntryResponse,
+  TransactionDirection,
 } from "@/types";
 
 const PAGE_SIZE = 10;
@@ -31,99 +30,23 @@ interface LegacyPaginated<T> {
 }
 
 type WalletTransactionsApi =
-  | SpringPage<TransactionResponse>
-  | LegacyPaginated<TransactionResponse>
-  | TransactionResponse[];
+  | SpringPage<LedgerEntryResponse>
+  | LegacyPaginated<LedgerEntryResponse>
+  | LedgerEntryResponse[];
 
 interface TransactionFiltersState {
-  type?: TransactionType;
   from?: string;
   to?: string;
-  search?: string;
 }
 
-function getTypeLabel(type: TransactionType): string {
-  switch (type) {
-    case TransactionType.DEPOSIT:
-      return "Nạp tiền";
-    case TransactionType.WITHDRAW:
-      return "Rút tiền";
-    case TransactionType.SYSTEM_TOPUP:
-      return "Nạp quỹ công ty";
-    case TransactionType.REQUEST_PAYMENT:
-      return "Thanh toán yêu cầu";
-    case TransactionType.PAYSLIP_PAYMENT:
-      return "Nhận lương";
-    case TransactionType.ADVANCE_RETURN:
-      return "Hoàn tạm ứng";
-    case TransactionType.REVERSAL:
-      return "Hoàn tiền";
-    case TransactionType.DEPT_QUOTA_ALLOCATION:
-      return "Cấp quỹ phòng ban";
-    case TransactionType.PROJECT_QUOTA_ALLOCATION:
-      return "Cấp quỹ dự án";
-    case TransactionType.SYSTEM_ADJUSTMENT:
-      return "Điều chỉnh hệ thống";
-    default:
-      return type;
-  }
+function getDirectionLabel(direction: TransactionDirection): string {
+  return direction === TransactionDirection.CREDIT ? "Tiền vào" : "Tiền ra";
 }
 
-function getTypeBadgeClass(type: TransactionType): string {
-  switch (type) {
-    case TransactionType.DEPOSIT:
-    case TransactionType.PAYSLIP_PAYMENT:
-    case TransactionType.SYSTEM_TOPUP:
-      return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    case TransactionType.WITHDRAW:
-      return "bg-rose-50 text-rose-700 border-rose-200";
-    case TransactionType.REQUEST_PAYMENT:
-    case TransactionType.ADVANCE_RETURN:
-      return "bg-amber-50 text-amber-700 border-amber-200";
-    default:
-      return "bg-slate-500/15 text-slate-600 border-slate-500/30";
-  }
-}
-
-function getStatusLabel(status: TransactionStatus): string {
-  switch (status) {
-    case TransactionStatus.SUCCESS:
-      return "Thành công";
-    case TransactionStatus.PENDING:
-      return "Đang chờ";
-    case TransactionStatus.FAILED:
-      return "Thất bại";
-    case TransactionStatus.CANCELLED:
-      return "Đã hủy";
-    default:
-      return status;
-  }
-}
-
-function getStatusClass(status: TransactionStatus): string {
-  switch (status) {
-    case TransactionStatus.SUCCESS:
-      return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    case TransactionStatus.PENDING:
-      return "bg-amber-50 text-amber-700 border-amber-200";
-    case TransactionStatus.FAILED:
-      return "bg-rose-50 text-rose-700 border-rose-200";
-    case TransactionStatus.CANCELLED:
-      return "bg-slate-500/15 text-slate-600 border-slate-500/30";
-    default:
-      return "bg-slate-500/15 text-slate-600 border-slate-500/30";
-  }
-}
-
-function parseTypeValue(typeParam: string | null): TransactionType | undefined {
-  if (!typeParam) return undefined;
-
-  const validTypes = new Set<string>(Object.values(TransactionType));
-  if (validTypes.has(typeParam)) {
-    return typeParam as TransactionType;
-  }
-
-  return undefined;
+function getDirectionBadgeClass(direction: TransactionDirection): string {
+  return direction === TransactionDirection.CREDIT
+    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+    : "bg-rose-50 text-rose-700 border-rose-200";
 }
 
 function getInitialState(searchParams: {
@@ -135,10 +58,8 @@ function getInitialState(searchParams: {
 
   return {
     filters: {
-      type: parseTypeValue(searchParams.get("type")),
       from: searchParams.get("from") ?? undefined,
       to: searchParams.get("to") ?? undefined,
-      search: searchParams.get("search") ?? undefined,
     } as TransactionFiltersState,
     page: parsedPage,
   };
@@ -182,16 +103,13 @@ export default function TransactionsPage() {
     [searchParams],
   );
 
-  const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
+  const [transactions, setTransactions] = useState<LedgerEntryResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(initialState.page);
   const [totalPages, setTotalPages] = useState(1);
 
   const [filters, setFilters] = useState<TransactionFiltersState>(
     initialState.filters,
-  );
-  const [searchInput, setSearchInput] = useState(
-    initialState.filters.search ?? "",
   );
 
   const [loading, setLoading] = useState(false);
@@ -201,10 +119,8 @@ export default function TransactionsPage() {
     (nextFilters: TransactionFiltersState, nextPage: number) => {
       const params = new URLSearchParams();
 
-      if (nextFilters.type) params.set("type", nextFilters.type);
       if (nextFilters.from) params.set("from", nextFilters.from);
       if (nextFilters.to) params.set("to", nextFilters.to);
-      if (nextFilters.search) params.set("search", nextFilters.search);
       if (nextPage > 0) params.set("page", String(nextPage + 1));
 
       const query = params.toString();
@@ -223,10 +139,8 @@ export default function TransactionsPage() {
 
       try {
         const query = new URLSearchParams();
-        if (filters.type) query.set("type", filters.type);
         if (filters.from) query.set("from", filters.from);
         if (filters.to) query.set("to", filters.to);
-        if (filters.search) query.set("search", filters.search);
         query.set("page", String(page));
         query.set("size", String(PAGE_SIZE));
 
@@ -284,17 +198,6 @@ export default function TransactionsPage() {
     };
   }, [page]);
 
-  const handleTypeChange = (value: string) => {
-    const nextFilters: TransactionFiltersState = {
-      ...filters,
-      type: value === "ALL" ? undefined : (value as TransactionType),
-    };
-
-    setFilters(nextFilters);
-    setPage(0);
-    syncUrl(nextFilters, 0);
-  };
-
   const handleDateChange = (key: "from" | "to", value: string) => {
     const nextFilters: TransactionFiltersState = {
       ...filters,
@@ -306,23 +209,9 @@ export default function TransactionsPage() {
     syncUrl(nextFilters, 0);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const nextFilters: TransactionFiltersState = {
-      ...filters,
-      search: searchInput.trim() || undefined,
-    };
-
-    setFilters(nextFilters);
-    setPage(0);
-    syncUrl(nextFilters, 0);
-  };
-
   const handleResetFilters = () => {
     const resetFilters: TransactionFiltersState = {};
     setFilters(resetFilters);
-    setSearchInput("");
     setPage(0);
     syncUrl(resetFilters, 0);
   };
@@ -354,35 +243,26 @@ export default function TransactionsPage() {
         </p>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-4 md:p-5 space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <select
-            value={filters.type ?? "ALL"}
-            onChange={(e) => handleTypeChange(e.target.value)}
-            className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-          >
-            <option value="ALL">Tất cả loại</option>
-            {Object.values(TransactionType).map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-
-          <input
-            type="date"
-            value={filters.from ?? ""}
-            onChange={(e) => handleDateChange("from", e.target.value)}
-            className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-          />
-
-          <input
-            type="date"
-            value={filters.to ?? ""}
-            onChange={(e) => handleDateChange("to", e.target.value)}
-            className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-          />
-
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 md:p-5">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Từ ngày</label>
+            <input
+              type="date"
+              value={filters.from ?? ""}
+              onChange={(e) => handleDateChange("from", e.target.value)}
+              className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Đến ngày</label>
+            <input
+              type="date"
+              value={filters.to ?? ""}
+              onChange={(e) => handleDateChange("to", e.target.value)}
+              className="px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            />
+          </div>
           <button
             type="button"
             onClick={handleResetFilters}
@@ -391,22 +271,6 @@ export default function TransactionsPage() {
             Xóa bộ lọc
           </button>
         </div>
-
-        <form onSubmit={handleSearchSubmit} className="flex gap-2">
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Tìm theo mã giao dịch hoặc mô tả..."
-            className="flex-1 px-3 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-700 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
-          >
-            Tìm
-          </button>
-        </form>
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden">
@@ -421,13 +285,13 @@ export default function TransactionsPage() {
                   Loại
                 </th>
                 <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Mô tả
+                  Mã giao dịch
                 </th>
                 <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                   Số tiền
                 </th>
-                <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Trạng thái
+                <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Số dư sau
                 </th>
                 <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                   Chi tiết
@@ -465,35 +329,26 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex px-2 py-1 rounded-full border text-xs ${getTypeBadgeClass(tx.type)}`}
+                        className={`inline-flex px-2 py-1 rounded-full border text-xs ${getDirectionBadgeClass(tx.direction)}`}
                       >
-                        {getTypeLabel(tx.type)}
+                        {getDirectionLabel(tx.direction)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm text-slate-900 truncate max-w-[320px]">
-                        {tx.description}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {tx.transactionCode}
-                      </p>
+                      <p className="text-xs text-slate-900 font-mono">{tx.transactionCode}</p>
                     </td>
                     <td
-                      className={`px-4 py-3 text-right text-sm font-semibold ${tx.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                      className={`px-4 py-3 text-right text-sm font-semibold ${tx.direction === TransactionDirection.CREDIT ? "text-emerald-700" : "text-rose-700"}`}
                     >
-                      {tx.amount >= 0 ? "+" : ""}
+                      {tx.direction === TransactionDirection.CREDIT ? "+" : "-"}
                       {formatCurrency(tx.amount)}
                     </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2 py-1 rounded-full border text-xs ${getStatusClass(tx.status)}`}
-                      >
-                        {getStatusLabel(tx.status)}
-                      </span>
+                    <td className="px-4 py-3 text-right text-sm text-slate-600">
+                      {formatCurrency(tx.balanceAfter)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
-                        href={`/wallet/transactions/${tx.id}`}
+                        href={`/wallet/transactions/${tx.transactionId}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-100 border border-blue-200 text-blue-700 text-xs font-medium hover:bg-blue-50 transition-colors"
                       >
                         Xem chi tiết

@@ -21,6 +21,16 @@ import {
 
 const PAGE_LIMIT = 8;
 
+const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
+  [RequestStatus.PENDING]: "Chờ duyệt",
+  [RequestStatus.APPROVED_BY_TEAM_LEADER]: "TL đã duyệt — chờ giải ngân",
+  [RequestStatus.APPROVED_BY_MANAGER]: "Manager đã duyệt",
+  [RequestStatus.APPROVED_BY_CFO]: "CFO đã duyệt",
+  [RequestStatus.PAID]: "Đã chi trả",
+  [RequestStatus.REJECTED]: "Từ chối",
+  [RequestStatus.CANCELLED]: "Đã hủy",
+};
+
 function parseStatus(value: string | null): RequestStatus | undefined {
   if (!value) return undefined;
   const valid = new Set<string>(Object.values(RequestStatus));
@@ -296,7 +306,7 @@ export default function RequestsPage() {
             <option value="ALL">Tất cả trạng thái</option>
             {Object.values(RequestStatus).map((status) => (
               <option key={status} value={status}>
-                {status}
+                {REQUEST_STATUS_LABELS[status]}
               </option>
             ))}
           </select>
@@ -307,9 +317,9 @@ export default function RequestsPage() {
             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="ALL">Tất cả loại</option>
-            <option value={RequestType.ADVANCE}>ADVANCE</option>
-            <option value={RequestType.EXPENSE}>EXPENSE</option>
-            <option value={RequestType.REIMBURSE}>REIMBURSE</option>
+            <option value={RequestType.ADVANCE}>Tạm ứng</option>
+            <option value={RequestType.EXPENSE}>Chi phí</option>
+            <option value={RequestType.REIMBURSE}>Hoàn ứng</option>
           </select>
 
           <input

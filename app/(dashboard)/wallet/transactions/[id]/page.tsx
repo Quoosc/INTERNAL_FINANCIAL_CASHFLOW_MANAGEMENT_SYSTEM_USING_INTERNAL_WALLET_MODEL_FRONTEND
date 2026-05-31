@@ -11,30 +11,28 @@ interface TransactionDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-
-
 function getTypeLabel(type: TransactionType): string {
   switch (type) {
     case TransactionType.DEPOSIT:
-      return "Nap tien";
+      return "Nạp tiền";
     case TransactionType.WITHDRAW:
-      return "Rut tien";
+      return "Rút tiền";
     case TransactionType.SYSTEM_TOPUP:
-      return "Nap quy cong ty";
+      return "Nạp quỹ công ty";
     case TransactionType.REQUEST_PAYMENT:
-      return "Thanh toan yeu cau";
+      return "Thanh toán yêu cầu";
     case TransactionType.PAYSLIP_PAYMENT:
-      return "Nhan luong";
+      return "Nhận lương";
     case TransactionType.ADVANCE_RETURN:
-      return "Hoan tam ung";
+      return "Hoàn tạm ứng";
     case TransactionType.REVERSAL:
-      return "Hoan tien";
+      return "Hoàn tiền";
     case TransactionType.DEPT_QUOTA_ALLOCATION:
-      return "Cap quy phong ban";
+      return "Cấp quỹ phòng ban";
     case TransactionType.PROJECT_QUOTA_ALLOCATION:
-      return "Cap quy du an";
+      return "Cấp quỹ dự án";
     case TransactionType.SYSTEM_ADJUSTMENT:
-      return "Dieu chinh he thong";
+      return "Điều chỉnh hệ thống";
     default:
       return type;
   }
@@ -43,15 +41,30 @@ function getTypeLabel(type: TransactionType): string {
 function getStatusLabel(status: TransactionStatus): string {
   switch (status) {
     case TransactionStatus.SUCCESS:
-      return "Thanh cong";
+      return "Thành công";
     case TransactionStatus.PENDING:
-      return "Dang cho";
+      return "Đang chờ";
     case TransactionStatus.FAILED:
-      return "That bai";
+      return "Thất bại";
     case TransactionStatus.CANCELLED:
-      return "Da huy";
+      return "Đã hủy";
     default:
       return status;
+  }
+}
+
+function getStatusClass(status: TransactionStatus): string {
+  switch (status) {
+    case TransactionStatus.SUCCESS:
+      return "bg-emerald-50 border-emerald-200 text-emerald-700";
+    case TransactionStatus.PENDING:
+      return "bg-amber-50 border-amber-200 text-amber-700";
+    case TransactionStatus.FAILED:
+      return "bg-rose-50 border-rose-200 text-rose-700";
+    case TransactionStatus.CANCELLED:
+      return "bg-slate-100 border-slate-200 text-slate-600";
+    default:
+      return "bg-slate-100 border-slate-200 text-slate-600";
   }
 }
 
@@ -78,7 +91,7 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Khong the tai chi tiet giao dich.");
+          toast.error("Không thể tải chi tiết giao dịch.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -100,8 +113,8 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Transaction detail</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Inspect transaction code, amount, type and processing timestamp.</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết giao dịch</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Kiểm tra mã giao dịch, số tiền, loại và thời gian xử lý.</p>
           </div>
         </div>
       </section>
@@ -113,41 +126,65 @@ export default function TransactionDetailPage({ params }: TransactionDetailPageP
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
         </svg>
-        Quay lai
+        Quay lại
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Chi tiet giao dich</h1>
-        <p className="text-slate-500 mt-1">Ma giao dich: {transaction?.transactionCode ?? id}</p>
+        <h1 className="text-2xl font-bold text-slate-900">Chi tiết giao dịch</h1>
+        <p className="text-slate-500 mt-1">Mã giao dịch: {transaction?.transactionCode ?? id}</p>
       </div>
 
       {loading ? (
         <div className="h-64 rounded-2xl bg-white animate-pulse" />
       ) : transaction ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-3">
-          <DetailRow label="Ma giao dich" value={transaction.transactionCode} />
-          <DetailRow label="Loai" value={getTypeLabel(transaction.type)} />
-          <DetailRow label="Trang thai" value={getStatusLabel(transaction.status)} />
-          <DetailRow label="So tien" value={formatCurrency(transaction.amount)} />
-          <DetailRow label="Mo ta" value={transaction.description || "-"} />
-          <DetailRow label="Thoi gian tao" value={formatDateTime(transaction.createdAt)} />
-          <DetailRow label="Reference ID" value={String(transaction.referenceId)} />
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <span className="text-sm font-semibold text-slate-900">{transaction.transactionCode}</span>
+            <span className={`inline-flex px-3 py-1 rounded-full border text-xs font-medium ${getStatusClass(transaction.status)}`}>
+              {getStatusLabel(transaction.status)}
+            </span>
+          </div>
+
+          <DetailRow label="Loại giao dịch" value={getTypeLabel(transaction.type)} />
+          <DetailRow
+            label="Số tiền"
+            value={`${transaction.amount >= 0 ? "+" : ""}${formatCurrency(transaction.amount)}`}
+            highlight={transaction.amount >= 0 ? "positive" : "negative"}
+          />
+          <DetailRow label="Mô tả" value={transaction.description || "—"} />
+          <DetailRow label="Thời gian tạo" value={formatDateTime(transaction.createdAt)} />
+          {transaction.referenceId != null && (
+            <DetailRow label="Reference ID" value={String(transaction.referenceId)} />
+          )}
         </div>
       ) : (
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600">
-          Khong tim thay giao dich.
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500">
+          Không tìm thấy giao dịch.
         </div>
       )}
-
     </div>
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: "positive" | "negative";
+}) {
+  const valueClass = highlight === "positive"
+    ? "text-emerald-700 font-semibold"
+    : highlight === "negative"
+      ? "text-rose-700 font-semibold"
+      : "text-slate-900 font-medium";
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm text-slate-900 font-medium mt-1 break-all">{value}</p>
+    <div className="flex items-start justify-between gap-4 py-2 border-b border-slate-50 last:border-0">
+      <p className="text-sm text-slate-500 shrink-0">{label}</p>
+      <p className={`text-sm text-right break-all ${valueClass}`}>{value}</p>
     </div>
   );
 }

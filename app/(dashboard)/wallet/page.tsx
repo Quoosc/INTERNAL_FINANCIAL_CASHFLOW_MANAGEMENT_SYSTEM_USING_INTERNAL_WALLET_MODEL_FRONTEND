@@ -13,10 +13,8 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { useToast } from "@/contexts/toast-context";
 import {
   DepositLogResponse,
-  PaginatedResponse,
-  TransactionResponse,
-  TransactionStatus,
-  TransactionType,
+  LedgerEntryResponse,
+  TransactionDirection,
   WithdrawRequestResponse,
 } from "@/types";
 
@@ -240,73 +238,17 @@ function WithdrawModal({ wallet: walletProp, onClose }: { wallet: { availableBal
   );
 }
 
-interface SpringPage<T> {
-  content: T[];
-}
-
 type WalletTransactionsResponse =
-  | PaginatedResponse<TransactionResponse>
-  | SpringPage<TransactionResponse>
-  | TransactionResponse[];
+  | { items: LedgerEntryResponse[]; total?: number }
+  | { content: LedgerEntryResponse[] }
+  | LedgerEntryResponse[];
 
-function normalizeTransactions(payload: WalletTransactionsResponse): TransactionResponse[] {
+function normalizeTransactions(payload: WalletTransactionsResponse): LedgerEntryResponse[] {
   if (Array.isArray(payload)) return payload;
   if ("content" in payload) return payload.content;
   return payload.items;
 }
 
-function getTransactionTypeLabel(type: TransactionType): string {
-  switch (type) {
-    case TransactionType.DEPOSIT:
-      return "Nạp tiền";
-    case TransactionType.WITHDRAW:
-      return "Rút tiền";
-    case TransactionType.SYSTEM_TOPUP:
-      return "Nạp quỹ công ty";
-    case TransactionType.REQUEST_PAYMENT:
-      return "Giải ngân yêu cầu";
-    case TransactionType.PAYSLIP_PAYMENT:
-      return "Nhận lương";
-    case TransactionType.ADVANCE_RETURN:
-      return "Hoàn trả tạm ứng";
-    case TransactionType.REVERSAL:
-      return "Hoàn tiền";
-    case TransactionType.SYSTEM_ADJUSTMENT:
-      return "Điều chỉnh hệ thống";
-    case TransactionType.DEPT_QUOTA_ALLOCATION:
-      return "Cấp quỹ phòng ban";
-    case TransactionType.PROJECT_QUOTA_ALLOCATION:
-      return "Cấp quỹ dự án";
-    default:
-      return type;
-  }
-}
-
-function getTransactionStatusLabel(status: TransactionStatus): string {
-  switch (status) {
-    case TransactionStatus.SUCCESS:
-      return "Thành công";
-    case TransactionStatus.PENDING:
-      return "Đang chờ";
-    case TransactionStatus.FAILED:
-      return "Thất bại";
-    default:
-      return status;
-  }
-}
-
-function getTransactionStatusClass(status: TransactionStatus): string {
-  switch (status) {
-    case TransactionStatus.SUCCESS:
-      return "text-emerald-700 bg-emerald-50 border-emerald-200";
-    case TransactionStatus.PENDING:
-      return "text-amber-700 bg-amber-50 border-amber-200";
-    case TransactionStatus.FAILED:
-      return "text-rose-700 bg-rose-50 border-rose-200";
-    default:
-      return "text-slate-500 bg-slate-500/10 border-slate-500/20";
-  }
-}
 
 function MetricCard({ label, value, tone = "blue" }: { label: string; value: string; tone?: "blue" | "amber" | "emerald" }) {
   const toneClass = {
@@ -330,7 +272,7 @@ export default function WalletPage() {
 
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
-  const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
+  const [transactions, setTransactions] = useState<LedgerEntryResponse[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const toast = useToast();
 
@@ -374,22 +316,6 @@ export default function WalletPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            {/* <button
-              type="button"
-              onClick={() => setShowWithdraw(true)}
-              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50"
-            >
-              Rút tiền
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowDeposit(true)}
-              className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
-            >
-              Nạp tiền
-            </button> */}
-          </div>
         </div>
       </section>
 
@@ -545,33 +471,29 @@ export default function WalletPage() {
         ) : (
           <div className="space-y-2">
             {transactions.map((transaction) => {
-              const positive = transaction.amount >= 0;
+              const isCredit = transaction.direction === TransactionDirection.CREDIT;
               return (
                 <button
                   key={transaction.id}
                   type="button"
-                  onClick={() => router.push(`/wallet/transactions/${transaction.id}`)}
+                  onClick={() => router.push(`/wallet/transactions/${transaction.transactionId}`)}
                   className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 hover:border-slate-200 hover:bg-blue-100/40 transition-all text-left"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-900 truncate">
-                      {getTransactionTypeLabel(transaction.type)}
+                      {isCredit ? "Tiền vào" : "Tiền ra"}
                     </p>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
-                      {transaction.description ?? "Không có mô tả"}
-                    </p>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">{transaction.transactionCode}</p>
                     <p className="text-xs text-slate-500 mt-1">{formatDateTime(transaction.createdAt)}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={`text-sm font-semibold ${positive ? "text-emerald-700" : "text-rose-700"}`}>
-                      {positive ? "+" : ""}
+                    <p className={`text-sm font-semibold ${isCredit ? "text-emerald-700" : "text-rose-700"}`}>
+                      {isCredit ? "+" : "-"}
                       {formatCurrency(transaction.amount)}
                     </p>
-                    <span
-                      className={`inline-flex px-2 py-0.5 mt-1 text-[11px] border rounded-full ${getTransactionStatusClass(transaction.status)}`}
-                    >
-                      {getTransactionStatusLabel(transaction.status)}
-                    </span>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Số dư: {formatCurrency(transaction.balanceAfter)}
+                    </p>
                   </div>
                 </button>
               );

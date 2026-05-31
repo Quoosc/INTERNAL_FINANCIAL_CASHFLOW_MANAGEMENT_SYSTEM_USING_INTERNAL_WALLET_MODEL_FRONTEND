@@ -477,6 +477,12 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
               />
             </div>
 
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <span className="font-semibold">⚠ Tự động chuyển tiền:</span>{" "}
+              Sau khi duyệt, hệ thống sẽ <strong>ngay lập tức</strong> trích{" "}
+              {formatCurrency(Number(approvedAmount) || 0)} từ quỹ phòng ban vào quỹ dự án — không thể hoàn tác.
+            </div>
+
             {actionError && (
               <div className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm">
                 {actionError}

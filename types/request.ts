@@ -117,6 +117,7 @@ export interface RequestDetailResponse extends RequestListItem {
   phaseCode: string | null;
   requesterId: number;
   requesterName: string;
+  advanceBalanceId: number | null;
   attachments: RequestAttachmentResponse[];
   timeline: RequestTimelineEntry[];
 }
@@ -130,6 +131,15 @@ export interface RequestSummaryResponse {
   totalRejected: number;
   totalPaid: number;
   totalCancelled: number;
+}
+
+/** GET /requests/my-advance-balances — một khoản tạm ứng chưa hoàn */
+export interface AdvanceBalanceItem {
+  id: number;
+  requestCode: string;
+  originalAmount: number;
+  remainingAmount: number;
+  status: "OUTSTANDING" | "PARTIALLY_SETTLED";
 }
 
 // --- Employee Request Body DTOs ---
@@ -146,6 +156,7 @@ export interface CreateRequestBody {
   projectId?: number;
   phaseId?: number;
   categoryId?: number;
+  advanceBalanceId?: number;
   amount: number;
   description: string;
   attachments?: FileStorageRequest[];

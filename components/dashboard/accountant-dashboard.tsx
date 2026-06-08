@@ -274,7 +274,7 @@ export function AccountantDashboard() {
             Bảng điều khiển Kế toán
           </h1>
           <p className="text-slate-500 mt-1">
-            Theo dõi giải ngân Flow 1, bảng lương và sổ cái hệ thống.
+            Theo dõi bảng lương và sổ cái hệ thống.
           </p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-100 text-cyan-700 text-sm font-medium">

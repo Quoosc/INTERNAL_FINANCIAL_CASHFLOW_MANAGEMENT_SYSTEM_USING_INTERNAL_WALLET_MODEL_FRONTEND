@@ -200,6 +200,7 @@ export interface WithdrawRequestResponse {
 export interface CreateWithdrawRequest {
   amount: number;       // min: 10000
   userNote?: string;    // optional
+  pin: string;           // 5 digits
 }
 
 /**

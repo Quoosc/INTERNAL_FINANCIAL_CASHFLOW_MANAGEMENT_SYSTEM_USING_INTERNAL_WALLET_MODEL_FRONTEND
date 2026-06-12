@@ -13,6 +13,8 @@ import { EmptyState } from "@/components/ui/loading-skeleton";
 import { useToast } from "@/contexts/toast-context";
 import { WithdrawRequestResponse, WithdrawStatus } from "@/types";
 
+const PIN_LENGTH = 5;
+
 function getWithdrawStatusClass(status: WithdrawStatus): string {
   if (status === WithdrawStatus.PENDING) {
     return "bg-amber-50 border-amber-200 text-amber-700";
@@ -59,6 +61,7 @@ export default function WithdrawPage() {
 
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<WithdrawRequestResponse | null>(null);
@@ -95,7 +98,11 @@ export default function WithdrawPage() {
     void loadWithdrawHistory();
   }, [fetchWallet]);
 
-  const validateAmount = (): boolean => {
+  const handlePinChange = (value: string) => {
+    setPin(value.replace(/\D/g, "").slice(0, PIN_LENGTH));
+  };
+
+  const validateForm = (): boolean => {
     if (!wallet) {
       setError("Không thể tải thông tin ví. Vui lòng thử lại.");
       return false;
@@ -116,6 +123,11 @@ export default function WithdrawPage() {
       return false;
     }
 
+    if (!new RegExp(`^\\d{${PIN_LENGTH}}$`).test(pin)) {
+      setError(`PIN giao dịch phải gồm đúng ${PIN_LENGTH} chữ số.`);
+      return false;
+    }
+
     return true;
   };
 
@@ -123,7 +135,7 @@ export default function WithdrawPage() {
     e.preventDefault();
     setError(null);
 
-    if (!validateAmount()) return;
+    if (!validateForm()) return;
 
     setLoading(true);
 
@@ -131,9 +143,11 @@ export default function WithdrawPage() {
       const res = await createWithdrawRequest({
         amount: amountNumber,
         userNote: note.trim() || undefined,
+        pin,
       });
 
       setResult(res.data);
+      setPin("");
       toast.success("Yêu cầu rút tiền đã được tạo thành công!");
       await fetchWallet();
       await loadWithdrawHistory();
@@ -227,6 +241,24 @@ export default function WithdrawPage() {
           </div>
 
           <div>
+            <label htmlFor="pin" className="block text-sm font-medium text-slate-600 mb-2">
+              PIN giao dịch
+            </label>
+            <input
+              id="pin"
+              type="password"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={PIN_LENGTH}
+              value={pin}
+              onChange={(event) => handlePinChange(event.target.value)}
+              placeholder="•••••"
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 text-center tracking-[0.5em] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            />
+            <p className="text-xs text-slate-500 mt-1">Nhập PIN {PIN_LENGTH} chữ số để xác nhận giao dịch rút tiền.</p>
+          </div>
+
+          <div>
             <label htmlFor="note" className="block text-sm font-medium text-slate-600 mb-2">
               Ghi chú (không bắt buộc)
             </label>
@@ -286,6 +318,7 @@ export default function WithdrawPage() {
                 setResult(null);
                 setAmount("");
                 setNote("");
+                setPin("");
                 setError(null);
               }}
               className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"

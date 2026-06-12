@@ -3,10 +3,10 @@
  * Import via: import { withdrawSchema, depositSchema, newRequestSchema } from "@/lib/schemas";
  *
  * Usage:
- *   const result = withdrawSchema.safeParse({ amount: amountNumber, note });
+ *   const result = withdrawSchema.safeParse({ amount: amountNumber, userNote, pin });
  *   if (!result.success) {
  *     const errors = result.error.flatten().fieldErrors;
- *     setErrors({ amount: errors.amount?.[0], note: errors.note?.[0] });
+ *     setErrors({ amount: errors.amount?.[0], userNote: errors.userNote?.[0], pin: errors.pin?.[0] });
  *   }
  */
 
@@ -20,7 +20,8 @@ export const withdrawSchema = z.object({
     .number({ error: "Số tiền phải là số nguyên dương." })
     .int("Số tiền phải là số nguyên.")
     .min(10_000, "Số tiền rút tối thiểu là 10.000 ₫."),
-  note: z.string().max(500, "Ghi chú không được vượt quá 500 ký tự.").optional(),
+  userNote: z.string().max(500, "Ghi chú không được vượt quá 500 ký tự.").optional(),
+  pin: z.string().regex(/^\d{5}$/, "PIN giao dịch phải gồm đúng 5 chữ số."),
 });
 
 export type WithdrawFormData = z.infer<typeof withdrawSchema>;
@@ -90,9 +91,9 @@ export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 export const changePinSchema = z
   .object({
-    currentPin: z.string().length(6, "PIN phải đúng 6 chữ số.").regex(/^\d+$/, "PIN chỉ gồm chữ số."),
-    newPin: z.string().length(6, "PIN phải đúng 6 chữ số.").regex(/^\d+$/, "PIN chỉ gồm chữ số."),
-    confirmPin: z.string().length(6, "PIN phải đúng 6 chữ số."),
+    currentPin: z.string().length(5, "PIN phải đúng 5 chữ số.").regex(/^\d+$/, "PIN chỉ gồm chữ số."),
+    newPin: z.string().length(5, "PIN phải đúng 5 chữ số.").regex(/^\d+$/, "PIN chỉ gồm chữ số."),
+    confirmPin: z.string().length(5, "PIN phải đúng 5 chữ số."),
   })
   .refine((data) => data.newPin === data.confirmPin, {
     message: "PIN xác nhận không khớp.",

@@ -59,7 +59,7 @@ export default function WithdrawPage() {
   const toast = useToast();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,7 +70,7 @@ export default function WithdrawPage() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
-  const amountNumber = useMemo(() => Number(amount || 0), [amount]);
+  const amountNumber = useMemo(() => amount ?? 0, [amount]);
   const currentBalance = wallet?.balance ?? 0;
   const availableBalance = wallet?.availableBalance ?? wallet?.balance ?? 0;
 
@@ -232,8 +232,8 @@ export default function WithdrawPage() {
             </label>
             <CurrencyInput
               id="amount"
-              value={amountNumber || null}
-              onChange={(value) => setAmount(value ? String(value) : "")}
+              value={amount}
+              onChange={setAmount}
               placeholder="Nhập số tiền"
               className="focus:ring-emerald-500/40"
             />
@@ -316,7 +316,7 @@ export default function WithdrawPage() {
               type="button"
               onClick={() => {
                 setResult(null);
-                setAmount("");
+                setAmount(null);
                 setNote("");
                 setPin("");
                 setError(null);

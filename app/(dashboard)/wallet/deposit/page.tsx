@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { createDeposit } from "@/lib/api";
-import { formatCurrency, parseAmountInput } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { useToast } from "@/contexts/toast-context";
 import { DepositLogResponse } from "@/types";
 
@@ -15,15 +16,12 @@ export default function DepositPage() {
   const router = useRouter();
   const toast = useToast();
 
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState<number | null>(null);
   const [paymentData, setPaymentData] = useState<DepositLogResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const amountNumber = useMemo(() => Number(amount || 0), [amount]);
-  const handleAmountChange = (value: string) => {
-    setAmount(parseAmountInput(value));
-  };
+  const amountNumber = useMemo(() => amount ?? 0, [amount]);
 
   const handleGeneratePayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -115,14 +113,11 @@ export default function DepositPage() {
           <label htmlFor="amount" className="block text-sm font-medium text-slate-600 mb-2">
             Số tiền nạp
           </label>
-          <input
+          <CurrencyInput
             id="amount"
-            type="text"
-            inputMode="numeric"
             value={amount}
-            onChange={(event) => handleAmountChange(event.target.value)}
+            onChange={setAmount}
             placeholder="Nhập số tiền"
-            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
           />
           <div className="flex items-center justify-between gap-3 mt-2 text-xs">
             <p className="text-slate-500">Tối thiểu: {formatCurrency(MIN_AMOUNT)}</p>

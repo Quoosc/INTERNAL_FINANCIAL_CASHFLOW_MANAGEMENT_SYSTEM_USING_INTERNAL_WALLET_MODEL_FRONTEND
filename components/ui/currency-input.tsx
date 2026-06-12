@@ -64,6 +64,7 @@ export function CurrencyInput({
           {...props}
           type="text"
           inputMode="numeric"
+          pattern="[0-9]*"
           disabled={disabled}
           value={displayValue}
           onChange={handleChange}

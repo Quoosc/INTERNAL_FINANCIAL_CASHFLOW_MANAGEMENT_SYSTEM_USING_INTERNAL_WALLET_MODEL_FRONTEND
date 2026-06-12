@@ -7,6 +7,7 @@ import { useWallet } from "@/contexts/wallet-context";
 import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
 import { formatCurrency, formatRelativeTime, getBurnClass } from "@/lib/format";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   ManagerApprovalListItem,
   ManagerDashboardResponse,
@@ -122,7 +123,7 @@ export function ManagerDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const [showQuotaModal, setShowQuotaModal] = useState(false);
-  const [quotaAmount, setQuotaAmount] = useState("");
+  const [quotaAmount, setQuotaAmount] = useState<number | null>(null);
   const [quotaDescription, setQuotaDescription] = useState("");
   const [quotaSubmitting, setQuotaSubmitting] = useState(false);
 
@@ -207,13 +208,13 @@ export function ManagerDashboard() {
   const pendingAmount = approvals.reduce((sum, item) => sum + item.amount, 0);
 
   const handleOpenQuotaModal = () => {
-    setQuotaAmount("");
+    setQuotaAmount(null);
     setQuotaDescription("");
     setShowQuotaModal(true);
   };
 
   const handleCreateQuotaTopup = async () => {
-    const amountNumber = Number(quotaAmount);
+    const amountNumber = quotaAmount ?? 0;
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
       toast.error("Số tiền xin cấp vốn phải lớn hơn 0.");
       return;
@@ -233,7 +234,7 @@ export function ManagerDashboard() {
         description: quotaDescription.trim(),
       });
       setShowQuotaModal(false);
-      setQuotaAmount("");
+      setQuotaAmount(null);
       setQuotaDescription("");
       toast.success("Đã gửi yêu cầu xin cấp vốn phòng ban.");
     } catch (err) {
@@ -625,13 +626,10 @@ export function ManagerDashboard() {
               <label className="block text-sm text-slate-600 mb-2">
                 Số tiền cần cấp
               </label>
-              <input
-                type="number"
-                min={1}
+              <CurrencyInput
                 value={quotaAmount}
-                onChange={(event) => setQuotaAmount(event.target.value)}
+                onChange={setQuotaAmount}
                 placeholder="Ví dụ: 100000000"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               />
             </div>
 

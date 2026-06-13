@@ -61,6 +61,48 @@ class ApiError extends Error {
 
 export { ApiError };
 
+function toFriendlyApiMessage(message: string | null | undefined, status?: number): string {
+  const raw = (message || "").trim();
+  const normalized = raw.toLowerCase();
+
+  if (!raw) {
+    return "Không thể xử lý yêu cầu. Vui lòng thử lại.";
+  }
+
+  if (
+    normalized.includes("usersecuritysettings not found") ||
+    normalized.includes("transaction pin has not been set up")
+  ) {
+    return "Tài khoản chưa thiết lập PIN giao dịch. Vui lòng vào Hồ sơ cá nhân để tạo PIN hoặc liên hệ quản trị viên.";
+  }
+
+  if (normalized.includes("full authentication is required") || normalized.includes("session expired")) {
+    return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+  }
+
+  if (normalized.includes("malformed or unreadable request body")) {
+    return "Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại thông tin.";
+  }
+
+  if (normalized.includes("bad credentials")) {
+    return "Email hoặc mật khẩu không đúng.";
+  }
+
+  if (normalized.includes("access denied") || normalized.includes("forbidden")) {
+    return "Bạn không có quyền thực hiện thao tác này.";
+  }
+
+  if (status === 404 && normalized.includes("not found")) {
+    return "Không tìm thấy dữ liệu phù hợp. Vui lòng tải lại trang và thử lại.";
+  }
+
+  if (status && status >= 500) {
+    return "Hệ thống đang gặp sự cố. Vui lòng thử lại sau.";
+  }
+
+  return raw;
+}
+
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
@@ -138,14 +180,18 @@ export async function apiClient<T>(
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
-      throw new ApiError(401, "Session expired. Please login again.");
+      throw new ApiError(401, toFriendlyApiMessage("Session expired. Please login again.", 401));
     }
   }
 
   const json: ApiResponse<T> = await res.json();
 
   if (!res.ok || !json.success) {
-    throw new ApiError(res.status, json.message || "An error occurred", json);
+    throw new ApiError(
+      res.status,
+      toFriendlyApiMessage(json.message || "An error occurred", res.status),
+      json
+    );
   }
 
   return json;

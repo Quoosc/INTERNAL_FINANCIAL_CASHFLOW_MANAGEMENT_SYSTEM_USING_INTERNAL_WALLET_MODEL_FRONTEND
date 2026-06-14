@@ -17,6 +17,12 @@ import { CardListSkeleton } from "@/components/ui/skeleton";
 
 const PAGE_LIMIT = 10;
 
+type ApprovalTab = "pending" | "approved";
+
+function parseApprovalTab(value: string | null): ApprovalTab {
+  return value === "approved" ? "approved" : "pending";
+}
+
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
   return Number.isFinite(page) && page > 0 ? page : 1;
@@ -35,6 +41,9 @@ export default function CfoApprovalsPage() {
   const searchParamsString = searchParams.toString();
   const search = useMemo(() => searchParams.get("search") ?? "", [searchParams]);
   const page = useMemo(() => parsePage(searchParams.get("page")), [searchParams]);
+  const approvalTab = useMemo(() => parseApprovalTab(searchParams.get("tab")), [searchParams]);
+  const approvalStatus = approvalTab === "approved" ? RequestStatus.PAID : RequestStatus.PENDING;
+  const isApprovedTab = approvalTab === "approved";
 
   const [items, setItems] = useState<AdminApprovalListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -79,6 +88,17 @@ export default function CfoApprovalsPage() {
     [pushWithParams, searchParamsString]
   );
 
+  const handleTabChange = useCallback(
+    (nextTab: ApprovalTab) => {
+      const params = new URLSearchParams(searchParamsString);
+      if (nextTab === "pending") params.delete("tab");
+      else params.set("tab", nextTab);
+      params.delete("page");
+      pushWithParams(params);
+    },
+    [pushWithParams, searchParamsString]
+  );
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       const trimmed = searchInput.trim();
@@ -99,12 +119,14 @@ export default function CfoApprovalsPage() {
 
       try {
         const filters: AdminApprovalFilterParams = {
+          status: approvalStatus,
           search: search.trim() || undefined,
           page,
           limit: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
+        query.set("status", filters.status ?? RequestStatus.PENDING);
         if (filters.search) query.set("search", filters.search);
         query.set("page", String(Math.max(0, (filters.page ?? 1) - 1)));
         query.set("size", String(filters.limit ?? PAGE_LIMIT));
@@ -119,7 +141,7 @@ export default function CfoApprovalsPage() {
         if (cancelled) return;
 
         const filteredItems = pickItems(approvalsRes.data).filter(
-          (item) => item.type === RequestType.DEPARTMENT_TOPUP && item.status === RequestStatus.PENDING
+          (item) => item.type === RequestType.DEPARTMENT_TOPUP && item.status === approvalStatus
         );
 
         const apiTotal = Array.isArray(approvalsRes.data) ? filteredItems.length : approvalsRes.data.total;
@@ -148,7 +170,7 @@ export default function CfoApprovalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [page, search, toast]);
+  }, [approvalStatus, page, search, toast]);
 
   const totalRequestedAmount = useMemo(
     () => items.reduce((sum, item) => sum + item.amount, 0),
@@ -166,22 +188,22 @@ export default function CfoApprovalsPage() {
               <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
               CFO approval center
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Duyệt cấp quota ngân sách</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Duyệt ngân sách phòng ban</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
-              Flow 3: CFO duyệt yêu cầu nạp quỹ phòng ban từ Manager. Khi phê duyệt, tiền chuyển trực tiếp từ quỹ hệ thống sang quỹ phòng ban.
+              CFO duyệt yêu cầu cấp ngân sách phòng ban từ Manager. Khi phê duyệt, tiền chuyển trực tiếp từ quỹ hệ thống sang ví phòng ban.
             </p>
           </div>
 
           <span className="inline-flex w-fit rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10">
-            {total.toLocaleString("vi-VN")} chờ duyệt
+            {total.toLocaleString("vi-VN")} {isApprovedTab ? "đã duyệt" : "chờ duyệt"}
           </span>
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <MetricCard label="Quỹ hệ thống khả dụng" value={formatCurrency(systemFundBalance)} />
-        <MetricCard label="Tổng đề xuất trang này" value={formatCurrency(totalRequestedAmount)} />
-        <MetricCard label="Số yêu cầu chờ duyệt" value={total.toLocaleString("vi-VN")} />
+        <MetricCard label={isApprovedTab ? "Tổng đã cấp trang này" : "Tổng đề xuất trang này"} value={formatCurrency(totalRequestedAmount)} />
+        <MetricCard label={isApprovedTab ? "Số yêu cầu đã duyệt" : "Số yêu cầu chờ duyệt"} value={total.toLocaleString("vi-VN")} />
       </section>
 
       <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -202,6 +224,15 @@ export default function CfoApprovalsPage() {
               Xóa tìm kiếm
             </button>
           )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <TabButton active={approvalTab === "pending"} onClick={() => handleTabChange("pending")}>
+            Chưa duyệt
+          </TabButton>
+          <TabButton active={approvalTab === "approved"} onClick={() => handleTabChange("approved")}>
+            Đã duyệt
+          </TabButton>
         </div>
 
         <div className="relative mt-4">
@@ -226,14 +257,18 @@ export default function CfoApprovalsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-2 7H6l-2-7m16 0H4" />
             </svg>
           </div>
-          <p className="mt-4 font-semibold text-slate-700">Không có yêu cầu cấp quỹ phòng ban chờ duyệt.</p>
-          <p className="mt-1 text-sm text-slate-500">Khi Manager gửi yêu cầu mới, danh sách sẽ hiển thị tại đây.</p>
+          <p className="mt-4 font-semibold text-slate-700">
+            {isApprovedTab ? "Chưa có yêu cầu cấp ngân sách đã duyệt." : "Không có yêu cầu cấp ngân sách phòng ban chờ duyệt."}
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            {isApprovedTab ? "Các yêu cầu đã được CFO duyệt sẽ hiển thị tại đây." : "Khi Manager gửi yêu cầu mới, danh sách sẽ hiển thị tại đây."}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
           {items.map((item) => {
             const deptCurrent = item.department.totalAvailableBalance;
-            const deptAfter = deptCurrent + item.amount;
+            const deptAfter = isApprovedTab ? deptCurrent : deptCurrent + item.amount;
             const enoughFund = systemFundBalance >= item.amount;
 
             return (
@@ -248,7 +283,14 @@ export default function CfoApprovalsPage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">
-                          Cấp quota phòng ban
+                          Cấp ngân sách phòng ban
+                        </span>
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 font-semibold ${
+                          isApprovedTab
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-amber-200 bg-amber-50 text-amber-700"
+                        }`}>
+                          {isApprovedTab ? "Đã duyệt" : "Chưa duyệt"}
                         </span>
                         <span className="font-mono text-slate-500">{item.requestCode}</span>
                         <span className="text-slate-500">{formatDateTime(item.createdAt)}</span>
@@ -272,7 +314,11 @@ export default function CfoApprovalsPage() {
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <AmountBox label="Quỹ phòng ban hiện tại" value={formatCurrency(deptCurrent)} />
                     <AmountBox label="Số tiền đề xuất" value={formatCurrency(item.amount)} highlight="blue" />
-                    <AmountBox label="Sau phê duyệt" value={formatCurrency(deptAfter)} highlight="emerald" />
+                    <AmountBox
+                      label={isApprovedTab ? "Quỹ phòng ban hiện tại" : "Sau phê duyệt"}
+                      value={formatCurrency(deptAfter)}
+                      highlight="emerald"
+                    />
                   </div>
 
                   {item.description && <p className="line-clamp-2 text-sm leading-6 text-slate-500">{item.description}</p>}
@@ -324,6 +370,30 @@ function MetricCard({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-medium text-slate-500">{label}</p>
       <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+        active
+          ? "border-blue-200 bg-blue-600 text-white shadow-sm shadow-blue-900/10"
+          : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

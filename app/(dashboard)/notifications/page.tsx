@@ -18,6 +18,8 @@ function getTypeIcon(type: string): React.ReactNode {
     case NotificationType.REQUEST_SUBMITTED:
     case NotificationType.REQUEST_APPROVED_BY_TL:
     case NotificationType.REQUEST_PAID:
+    case NotificationType.PROJECT_TOPUP_APPROVED:
+    case NotificationType.DEPT_TOPUP_APPROVED:
       return (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -69,7 +71,7 @@ function getTypeIconClass(type: string): string {
     case NotificationType.SECURITY_ALERT:
       return "border-amber-100 bg-amber-50 text-amber-700";
     default:
-      return "border-slate-200 bg-slate-50 text-slate-600";
+      return "border-blue-100 bg-blue-50 text-blue-700";
   }
 }
 
@@ -301,35 +303,53 @@ export default function NotificationsPage() {
           <div className="py-16 text-center text-sm text-slate-500">Không có thông báo phù hợp.</div>
         ) : (
           <ul className="divide-y divide-slate-100">
-            {notifications.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => void handleOpenNotification(item)}
-                  className={`w-full px-5 py-4 text-left transition ${
-                    item.isRead ? "bg-white hover:bg-blue-50/40" : "bg-blue-50/70 hover:bg-blue-100/70"
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${getTypeIconClass(item.type)}`}>
-                      {getTypeIcon(item.type)}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-slate-900 md:text-base">{toUserFacingText(item.title)}</p>
-                          <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{toUserFacingText(item.message)}</p>
-                        </div>
-                        <span className="shrink-0 text-xs font-medium text-slate-500">{formatRelativeTime(item.createdAt)}</span>
-                      </div>
-                    </div>
-
-                    {!item.isRead && <span className="mt-2 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-blue-500" />}
+            {notifications.map((item) => {
+              const target = getNotificationTarget(item);
+              const rowClassName = `w-full px-5 py-4 text-left transition ${
+                item.isRead
+                  ? target
+                    ? "bg-white hover:bg-blue-50/40"
+                    : "bg-white"
+                  : target
+                    ? "bg-blue-50/70 hover:bg-blue-100/70"
+                    : "bg-blue-50/50"
+              }`;
+              const rowContent = (
+                <div className="flex items-start gap-4">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${getTypeIconClass(item.type)}`}>
+                    {getTypeIcon(item.type)}
                   </div>
-                </button>
-              </li>
-            ))}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-slate-900 md:text-base">{toUserFacingText(item.title)}</p>
+                        <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{toUserFacingText(item.message)}</p>
+                      </div>
+                      <span className="shrink-0 text-xs font-medium text-slate-500">{formatRelativeTime(item.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {!item.isRead && <span className="mt-2 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-blue-500" />}
+                </div>
+              );
+
+              return (
+                <li key={item.id}>
+                  {target ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleOpenNotification(item)}
+                      className={rowClassName}
+                    >
+                      {rowContent}
+                    </button>
+                  ) : (
+                    <div className={rowClassName}>{rowContent}</div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
 

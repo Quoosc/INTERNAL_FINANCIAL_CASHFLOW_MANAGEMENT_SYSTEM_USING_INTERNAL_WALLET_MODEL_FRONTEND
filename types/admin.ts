@@ -231,6 +231,7 @@ export interface UpdateSettingsBody {
 
 /** GET /admin/approvals — query params */
 export interface AdminApprovalFilterParams {
+  status?: RequestStatus;
   search?: string;
   page?: number;
   limit?: number;

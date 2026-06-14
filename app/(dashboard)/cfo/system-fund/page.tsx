@@ -230,12 +230,6 @@ export default function CfoSystemFundPage() {
             >
               Duyệt cấp quỹ
             </Link>
-            <Link
-              href="/cfo/audit-logs"
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
-            >
-              Nhật ký hoạt động
-            </Link>
           </div>
         </div>
       </section>

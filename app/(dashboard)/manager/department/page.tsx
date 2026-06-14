@@ -34,13 +34,18 @@ function parseRole(value: string | null): MemberRole | undefined {
 }
 
 function inferRole(member: ManagerDeptMemberListItem): MemberRole {
-  const withRole = member as ManagerDeptMemberListItem & { role?: string };
-  if (withRole.role === "TEAM_LEADER" || withRole.role === "EMPLOYEE") {
-    return withRole.role;
+  const role = member.role?.toUpperCase();
+  if (role === "TEAM_LEADER" || role === "TEAMLEADER") {
+    return "TEAM_LEADER";
+  }
+  if (role === "EMPLOYEE") {
+    return "EMPLOYEE";
   }
 
   const jobTitle = member.jobTitle?.toLowerCase() ?? "";
-  return jobTitle.includes("team leader") ? "TEAM_LEADER" : "EMPLOYEE";
+  return jobTitle.includes("team leader") || jobTitle.includes("technical lead")
+    ? "TEAM_LEADER"
+    : "EMPLOYEE";
 }
 
 function normalizeMember(member: ManagerDeptMemberListItem): ManagerMemberView {
@@ -329,6 +334,10 @@ export default function ManagerDepartmentPage() {
   const debtMembers = members.filter((member) => member.debtBalance > 0).length;
   const pendingRequests = members.reduce((sum, member) => sum + member.pendingRequestsCount, 0);
   const teamLeaderCount = members.filter((member) => member.role === "TEAM_LEADER").length;
+  const currentDepartment = deptDashboard?.department;
+  const currentDepartmentLabel = currentDepartment
+    ? `${currentDepartment.name}${currentDepartment.code ? ` (${currentDepartment.code})` : ""}`
+    : "Phòng ban đang quản lý";
 
   return (
     <div className="space-y-6">
@@ -342,6 +351,10 @@ export default function ManagerDepartmentPage() {
               <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
                 Theo dõi ngân sách phòng ban, thành viên, dư nợ và yêu cầu đang chờ xử lý.
               </p>
+              <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur">
+                <span className="h-2 w-2 rounded-full bg-cyan-200" />
+                Đang xem: {currentDepartmentLabel}
+              </div>
             </div>
 
             <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur">

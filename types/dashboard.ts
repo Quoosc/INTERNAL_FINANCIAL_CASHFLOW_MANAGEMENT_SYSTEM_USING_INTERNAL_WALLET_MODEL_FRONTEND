@@ -37,6 +37,11 @@ export interface EmployeeDashboardResponse {
 
 /** GET /dashboard/manager — response */
 export interface ManagerDashboardResponse {
+  department?: {
+    id: number;
+    name: string;
+    code: string;
+  };
   departmentBudget: {
     totalProjectQuota: number;
     totalAvailableBalance: number;

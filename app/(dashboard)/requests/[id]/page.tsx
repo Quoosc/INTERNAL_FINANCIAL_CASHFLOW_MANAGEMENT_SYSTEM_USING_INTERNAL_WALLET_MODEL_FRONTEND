@@ -3,7 +3,7 @@
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDate, formatDateTime, parseApiDate } from "@/lib/format";
 import {
   RequestStatusBadge,
   RequestTypeBadge,
@@ -82,7 +82,7 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
   ];
 
   const sortedTimeline = [...request.timeline].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) => (parseApiDate(a.createdAt)?.getTime() ?? 0) - (parseApiDate(b.createdAt)?.getTime() ?? 0),
   );
 
   sortedTimeline.forEach((entry) => {

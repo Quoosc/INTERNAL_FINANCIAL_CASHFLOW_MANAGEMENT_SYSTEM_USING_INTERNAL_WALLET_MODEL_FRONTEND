@@ -15,7 +15,7 @@ import {
   TLRejectBody,
   TLRejectResponse,
 } from "@/types";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, parseApiDate } from "@/lib/format";
 import { normalizeTLApprovalDetail } from "@/lib/adapters/team-leader";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useAuth } from "@/contexts/auth-context";
@@ -599,7 +599,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
   }
 
   const sortedTimeline = [...request.timeline].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) => (parseApiDate(a.createdAt)?.getTime() ?? 0) - (parseApiDate(b.createdAt)?.getTime() ?? 0),
   );
   const requesterLabel = request.requesterEmployeeCode ?? `ID ${request.requesterId}`;
   const approvedValue = request.approvedAmount ?? request.amount;

@@ -15,7 +15,7 @@ import {
   RequestStatus,
   RequestType,
 } from "@/types";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, parseApiDate } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
@@ -181,7 +181,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
   const sortedTimeline = useMemo(() => {
     if (!request) return [];
     return [...request.timeline].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      (a, b) => (parseApiDate(a.createdAt)?.getTime() ?? 0) - (parseApiDate(b.createdAt)?.getTime() ?? 0),
     );
   }, [request]);
 

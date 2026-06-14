@@ -9,7 +9,7 @@ import {
   RequestType,
   TLApprovalListItem,
 } from "@/types";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatRelativeTime as formatSharedRelativeTime } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 import { normalizeTLApprovalListItem } from "@/lib/adapters/team-leader";
 import { useToast } from "@/contexts/toast-context";
@@ -17,17 +17,6 @@ import { useAuth } from "@/contexts/auth-context";
 
 const PAGE_LIMIT = 10;
 
-
-function formatRelativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const diffMin = Math.floor(diffMs / (1000 * 60));
-  if (diffMin < 1) return "Vừa xong";
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour} giờ trước`;
-  const diffDay = Math.floor(diffHour / 24);
-  return `${diffDay} ngày trước`;
-}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).slice(-2);
@@ -379,7 +368,7 @@ export default function TLApprovalsPage() {
                       {item.requestCode}
                     </span>
                     <span className="text-slate-500">
-                      {formatRelativeTime(item.createdAt)}
+                      {formatSharedRelativeTime(item.createdAt)}
                     </span>
                   </div>
 

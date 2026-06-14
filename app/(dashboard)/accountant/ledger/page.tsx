@@ -14,7 +14,7 @@ import {
   TransactionStatus,
   TransactionType,
 } from "@/types";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, parseApiDate } from "@/lib/format";
 
 const PAGE_LIMIT = 20;
 
@@ -210,8 +210,8 @@ export default function AccountantLedgerPage() {
   const sortedItems = useMemo(() => {
     if (!sortBy) return items;
     return [...items].sort((a, b) => {
-      const av = sortBy === "amount" ? a.amount : new Date(a.timestamp).getTime();
-      const bv = sortBy === "amount" ? b.amount : new Date(b.timestamp).getTime();
+      const av = sortBy === "amount" ? a.amount : (parseApiDate(a.timestamp)?.getTime() ?? 0);
+      const bv = sortBy === "amount" ? b.amount : (parseApiDate(b.timestamp)?.getTime() ?? 0);
       return sortDir === "asc" ? av - bv : bv - av;
     });
   }, [items, sortBy, sortDir]);

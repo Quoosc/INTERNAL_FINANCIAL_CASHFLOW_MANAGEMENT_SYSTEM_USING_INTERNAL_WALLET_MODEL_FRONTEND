@@ -7,31 +7,11 @@ import { getNotifications, markAllAsRead, markAsRead } from "@/lib/api";
 import { useToast } from "@/contexts/toast-context";
 import { NotificationResponse, NotificationType } from "@/types";
 import { getNotificationTarget } from "@/lib/adapters/notification-routing";
+import { formatRelativeTime } from "@/lib/format";
 
 const PAGE_SIZE = 20;
 
 type NotificationFilterTab = "ALL" | "UNREAD";
-
-function formatTimeAgo(iso: string): string {
-  const now = Date.now();
-  const target = new Date(iso).getTime();
-  const diff = Math.max(0, now - target);
-  const minute = 60 * 1000;
-  const hour = 60 * minute;
-  const day = 24 * hour;
-
-  if (diff < 5 * minute) return "Vừa xong";
-  if (diff < hour) return `${Math.floor(diff / minute)} phút trước`;
-  if (diff < day) return `${Math.floor(diff / hour)} giờ trước`;
-  if (diff < 2 * day) return "Hôm qua";
-  if (diff < 7 * day) return `${Math.floor(diff / day)} ngày trước`;
-
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(iso));
-}
 
 function getTypeIcon(type: string): React.ReactNode {
   switch (type) {
@@ -333,7 +313,7 @@ export default function NotificationsPage() {
                           <p className="truncate text-sm font-bold text-slate-900 md:text-base">{item.title}</p>
                           <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{item.message}</p>
                         </div>
-                        <span className="shrink-0 text-xs font-medium text-slate-500">{formatTimeAgo(item.createdAt)}</span>
+                        <span className="shrink-0 text-xs font-medium text-slate-500">{formatRelativeTime(item.createdAt)}</span>
                       </div>
                     </div>
 

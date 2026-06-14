@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/auth-context";
 import { api } from "@/lib/api-client";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatRelativeTime } from "@/lib/format";
 import {
   PaginatedResponse,
   EmployeeDashboardResponse,
@@ -90,16 +90,6 @@ function mapRecentTransactions(
 
 // ─── Helpers ─────────────────────────────────────────────────
 
-
-function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const diffH = Math.floor(diffMs / 3_600_000);
-  if (diffH < 1) return "Vừa xong";
-  if (diffH < 24) return `${diffH} giờ trước`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD === 1) return "Hôm qua";
-  return `${diffD} ngày trước`;
-}
 
 const REQUEST_TYPE_CONFIG: Record<
   RequestType,
@@ -555,7 +545,7 @@ export function EmployeeDashboard() {
                         {isCredit ? "Tiền vào" : "Tiền ra"}
                       </p>
                       <p className="text-xs text-slate-500 truncate">{tx.transactionCode}</p>
-                      <p className="text-xs text-slate-500">{timeAgo(tx.createdAt)}</p>
+                      <p className="text-xs text-slate-500">{formatRelativeTime(tx.createdAt)}</p>
                     </div>
                   </div>
                   <span

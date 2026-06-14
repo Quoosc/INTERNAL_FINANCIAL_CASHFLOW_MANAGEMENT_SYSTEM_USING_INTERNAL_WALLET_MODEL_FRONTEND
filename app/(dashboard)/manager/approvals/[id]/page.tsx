@@ -14,7 +14,7 @@ import {
   RequestAction,
   RequestStatus,
 } from "@/types";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, parseApiDate } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
@@ -277,7 +277,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
   const overDeptBudget = request.amount > request.department.totalAvailableBalance;
 
   const sortedTimeline = [...request.timeline].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => (parseApiDate(a.createdAt)?.getTime() ?? 0) - (parseApiDate(b.createdAt)?.getTime() ?? 0)
   );
   const remainingDeptBudget = Math.max(0, request.department.totalAvailableBalance - previewApprovedAmount);
   const projectAfterApproval = request.project.availableBudget + previewApprovedAmount;

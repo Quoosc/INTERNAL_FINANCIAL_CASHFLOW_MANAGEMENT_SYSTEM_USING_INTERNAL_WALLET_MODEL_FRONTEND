@@ -271,22 +271,22 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} helper="Ngân sách được phê duyệt" tone="blue" />
+        <MetricCard label="Hạn mức dự án" value={formatCurrency(project.totalBudget)} helper="Ngân sách kế hoạch" tone="blue" />
         <MetricCard label="Đã chi" value={formatCurrency(project.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
-        <MetricCard label="Còn lại" value={formatCurrency(project.availableBudget)} helper={`${remainingPercent}% khả dụng`} tone="emerald" />
+        <MetricCard label="Quỹ khả dụng" value={formatCurrency(project.availableBudget)} helper={`${remainingPercent}% khả dụng`} tone="emerald" />
         <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} phase`} tone="cyan" />
       </section>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4">
           <h2 className="text-lg font-bold text-slate-900">Tổng quan ngân sách</h2>
-          <p className="mt-1 text-sm text-slate-500">Theo dõi mức tiêu hao ngân sách tổng thể của dự án.</p>
+          <p className="mt-1 text-sm text-slate-500">Theo dõi hạn mức kế hoạch và phần quỹ đã được cấp còn khả dụng của dự án.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <InfoCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} tone="text-slate-900" />
+          <InfoCard label="Hạn mức kế hoạch" value={formatCurrency(project.totalBudget)} tone="text-slate-900" />
           <InfoCard label="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-700" />
-          <InfoCard label="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-700" />
+          <InfoCard label="Quỹ khả dụng" value={formatCurrency(project.availableBudget)} tone="text-emerald-700" />
         </div>
 
         <div className="space-y-2">

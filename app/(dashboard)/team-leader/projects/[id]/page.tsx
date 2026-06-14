@@ -240,7 +240,8 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       selectedPhaseSpentFromDetail +
       selectedPhaseCategorySpent;
     const totalSpent = Math.max(project.totalSpent, normalizedSpent, 0);
-    const availableBudget = Math.max(0, project.totalBudget - totalSpent);
+    const fundedBudget = Math.max(0, project.availableBudget + project.totalSpent);
+    const availableBudget = Math.max(0, fundedBudget - totalSpent);
 
     return {
       totalSpent,
@@ -745,9 +746,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} helper="Ngân sách được cấp" tone="blue" />
+        <MetricCard label="Hạn mức dự án" value={formatCurrency(project.totalBudget)} helper="Ngân sách kế hoạch" tone="blue" />
         <MetricCard label="Đã chi" value={formatCurrency(budgetSummary.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
-        <MetricCard label="Còn lại" value={formatCurrency(budgetSummary.availableBudget)} helper={`${budgetSummary.remainingPercent}% khả dụng`} tone="emerald" />
+        <MetricCard label="Quỹ khả dụng" value={formatCurrency(budgetSummary.availableBudget)} helper={`${budgetSummary.remainingPercent}% khả dụng`} tone="emerald" />
         <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} phase`} tone="cyan" />
       </section>
 
@@ -755,7 +756,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Tổng quan ngân sách</h2>
-            <p className="mt-1 text-sm text-slate-500">Theo dõi mức tiêu hao và phần ngân sách còn khả dụng của dự án.</p>
+            <p className="mt-1 text-sm text-slate-500">Theo dõi mức tiêu hao và phần quỹ đã được cấp còn khả dụng của dự án.</p>
           </div>
           <span className="inline-flex w-fit rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
             Phase hiện tại: {currentPhase?.name ?? "Chưa có"}
@@ -763,9 +764,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <InfoCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} />
+          <InfoCard label="Hạn mức kế hoạch" value={formatCurrency(project.totalBudget)} />
           <InfoCard label="Đã chi" value={formatCurrency(budgetSummary.totalSpent)} tone="text-rose-700" />
-          <InfoCard label="Còn lại" value={formatCurrency(budgetSummary.availableBudget)} tone="text-emerald-700" />
+          <InfoCard label="Quỹ khả dụng" value={formatCurrency(budgetSummary.availableBudget)} tone="text-emerald-700" />
         </div>
 
         <div className="mt-5 space-y-2">

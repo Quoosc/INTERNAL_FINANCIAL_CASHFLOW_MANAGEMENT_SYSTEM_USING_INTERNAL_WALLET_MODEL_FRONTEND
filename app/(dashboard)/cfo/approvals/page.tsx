@@ -268,6 +268,8 @@ export default function CfoApprovalsPage() {
         <div className="space-y-4">
           {items.map((item) => {
             const deptCurrent = item.department.totalAvailableBalance;
+            const approvedOrRequestedAmount = item.approvedAmount ?? item.amount;
+            const deptBefore = Math.max(0, deptCurrent - approvedOrRequestedAmount);
             const deptAfter = isApprovedTab ? deptCurrent : deptCurrent + item.amount;
             const enoughFund = systemFundBalance >= item.amount;
 
@@ -312,7 +314,10 @@ export default function CfoApprovalsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <AmountBox label="Quỹ phòng ban hiện tại" value={formatCurrency(deptCurrent)} />
+                    <AmountBox
+                      label={isApprovedTab ? "Trước khi cấp" : "Quỹ phòng ban hiện tại"}
+                      value={formatCurrency(isApprovedTab ? deptBefore : deptCurrent)}
+                    />
                     <AmountBox label="Số tiền đề xuất" value={formatCurrency(item.amount)} highlight="blue" />
                     <AmountBox
                       label={isApprovedTab ? "Quỹ phòng ban hiện tại" : "Sau phê duyệt"}

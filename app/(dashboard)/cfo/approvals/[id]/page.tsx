@@ -160,6 +160,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     0;
   const deptCurrent = request?.department?.totalAvailableBalance ?? 0;
   const isPending = request?.status === RequestStatus.PENDING;
+  const settledAmount = request?.approvedAmount ?? request?.amount ?? 0;
 
   const maxApprovable = useMemo(() => {
     if (!request) return 0;
@@ -180,7 +181,9 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     return Math.min(fromInput, request.amount);
   }, [approvedAmount, maxApprovable, request]);
 
+  const systemFundBefore = isPending ? systemFundBalance : systemFundBalance + settledAmount;
   const systemFundAfter = isPending ? Math.max(0, systemFundBalance - previewApprovedAmount) : systemFundBalance;
+  const deptBefore = Math.max(0, deptCurrent - settledAmount);
   const deptAfter = isPending ? deptCurrent + previewApprovedAmount : deptCurrent;
   const overSystemFund = isPending && request ? request.amount > systemFundBalance : false;
   const canTakeAction = isPending;
@@ -368,9 +371,12 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <InfoCard label="Quỹ hệ thống hiện tại" value={formatCurrency(systemFundBalance)} />
           <InfoCard
-            label={isPending ? "Quỹ hệ thống sau phê duyệt" : "Quỹ hệ thống hiện tại"}
+            label={isPending ? "Quỹ hệ thống hiện tại" : "Trước khi trừ"}
+            value={formatCurrency(systemFundBefore)}
+          />
+          <InfoCard
+            label={isPending ? "Quỹ hệ thống sau phê duyệt" : "Sau khi trừ"}
             value={formatCurrency(systemFundAfter)}
             tone="text-amber-700"
           />
@@ -405,7 +411,10 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Phòng ban" value={request.department.name} />
               <InfoCard label="Mã phòng" value={request.department.code} />
-              <InfoCard label="Số dư ví phòng ban" value={formatCurrency(request.department.totalAvailableBalance)} />
+              <InfoCard
+                label={isPending ? "Số dư ví phòng ban hiện tại" : "Trước khi cấp"}
+                value={formatCurrency(isPending ? request.department.totalAvailableBalance : deptBefore)}
+              />
               <InfoCard label="Nguồn số liệu" value="Ví phòng ban" />
             </div>
           </div>

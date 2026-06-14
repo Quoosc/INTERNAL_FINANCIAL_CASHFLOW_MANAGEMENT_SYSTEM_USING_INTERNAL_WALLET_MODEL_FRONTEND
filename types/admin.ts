@@ -15,6 +15,7 @@ export interface AdminApprovalListItem {
   type: "DEPARTMENT_TOPUP";
   status: RequestStatus;
   amount: number;
+  approvedAmount?: number | null;
   description: string | null;
   requester: ApprovalRequester;
   department: {

@@ -62,5 +62,6 @@ export interface CreateDepartmentBody {
 export interface UpdateDepartmentBody {
   name?: string;
   managerId?: number;
+  clearManager?: boolean;
   totalProjectQuota?: number;
 }

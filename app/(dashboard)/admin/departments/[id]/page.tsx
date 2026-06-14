@@ -212,6 +212,7 @@ export default function AdminDepartmentDetailPage({ params }: PageProps) {
     const body: UpdateDepartmentBody = {
       name: editName.trim(),
       managerId: Number.isFinite(managerIdNumber) && managerIdNumber > 0 ? managerIdNumber : undefined,
+      clearManager: !(Number.isFinite(managerIdNumber) && managerIdNumber > 0),
       totalProjectQuota: quotaNumber,
     };
 

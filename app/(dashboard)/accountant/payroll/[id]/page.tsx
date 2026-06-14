@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
-import { ApiError, api } from "@/lib/api-client";
+import { ApiError, api, downloadFile } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
@@ -75,6 +75,7 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [uploading, setUploading] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [netting, setNetting] = useState(false);
   const [running, setRunning] = useState(false);
   const [showRunConfirm, setShowRunConfirm] = useState(false);
@@ -208,6 +209,18 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
   const handleImport = () => {
     if (!period || !selectedFile) return;
     void runImport(false);
+  };
+
+  const handleDownloadTemplate = async () => {
+    setDownloadingTemplate(true);
+
+    try {
+      await downloadFile("/api/v1/accountant/payroll/template", "payroll_template.xlsx");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải file mẫu Excel.");
+    } finally {
+      setDownloadingTemplate(false);
+    }
   };
 
   const handleSaveEntry = async () => {
@@ -412,16 +425,17 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               <h2 className="text-lg font-semibold text-slate-900">Bước 1: Nhập bảng lương từ Excel</h2>
               <p className="mt-1 text-sm text-slate-500">{getStepDescription(1)}</p>
             </div>
-            <a
-              href="/api/v1/accountant/payroll/template"
-              download="payroll_template.xlsx"
-              className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-600"
+            <button
+              type="button"
+              onClick={() => void handleDownloadTemplate()}
+              disabled={downloadingTemplate}
+              className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v13m0 0l-4-4m4 4l4-4M4 20h16" />
               </svg>
-              Tải file mẫu Excel
-            </a>
+              {downloadingTemplate ? "Đang tải..." : "Tải file mẫu Excel"}
+            </button>
           </div>
 
           <label className="block rounded-3xl border border-dashed border-blue-200 bg-blue-50/40 p-8 text-center cursor-pointer hover:border-blue-400/70 transition-colors">

@@ -216,6 +216,71 @@ export async function apiClient<T>(
   return json;
 }
 
+export async function downloadFile(
+  url: string,
+  filename: string,
+  options: FetchOptions = {}
+): Promise<void> {
+  const { skipAuth = false, headers: customHeaders, ...rest } = options;
+
+  const headers: Record<string, string> = {
+    ...(customHeaders as Record<string, string>),
+  };
+
+  if (!skipAuth) {
+    const token = getAccessToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
+  let res = await fetch(url, { method: "GET", headers, ...rest });
+
+  if (res.status === 503) {
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/maintenance")) {
+      window.location.href = "/maintenance";
+    }
+    throw new ApiError(503, "Hệ thống đang bảo trì. Vui lòng thử lại sau.");
+  }
+
+  if (res.status === 401 && !skipAuth) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      headers["Authorization"] = `Bearer ${newToken}`;
+      res = await fetch(url, { method: "GET", headers, ...rest });
+    } else {
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new ApiError(401, toFriendlyApiMessage("Session expired. Please login again.", 401));
+    }
+  }
+
+  if (!res.ok) {
+    let message = "Không thể tải file. Vui lòng thử lại.";
+
+    try {
+      const json = await res.json();
+      message = toFriendlyApiMessage(json?.message || message, res.status);
+    } catch {
+      message = toFriendlyApiMessage(message, res.status);
+    }
+
+    throw new ApiError(res.status, message);
+  }
+
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 // --- Convenience Methods ---
 
 export const api = {

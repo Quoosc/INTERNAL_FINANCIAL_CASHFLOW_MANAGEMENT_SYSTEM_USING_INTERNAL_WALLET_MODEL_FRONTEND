@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ApiError, api } from "@/lib/api-client";
+import { ApiError, api, downloadFile } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
 import {
   CreatePayrollPeriodBody,
@@ -108,6 +108,7 @@ export default function AccountantPayrollPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -213,6 +214,18 @@ export default function AccountantPayrollPage() {
     setShowCreateModal(true);
   };
 
+  const handleDownloadTemplate = async () => {
+    setDownloadingTemplate(true);
+
+    try {
+      await downloadFile("/api/v1/accountant/payroll/template", "payroll_template.xlsx");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tải file mẫu Excel.");
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
+
   const handleCreatePeriod = async () => {
     if (periodMonth < 1 || periodMonth > 12) {
       toast.error("Tháng phải nằm trong khoảng 1–12.");
@@ -282,13 +295,14 @@ export default function AccountantPayrollPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <a
-              href="/api/v1/accountant/payroll/template"
-              download="payroll_template.xlsx"
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+            <button
+              type="button"
+              onClick={() => void handleDownloadTemplate()}
+              disabled={downloadingTemplate}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Tải file mẫu Excel
-            </a>
+              {downloadingTemplate ? "Đang tải..." : "Tải file mẫu Excel"}
+            </button>
             <button
               type="button"
               onClick={openCreateModal}

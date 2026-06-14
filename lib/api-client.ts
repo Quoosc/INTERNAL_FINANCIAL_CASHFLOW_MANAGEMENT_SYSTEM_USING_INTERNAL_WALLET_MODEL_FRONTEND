@@ -167,11 +167,15 @@ export async function apiClient<T>(
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
   const { skipAuth = false, headers: customHeaders, ...rest } = options;
+  const isFormData = typeof FormData !== "undefined" && rest.body instanceof FormData;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(customHeaders as Record<string, string>),
   };
+
+  if (!isFormData && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (!skipAuth) {
     const token = getAccessToken();

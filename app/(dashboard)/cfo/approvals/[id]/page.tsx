@@ -159,6 +159,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     request?.systemFund?.totalBalance ??
     0;
   const deptCurrent = request?.department?.totalAvailableBalance ?? 0;
+  const isPending = request?.status === RequestStatus.PENDING;
 
   const maxApprovable = useMemo(() => {
     if (!request) return 0;
@@ -167,6 +168,9 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
   const previewApprovedAmount = useMemo(() => {
     if (!request) return 0;
+    if (request.status !== RequestStatus.PENDING) {
+      return request.approvedAmount ?? request.amount;
+    }
 
     const fromInput = Number(approvedAmount);
     if (!Number.isFinite(fromInput) || fromInput <= 0) {
@@ -176,10 +180,10 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     return Math.min(fromInput, request.amount);
   }, [approvedAmount, maxApprovable, request]);
 
-  const systemFundAfter = Math.max(0, systemFundBalance - previewApprovedAmount);
-  const deptAfter = deptCurrent + previewApprovedAmount;
-  const overSystemFund = request ? request.amount > systemFundBalance : false;
-  const canTakeAction = request?.status === RequestStatus.PENDING;
+  const systemFundAfter = isPending ? Math.max(0, systemFundBalance - previewApprovedAmount) : systemFundBalance;
+  const deptAfter = isPending ? deptCurrent + previewApprovedAmount : deptCurrent;
+  const overSystemFund = isPending && request ? request.amount > systemFundBalance : false;
+  const canTakeAction = isPending;
 
   const sortedTimeline = useMemo(() => {
     if (!request) return [];
@@ -359,12 +363,22 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Tác động sau phê duyệt</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {isPending ? "Tác động nếu phê duyệt" : "Số dư sau xử lý"}
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <InfoCard label="Quỹ hệ thống hiện tại" value={formatCurrency(systemFundBalance)} />
-          <InfoCard label="Sau phê duyệt" value={formatCurrency(systemFundAfter)} tone="text-amber-700" />
-          <InfoCard label="Quỹ phòng ban sau phê duyệt" value={formatCurrency(deptAfter)} tone="text-emerald-700" />
+          <InfoCard
+            label={isPending ? "Quỹ hệ thống sau phê duyệt" : "Quỹ hệ thống hiện tại"}
+            value={formatCurrency(systemFundAfter)}
+            tone="text-amber-700"
+          />
+          <InfoCard
+            label={isPending ? "Quỹ phòng ban sau phê duyệt" : "Quỹ phòng ban hiện tại"}
+            value={formatCurrency(deptAfter)}
+            tone="text-emerald-700"
+          />
         </div>
 
         {overSystemFund && (
@@ -391,8 +405,8 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Phòng ban" value={request.department.name} />
               <InfoCard label="Mã phòng" value={request.department.code} />
-              <InfoCard label="Quota dự án hiện tại" value={formatCurrency(request.department.totalProjectQuota)} />
-              <InfoCard label="Ngân sách khả dụng" value={formatCurrency(request.department.totalAvailableBalance)} />
+              <InfoCard label="Số dư ví phòng ban" value={formatCurrency(request.department.totalAvailableBalance)} />
+              <InfoCard label="Nguồn số liệu" value="Ví phòng ban" />
             </div>
           </div>
 

@@ -353,8 +353,8 @@ export default function ManagerDepartmentPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Quỹ khả dụng" value={formatCurrency(availableBudget)} helper={`${availablePercent}% trên tổng quota`} tone="blue" />
-        <MetricCard label="Tổng quota" value={formatCurrency(totalQuota)} helper="Ngân sách phòng ban" tone="indigo" />
+        <MetricCard label="Số dư ví PB" value={formatCurrency(availableBudget)} helper="Có thể dùng để cấp vốn dự án" tone="blue" />
+        <MetricCard label="Quỹ tham chiếu" value={formatCurrency(totalQuota)} helper="Mốc so sánh khả dụng" tone="indigo" />
         <MetricCard label="Có dư nợ" value={String(debtMembers)} helper="Thành viên cần theo dõi" tone="rose" />
         <MetricCard label="Chờ xử lý" value={String(pendingRequests)} helper={`${teamLeaderCount} Team Leader trên trang`} tone="cyan" />
       </section>
@@ -362,7 +362,7 @@ export default function ManagerDepartmentPage() {
       <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-slate-700">Mức khả dụng quỹ phòng ban</span>
+            <span className="font-semibold text-slate-700">Mức khả dụng ví phòng ban</span>
             <span className="font-medium text-blue-700">{availablePercent}%</span>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">

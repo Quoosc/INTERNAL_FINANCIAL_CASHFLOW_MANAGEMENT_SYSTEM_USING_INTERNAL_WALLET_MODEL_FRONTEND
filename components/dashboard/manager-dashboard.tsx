@@ -201,8 +201,6 @@ export function ManagerDashboard() {
     projects.filter((p) => p.status === "ACTIVE").length;
   const pendingCount = dashboard?.pendingApprovalsCount ?? approvals.length;
   const deptBalance = dashboard?.departmentBudget.totalAvailableBalance ?? 0;
-  const deptQuota = dashboard?.departmentBudget.totalProjectQuota ?? 0;
-  const deptSpent = dashboard?.departmentBudget.totalSpent ?? Math.max(0, deptQuota - deptBalance);
   const teamDebt = dashboard?.teamDebtSummary.totalDebt ?? 0;
   const debtUsers = dashboard?.teamDebtSummary.employeesWithDebt ?? 0;
   const pendingAmount = approvals.reduce((sum, item) => sum + item.amount, 0);
@@ -278,9 +276,9 @@ export function ManagerDashboard() {
         ) : (
           <>
             <StatCard
-              title="Quỹ phòng ban"
+              title="Số dư ví PB"
               value={formatCurrency(deptBalance)}
-              sub="Số dư khả dụng"
+              sub="Có thể dùng để cấp vốn"
               href="/manager/department"
               accent="text-blue-700"
               icon={
@@ -377,8 +375,8 @@ export function ManagerDashboard() {
           <div className="rounded-3xl border border-blue-100 bg-blue-50/70 p-5">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm font-bold text-blue-900">Tổng quan quỹ phòng ban</p>
-                <p className="mt-1 text-sm text-blue-700">Đã dùng {formatCurrency(deptSpent)} / {formatCurrency(deptQuota)}</p>
+                <p className="text-sm font-bold text-blue-900">Số dư ví phòng ban</p>
+                <p className="mt-1 text-sm text-blue-700">Khả dụng để duyệt cấp vốn dự án</p>
               </div>
               <p className="text-2xl font-bold text-blue-900">{formatCurrency(deptBalance)}</p>
             </div>

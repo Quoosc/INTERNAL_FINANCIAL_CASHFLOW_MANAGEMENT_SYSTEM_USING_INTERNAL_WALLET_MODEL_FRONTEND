@@ -76,6 +76,13 @@ function toFriendlyApiMessage(message: string | null | undefined, status?: numbe
     return "Tài khoản chưa thiết lập PIN giao dịch. Vui lòng vào Hồ sơ cá nhân để tạo PIN hoặc liên hệ quản trị viên.";
   }
 
+  if (
+    normalized.includes("team leader cannot approve their own request") ||
+    normalized.includes("team leader cannot reject their own request")
+  ) {
+    return "Bạn không thể tự duyệt hoặc từ chối yêu cầu do chính mình tạo.";
+  }
+
   if (normalized.includes("full authentication is required") || normalized.includes("session expired")) {
     return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
   }

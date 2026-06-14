@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/format";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 import { normalizeTLApprovalListItem } from "@/lib/adapters/team-leader";
 import { useToast } from "@/contexts/toast-context";
+import { useAuth } from "@/contexts/auth-context";
 
 const PAGE_LIMIT = 10;
 
@@ -86,6 +87,7 @@ export default function TLApprovalsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const toast = useToast();
+  const { user } = useAuth();
 
   const searchParamsString = searchParams.toString();
   const typeFilter = useMemo(
@@ -177,16 +179,18 @@ export default function TLApprovalsPage() {
 
         if (cancelled) return;
 
-        const normalizedItems = pickItems(res.data)
+        const rawItems = pickItems(res.data)
           .map((item) => normalizeTLApprovalListItem(item))
           .filter((item) => item.status === RequestStatus.PENDING);
+        const normalizedItems = rawItems.filter((item) => item.requester.id !== user?.id);
+        const hiddenSelfItems = rawItems.length - normalizedItems.length;
 
         const apiTotal = Array.isArray(res.data)
           ? normalizedItems.length
-          : res.data.total;
+          : Math.max(0, res.data.total - hiddenSelfItems);
         const apiTotalPages = Array.isArray(res.data)
           ? Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT))
-          : res.data.totalPages;
+          : Math.max(1, Math.ceil(apiTotal / PAGE_LIMIT));
 
         setItems(normalizedItems);
         setTotal(apiTotal);
@@ -207,7 +211,7 @@ export default function TLApprovalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search, typeFilter, toast]);
+  }, [goToPage, page, search, typeFilter, toast, user?.id]);
 
   const typeTabs: { label: string; value?: RequestType }[] = [
     { label: "Tất cả" },

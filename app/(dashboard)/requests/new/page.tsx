@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { z } from "zod";
@@ -8,6 +9,7 @@ import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { useAuth } from "@/contexts/auth-context";
 import {
   AdvanceBalanceItem,
   CreateRequestBody,
@@ -18,6 +20,7 @@ import {
   ProjectPhasesResponse,
   RequestDetailResponse,
   RequestType,
+  RoleName,
 } from "@/types";
 
 interface UploadFileItem {
@@ -98,6 +101,23 @@ const REQUEST_TYPE_CONFIG = [
   },
 ] as const;
 
+const ROLE_CREATE_ACTIONS: Partial<
+  Record<RoleName, { title: string; description: string; href: string; action: string }>
+> = {
+  [RoleName.TEAM_LEADER]: {
+    title: "Xin cấp vốn dự án",
+    description: "Team Leader tạo PROJECT_TOPUP tại màn hình chi tiết dự án mình phụ trách.",
+    href: "/team-leader/projects",
+    action: "Chọn dự án để xin cấp vốn",
+  },
+  [RoleName.MANAGER]: {
+    title: "Xin cấp vốn phòng ban",
+    description: "Manager tạo DEPARTMENT_TOPUP từ dashboard quản lý phòng ban.",
+    href: "/dashboard",
+    action: "Về dashboard Manager",
+  },
+};
+
 
 function isImage(file: File): boolean {
   return file.type.startsWith("image/");
@@ -162,6 +182,10 @@ async function uploadAttachments(files: UploadFileItem[]): Promise<FileStorageRe
 export default function NewRequestPage() {
   const router = useRouter();
   const toast = useToast();
+  const { user, isLoading: authLoading } = useAuth();
+  const currentRole = user?.role as RoleName | undefined;
+  const canCreatePersonalRequest = currentRole === RoleName.EMPLOYEE;
+  const roleCreateAction = currentRole ? ROLE_CREATE_ACTIONS[currentRole] : undefined;
 
   const [form, setForm] = useState<Partial<CreateRequestBody>>({
     type: RequestType.ADVANCE,
@@ -204,6 +228,12 @@ export default function NewRequestPage() {
     let cancelled = false;
 
     const loadProjects = async () => {
+      if (!canCreatePersonalRequest) {
+        setProjects([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       try {
@@ -235,7 +265,7 @@ export default function NewRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, [toast]);
+  }, [canCreatePersonalRequest, toast]);
 
   useEffect(() => {
     const projectId = form.projectId;
@@ -552,6 +582,72 @@ export default function NewRequestPage() {
       setSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <div className="h-44 animate-pulse rounded-3xl bg-white" />
+        <div className="h-64 animate-pulse rounded-3xl bg-white" />
+      </div>
+    );
+  }
+
+  if (!canCreatePersonalRequest) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <section className="overflow-hidden rounded-3xl border border-blue-200 bg-linear-to-br from-blue-700 via-blue-600 to-cyan-600 text-white shadow-xl shadow-blue-900/15">
+          <div className="relative p-6 sm:p-8">
+            <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+            <div className="relative max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Tạo yêu cầu</h1>
+              <p className="mt-3 text-sm leading-6 text-blue-100">
+                Hệ thống chỉ hiển thị chức năng tạo yêu cầu phù hợp với vai trò hiện tại của bạn.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-slate-600 transition-colors hover:bg-white hover:text-slate-900"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+          </svg>
+          Quay lại
+        </button>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          {roleCreateAction ? (
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-blue-700">{currentRole}</p>
+                <h2 className="mt-2 text-2xl font-bold text-slate-950">{roleCreateAction.title}</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                  {roleCreateAction.description}
+                </p>
+              </div>
+              <Link
+                href={roleCreateAction.href}
+                className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-500"
+              >
+                {roleCreateAction.action}
+              </Link>
+            </div>
+          ) : (
+            <div>
+              <h2 className="text-2xl font-bold text-slate-950">Không có chức năng tạo yêu cầu</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Vai trò hiện tại của bạn không được cấu hình để tạo yêu cầu mới trong hệ thống.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

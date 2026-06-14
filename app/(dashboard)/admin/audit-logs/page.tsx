@@ -732,15 +732,6 @@ function AuditDetailModal({ log, onClose }: { log: AuditLogResponse; onClose: ()
             </div>
           </div>
 
-          <details className="rounded-2xl border border-slate-200 bg-white">
-            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-900">
-              Dữ liệu kỹ thuật từ backend
-            </summary>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-slate-200 p-4">
-              <JsonCard title="Snapshot trước" value={log.oldValues} />
-              <JsonCard title="Snapshot sau" value={log.newValues} />
-            </div>
-          </details>
         </div>
       </section>
     </div>
@@ -752,17 +743,6 @@ function InfoCard({ label, value, mono = false }: { label: string; value: string
     <div className="bg-white border border-slate-200 rounded-xl p-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm text-slate-900 mt-1 break-words ${mono ? "font-mono" : "font-medium"}`}>{value}</p>
-    </div>
-  );
-}
-
-function JsonCard({ title, value }: { title: string; value: Record<string, unknown> | null }) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-      <pre className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-3 overflow-auto max-h-72">
-        {value ? JSON.stringify(value, null, 2) : "Không có dữ liệu"}
-      </pre>
     </div>
   );
 }

@@ -211,10 +211,49 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     };
   }, [project, selectedPhaseId, expenseCategories]);
 
-  const overallBurn = useMemo(
-    () => (project ? burn(project.totalSpent, project.totalBudget) : 0),
-    [project],
-  );
+  const budgetSummary = useMemo(() => {
+    if (!project) {
+      return {
+        totalSpent: 0,
+        availableBudget: 0,
+        burnPercent: 0,
+        remainingPercent: 0,
+      };
+    }
+
+    const phaseSpentFromDetail = project.phases.reduce(
+      (sum, phase) => sum + phase.currentSpent,
+      0,
+    );
+    const selectedPhaseSpentFromDetail =
+      project.phases.find((phase) => phase.id === selectedPhaseId)?.currentSpent ?? 0;
+    const selectedPhaseCategorySpent =
+      phaseCategories?.phaseId === selectedPhaseId
+        ? phaseCategories.categories.reduce(
+            (sum, category) => sum + category.currentSpent,
+            0,
+          )
+        : 0;
+
+    const normalizedSpent =
+      phaseSpentFromDetail -
+      selectedPhaseSpentFromDetail +
+      selectedPhaseCategorySpent;
+    const totalSpent = Math.max(project.totalSpent, normalizedSpent, 0);
+    const availableBudget = Math.max(0, project.totalBudget - totalSpent);
+
+    return {
+      totalSpent,
+      availableBudget,
+      burnPercent: burn(totalSpent, project.totalBudget),
+      remainingPercent:
+        project.totalBudget > 0
+          ? Math.max(0, Math.round((availableBudget / project.totalBudget) * 100))
+          : 0,
+    };
+  }, [project, phaseCategories, selectedPhaseId]);
+
+  const overallBurn = budgetSummary.burnPercent;
 
   const filteredAvailable = useMemo(() => {
     const q = memberSearch.trim().toLowerCase();
@@ -662,11 +701,6 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     project.phases.find((p) => p.id === project.currentPhaseId) ??
     project.phases[0] ??
     null;
-  const remainingPercent =
-    project.totalBudget > 0
-      ? Math.max(0, Math.round((project.availableBudget / project.totalBudget) * 100))
-      : 0;
-
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-cyan-600 text-white shadow-xl shadow-blue-950/20">
@@ -712,8 +746,8 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} helper="Ngân sách được cấp" tone="blue" />
-        <MetricCard label="Đã chi" value={formatCurrency(project.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
-        <MetricCard label="Còn lại" value={formatCurrency(project.availableBudget)} helper={`${remainingPercent}% khả dụng`} tone="emerald" />
+        <MetricCard label="Đã chi" value={formatCurrency(budgetSummary.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
+        <MetricCard label="Còn lại" value={formatCurrency(budgetSummary.availableBudget)} helper={`${budgetSummary.remainingPercent}% khả dụng`} tone="emerald" />
         <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} phase`} tone="cyan" />
       </section>
 
@@ -730,8 +764,8 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <InfoCard label="Tổng ngân sách" value={formatCurrency(project.totalBudget)} />
-          <InfoCard label="Đã chi" value={formatCurrency(project.totalSpent)} tone="text-rose-700" />
-          <InfoCard label="Còn lại" value={formatCurrency(project.availableBudget)} tone="text-emerald-700" />
+          <InfoCard label="Đã chi" value={formatCurrency(budgetSummary.totalSpent)} tone="text-rose-700" />
+          <InfoCard label="Còn lại" value={formatCurrency(budgetSummary.availableBudget)} tone="text-emerald-700" />
         </div>
 
         <div className="mt-5 space-y-2">

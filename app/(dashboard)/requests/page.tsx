@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
+import { useAuth } from "@/contexts/auth-context";
 import {
   RequestStatusBadge,
   RequestTypeBadge,
@@ -17,6 +18,7 @@ import {
   RequestStatus,
   RequestSummaryResponse,
   RequestType,
+  RoleName,
 } from "@/types";
 
 const PAGE_LIMIT = 8;
@@ -31,6 +33,47 @@ const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
   [RequestStatus.CANCELLED]: "Đã hủy",
 };
 
+const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
+  [RequestType.ADVANCE]: "Tạm ứng",
+  [RequestType.EXPENSE]: "Chi phí",
+  [RequestType.REIMBURSE]: "Hoàn ứng",
+  [RequestType.PROJECT_TOPUP]: "Cấp vốn dự án",
+  [RequestType.DEPARTMENT_TOPUP]: "Cấp vốn phòng ban",
+};
+
+const CREATE_ACTION_BY_ROLE: Partial<
+  Record<RoleName, { href: string; label: string; description: string }>
+> = {
+  [RoleName.EMPLOYEE]: {
+    href: "/requests/new",
+    label: "Tạo yêu cầu mới",
+    description: "Theo dõi toàn bộ tạm ứng, chi phí và hoàn ứng với trạng thái xử lý rõ ràng theo từng bước phê duyệt.",
+  },
+  [RoleName.TEAM_LEADER]: {
+    href: "/team-leader/projects",
+    label: "Xin cấp vốn dự án",
+    description: "Theo dõi các yêu cầu bạn đã tạo; Team Leader tạo yêu cầu cấp vốn từ màn hình chi tiết dự án.",
+  },
+  [RoleName.MANAGER]: {
+    href: "/dashboard",
+    label: "Xin cấp vốn phòng ban",
+    description: "Theo dõi các yêu cầu bạn đã tạo; Manager tạo yêu cầu cấp vốn phòng ban từ dashboard.",
+  },
+};
+
+function requestTypesForRole(role: RoleName | undefined): RequestType[] {
+  if (role === RoleName.EMPLOYEE) {
+    return [RequestType.ADVANCE, RequestType.EXPENSE, RequestType.REIMBURSE];
+  }
+  if (role === RoleName.TEAM_LEADER) {
+    return [RequestType.PROJECT_TOPUP];
+  }
+  if (role === RoleName.MANAGER) {
+    return [RequestType.DEPARTMENT_TOPUP];
+  }
+  return [];
+}
+
 function parseStatus(value: string | null): RequestStatus | undefined {
   if (!value) return undefined;
   const valid = new Set<string>(Object.values(RequestStatus));
@@ -39,11 +82,7 @@ function parseStatus(value: string | null): RequestStatus | undefined {
 
 function parseType(value: string | null): RequestType | undefined {
   if (!value) return undefined;
-  const valid = new Set<string>([
-    RequestType.ADVANCE,
-    RequestType.EXPENSE,
-    RequestType.REIMBURSE,
-  ]);
+  const valid = new Set<string>(Object.values(RequestType));
   return valid.has(value) ? (value as RequestType) : undefined;
 }
 
@@ -75,6 +114,10 @@ function buildInitialState(searchParams: {
 export default function RequestsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const currentRole = user?.role as RoleName | undefined;
+  const createAction = currentRole ? CREATE_ACTION_BY_ROLE[currentRole] : undefined;
+  const requestTypeOptions = requestTypesForRole(currentRole);
 
   const initial = useMemo(
     () => buildInitialState(searchParams),
@@ -266,19 +309,22 @@ export default function RequestsPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Personal requests</p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Yêu cầu của tôi</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-blue-100">
-                Theo dõi toàn bộ tạm ứng, chi phí và hoàn ứng với trạng thái xử lý rõ ràng theo từng bước phê duyệt.
+                {createAction?.description ??
+                  "Theo dõi các yêu cầu liên quan đến tài khoản của bạn với trạng thái xử lý rõ ràng theo từng bước phê duyệt."}
               </p>
             </div>
 
-            <Link
-              href="/requests/new"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/20 transition hover:bg-blue-50"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6v12m6-6H6" />
-              </svg>
-              Tạo yêu cầu mới
-            </Link>
+            {createAction && (
+              <Link
+                href={createAction.href}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/20 transition hover:bg-blue-50"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6v12m6-6H6" />
+                </svg>
+                {createAction.label}
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -327,9 +373,11 @@ export default function RequestsPage() {
             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
           >
             <option value="ALL">Tất cả loại</option>
-            <option value={RequestType.ADVANCE}>Tạm ứng</option>
-            <option value={RequestType.EXPENSE}>Chi phí</option>
-            <option value={RequestType.REIMBURSE}>Hoàn ứng</option>
+            {requestTypeOptions.map((type) => (
+              <option key={type} value={type}>
+                {REQUEST_TYPE_LABELS[type]}
+              </option>
+            ))}
           </select>
 
           <input

@@ -18,6 +18,7 @@ import {
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { normalizeTLApprovalDetail } from "@/lib/adapters/team-leader";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { useAuth } from "@/contexts/auth-context";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -363,6 +364,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { id } = use(params);
   const toast = useToast();
+  const { user } = useAuth();
 
   const [request, setRequest] = useState<TLApprovalDetailView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -443,10 +445,15 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
     };
   }, [request]);
 
-  const canTakeAction = request?.status === RequestStatus.PENDING;
+  const isOwnRequest = Boolean(request && user?.id === request.requesterId);
+  const canTakeAction = request?.status === RequestStatus.PENDING && !isOwnRequest;
 
   const openApproveModal = () => {
     if (!request) return;
+    if (isOwnRequest) {
+      setActionError("Bạn không thể tự duyệt yêu cầu do chính mình tạo.");
+      return;
+    }
     setApprovedAmount(String(request.amount));
     setApproveComment("");
     setActionError(null);
@@ -454,6 +461,10 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
   };
 
   const openRejectModal = () => {
+    if (isOwnRequest) {
+      setActionError("Bạn không thể tự từ chối yêu cầu do chính mình tạo.");
+      return;
+    }
     setRejectReason("");
     setActionError(null);
     setShowRejectModal(true);
@@ -461,6 +472,10 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
 
   const handleApprove = async () => {
     if (!request) return;
+    if (isOwnRequest) {
+      setActionError("Bạn không thể tự duyệt yêu cầu do chính mình tạo.");
+      return;
+    }
 
     const numericApprovedAmount = Number(approvedAmount);
     if (!Number.isFinite(numericApprovedAmount) || numericApprovedAmount < 1) {
@@ -501,6 +516,10 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
 
   const handleReject = async () => {
     if (!request) return;
+    if (isOwnRequest) {
+      setActionError("Bạn không thể tự từ chối yêu cầu do chính mình tạo.");
+      return;
+    }
 
     if (rejectReason.trim().length < 10) {
       setActionError("Lý do từ chối phải có ít nhất 10 ký tự.");
@@ -789,6 +808,15 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
               </div>
             )}
           </div>
+
+          {isOwnRequest && request.status === RequestStatus.PENDING && (
+            <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
+              <h2 className="text-lg font-bold text-amber-900">Yêu cầu của chính bạn</h2>
+              <p className="mt-1 text-sm text-amber-800">
+                Team Leader không được tự duyệt yêu cầu do mình tạo. Yêu cầu này sẽ không được xử lý trong hàng chờ duyệt của Team Leader.
+              </p>
+            </div>
+          )}
 
           {canTakeAction && (
             <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5">

@@ -53,10 +53,23 @@ function pickTotalPages<T>(payload: PaginatedResponse<T> | T[], fallbackSize: nu
 
 function getStatusLabel(status: PayrollStatus): string {
   switch (status) {
-    case PayrollStatus.DRAFT:       return "Nháp";
-    case PayrollStatus.PROCESSING:  return "Đang xử lý";
-    case PayrollStatus.COMPLETED:   return "Hoàn tất";
+    case PayrollStatus.DRAFT:       return "Đang chuẩn bị";
+    case PayrollStatus.PROCESSING:  return "Đang chi lương";
+    case PayrollStatus.COMPLETED:   return "Đã hoàn tất";
     default: return status;
+  }
+}
+
+function getStatusHelper(status: PayrollStatus): string {
+  switch (status) {
+    case PayrollStatus.DRAFT:
+      return "Có thể nhập Excel, rà soát và chỉnh sửa dữ liệu lương.";
+    case PayrollStatus.PROCESSING:
+      return "Hệ thống đang xử lý chi lương cho nhân viên.";
+    case PayrollStatus.COMPLETED:
+      return "Tiền lương đã được chuyển vào ví nhân viên.";
+    default:
+      return "";
   }
 }
 
@@ -70,7 +83,7 @@ function getStatusClass(status: PayrollStatus): string {
 }
 
 function buildPeriodName(month: number, year: number): string {
-  return `Lương tháng ${String(month).padStart(2, "0")}/${year}`;
+  return `Bảng lương tháng ${String(month).padStart(2, "0")}/${year}`;
 }
 
 function getMonthRange(month: number, year: number): { startDate: string; endDate: string } {
@@ -248,9 +261,9 @@ export default function AccountantPayrollPage() {
 
   const statusTabs: Array<{ label: string; value?: PayrollStatus }> = [
     { label: "Tất cả" },
-    { label: "Nháp", value: PayrollStatus.DRAFT },
-    { label: "Đang xử lý", value: PayrollStatus.PROCESSING },
-    { label: "Hoàn tất", value: PayrollStatus.COMPLETED },
+    { label: "Đang chuẩn bị", value: PayrollStatus.DRAFT },
+    { label: "Đang chi lương", value: PayrollStatus.PROCESSING },
+    { label: "Đã hoàn tất", value: PayrollStatus.COMPLETED },
   ];
 
   return (
@@ -260,11 +273,11 @@ export default function AccountantPayrollPage() {
           <div className="max-w-3xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-              Payroll operations
+              Trung tâm bảng lương
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Quản lý bảng lương</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Quản lý kỳ lương</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
-              Tạo kỳ lương, import dữ liệu, rà soát khấu trừ tạm ứng và chạy payroll cho toàn bộ nhân viên.
+              Tạo kỳ lương, nhập dữ liệu từ Excel, khấu trừ tạm ứng và chi lương vào ví nhân viên.
             </p>
           </div>
 
@@ -274,59 +287,36 @@ export default function AccountantPayrollPage() {
               download="payroll_template.xlsx"
               className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
             >
-              Tải template
+              Tải file mẫu Excel
             </a>
             <button
               type="button"
               onClick={openCreateModal}
               className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:bg-blue-50"
             >
-              Tạo kỳ lương
+              Tạo kỳ lương mới
             </button>
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <PayrollMetric label="Tổng kỳ lương" value={String(total)} helper={`Trang ${page}/${totalPages}`} tone="blue" />
-        <PayrollMetric label="Đã hoàn tất trên trang" value={String(completedCount)} helper={`${items.length} kỳ đang hiển thị`} tone="emerald" />
-        <PayrollMetric label="Tổng net trên trang" value={formatCurrency(totalNetOnPage)} helper={year ? `Năm ${year}` : "Tất cả năm"} tone="violet" />
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+        <WorkflowStep index="1" title="Tạo kỳ lương" description="Chọn tháng, năm và mở một kỳ xử lý mới." />
+        <WorkflowStep index="2" title="Nhập Excel" description="Tải file mẫu, điền lương và nhập vào hệ thống." />
+        <WorkflowStep index="3" title="Rà soát & bù trừ" description="Kiểm tra từng dòng và trừ tạm ứng còn tồn." />
+        <WorkflowStep index="4" title="Chi lương" description="Chốt kỳ lương và chuyển tiền vào ví nhân viên." />
       </section>
 
-      <div className="hidden">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quản lý bảng lương</h1>
-          <p className="text-slate-500 mt-1">Danh sách kỳ lương và quy trình xử lý payroll cho toàn bộ nhân viên.</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <a
-            href="/api/v1/accountant/payroll/template"
-            download="payroll_template.xlsx"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v13m0 0l-4-4m4 4l4-4M4 20h16" />
-            </svg>
-            Tải template
-          </a>
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v14m7-7H5" />
-            </svg>
-            Tạo kỳ lương
-          </button>
-        </div>
-      </div>
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <PayrollMetric label="Tổng kỳ lương" value={String(total)} helper={`Đang xem trang ${page}/${totalPages}`} tone="blue" />
+        <PayrollMetric label="Kỳ đã chi xong" value={String(completedCount)} helper={`${items.length} kỳ trong danh sách hiện tại`} tone="emerald" />
+        <PayrollMetric label="Tổng thực lĩnh" value={formatCurrency(totalNetOnPage)} helper={year ? `Lọc theo năm ${year}` : "Tất cả năm"} tone="violet" />
+      </section>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
         <div>
           <h2 className="text-base font-bold text-slate-900">Bộ lọc kỳ lương</h2>
-          <p className="mt-1 text-sm text-slate-500">Theo dõi trạng thái xử lý và lọc nhanh theo năm.</p>
+          <p className="mt-1 text-sm text-slate-500">Lọc theo trạng thái chi lương hoặc năm xử lý.</p>
         </div>
         {/* Status filter tabs */}
         <div className="flex flex-wrap gap-2">
@@ -351,7 +341,7 @@ export default function AccountantPayrollPage() {
 
         {/* Year filter */}
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-600 shrink-0">Năm:</label>
+          <label className="text-sm text-slate-600 shrink-0">Năm xử lý:</label>
           <select
             value={year ?? ""}
             onChange={(e) => updateParam("year", e.target.value || undefined)}
@@ -369,7 +359,8 @@ export default function AccountantPayrollPage() {
         <CardListSkeleton rows={4} height="h-40" />
       ) : items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-12 text-center">
-          <p className="text-slate-600">Không có kỳ lương phù hợp bộ lọc hiện tại.</p>
+          <p className="text-slate-900 font-semibold">Chưa có kỳ lương phù hợp</p>
+          <p className="mt-2 text-sm text-slate-500">Bạn có thể đổi bộ lọc hoặc tạo kỳ lương mới để bắt đầu nhập dữ liệu.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -385,7 +376,7 @@ export default function AccountantPayrollPage() {
                   <div>
                     <p className="text-xs text-slate-500 font-mono">{item.periodCode}</p>
                     <p className="text-lg font-semibold text-slate-900 mt-1">{item.name}</p>
-                    <p className="text-xs text-slate-500 mt-1">Tháng {item.month}/{item.year}</p>
+                    <p className="text-xs text-slate-500 mt-1">Kỳ tháng {item.month}/{item.year} · {getStatusHelper(item.status)}</p>
                   </div>
                   <span
                     className={`inline-flex w-fit px-2.5 py-1 rounded-full border text-xs ${getStatusClass(item.status)} ${
@@ -397,18 +388,18 @@ export default function AccountantPayrollPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <InfoCell label="Nhân viên" value={`${item.employeeCount} người`} />
-                  <InfoCell label="Tổng net" value={formatCurrency(item.totalNetPayroll)} tone="text-emerald-700" />
+                  <InfoCell label="Số nhân viên" value={`${item.employeeCount} người`} />
+                  <InfoCell label="Tổng thực lĩnh" value={formatCurrency(item.totalNetPayroll)} tone="text-emerald-700" />
                   <InfoCell label="Tạo lúc" value={formatDateTime(item.createdAt)} />
                   <InfoCell
-                    label={item.status === PayrollStatus.COMPLETED ? "Hoàn tất" : "Cập nhật"}
+                    label={item.status === PayrollStatus.COMPLETED ? "Hoàn tất lúc" : "Cập nhật gần nhất"}
                     value={formatDateTime(item.updatedAt)}
                   />
                 </div>
 
                 <div className="flex justify-end">
                   <span className="inline-flex w-fit rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-600/20">
-                    Xem chi tiết →
+                    Xem và xử lý
                   </span>
                 </div>
               </div>
@@ -444,7 +435,7 @@ export default function AccountantPayrollPage() {
       <SideDrawer
         open={showCreateModal}
         title="Tạo kỳ lương mới"
-        description="Thiết lập kỳ payroll trước khi import file Excel và chạy quy trình chi lương."
+        description="Sau khi tạo kỳ, bạn sẽ được chuyển sang màn hình chi tiết để tải file mẫu, nhập Excel và chi lương."
         onClose={() => setShowCreateModal(false)}
         footer={
           <div className="flex items-center justify-end gap-3">
@@ -481,7 +472,7 @@ export default function AccountantPayrollPage() {
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Tháng</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Tháng trả lương</span>
               <select
                 value={periodMonth}
                 onChange={(event) => setPeriodMonth(Number(event.target.value))}
@@ -493,7 +484,7 @@ export default function AccountantPayrollPage() {
               </select>
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Năm</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Năm trả lương</span>
               <input
                 type="number"
                 min={2000}
@@ -515,6 +506,22 @@ function InfoCell({ label, value, tone }: { label: string; value: string; tone?:
     <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm font-medium mt-1 ${tone ?? "text-slate-900"}`}>{value}</p>
+    </div>
+  );
+}
+
+function WorkflowStep({ index, title, description }: { index: string; title: string; description: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          {index}
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-slate-900">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -73,6 +73,14 @@ function getTypeIconClass(type: string): string {
   }
 }
 
+function toUserFacingText(value: string): string {
+  return value
+    .replaceAll("DEPARTMENT_TOPUP", "cấp ngân sách phòng ban")
+    .replaceAll("PROJECT_TOPUP", "cấp vốn dự án")
+    .replaceAll("ADVANCE", "tạm ứng")
+    .replaceAll("EXPENSE", "thanh toán chi phí")
+    .replaceAll("REIMBURSE", "hoàn ứng");
+}
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -310,8 +318,8 @@ export default function NotificationsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-slate-900 md:text-base">{item.title}</p>
-                          <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{item.message}</p>
+                          <p className="truncate text-sm font-bold text-slate-900 md:text-base">{toUserFacingText(item.title)}</p>
+                          <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{toUserFacingText(item.message)}</p>
                         </div>
                         <span className="shrink-0 text-xs font-medium text-slate-500">{formatRelativeTime(item.createdAt)}</span>
                       </div>

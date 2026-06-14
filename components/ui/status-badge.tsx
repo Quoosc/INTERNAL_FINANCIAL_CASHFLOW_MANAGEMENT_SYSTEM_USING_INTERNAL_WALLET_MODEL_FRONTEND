@@ -99,8 +99,8 @@ const REQUEST_TYPE_LABEL: Partial<Record<RequestType, string>> = {
   [RequestType.ADVANCE]: "Tạm ứng",
   [RequestType.EXPENSE]: "Chi phí",
   [RequestType.REIMBURSE]: "Hoàn ứng",
-  [RequestType.PROJECT_TOPUP]: "Nạp quỹ DA",
-  [RequestType.DEPARTMENT_TOPUP]: "Nạp quota PB",
+  [RequestType.PROJECT_TOPUP]: "Cấp vốn dự án",
+  [RequestType.DEPARTMENT_TOPUP]: "Cấp ngân sách PB",
 };
 
 export function RequestTypeBadge({

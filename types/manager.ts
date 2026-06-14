@@ -140,6 +140,7 @@ export interface ManagerDeptMemberDetailResponse {
 
 /** GET /manager/approvals — query params */
 export interface ManagerApprovalFilterParams {
+  status?: RequestStatus;
   search?: string;
   page?: number;
   size?: number;

@@ -301,7 +301,7 @@ export function ManagerDashboard() {
             <StatCard
               title="Chờ duyệt"
               value={String(pendingCount)}
-              sub="PROJECT_TOPUP"
+              sub="Cấp vốn dự án"
               href="/manager/approvals"
               accent="text-amber-700"
               icon={
@@ -385,8 +385,8 @@ export function ManagerDashboard() {
           <div className="rounded-3xl border border-indigo-100 bg-indigo-50/70 p-5">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm font-bold text-indigo-900">PROJECT_TOPUP đang chờ</p>
-                <p className="mt-1 text-sm text-indigo-700">Tổng giá trị các đề xuất mới nhất</p>
+                <p className="text-sm font-bold text-indigo-900">Đề xuất cấp vốn dự án đang chờ</p>
+                <p className="mt-1 text-sm text-indigo-700">Tổng giá trị đề xuất cấp vốn mới nhất</p>
               </div>
               <p className="text-2xl font-bold text-indigo-900">{formatCurrency(pendingAmount)}</p>
             </div>
@@ -398,7 +398,7 @@ export function ManagerDashboard() {
         <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">PROJECT_TOPUP chờ duyệt</h2>
+              <h2 className="text-lg font-bold text-slate-900">Yêu cầu cấp vốn dự án chờ duyệt</h2>
               <p className="mt-1 text-sm text-slate-500">Các đề xuất cấp vốn mới từ Team Leader.</p>
             </div>
             <Link
@@ -420,7 +420,7 @@ export function ManagerDashboard() {
             </div>
           ) : approvals.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
-              Không có yêu cầu PROJECT_TOPUP đang chờ duyệt.
+              Không có yêu cầu cấp vốn dự án đang chờ duyệt.
             </div>
           ) : (
             <div className="space-y-3">
@@ -615,7 +615,7 @@ export function ManagerDashboard() {
                 Xin cấp vốn phòng ban
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.
+                Yêu cầu này sẽ được gửi đến CFO để phê duyệt ngân sách phòng ban.
               </p>
             </div>
 

@@ -17,6 +17,11 @@ import { toApiPage } from "@/lib/adapters/pagination";
 
 const PAGE_LIMIT = 10;
 
+type ApprovalTab = "pending" | "approved";
+
+function parseApprovalTab(value: string | null): ApprovalTab {
+  return value === "approved" ? "approved" : "pending";
+}
 
 function parsePage(value: string | null): number {
   const page = Number(value ?? "1");
@@ -43,6 +48,12 @@ export default function ManagerApprovalsPage() {
     () => parsePage(searchParams.get("page")),
     [searchParams],
   );
+  const approvalTab = useMemo(
+    () => parseApprovalTab(searchParams.get("tab")),
+    [searchParams],
+  );
+  const approvalStatus =
+    approvalTab === "approved" ? RequestStatus.PAID : RequestStatus.PENDING;
 
   const [items, setItems] = useState<ManagerApprovalListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -87,6 +98,17 @@ export default function ManagerApprovalsPage() {
     [pushWithParams, searchParamsString],
   );
 
+  const handleTabChange = useCallback(
+    (nextTab: ApprovalTab) => {
+      const params = new URLSearchParams(searchParamsString);
+      if (nextTab === "pending") params.delete("tab");
+      else params.set("tab", nextTab);
+      params.delete("page");
+      pushWithParams(params);
+    },
+    [pushWithParams, searchParamsString],
+  );
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       const trimmed = searchInput.trim();
@@ -107,12 +129,14 @@ export default function ManagerApprovalsPage() {
 
       try {
         const filters: ManagerApprovalFilterParams = {
+          status: approvalStatus,
           search: search.trim() || undefined,
           page,
           size: PAGE_LIMIT,
         };
 
         const query = new URLSearchParams();
+        query.set("status", filters.status ?? RequestStatus.PENDING);
         if (filters.search) query.set("search", filters.search);
         query.set("page", String(toApiPage(filters.page ?? 1)));
         query.set("size", String(filters.size ?? PAGE_LIMIT));
@@ -126,7 +150,7 @@ export default function ManagerApprovalsPage() {
         const filteredItems = pickItems(res.data).filter(
           (item) =>
             item.type === RequestType.PROJECT_TOPUP &&
-            item.status === RequestStatus.PENDING,
+            item.status === approvalStatus,
         );
 
         const apiTotal = Array.isArray(res.data)
@@ -155,12 +179,14 @@ export default function ManagerApprovalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search, toast]);
+  }, [approvalStatus, page, search, toast]);
 
   const filtered = Boolean(search);
   const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
   const overBudgetCount = items.filter((item) => item.amount > item.project.availableBudget).length;
   const uniqueRequesters = new Set(items.map((item) => item.requester.id)).size;
+  const isApprovedTab = approvalTab === "approved";
+  const tabLabel = isApprovedTab ? "đã duyệt" : "chờ duyệt";
 
   return (
     <div className="space-y-6">
@@ -169,25 +195,25 @@ export default function ManagerApprovalsPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Manager approval queue</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Manager workspace</p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Duyệt cấp vốn dự án</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
-                Xử lý PROJECT_TOPUP từ Team Leader và cấp vốn trực tiếp từ quỹ phòng ban sang dự án.
+                Xử lý đề xuất cấp vốn từ Team Leader và chuyển tiền trực tiếp từ ví phòng ban sang quỹ dự án.
               </p>
             </div>
 
             <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur">
               <span className="h-2 w-2 rounded-full bg-emerald-300" />
-              {total.toLocaleString("vi-VN")} chờ duyệt
+              {total.toLocaleString("vi-VN")} {tabLabel}
             </div>
           </div>
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Hàng chờ" value={total.toLocaleString("vi-VN")} helper={`${items.length} yêu cầu đang hiển thị`} tone="blue" />
-        <MetricCard label="Tổng tiền" value={formatCurrency(totalAmount)} helper="Giá trị trên trang hiện tại" tone="indigo" />
-        <MetricCard label="Người gửi" value={String(uniqueRequesters)} helper="Team Leader đang chờ xử lý" tone="cyan" />
+        <MetricCard label={isApprovedTab ? "Đã duyệt" : "Chưa duyệt"} value={total.toLocaleString("vi-VN")} helper={`${items.length} yêu cầu đang hiển thị`} tone="blue" />
+        <MetricCard label={isApprovedTab ? "Tổng đã cấp" : "Tổng đề xuất"} value={formatCurrency(totalAmount)} helper="Giá trị trên trang hiện tại" tone="indigo" />
+        <MetricCard label="Người gửi" value={String(uniqueRequesters)} helper="Team Leader gửi đề xuất" tone="cyan" />
         <MetricCard label="Vượt ngân sách DA" value={String(overBudgetCount)} helper="Cần kiểm tra kỹ trước khi duyệt" tone="rose" />
       </section>
 
@@ -211,6 +237,15 @@ export default function ManagerApprovalsPage() {
               Xóa bộ lọc
             </button>
           )}
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          <TabButton active={approvalTab === "pending"} onClick={() => handleTabChange("pending")}>
+            Chưa duyệt
+          </TabButton>
+          <TabButton active={approvalTab === "approved"} onClick={() => handleTabChange("approved")}>
+            Đã duyệt
+          </TabButton>
         </div>
 
         <div className="relative">
@@ -255,8 +290,10 @@ export default function ManagerApprovalsPage() {
               />
             </svg>
           </div>
-          <h3 className="mt-4 text-base font-bold text-slate-900">Không có yêu cầu PROJECT_TOPUP chờ duyệt</h3>
-          <p className="mt-1 text-sm text-slate-500">Hàng chờ đang trống hoặc bộ lọc chưa có dữ liệu phù hợp.</p>
+          <h3 className="mt-4 text-base font-bold text-slate-900">
+            {isApprovedTab ? "Chưa có yêu cầu cấp vốn đã duyệt" : "Không có yêu cầu cấp vốn chờ duyệt"}
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">Danh sách đang trống hoặc bộ lọc chưa có dữ liệu phù hợp.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -273,7 +310,14 @@ export default function ManagerApprovalsPage() {
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700">
-                      Cấp vốn DA
+                      Cấp vốn dự án
+                    </span>
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 font-semibold ${
+                      item.status === RequestStatus.PAID
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-amber-200 bg-amber-50 text-amber-700"
+                    }`}>
+                      {item.status === RequestStatus.PAID ? "Đã duyệt" : "Chưa duyệt"}
                     </span>
                     <span className="font-mono font-semibold text-slate-600">
                       {item.requestCode}
@@ -383,5 +427,29 @@ function MetricCard({
       <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+        active
+          ? "border-blue-200 bg-blue-600 text-white shadow-sm shadow-blue-900/10"
+          : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+      }`}
+    >
+      {children}
+    </button>
   );
 }

@@ -46,8 +46,12 @@ export interface AdminApprovalDetailResponse {
     totalProjectQuota: number;
     totalAvailableBalance: number;
   };
-  systemFund: {
-    totalBalance: number;
+  companyFund?: {
+    balance?: number;
+    availableBalance?: number;
+  };
+  systemFund?: {
+    totalBalance?: number;
   };
   timeline: RequestTimelineEntry[];
   createdAt: string;

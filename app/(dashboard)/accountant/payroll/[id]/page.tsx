@@ -206,9 +206,20 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleImport = () => {
-    if (!period || !selectedFile) return;
-    void runImport(false);
+  const handleFileSelect = (file: File | null) => {
+    setSelectedFile(file);
+    setImportResult(null);
+  };
+
+  const handleGoToReview = () => {
+    if (hasEntries) {
+      setActiveStep(2);
+      return;
+    }
+
+    if (selectedFile) {
+      void runImport(false);
+    }
   };
 
   const handleDownloadTemplate = async () => {
@@ -438,12 +449,22 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
             </button>
           </div>
 
-          <label className="block rounded-3xl border border-dashed border-blue-200 bg-blue-50/40 p-8 text-center cursor-pointer hover:border-blue-400/70 transition-colors">
+          <label
+            className="block rounded-3xl border border-dashed border-blue-200 bg-blue-50/40 p-8 text-center cursor-pointer hover:border-blue-400/70 transition-colors"
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "copy";
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              handleFileSelect(event.dataTransfer.files?.[0] ?? null);
+            }}
+          >
             <input
               type="file"
               accept=".xlsx,.xls"
               className="hidden"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
             />
             <p className="text-sm font-semibold text-slate-900">Chọn file bảng lương Excel</p>
             <p className="mt-1 text-sm text-slate-600">Kéo thả hoặc bấm để chọn file `.xlsx` / `.xls` đã điền theo file mẫu.</p>
@@ -451,17 +472,6 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
               {selectedFile ? `Đã chọn: ${selectedFile.name}` : "Chưa có file nào được chọn"}
             </p>
           </label>
-
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleImport}
-              disabled={!selectedFile || uploading}
-              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
-            >
-              {uploading ? "Đang nhập dữ liệu..." : "Nhập dữ liệu lương"}
-            </button>
-          </div>
 
           {importResult && (
             <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
@@ -487,11 +497,11 @@ export default function AccountantPayrollDetailPage({ params }: PageProps) {
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={() => setActiveStep(2)}
-              disabled={!hasEntries}
+              onClick={handleGoToReview}
+              disabled={(!hasEntries && !selectedFile) || uploading}
               className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold"
             >
-              Sang bước rà soát
+              {uploading ? "Đang nhập dữ liệu..." : "Sang bước rà soát"}
             </button>
           </div>
         </div>

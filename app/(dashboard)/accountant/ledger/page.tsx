@@ -410,7 +410,7 @@ export default function AccountantLedgerPage() {
                   <tr
                     key={item.id}
                     className="border-b border-slate-100 last:border-b-0 hover:bg-blue-50/60 transition-colors cursor-pointer"
-                    onClick={() => router.push(`/accountant/ledger/${item.id}`)}
+                    onClick={() => router.push(`/accountant/ledger/${item.transactionId ?? item.id}`)}
                   >
                     <td className="px-4 py-3 text-sm text-slate-900 font-mono">{item.transactionCode}</td>
                     <td className="px-4 py-3">

@@ -307,6 +307,7 @@ export interface LedgerFilterParams {
  */
 export interface AccountantLedgerItemResponse {
   id: number;
+  transactionId?: number;
   transactionCode: string;
   type: TransactionType;
   status: TransactionStatus;

@@ -83,6 +83,18 @@ function toFriendlyApiMessage(message: string | null | undefined, status?: numbe
     return "Bạn không thể tự duyệt hoặc từ chối yêu cầu do chính mình tạo.";
   }
 
+  if (normalized.includes("insufficient wallet balance")) {
+    if (normalized.includes("debit")) {
+      return "Số dư ví nguồn không đủ để thực hiện giao dịch. Vui lòng kiểm tra lại quỹ khả dụng trước khi duyệt.";
+    }
+
+    if (normalized.includes("lock")) {
+      return "Số dư khả dụng không đủ để giữ tiền cho yêu cầu này. Vui lòng kiểm tra lại quỹ trước khi duyệt.";
+    }
+
+    return "Số dư ví không đủ để thực hiện giao dịch này.";
+  }
+
   if (normalized.includes("full authentication is required") || normalized.includes("session expired")) {
     return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
   }

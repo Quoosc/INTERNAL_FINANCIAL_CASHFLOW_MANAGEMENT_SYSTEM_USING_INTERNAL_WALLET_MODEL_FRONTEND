@@ -326,7 +326,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Số tiền yêu cầu" value={formatCurrency(request.amount)} helper={`Tạo lúc ${formatDateTime(request.createdAt)}`} tone="blue" />
         <MetricCard label="Có thể duyệt" value={formatCurrency(maxApprovable)} helper="Theo quỹ phòng ban khả dụng" tone="emerald" />
-        <MetricCard label="Quỹ PB còn lại" value={formatCurrency(remainingDeptBudget)} helper="Sau giá trị preview duyệt" tone={overDeptBudget ? "rose" : "indigo"} />
+        <MetricCard label="Quỹ PB sau duyệt" value={formatCurrency(remainingDeptBudget)} helper="Sau khi trừ số tiền duyệt" tone={overDeptBudget ? "rose" : "indigo"} />
         <MetricCard label="Dự án sau duyệt" value={formatCurrency(projectAfterApproval)} helper={request.project.projectCode} tone="cyan" />
       </section>
 
@@ -376,7 +376,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
             }`}
           >
             <p className={`text-sm ${overDeptBudget ? "text-rose-700" : "text-emerald-700"}`}>
-              Quỹ phòng ban khả dụng: {formatCurrency(request.department.totalAvailableBalance)}
+              Số dư ví phòng ban hiện tại: {formatCurrency(request.department.totalAvailableBalance)}
             </p>
             {overDeptBudget && (
               <p className="text-xs text-rose-700 mt-2">Yêu cầu hiện vượt mức quỹ phòng ban đang khả dụng.</p>

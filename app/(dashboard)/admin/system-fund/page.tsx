@@ -12,7 +12,7 @@ import {
   updateBankStatement,
 } from "@/lib/api";
 import { CompanyFundResponse, ReconciliationReportResponse, RoleName } from "@/types";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { SideDrawer } from "@/components/ui/side-drawer";
 
@@ -24,7 +24,7 @@ export default function AdminSystemFundPage() {
   const [companyFund, setCompanyFund] = useState<CompanyFundResponse | null>(null);
   const [reconciliation, setReconciliation] = useState<ReconciliationReportResponse | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   const [showTopupModal, setShowTopupModal] = useState(false);
   const [showStatementModal, setShowStatementModal] = useState(false);
@@ -157,7 +157,7 @@ export default function AdminSystemFundPage() {
           <div className="max-w-3xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
               <span className={`h-1.5 w-1.5 rounded-full ${reconciled ? "bg-emerald-300" : "bg-amber-300"}`} />
-              Admin treasury
+              Quỹ công ty
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Quỹ hệ thống</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
@@ -179,14 +179,6 @@ export default function AdminSystemFundPage() {
               className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20"
             >
               Cập nhật sao kê
-            </button>
-            <button
-              type="button"
-              onClick={() => void loadData()}
-              disabled={loading}
-              className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Tải lại
             </button>
           </div>
         </div>
@@ -212,14 +204,6 @@ export default function AdminSystemFundPage() {
             className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold"
           >
             Cập nhật số dư ngân hàng
-          </button>
-          <button
-            type="button"
-            onClick={() => void loadData()}
-            disabled={loading}
-            className="px-4 py-2.5 rounded-xl bg-blue-100 hover:bg-blue-200 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 text-sm font-semibold"
-          >
-            Tải lại
           </button>
         </div>
       </div>
@@ -250,20 +234,20 @@ export default function AdminSystemFundPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-5">
           <InfoRow
-            label="System balance"
+            label="Số dư IFMS"
             value={formatCurrency(reconciliation?.companyFundBalance ?? 0)}
           />
           <InfoRow
-            label="Bank balance"
+            label="Số dư ngân hàng"
             value={formatCurrency(reconciliation?.externalBankBalance ?? 0)}
           />
           <InfoRow
-            label="Discrepancy"
+            label="Chênh lệch đối soát"
             value={formatCurrency(reconciliation?.bankDiscrepancy ?? 0)}
           />
           <InfoRow
-            label="Last reconciliation"
-            value={reconciliation?.generatedAt ?? "-"}
+            label="Lần đối soát gần nhất"
+            value={reconciliation?.generatedAt ? formatDateTime(reconciliation.generatedAt) : "-"}
           />
         </div>
 

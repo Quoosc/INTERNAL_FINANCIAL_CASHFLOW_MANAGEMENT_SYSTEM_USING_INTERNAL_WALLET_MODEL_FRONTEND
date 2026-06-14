@@ -69,6 +69,22 @@ function mapTabToStatus(tab: WithdrawFilterTab): WithdrawStatus | undefined {
   return undefined;
 }
 
+function getRequesterName(item: WithdrawRequestListItem): string {
+  return (
+    item.requesterFullName ||
+    item.requester?.fullName ||
+    item.creditAccountName ||
+    `Người dùng #${item.userId}`
+  );
+}
+
+function getBankAccountLabel(item: WithdrawRequestListItem): string {
+  if (item.creditAccountName && item.creditAccount) {
+    return `${item.creditAccountName} - ${item.creditAccount}`;
+  }
+  return item.creditAccount || "-";
+}
+
 export default function AccountantWithdrawalsPage() {
   const { hasRole } = useAuth();
   const toast = useToast();
@@ -185,21 +201,13 @@ export default function AccountantWithdrawalsPage() {
           <div className="max-w-3xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
-              Withdrawal processing
+              Xử lý rút tiền
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Yêu cầu rút tiền</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
               Kiểm tra thông tin ngân hàng, thực hiện hoặc từ chối các yêu cầu rút tiền của nhân viên.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void loadRequests()}
-            disabled={loading}
-            className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Tải lại
-          </button>
         </div>
       </section>
 
@@ -234,15 +242,6 @@ export default function AccountantWithdrawalsPage() {
             {TAB_LABELS[tab]}
           </button>
         ))}
-
-        <button
-          type="button"
-          onClick={() => void loadRequests()}
-          disabled={loading}
-            className="ml-auto rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Tải lại
-        </button>
         </div>
       </div>
 
@@ -278,13 +277,13 @@ export default function AccountantWithdrawalsPage() {
                 items.map((item) => (
                   <tr key={item.id} className="border-b border-slate-100 hover:bg-blue-50/60 transition-colors">
                     <td className="px-4 py-3 text-sm text-slate-900">
-                      {item.requester?.fullName ?? `User #${item.userId}`}
+                      {getRequesterName(item)}
                     </td>
                     <td className="px-4 py-3 text-sm text-right font-semibold text-slate-900">
                       {formatCurrency(item.amount)}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">
-                      {item.creditAccountName} - {item.creditAccount}
+                      {getBankAccountLabel(item)}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">{item.creditBankName}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 max-w-55 truncate">

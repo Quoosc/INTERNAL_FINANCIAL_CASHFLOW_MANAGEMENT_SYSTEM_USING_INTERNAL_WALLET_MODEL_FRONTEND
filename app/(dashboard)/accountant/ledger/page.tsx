@@ -13,6 +13,7 @@ import {
   TransactionDirection,
   TransactionStatus,
   TransactionType,
+  WalletOwnerType,
 } from "@/types";
 import { formatCurrency, formatDateTime, parseApiDate } from "@/lib/format";
 
@@ -38,16 +39,16 @@ function pickPaginated<T>(payload: PaginatedResponse<T> | T[]): { items: T[]; to
 
 function getTypeLabel(type: TransactionType): string {
   const labels: Record<string, string> = {
-    REQUEST_PAYMENT:        "Giải ngân",
-    PAYSLIP_PAYMENT:        "Chi lương",
-    SYSTEM_TOPUP:           "Nạp quỹ",
-    DEPOSIT:                "Nạp ví",
-    WITHDRAW:               "Rút tiền",
-    DEPT_QUOTA_ALLOCATION:  "Cấp quota phòng ban",
-    PROJECT_QUOTA_ALLOCATION: "Cấp quota dự án",
+    REQUEST_PAYMENT:        "Giải ngân yêu cầu",
+    PAYSLIP_PAYMENT:        "Chi trả lương",
+    SYSTEM_TOPUP:           "Nạp quỹ hệ thống",
+    DEPOSIT:                "Nạp tiền vào ví",
+    WITHDRAW:               "Rút tiền về ngân hàng",
+    DEPT_QUOTA_ALLOCATION:  "Cấp ngân sách phòng ban",
+    PROJECT_QUOTA_ALLOCATION: "Cấp vốn dự án",
     ADVANCE_RETURN:         "Hoàn tạm ứng",
-    REVERSAL:               "Hoàn đảo",
-    SYSTEM_ADJUSTMENT:      "Điều chỉnh",
+    REVERSAL:               "Hoàn giao dịch",
+    SYSTEM_ADJUSTMENT:      "Điều chỉnh số dư",
   };
   return labels[type] ?? type;
 }
@@ -69,6 +70,53 @@ function getDirectionClass(direction: TransactionDirection): string {
   return direction === TransactionDirection.CREDIT
     ? "bg-emerald-100 border-emerald-200 text-emerald-700"
     : "bg-rose-100 border-rose-200 text-rose-700";
+}
+
+function getDirectionLabel(direction: TransactionDirection): string {
+  return direction === TransactionDirection.CREDIT ? "Tiền vào" : "Tiền ra";
+}
+
+function getStatusLabel(status: TransactionStatus): string {
+  const labels: Record<string, string> = {
+    SUCCESS: "Thành công",
+    PENDING: "Đang xử lý",
+    FAILED: "Thất bại",
+    CANCELLED: "Đã hủy",
+  };
+  return labels[status] ?? status;
+}
+
+function getReferenceTypeLabel(referenceType: ReferenceType): string {
+  const labels: Record<string, string> = {
+    REQUEST: "Yêu cầu chi tiền",
+    PAYSLIP: "Phiếu lương",
+    PROJECT: "Dự án",
+    DEPARTMENT: "Phòng ban",
+    ADVANCE_BALANCE: "Dư tạm ứng",
+    SYSTEM: "Quỹ hệ thống",
+    WITHDRAWAL: "Yêu cầu rút tiền",
+    DEPOSIT: "Nạp tiền",
+  };
+  return labels[referenceType] ?? referenceType;
+}
+
+function formatOwnerLabel(ownerType: WalletOwnerType, ownerId: number, ownerName?: string | null): string {
+  if (ownerName) return ownerName;
+
+  switch (ownerType) {
+    case WalletOwnerType.USER:
+      return `Người dùng #${ownerId}`;
+    case WalletOwnerType.DEPARTMENT:
+      return `Phòng ban #${ownerId}`;
+    case WalletOwnerType.PROJECT:
+      return `Dự án #${ownerId}`;
+    case WalletOwnerType.COMPANY_FUND:
+      return "Quỹ hệ thống";
+    case WalletOwnerType.FLOAT_MAIN:
+      return "Ví kiểm soát hệ thống";
+    default:
+      return `${ownerType} #${ownerId}`;
+  }
 }
 
 export default function AccountantLedgerPage() {
@@ -234,11 +282,11 @@ export default function AccountantLedgerPage() {
           <div className="max-w-3xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-50">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-              Immutable ledger
+              Nhật ký giao dịch
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Sổ cái</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
-              Tra cứu giao dịch hệ thống, theo dõi dòng tiền vào ra và đối chiếu từng bút toán kế toán.
+              Tra cứu giao dịch hệ thống, theo dõi tiền vào ra và đối chiếu từng ghi nhận kế toán.
             </p>
           </div>
           <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4">
@@ -249,8 +297,8 @@ export default function AccountantLedgerPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <LedgerMetric label="Dòng tiền vào trang này" value={formatCurrency(pageInflow)} helper="Các bút toán CREDIT" tone="emerald" />
-        <LedgerMetric label="Dòng tiền ra trang này" value={formatCurrency(pageOutflow)} helper="Các bút toán DEBIT" tone="rose" />
+        <LedgerMetric label="Tiền vào trang này" value={formatCurrency(pageInflow)} helper="Các giao dịch làm tăng số dư ví" tone="emerald" />
+        <LedgerMetric label="Tiền ra trang này" value={formatCurrency(pageOutflow)} helper="Các giao dịch làm giảm số dư ví" tone="rose" />
         <LedgerMetric label="Bộ lọc" value={type ? getTypeLabel(type) : "Tất cả"} helper={from || to ? `${from || "..."} - ${to || "..."}` : "Toàn bộ thời gian"} tone="blue" />
       </section>
 
@@ -298,7 +346,7 @@ export default function AccountantLedgerPage() {
           >
             <option value="">Tất cả trạng thái</option>
             {statusOptions.map((v) => (
-              <option key={v} value={v}>{v}</option>
+              <option key={v} value={v}>{getStatusLabel(v)}</option>
             ))}
           </select>
 
@@ -309,7 +357,7 @@ export default function AccountantLedgerPage() {
           >
             <option value="">Tất cả nguồn</option>
             {refTypeOptions.map((v) => (
-              <option key={v} value={v}>{v}</option>
+              <option key={v} value={v}>{getReferenceTypeLabel(v)}</option>
             ))}
           </select>
 
@@ -337,10 +385,10 @@ export default function AccountantLedgerPage() {
               <tr className="bg-blue-50/80 border-b border-slate-200">
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã GD</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Loại</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Chiều</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Hướng tiền</th>
                 <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none hover:text-slate-600" onClick={() => handleSort("amount")}>Số tiền<SortIcon col="amount" /></th>
                 <th className="px-4 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Số dư sau</th>
-                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ví chủ thể</th>
+                <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">Ví liên quan</th>
                 <th className="px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none hover:text-slate-600" onClick={() => handleSort("timestamp")}>Thời gian<SortIcon col="timestamp" /></th>
               </tr>
             </thead>
@@ -372,7 +420,7 @@ export default function AccountantLedgerPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full border text-xs ${getDirectionClass(item.direction)}`}>
-                        {item.direction === TransactionDirection.CREDIT ? "Vào" : "Ra"}
+                        {getDirectionLabel(item.direction)}
                       </span>
                     </td>
                     <td className={`px-4 py-3 text-right text-sm font-semibold ${item.direction === TransactionDirection.CREDIT ? "text-emerald-700" : "text-rose-700"}`}>
@@ -380,7 +428,7 @@ export default function AccountantLedgerPage() {
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-slate-900">{formatCurrency(item.balanceAfter)}</td>
                     <td className="px-4 py-3 text-sm text-slate-600">
-                      {item.walletOwnerType} #{item.ownerId}
+                      {formatOwnerLabel(item.walletOwnerType, item.ownerId, item.ownerName)}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">{formatDateTime(item.timestamp)}</td>
                   </tr>

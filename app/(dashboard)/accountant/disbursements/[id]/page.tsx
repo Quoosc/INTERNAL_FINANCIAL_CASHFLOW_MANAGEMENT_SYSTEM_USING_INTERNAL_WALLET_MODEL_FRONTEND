@@ -333,9 +333,9 @@ export default function AccountantDisbursementDetailPage({
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Disbursement detail</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Process payout, verify OTP, inspect evidence and approval timeline.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Trung tâm giải ngân</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết giải ngân</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Kiểm tra người nhận, chứng từ, luồng phê duyệt và xác nhận chuyển tiền.</p>
           </div>
         </div>
       </section>
@@ -385,9 +385,9 @@ export default function AccountantDisbursementDetailPage({
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Disbursement detail</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Process payout, verify OTP, inspect evidence and approval timeline.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Trung tâm giải ngân</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết giải ngân</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Kiểm tra người nhận, chứng từ, luồng phê duyệt và xác nhận chuyển tiền.</p>
           </div>
         </div>
       </section>
@@ -403,7 +403,14 @@ export default function AccountantDisbursementDetailPage({
         <span className="text-slate-600 font-mono">{detail.requestCode}</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+        <InfoCard label="Mã yêu cầu" value={detail.requestCode} mono />
+        <InfoCard label="Người nhận" value={detail.requester.fullName} />
+        <InfoCard label="Số tiền giải ngân" value={formatCurrency(detail.approvedAmount)} tone="text-amber-700" />
+        <InfoCard label="Trạng thái xử lý" value={canProcessDisbursement ? "Đang chờ giải ngân" : "Đã xử lý"} />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-6">
         <div className="space-y-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -431,7 +438,7 @@ export default function AccountantDisbursementDetailPage({
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
-              Approval chain
+              Luồng phê duyệt
             </h2>
 
             <div className="space-y-3">
@@ -511,7 +518,7 @@ export default function AccountantDisbursementDetailPage({
                 value={`${detail.project.projectCode} • ${detail.project.name}`}
               />
               <InfoCard
-                label="Phase"
+                label="Giai đoạn"
                 value={`${detail.phase.phaseCode} • ${detail.phase.name}`}
               />
               <InfoCard
@@ -535,7 +542,7 @@ export default function AccountantDisbursementDetailPage({
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
-              Compliance checklist
+              Checklist kiểm tra
             </h2>
 
             <ChecklistItem
@@ -575,10 +582,10 @@ export default function AccountantDisbursementDetailPage({
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
+        <div className="flex flex-col gap-6 xl:sticky xl:top-6 xl:self-start">
+          <div className="order-2 rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
-              Receipt Viewer
+              Chứng từ đính kèm
             </h2>
 
             {detail.attachments.length === 0 ? (
@@ -633,7 +640,7 @@ export default function AccountantDisbursementDetailPage({
             )}
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
+          <div className="order-1 rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
               Xác nhận giải ngân
             </h2>

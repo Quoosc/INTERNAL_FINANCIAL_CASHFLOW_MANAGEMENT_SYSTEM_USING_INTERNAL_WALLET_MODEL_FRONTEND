@@ -287,6 +287,12 @@ export async function downloadFile(
 
 // --- Convenience Methods ---
 
+function serializeBody(body?: unknown): BodyInit | undefined {
+  if (body == null) return undefined;
+  if (typeof FormData !== "undefined" && body instanceof FormData) return body;
+  return JSON.stringify(body);
+}
+
 export const api = {
   get: <T>(url: string, options?: FetchOptions) =>
     apiClient<T>(url, { method: "GET", ...options }),
@@ -294,21 +300,21 @@ export const api = {
   post: <T>(url: string, body?: unknown, options?: FetchOptions) =>
     apiClient<T>(url, {
       method: "POST",
-      body: body ? JSON.stringify(body) : undefined,
+      body: serializeBody(body),
       ...options,
     }),
 
   put: <T>(url: string, body?: unknown, options?: FetchOptions) =>
     apiClient<T>(url, {
       method: "PUT",
-      body: body ? JSON.stringify(body) : undefined,
+      body: serializeBody(body),
       ...options,
     }),
 
   patch: <T>(url: string, body?: unknown, options?: FetchOptions) =>
     apiClient<T>(url, {
       method: "PATCH",
-      body: body ? JSON.stringify(body) : undefined,
+      body: serializeBody(body),
       ...options,
     }),
 

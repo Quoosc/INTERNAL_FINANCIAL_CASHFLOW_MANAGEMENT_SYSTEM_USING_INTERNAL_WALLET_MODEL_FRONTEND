@@ -218,9 +218,9 @@ export function TeamLeaderDashboard() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Team Leader dashboard</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Tổng quan Trưởng nhóm</p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-                Xin chào, {user?.fullName ?? "Team Leader"}
+                Xin chào, {user?.fullName ?? "Trưởng nhóm"}
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
                 Hôm nay là {todayLabel}. Theo dõi hàng chờ duyệt, dự án phụ trách và các thao tác ví cá nhân tại một nơi.
@@ -337,7 +337,7 @@ export function TeamLeaderDashboard() {
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-bold text-amber-900">Tổng giá trị đang chờ duyệt</p>
-              <p className="mt-1 text-sm text-amber-700">Ưu tiên kiểm tra các yêu cầu có ảnh hưởng trực tiếp tới ngân sách phase.</p>
+              <p className="mt-1 text-sm text-amber-700">Ưu tiên kiểm tra các yêu cầu có ảnh hưởng trực tiếp tới ngân sách giai đoạn.</p>
             </div>
             <p className="text-2xl font-bold text-amber-900">{formatCurrency(pendingAmount)}</p>
           </div>
@@ -464,7 +464,7 @@ export function TeamLeaderDashboard() {
 
                     <div className="mt-2 space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span>Budget burn</span>
+                        <span>Tỷ lệ sử dụng ngân sách</span>
                         <span>{burn}%</span>
                       </div>
                       <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">

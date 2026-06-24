@@ -631,7 +631,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
                 <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">{request.requestCode}</p>
                 <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết yêu cầu phê duyệt</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">
-                  Kiểm tra người gửi, hạng mục, chứng từ và sức khỏe ngân sách phase trước khi xử lý Flow 1.
+                  Kiểm tra người gửi, hạng mục, chứng từ và tình hình ngân sách giai đoạn trước khi xử lý.
                 </p>
               </div>
 
@@ -655,7 +655,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
         <MetricCard label="Số tiền yêu cầu" value={formatCurrency(request.amount)} helper={`Tạo lúc ${formatDateTime(request.createdAt)}`} tone="blue" />
         <MetricCard label="Số tiền duyệt" value={formatCurrency(approvedValue)} helper={request.approvedAmount ? "Đã có giá trị duyệt" : "Mặc định bằng số tiền yêu cầu"} tone="emerald" />
         <MetricCard label="Ngân sách còn lại" value={formatCurrency(remainingBudget)} helper={`Sau yêu cầu: ${afterUsagePercent}% sử dụng`} tone={budgetSummary?.overBudget ? "rose" : "indigo"} />
-        <MetricCard label="Timeline" value={String(sortedTimeline.length)} helper="Sự kiện đã ghi nhận" tone="slate" />
+        <MetricCard label="Trạng thái" value={getStatusLabel(request.status)} helper="Tình trạng xử lý hiện tại" tone="slate" />
       </section>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -698,7 +698,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
                 }
               />
               <InfoCard
-                label="Phase"
+                label="Giai đoạn"
                 value={
                   `${request.phaseCode ?? ""} ${request.phaseName ?? ""}`.trim() ||
                   "—"
@@ -713,7 +713,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
               <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">
-                    Sức khỏe ngân sách Phase
+                    Tình hình ngân sách giai đoạn
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">{request.phaseName ?? "N/A"}</p>
                 </div>
@@ -745,7 +745,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
 
               {budgetSummary.overBudget && (
                 <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-                  ⚠ Yêu cầu này vượt ngân sách phase. Cần xem xét kỹ trước khi duyệt.
+                  Yêu cầu này vượt ngân sách giai đoạn. Cần xem xét kỹ trước khi duyệt.
                 </div>
               )}
             </div>
@@ -813,7 +813,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
             <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
               <h2 className="text-lg font-bold text-amber-900">Yêu cầu của chính bạn</h2>
               <p className="mt-1 text-sm text-amber-800">
-                Team Leader không được tự duyệt yêu cầu do mình tạo. Yêu cầu này sẽ không được xử lý trong hàng chờ duyệt của Team Leader.
+                Trưởng nhóm không được tự duyệt yêu cầu do mình tạo. Yêu cầu này sẽ không được xử lý trong hàng chờ duyệt của Trưởng nhóm.
               </p>
             </div>
           )}
@@ -847,11 +847,27 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-lg font-bold text-slate-900">Timeline</h2>
-            <p className="mt-1 text-sm text-slate-500">Lịch sử xử lý yêu cầu.</p>
+            <h2 className="text-lg font-bold text-slate-900">Lịch sử xử lý</h2>
+            <p className="mt-1 text-sm text-slate-500">Các bước đã diễn ra với yêu cầu này.</p>
           </div>
 
           <div className="space-y-3">
+            <div className="relative pl-8">
+              {sortedTimeline.length > 0 && (
+                <span className="absolute left-3 top-7 bottom-[-10px] w-px bg-slate-200" />
+              )}
+              <span className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600">
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <p className="text-sm font-bold text-slate-900">Đã gửi yêu cầu</p>
+                <p className="mt-1 text-xs text-slate-500">{request.requesterName}</p>
+                <p className="mt-1 text-xs text-slate-500">{formatDateTime(request.createdAt)}</p>
+              </div>
+            </div>
+
             {sortedTimeline.map((entry, index) => (
               <div key={entry.id} className="relative pl-8">
                 {index < sortedTimeline.length - 1 && (
@@ -974,7 +990,7 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
               <h3 className="text-xl font-bold text-slate-900">
                 Từ chối yêu cầu - {request.requestCode}
               </h3>
-              <p className="mt-1 text-sm text-slate-500">Lý do từ chối sẽ được ghi vào timeline xử lý.</p>
+              <p className="mt-1 text-sm text-slate-500">Lý do từ chối sẽ được ghi vào lịch sử xử lý.</p>
             </div>
 
             <div>

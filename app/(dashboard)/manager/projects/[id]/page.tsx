@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
 import {
+  PhaseStatus,
   ProjectDetailResponse,
   ProjectRole,
   ProjectStatus,
@@ -47,6 +48,22 @@ function statusLabel(status: string): string {
     default:
       return status;
   }
+}
+
+function phaseStatusLabel(status: PhaseStatus): string {
+  if (status === PhaseStatus.PLANNED) return "Chưa bắt đầu";
+  if (status === PhaseStatus.ACTIVE) return "Đang thực hiện";
+  return "Đã kết thúc";
+}
+
+function phaseStatusClass(status: PhaseStatus): string {
+  if (status === PhaseStatus.PLANNED) {
+    return "bg-blue-50 border-blue-200 text-blue-700";
+  }
+  if (status === PhaseStatus.ACTIVE) {
+    return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  }
+  return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 function burnPercent(totalSpent: number, totalBudget: number): number {
@@ -117,7 +134,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
         if (err instanceof ApiError) {
           toast.error(err.apiMessage);
         } else {
-          toast.error("Không thể tải danh sách Team Leader.");
+          toast.error("Không thể tải danh sách Trưởng nhóm.");
         }
       }
     };
@@ -167,7 +184,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
     }
 
     if (!Number.isFinite(teamLeaderId) || teamLeaderId <= 0) {
-      toast.error("Vui lòng chọn Team Leader.");
+      toast.error("Vui lòng chọn Trưởng nhóm.");
       return;
     }
 
@@ -272,9 +289,9 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Hạn mức dự án" value={formatCurrency(project.totalBudget)} helper="Ngân sách kế hoạch" tone="blue" />
-        <MetricCard label="Đã chi" value={formatCurrency(project.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
+        <MetricCard label="Đã chi" value={formatCurrency(project.totalSpent)} helper={`${overallBurn}% ngân sách đã sử dụng`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
         <MetricCard label="Quỹ khả dụng" value={formatCurrency(project.availableBudget)} helper={`${remainingPercent}% khả dụng`} tone="emerald" />
-        <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} phase`} tone="cyan" />
+        <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} giai đoạn`} tone="cyan" />
       </section>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -291,7 +308,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Budget burn</span>
+            <span>Tỷ lệ sử dụng ngân sách</span>
             <span>{overallBurn}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-100">
@@ -315,12 +332,12 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
 
       <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-slate-900">Phases</h2>
+          <h2 className="text-lg font-bold text-slate-900">Các giai đoạn</h2>
           <p className="mt-1 text-sm text-slate-500">Các giai đoạn triển khai của dự án.</p>
         </div>
 
         {project.phases.length === 0 ? (
-          <p className="text-sm text-slate-500">Dự án chưa có phase.</p>
+          <p className="text-sm text-slate-500">Dự án chưa có giai đoạn.</p>
         ) : (
           <div className="space-y-3">
             {project.phases.map((phase) => {
@@ -333,13 +350,9 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                       <p className="text-sm font-semibold text-slate-900 mt-1">{phase.name}</p>
                     </div>
                     <span
-                      className={`inline-flex px-2 py-1 rounded-full border text-xs ${
-                        phase.status === "ACTIVE"
-                          ? "bg-emerald-100 border-emerald-200 text-emerald-700"
-                          : "bg-slate-100 border-slate-200 text-slate-600"
-                      }`}
+                      className={`inline-flex px-2 py-1 rounded-full border text-xs ${phaseStatusClass(phase.status)}`}
                     >
-                      {phase.status}
+                      {phaseStatusLabel(phase.status)}
                     </span>
                   </div>
 
@@ -411,7 +424,7 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
           <div className="absolute inset-x-0 top-10 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl shadow-slate-950/20">
             <div className="mb-5">
               <h3 className="text-xl font-bold text-slate-900">Sửa thông tin dự án</h3>
-              <p className="mt-1 text-sm text-slate-500">Cập nhật cấu hình quản trị, ngân sách và Team Leader phụ trách.</p>
+              <p className="mt-1 text-sm text-slate-500">Cập nhật cấu hình quản trị, ngân sách và Trưởng nhóm phụ trách.</p>
             </div>
 
             <div className="space-y-5">
@@ -447,22 +460,22 @@ export default function ManagerProjectDetailPage({ params }: PageProps) {
                   onChange={(event) => setEditStatus(event.target.value as ProjectStatus)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
                 >
-                  <option value={ProjectStatus.PLANNING}>PLANNING</option>
-                  <option value={ProjectStatus.ACTIVE}>ACTIVE</option>
-                  <option value={ProjectStatus.PAUSED}>PAUSED</option>
-                  <option value={ProjectStatus.CLOSED}>CLOSED</option>
+                  <option value={ProjectStatus.PLANNING}>Lập kế hoạch</option>
+                  <option value={ProjectStatus.ACTIVE}>Đang hoạt động</option>
+                  <option value={ProjectStatus.PAUSED}>Tạm dừng</option>
+                  <option value={ProjectStatus.CLOSED}>Đã đóng</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm text-slate-600 mb-2">Team Leader</label>
+              <label className="block text-sm text-slate-600 mb-2">Trưởng nhóm</label>
               <select
                 value={editTeamLeaderId}
                 onChange={(event) => setEditTeamLeaderId(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-500/10"
               >
-                <option value="">Chọn Team Leader</option>
+                <option value="">Chọn Trưởng nhóm</option>
                 {teamLeaders.map((option) => (
                   <option key={option.id} value={String(option.id)}>
                     {option.fullName} ({option.employeeCode})

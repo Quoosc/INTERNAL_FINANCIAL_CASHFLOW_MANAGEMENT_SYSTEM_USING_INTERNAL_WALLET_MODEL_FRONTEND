@@ -4,7 +4,7 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
-import { formatCurrency, getBurnClass } from "@/lib/format";
+import { formatCurrency, formatDate, getBurnClass } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SideDrawer } from "@/components/ui/side-drawer";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -64,6 +64,29 @@ function statusLabel(status: ProjectStatus): string {
   if (status === ProjectStatus.PAUSED) return "Tạm dừng";
   if (status === ProjectStatus.CLOSED) return "Đã đóng";
   return status;
+}
+
+function phaseStatusLabel(status: PhaseStatus): string {
+  if (status === PhaseStatus.PLANNED) return "Chưa bắt đầu";
+  if (status === PhaseStatus.ACTIVE) return "Đang thực hiện";
+  return "Đã kết thúc";
+}
+
+function phaseStatusClass(status: PhaseStatus): string {
+  if (status === PhaseStatus.PLANNED) {
+    return "bg-blue-50 border-blue-200 text-blue-700";
+  }
+  if (status === PhaseStatus.ACTIVE) {
+    return "bg-emerald-100 border-emerald-200 text-emerald-700";
+  }
+  return "bg-slate-100 border-slate-200 text-slate-600";
+}
+
+function localDateValue(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function roleBadge(role: ProjectRole): string {
@@ -287,7 +310,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       !phaseEnd ||
       (phaseBudget ?? 0) <= 0
     ) {
-      toast.error("Vui lòng nhập đủ thông tin phase hợp lệ.");
+      toast.error("Vui lòng nhập đầy đủ thông tin giai đoạn hợp lệ.");
       return;
     }
     setSubmitting(true);
@@ -303,7 +326,16 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         body,
       );
       setProject((prev) =>
-        prev ? { ...prev, phases: [...prev.phases, res.data] } : prev,
+        prev
+          ? {
+              ...prev,
+              currentPhaseId:
+                res.data.status === PhaseStatus.ACTIVE
+                  ? res.data.id
+                  : prev.currentPhaseId,
+              phases: [...prev.phases, res.data],
+            }
+          : prev,
       );
       setSelectedPhaseId(res.data.id);
       setShowCreatePhase(false);
@@ -311,54 +343,116 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       setPhaseBudget(null);
       setPhaseStart("");
       setPhaseEnd("");
-      toast.success("Đã tạo phase mới.");
+      toast.success("Đã tạo giai đoạn mới.");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tạo phase. Vui lòng thử lại.");
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể tạo giai đoạn. Vui lòng thử lại.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const onUpdatePhase = async () => {
+  const updatePhase = async (
+    projectId: number,
+    phaseId: number,
+    body: UpdatePhaseBody,
+  ) => {
+    setSubmitting(true);
+    try {
+      const res = await api.put<ProjectPhaseResponse>(
+        `/api/v1/team-leader/projects/${projectId}/phases/${phaseId}`,
+        body,
+      );
+      const transitionDate = localDateValue();
+      setProject((prev) =>
+        prev
+          ? {
+              ...prev,
+              currentPhaseId:
+                res.data.status === PhaseStatus.ACTIVE
+                  ? res.data.id
+                  : prev.currentPhaseId === res.data.id
+                    ? null
+                    : prev.currentPhaseId,
+              phases: prev.phases.map((p) => {
+                if (p.id === phaseId) return res.data;
+                if (
+                  res.data.status === PhaseStatus.ACTIVE &&
+                  p.status === PhaseStatus.ACTIVE
+                ) {
+                  return {
+                    ...p,
+                    status: PhaseStatus.CLOSED,
+                    endDate: transitionDate,
+                  };
+                }
+                return p;
+              }),
+            }
+          : prev,
+      );
+      setShowEditPhase(false);
+      setEditingPhaseId(null);
+      toast.success("Đã cập nhật giai đoạn.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể cập nhật giai đoạn. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onUpdatePhase = () => {
     if (
       !project ||
       !editingPhaseId ||
       !editPhaseName.trim() ||
       (editPhaseBudget ?? 0) <= 0
     ) {
-      toast.error("Thông tin cập nhật phase chưa hợp lệ.");
+      toast.error("Thông tin cập nhật giai đoạn chưa hợp lệ.");
       return;
     }
-    setSubmitting(true);
+
     const body: UpdatePhaseBody = {
       name: editPhaseName.trim(),
       budgetLimit: editPhaseBudget ?? 0,
       endDate: editPhaseEnd || undefined,
       status: editPhaseStatus,
     };
-    try {
-      const res = await api.put<ProjectPhaseResponse>(
-        `/api/v1/team-leader/projects/${project.id}/phases/${editingPhaseId}`,
-        body,
-      );
-      setProject((prev) =>
-        prev
-          ? {
-              ...prev,
-              phases: prev.phases.map((p) =>
-                p.id === editingPhaseId ? res.data : p,
-              ),
-            }
-          : prev,
-      );
-      setShowEditPhase(false);
-      setEditingPhaseId(null);
-      toast.success("Đã cập nhật phase.");
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.apiMessage : "Không thể cập nhật phase. Vui lòng thử lại.");
-    } finally {
-      setSubmitting(false);
+    const currentPhase = project.phases.find(
+      (phase) =>
+        phase.id === project.currentPhaseId &&
+        phase.status === PhaseStatus.ACTIVE,
+    );
+    const isSwitchingPhase =
+      editPhaseStatus === PhaseStatus.ACTIVE &&
+      currentPhase != null &&
+      currentPhase.id !== editingPhaseId;
+
+    if (isSwitchingPhase) {
+      const transitionDate = localDateValue();
+      const plannedEnd = currentPhase.endDate
+        ? formatDate(currentPhase.endDate)
+        : "chưa xác định";
+      const isEndingEarly =
+        currentPhase.endDate != null &&
+        currentPhase.endDate > transitionDate;
+      const transitionDescription = isEndingEarly
+        ? `sẽ kết thúc sớm vào ${formatDate(transitionDate)}`
+        : `sẽ được ghi nhận kết thúc vào ${formatDate(transitionDate)}`;
+      setConfirmState({
+        open: true,
+        message:
+          `Giai đoạn "${currentPhase.name}" vẫn đang thực hiện và có ngày kết thúc dự kiến ${plannedEnd}. ` +
+          `Nếu tiếp tục, giai đoạn này ${transitionDescription} và ` +
+          `"${editPhaseName.trim()}" sẽ trở thành giai đoạn đang thực hiện. Bạn có chắc muốn chuyển không?`,
+        onConfirm: () => {
+          setConfirmState((prev) => ({ ...prev, open: false }));
+          void updatePhase(project.id, editingPhaseId, body);
+        },
+      });
+      return;
     }
+
+    void updatePhase(project.id, editingPhaseId, body);
   };
 
   const startEditBudget = () => {
@@ -608,7 +702,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
     }
     setConfirmState({
       open: true,
-      message: `Bạn có chắc muốn xóa danh mục "${categoryName}" khỏi phase này?`,
+      message: `Bạn có chắc muốn xóa danh mục "${categoryName}" khỏi giai đoạn này?`,
       onConfirm: async () => {
         setConfirmState((prev) => ({ ...prev, open: false }));
         setSubmitting(true);
@@ -660,7 +754,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         `/api/v1/team-leader/expense-categories?projectId=${project.id}`,
       );
       setExpenseCategories(catRefreshed.data);
-      toast.success(`Đã thêm danh mục "${body.name}" vào phase.`);
+      toast.success(`Đã thêm danh mục "${body.name}" vào giai đoạn.`);
     } catch {
       toast.error("Không thể tạo danh mục. Vui lòng thử lại.");
     } finally {
@@ -699,9 +793,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
   }
 
   const currentPhase =
-    project.phases.find((p) => p.id === project.currentPhaseId) ??
-    project.phases[0] ??
-    null;
+    project.phases.find((p) => p.id === project.currentPhaseId) ?? null;
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-cyan-600 text-white shadow-xl shadow-blue-950/20">
@@ -747,9 +839,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Hạn mức dự án" value={formatCurrency(project.totalBudget)} helper="Ngân sách kế hoạch" tone="blue" />
-        <MetricCard label="Đã chi" value={formatCurrency(budgetSummary.totalSpent)} helper={`${overallBurn}% budget burn`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
+        <MetricCard label="Đã chi" value={formatCurrency(budgetSummary.totalSpent)} helper={`${overallBurn}% ngân sách đã sử dụng`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
         <MetricCard label="Quỹ khả dụng" value={formatCurrency(budgetSummary.availableBudget)} helper={`${budgetSummary.remainingPercent}% khả dụng`} tone="emerald" />
-        <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} phase`} tone="cyan" />
+        <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} giai đoạn`} tone="cyan" />
       </section>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -759,7 +851,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             <p className="mt-1 text-sm text-slate-500">Theo dõi mức tiêu hao và phần quỹ đã được cấp còn khả dụng của dự án.</p>
           </div>
           <span className="inline-flex w-fit rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
-            Phase hiện tại: {currentPhase?.name ?? "Chưa có"}
+            Giai đoạn hiện tại: {currentPhase?.name ?? "Chưa có"}
           </span>
         </div>
 
@@ -771,7 +863,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
         <div className="mt-5 space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-            <span>Budget burn</span>
+            <span>Tỷ lệ sử dụng ngân sách</span>
             <span>{overallBurn}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-100">
@@ -783,7 +875,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       <div className="flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
         {(
           [
-            ["phases", "Phases"],
+            ["phases", "Giai đoạn"],
             ["budget", "Ngân sách danh mục"],
             ["members", "Thành viên"],
           ] as [TabKey, string][]
@@ -806,13 +898,13 @@ export default function TLProjectDetailPage({ params }: PageProps) {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-lg font-bold text-slate-900">
-              Danh sách phase
+              Danh sách giai đoạn
             </h3>
             <button
               onClick={() => setShowCreatePhase(true)}
               className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-500"
             >
-              + Tạo phase
+              + Tạo giai đoạn
             </button>
           </div>
           {project.phases.map((p) => {
@@ -833,9 +925,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`inline-flex px-2 py-1 rounded-full border text-xs ${p.status === PhaseStatus.ACTIVE ? "bg-emerald-100 border-emerald-200 text-emerald-700" : "bg-slate-100 border-slate-200 text-slate-600"}`}
+                      className={`inline-flex px-2 py-1 rounded-full border text-xs ${phaseStatusClass(p.status)}`}
                     >
-                      {p.status}
+                      {phaseStatusLabel(p.status)}
                     </span>
                     <button
                       onClick={() => openEditPhase(p)}
@@ -857,7 +949,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                     {formatCurrency(p.budgetLimit)}
                   </span>
                   <span>
-                    {p.startDate ?? "—"} - {p.endDate ?? "—"}
+                    {formatDate(p.startDate)} - {formatDate(p.endDate)}
                   </span>
                 </div>
               </div>
@@ -922,7 +1014,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
           {!phaseCategories ? (
             <p className="text-sm text-slate-500">
-              Không có dữ liệu danh mục cho phase này.
+              Không có dữ liệu danh mục cho giai đoạn này.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-2xl border border-slate-200">
@@ -942,7 +1034,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
                       Còn lại
                     </th>
                     <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Burn %
+                      Tỷ lệ dùng
                     </th>
                     <th className="px-4 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-400">
                       Xóa
@@ -1095,13 +1187,13 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
       <SideDrawer
         open={showCreatePhase}
-        title="Tạo phase mới"
+        title="Tạo giai đoạn mới"
         onClose={() => setShowCreatePhase(false)}
         footer={
           <ModalActions
             onClose={() => setShowCreatePhase(false)}
             onConfirm={onCreatePhase}
-            confirmText={submitting ? "Đang lưu..." : "Tạo phase"}
+            confirmText={submitting ? "Đang lưu..." : "Tạo giai đoạn"}
           />
         }
       >
@@ -1109,7 +1201,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           <input
             value={phaseName}
             onChange={(e) => setPhaseName(e.target.value)}
-            placeholder="Tên phase"
+            placeholder="Tên giai đoạn"
             className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
           />
           <CurrencyInput
@@ -1136,7 +1228,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
 
       <SideDrawer
         open={showEditPhase}
-        title="Cập nhật phase"
+        title="Cập nhật giai đoạn"
         onClose={() => setShowEditPhase(false)}
         footer={
           <ModalActions
@@ -1150,7 +1242,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
           <input
             value={editPhaseName}
             onChange={(e) => setEditPhaseName(e.target.value)}
-            placeholder="Tên phase"
+            placeholder="Tên giai đoạn"
             className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
           />
           <CurrencyInput
@@ -1172,8 +1264,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
               }
               className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900"
             >
-              <option value={PhaseStatus.ACTIVE}>ACTIVE</option>
-              <option value={PhaseStatus.CLOSED}>CLOSED</option>
+              <option value={PhaseStatus.PLANNED}>Chưa bắt đầu</option>
+              <option value={PhaseStatus.ACTIVE}>Đang thực hiện</option>
+              <option value={PhaseStatus.CLOSED}>Đã kết thúc</option>
             </select>
           </div>
         </div>
@@ -1284,7 +1377,7 @@ export default function TLProjectDetailPage({ params }: PageProps) {
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-600 mb-1">Ngân sách cho phase này *</label>
+            <label className="block text-sm text-slate-600 mb-1">Ngân sách cho giai đoạn này *</label>
             <CurrencyInput
               value={newCatBudget}
               onChange={setNewCatBudget}

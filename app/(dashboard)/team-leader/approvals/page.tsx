@@ -17,6 +17,11 @@ import { useAuth } from "@/contexts/auth-context";
 
 const PAGE_LIMIT = 10;
 
+type ApprovalTab = "pending" | "approved";
+
+function parseApprovalTab(value: string | null): ApprovalTab {
+  return value === "approved" ? "approved" : "pending";
+}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).slice(-2);
@@ -47,6 +52,22 @@ function getTypeLabel(type: RequestType): string {
     default:
       return type;
   }
+}
+
+function getStatusLabel(status: RequestStatus): string {
+  if (status === RequestStatus.PAID) return "Đã giải ngân";
+  if (status === RequestStatus.APPROVED_BY_TEAM_LEADER) return "Đã duyệt";
+  return "Chờ duyệt";
+}
+
+function getStatusClass(status: RequestStatus): string {
+  if (status === RequestStatus.PAID) {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  }
+  if (status === RequestStatus.APPROVED_BY_TEAM_LEADER) {
+    return "border-blue-200 bg-blue-50 text-blue-700";
+  }
+  return "border-amber-200 bg-amber-50 text-amber-700";
 }
 
 function parseType(value: string | null): RequestType | undefined {
@@ -91,6 +112,15 @@ export default function TLApprovalsPage() {
     () => parsePage(searchParams.get("page")),
     [searchParams],
   );
+  const approvalTab = useMemo(
+    () => parseApprovalTab(searchParams.get("tab")),
+    [searchParams],
+  );
+  const approvalStatus =
+    approvalTab === "approved"
+      ? RequestStatus.APPROVED_BY_TEAM_LEADER
+      : RequestStatus.PENDING;
+  const isApprovedTab = approvalTab === "approved";
 
   const [items, setItems] = useState<TLApprovalListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -137,6 +167,17 @@ export default function TLApprovalsPage() {
     [pushWithParams, searchParamsString],
   );
 
+  const handleTabChange = useCallback(
+    (nextTab: ApprovalTab) => {
+      const params = new URLSearchParams(searchParamsString);
+      if (nextTab === "pending") params.delete("tab");
+      else params.set("tab", nextTab);
+      params.delete("page");
+      pushWithParams(params);
+    },
+    [pushWithParams, searchParamsString],
+  );
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       const trimmed = searchInput.trim();
@@ -158,6 +199,7 @@ export default function TLApprovalsPage() {
       try {
         const query = new URLSearchParams();
         if (typeFilter) query.set("type", typeFilter);
+        query.set("status", approvalStatus);
         if (search.trim()) query.set("search", search.trim());
         query.set("page", String(Math.max(0, page - 1)));
         query.set("size", String(PAGE_LIMIT));
@@ -169,8 +211,7 @@ export default function TLApprovalsPage() {
         if (cancelled) return;
 
         const rawItems = pickItems(res.data)
-          .map((item) => normalizeTLApprovalListItem(item))
-          .filter((item) => item.status === RequestStatus.PENDING);
+          .map((item) => normalizeTLApprovalListItem(item));
         const normalizedItems = rawItems.filter((item) => item.requester.id !== user?.id);
         const hiddenSelfItems = rawItems.length - normalizedItems.length;
 
@@ -200,7 +241,7 @@ export default function TLApprovalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [goToPage, page, search, typeFilter, toast, user?.id]);
+  }, [approvalStatus, goToPage, page, search, typeFilter, toast, user?.id]);
 
   const typeTabs: { label: string; value?: RequestType }[] = [
     { label: "Tất cả" },
@@ -224,26 +265,26 @@ export default function TLApprovalsPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Approval queue</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Trung tâm phê duyệt</p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Duyệt yêu cầu</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
-                Rà soát yêu cầu Flow 1, kiểm tra ngân sách phase và xử lý các đề xuất từ thành viên trong nhóm.
+                Rà soát yêu cầu, kiểm tra ngân sách giai đoạn và xử lý các đề xuất từ thành viên trong nhóm.
               </p>
             </div>
 
             <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur">
               <span className="h-2 w-2 rounded-full bg-white" />
-              {total.toLocaleString("vi-VN")} chờ duyệt
+              {total.toLocaleString("vi-VN")} {isApprovedTab ? "đã duyệt" : "chờ duyệt"}
             </div>
           </div>
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Hàng chờ" value={total.toLocaleString("vi-VN")} helper={`${items.length} yêu cầu đang hiển thị`} tone="blue" />
-        <MetricCard label="Tổng tiền" value={formatCurrency(totalAmount)} helper="Giá trị trên trang hiện tại" tone="blue" />
-        <MetricCard label="Nhân sự gửi" value={String(uniqueRequesters)} helper="Người đang chờ phê duyệt" tone="indigo" />
-        <MetricCard label="Cần kiểm tra" value={String(overBudgetCount)} helper="Có nguy cơ vượt phase" tone="rose" />
+        <MetricCard label={isApprovedTab ? "Đã duyệt" : "Hàng chờ"} value={total.toLocaleString("vi-VN")} helper={`${items.length} yêu cầu đang hiển thị`} tone="blue" />
+        <MetricCard label={isApprovedTab ? "Tổng đã duyệt" : "Tổng tiền"} value={formatCurrency(totalAmount)} helper="Giá trị trên trang hiện tại" tone="blue" />
+        <MetricCard label="Nhân sự gửi" value={String(uniqueRequesters)} helper={isApprovedTab ? "Người có yêu cầu đã duyệt" : "Người đang chờ phê duyệt"} tone="indigo" />
+        <MetricCard label="Cần kiểm tra" value={String(overBudgetCount)} helper="Có nguy cơ vượt ngân sách giai đoạn" tone="rose" />
       </section>
 
       <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -270,6 +311,31 @@ export default function TLApprovalsPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => handleTabChange("pending")}
+            className={`rounded-2xl border px-4 py-2.5 text-sm font-semibold transition ${
+              !isApprovedTab
+                ? "border-blue-200 bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
+            }`}
+          >
+            Chưa duyệt
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTabChange("approved")}
+            className={`rounded-2xl border px-4 py-2.5 text-sm font-semibold transition ${
+              isApprovedTab
+                ? "border-blue-200 bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
+            }`}
+          >
+            Đã duyệt
+          </button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
           {typeTabs.map((tab) => {
             const active =
               typeFilter === tab.value || (!typeFilter && !tab.value);
@@ -333,7 +399,9 @@ export default function TLApprovalsPage() {
             </svg>
           </div>
           <h3 className="mt-4 text-base font-bold text-slate-900">
-            Không có yêu cầu nào đang chờ duyệt
+            {isApprovedTab
+              ? "Chưa có yêu cầu nào đã duyệt"
+              : "Không có yêu cầu nào đang chờ duyệt"}
           </h3>
           <p className="mt-1 text-sm text-slate-500">Hàng chờ đang trống hoặc bộ lọc chưa có dữ liệu phù hợp.</p>
         </div>
@@ -370,6 +438,11 @@ export default function TLApprovalsPage() {
                     <span className="text-slate-500">
                       {formatSharedRelativeTime(item.createdAt)}
                     </span>
+                    <span
+                      className={`inline-flex rounded-full border px-2.5 py-1 font-semibold ${getStatusClass(item.status)}`}
+                    >
+                      {getStatusLabel(item.status)}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -396,15 +469,15 @@ export default function TLApprovalsPage() {
                     <div>
                       {phaseBudgetLimit <= 0 ? (
                         <p className="text-sm text-slate-500">
-                          Chưa có dữ liệu ngân sách phase
+                          Chưa có dữ liệu ngân sách giai đoạn
                         </p>
                       ) : overBudget ? (
                         <p className="text-sm text-rose-700 font-medium">
-                          ⚠ Vượt ngân sách phase
+                          Vượt ngân sách giai đoạn
                         </p>
                       ) : (
                         <p className="text-sm text-emerald-700">
-                          Ngân sách phase còn an toàn
+                          Ngân sách giai đoạn còn an toàn
                         </p>
                       )}
                       <p className="text-xs text-slate-500 mt-1">

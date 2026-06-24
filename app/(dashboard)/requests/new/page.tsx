@@ -289,7 +289,7 @@ export default function NewRequestPage() {
 
       try {
         const phasesRes = await api.get<ProjectPhasesResponse>(
-          `/api/v1/projects/${projectId}/phases`
+          `/api/v1/projects/${projectId}/phases?status=ACTIVE`
         );
 
         if (cancelled) return;
@@ -787,7 +787,7 @@ export default function NewRequestPage() {
               disabled={!isProjectBasedType || !form.projectId || loadingPhases}
               className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.phaseId ? "border-rose-300" : "border-slate-200"}`}
             >
-              <option value="">{loadingPhases ? "Đang tải phase..." : form.projectId ? "Chọn phase" : "Chọn dự án trước"}</option>
+              <option value="">{loadingPhases ? "Đang tải giai đoạn..." : form.projectId ? "Chọn giai đoạn" : "Chọn dự án trước"}</option>
               {(phases?.phases ?? []).map((phase) => (
                 <option key={phase.id} value={phase.id}>
                   [{phase.phaseCode}] {phase.name}
@@ -809,7 +809,7 @@ export default function NewRequestPage() {
               disabled={!isProjectBasedType || !form.phaseId || loadingCategories}
               className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.categoryId ? "border-rose-300" : "border-slate-200"}`}
             >
-              <option value="">{loadingCategories ? "Đang tải hạng mục..." : form.phaseId ? "Chọn hạng mục" : "Chọn phase trước"}</option>
+              <option value="">{loadingCategories ? "Đang tải hạng mục..." : form.phaseId ? "Chọn hạng mục" : "Chọn giai đoạn trước"}</option>
               {categoryOptions.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}

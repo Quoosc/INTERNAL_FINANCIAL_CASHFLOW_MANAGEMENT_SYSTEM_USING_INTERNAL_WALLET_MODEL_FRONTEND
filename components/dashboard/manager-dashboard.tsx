@@ -322,7 +322,7 @@ export function ManagerDashboard() {
             />
 
             <StatCard
-              title="Dự án active"
+              title="Dự án đang hoạt động"
               value={String(activeProjects)}
               sub="Đang triển khai"
               href="/manager/projects"
@@ -399,7 +399,7 @@ export function ManagerDashboard() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Yêu cầu cấp vốn dự án chờ duyệt</h2>
-              <p className="mt-1 text-sm text-slate-500">Các đề xuất cấp vốn mới từ Team Leader.</p>
+              <p className="mt-1 text-sm text-slate-500">Các đề xuất cấp vốn mới từ Trưởng nhóm.</p>
             </div>
             <Link
               href="/manager/approvals"
@@ -512,7 +512,7 @@ export function ManagerDashboard() {
 
                     <div className="mt-2 space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span>Budget burn</span>
+                        <span>Tỷ lệ sử dụng ngân sách</span>
                         <span>{burn}%</span>
                       </div>
                       <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">

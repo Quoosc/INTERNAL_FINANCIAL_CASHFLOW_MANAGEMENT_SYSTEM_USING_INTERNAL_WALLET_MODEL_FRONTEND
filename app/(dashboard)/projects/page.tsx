@@ -219,7 +219,7 @@ export default function ProjectsPage() {
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Không gian IFMS</p>
             <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Dự án của tôi</h1>
             <p className="mt-3 text-sm leading-6 text-blue-100">Theo dõi ngân sách, giai đoạn hiện tại và tiến độ của các dự án bạn đang tham gia.</p>
           </div>
@@ -303,7 +303,7 @@ export default function ProjectsPage() {
 
                 {project.currentPhaseName && (
                   <p className="text-xs text-slate-500">
-                    Phase hiện tại: <span className="text-slate-700">{project.currentPhaseName}</span>
+                    Giai đoạn hiện tại: <span className="text-slate-700">{project.currentPhaseName}</span>
                   </p>
                 )}
 

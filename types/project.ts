@@ -16,6 +16,7 @@ export enum ProjectStatus {
 
 /** khớp với project.entity.PhaseStatus */
 export enum PhaseStatus {
+  PLANNED = "PLANNED",
   ACTIVE = "ACTIVE",
   CLOSED = "CLOSED",
 }

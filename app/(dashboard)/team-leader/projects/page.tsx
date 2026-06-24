@@ -189,10 +189,10 @@ export default function TLProjectsPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_32%),radial-gradient(circle_at_bottom_left,_rgba(103,232,249,0.22),_transparent_34%)]" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Team Leader workspace</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Không gian Trưởng nhóm</p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Dự án của tôi</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
-                Theo dõi danh sách dự án đang phụ trách, sức khỏe ngân sách và phase hiện tại trong một màn hình.
+                Theo dõi danh sách dự án đang phụ trách, tình hình ngân sách và giai đoạn hiện tại trong một màn hình.
               </p>
             </div>
 
@@ -206,9 +206,9 @@ export default function TLProjectsPage() {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Tổng dự án" value={total.toLocaleString("vi-VN")} helper={`${items.length} đang hiển thị`} tone="blue" />
-        <MetricCard label="Đang chạy" value={String(activeOnPage)} helper="Dự án active trên trang" tone="emerald" />
+        <MetricCard label="Đang chạy" value={String(activeOnPage)} helper="Dự án đang hoạt động trên trang" tone="emerald" />
         <MetricCard label="Ngân sách còn lại" value={formatCurrency(availableOnPage)} helper="Tổng khả dụng trên trang" tone="cyan" />
-        <MetricCard label="Cần chú ý" value={String(atRiskOnPage)} helper="Burn rate từ 85% trở lên" tone="rose" />
+        <MetricCard label="Cần chú ý" value={String(atRiskOnPage)} helper="Tỷ lệ sử dụng từ 85% trở lên" tone="rose" />
       </section>
 
       <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -311,12 +311,12 @@ export default function TLProjectsPage() {
                 </div>
 
                 <p className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                  {project.currentPhaseName ? project.currentPhaseName : "Chưa có phase"}
+                  {project.currentPhaseName ? project.currentPhaseName : "Chưa có giai đoạn"}
                 </p>
 
                 <div className="mt-5 space-y-2">
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-semibold text-slate-700">Budget burn</span>
+                    <span className="font-semibold text-slate-700">Tỷ lệ sử dụng ngân sách</span>
                     <span>{burn}% sử dụng</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-slate-100">

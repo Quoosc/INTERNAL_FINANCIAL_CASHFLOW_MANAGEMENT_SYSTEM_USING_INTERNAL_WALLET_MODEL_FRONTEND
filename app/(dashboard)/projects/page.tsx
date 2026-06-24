@@ -46,51 +46,21 @@ type ProjectListPayload =
   | PaginatedResponse<ProjectListItem>
   | { content?: ProjectListItem[]; totalElements?: number; totalPages?: number }
   | ProjectListItem[];
-type ProjectMoneyFields = ProjectListItem & {
-  budget?: number | string | null;
-  budgetLimit?: number | string | null;
-  allocatedBudget?: number | string | null;
-  totalAmount?: number | string | null;
-  spentAmount?: number | string | null;
-  usedBudget?: number | string | null;
-  remainingBudget?: number | string | null;
-  availableBudget?: number | string | null;
-};
-
-function asMoney(value: unknown): number | null {
-  const numeric = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
-}
-
 function getProjectBudget(item: ProjectListItem): number {
-  const project = item as ProjectMoneyFields;
-  return (
-    asMoney(project.totalBudget) ??
-    asMoney(project.budget) ??
-    asMoney(project.budgetLimit) ??
-    asMoney(project.allocatedBudget) ??
-    asMoney(project.totalAmount) ??
-    0
-  );
+  const budget = Number(item.totalBudget);
+  return Number.isFinite(budget) ? budget : 0;
 }
 
 function getProjectSpent(item: ProjectListItem): number {
-  const project = item as ProjectMoneyFields;
-  return (
-    asMoney(project.totalSpent) ??
-    asMoney(project.spentAmount) ??
-    asMoney(project.usedBudget) ??
-    0
-  );
+  const spent = Number(item.totalSpent);
+  return Number.isFinite(spent) ? spent : 0;
 }
 
 function getProjectRemaining(item: ProjectListItem): number {
-  const project = item as ProjectMoneyFields;
-  return (
-    asMoney(project.availableBudget) ??
-    asMoney(project.remainingBudget) ??
-    Math.max(0, getProjectBudget(item) - getProjectSpent(item))
-  );
+  const available = Number(item.availableBudget);
+  return Number.isFinite(available)
+    ? available
+    : Math.max(0, getProjectBudget(item) - getProjectSpent(item));
 }
 
 function getSpentPercent(item: ProjectListItem): number {
@@ -250,8 +220,8 @@ export default function ProjectsPage() {
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">My projects</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Track budget, current phase and progress for projects you are involved in.</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Dự án của tôi</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Theo dõi ngân sách, giai đoạn hiện tại và tiến độ của các dự án bạn đang tham gia.</p>
           </div>
         </div>
       </section>
@@ -350,13 +320,17 @@ export default function ProjectsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
-                    <p className="text-[11px] text-slate-500">Ngân sách</p>
+                    <p className="text-[11px] text-slate-500">Hạn mức</p>
                     <p className="text-xs font-semibold text-slate-900 mt-0.5">{formatCurrency(budget)}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
-                    <p className="text-[11px] text-slate-500">Còn lại</p>
+                    <p className="text-[11px] text-slate-500">Đã chi</p>
+                    <p className="text-xs font-semibold text-rose-700 mt-0.5">{formatCurrency(getProjectSpent(project))}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
+                    <p className="text-[11px] text-slate-500">Khả dụng</p>
                     <p className="text-xs font-semibold text-emerald-700 mt-0.5">{formatCurrency(remaining)}</p>
                   </div>
                 </div>

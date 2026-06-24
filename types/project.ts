@@ -40,6 +40,7 @@ export interface ProjectListItem {
   status: ProjectStatus;
   departmentId: number;
   totalBudget: number;
+  availableBudget: number;
   totalSpent: number;
   currentPhaseId: number | null;
   currentPhaseName: string | null;

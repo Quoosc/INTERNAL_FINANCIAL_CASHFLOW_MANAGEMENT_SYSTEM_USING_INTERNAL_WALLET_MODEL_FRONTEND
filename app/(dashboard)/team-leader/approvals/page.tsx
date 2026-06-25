@@ -492,7 +492,7 @@ export default function TLApprovalsPage() {
                         {formatCurrency(item.amount)}
                       </p>
                       <span className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition group-hover:border-blue-200">
-                        Chi tiết →
+                        Xem chi tiết →
                       </span>
                     </div>
                   </div>

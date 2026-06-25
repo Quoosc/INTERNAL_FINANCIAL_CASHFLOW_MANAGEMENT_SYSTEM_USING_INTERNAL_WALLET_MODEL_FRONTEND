@@ -33,7 +33,7 @@ function formatDateInput(value: string | null): string {
 
 const ROLE_LABEL: Record<string, string> = {
   EMPLOYEE:    "Nhân viên",
-  TEAM_LEADER: "Team Leader",
+  TEAM_LEADER: "Trưởng nhóm",
   MANAGER:     "Quản lý",
   ACCOUNTANT:  "Kế toán",
   CFO:         "Giám đốc tài chính",

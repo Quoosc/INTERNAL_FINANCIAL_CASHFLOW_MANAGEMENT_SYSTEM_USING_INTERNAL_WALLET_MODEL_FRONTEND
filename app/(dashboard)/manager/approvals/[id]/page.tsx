@@ -208,7 +208,8 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
     try {
       await api.post<ManagerApproveResponse>(`/api/v1/manager/approvals/${id}/approve`, body);
       toast.success("Đã duyệt yêu cầu thành công.");
-      router.push("/manager/approvals");
+      router.replace("/manager/approvals?tab=approved");
+      router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {
         setActionError(err.apiMessage);
@@ -339,7 +340,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-4">
               <h2 className="text-lg font-bold text-slate-900">Người gửi yêu cầu</h2>
-              <p className="mt-1 text-sm text-slate-500">Thông tin Team Leader tạo đề xuất cấp vốn.</p>
+              <p className="mt-1 text-sm text-slate-500">Thông tin Trưởng nhóm tạo đề xuất cấp vốn.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <InfoCard label="Họ tên" value={request.requester.fullName} />
@@ -415,7 +416,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-lg font-bold text-slate-900">Timeline</h2>
+            <h2 className="text-lg font-bold text-slate-900">Lịch sử xử lý</h2>
             <p className="mt-1 text-sm text-slate-500">Lịch sử xử lý cấp vốn.</p>
           </div>
 

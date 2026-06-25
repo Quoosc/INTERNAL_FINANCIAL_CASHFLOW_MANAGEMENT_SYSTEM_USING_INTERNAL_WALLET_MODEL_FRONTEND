@@ -178,11 +178,11 @@ const PERMISSION_COPY: Record<Permission, { label: string; description: string }
   },
   [Permission.REQUEST_APPROVE_TEAM_LEADER]: {
     label: "Duyệt yêu cầu chi tiêu của thành viên",
-    description: "Cho phép Team Leader duyệt hoặc từ chối yêu cầu tạm ứng, chi phí và hoàn ứng.",
+    description: "Cho phép Trưởng nhóm duyệt hoặc từ chối yêu cầu tạm ứng, chi phí và hoàn ứng.",
   },
   [Permission.REQUEST_APPROVE_PROJECT_TOPUP]: {
     label: "Duyệt cấp vốn dự án",
-    description: "Cho phép Manager duyệt yêu cầu bổ sung ngân sách dự án từ Team Leader.",
+    description: "Cho phép Quản lý duyệt yêu cầu bổ sung ngân sách dự án từ Trưởng nhóm.",
   },
   [Permission.REQUEST_APPROVE_DEPT_TOPUP]: {
     label: "Duyệt cấp vốn phòng ban",
@@ -241,7 +241,7 @@ const PERMISSION_COPY: Record<Permission, { label: string; description: string }
     description: "Cho phép phân bổ ngân sách cho phase, hạng mục hoặc đề xuất bổ sung ngân sách dự án.",
   },
   [Permission.PROJECT_ASSIGN_LEADER]: {
-    label: "Chỉ định Team Leader cho dự án",
+    label: "Chỉ định Trưởng nhóm cho dự án",
     description: "Cho phép Manager gán hoặc thay đổi người phụ trách dự án.",
   },
   [Permission.DEPT_VIEW_DASHBOARD]: {

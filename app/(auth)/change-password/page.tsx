@@ -216,21 +216,44 @@ function PasswordField({
   onChange: (value: string) => void;
   placeholder: string;
 }) {
+  const [visible, setVisible] = useState(false);
+
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-slate-700">
         {label}
       </label>
-      <input
-        id={id}
-        type="password"
-        required
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 placeholder-slate-400 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
-        placeholder={placeholder}
-        autoComplete="new-password"
-      />
+      <div className="relative">
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          required
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm text-slate-950 placeholder-slate-400 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10"
+          placeholder={placeholder}
+          autoComplete="new-password"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((current) => !current)}
+          className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-2xl text-slate-400 transition hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-blue-500/15"
+          aria-label={visible ? `Ẩn ${label.toLowerCase()}` : `Hiện ${label.toLowerCase()}`}
+          aria-pressed={visible}
+          title={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+        >
+          {visible ? (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 3l18 18M10.6 10.7a2 2 0 002.7 2.7M9.9 4.3A10.7 10.7 0 0112 4c5 0 8.5 4.2 9.5 6.1a4 4 0 010 3.8 12.5 12.5 0 01-2.2 2.9M6.2 6.2A13.5 13.5 0 002.5 10a4 4 0 000 4c1 1.8 4.5 6 9.5 6 1.4 0 2.7-.3 3.8-.8" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z" />
+              <circle cx="12" cy="12" r="3" strokeWidth={1.8} />
+            </svg>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

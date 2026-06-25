@@ -450,8 +450,8 @@ export default function AccountantDisbursementDetailPage({
               />
 
               <TimelineStep
-                title="Bước 2: Team Leader duyệt"
-                subtitle={tlApprovalEntry?.actorName ?? "Team Leader"}
+                title="Bước 2: Trưởng nhóm duyệt"
+                subtitle={tlApprovalEntry?.actorName ?? "Trưởng nhóm"}
                 time={
                   tlApprovalEntry
                     ? formatDateTime(tlApprovalEntry.createdAt)

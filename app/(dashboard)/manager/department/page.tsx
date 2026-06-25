@@ -304,7 +304,7 @@ export default function ManagerDepartmentPage() {
 
   const roleTabs: { label: string; value?: MemberRole }[] = [
     { label: "Tất cả" },
-    { label: "Team Leader", value: "TEAM_LEADER" },
+    { label: "Trưởng nhóm", value: "TEAM_LEADER" },
     { label: "Nhân viên", value: "EMPLOYEE" },
   ];
 
@@ -369,7 +369,7 @@ export default function ManagerDepartmentPage() {
         <MetricCard label="Số dư ví PB" value={formatCurrency(availableBudget)} helper="Có thể dùng để cấp vốn dự án" tone="blue" />
         <MetricCard label="Thành viên" value={total.toLocaleString("vi-VN")} helper="Nhân sự trong phòng" tone="indigo" />
         <MetricCard label="Có dư nợ" value={String(debtMembers)} helper="Thành viên cần theo dõi" tone="rose" />
-        <MetricCard label="Chờ xử lý" value={String(pendingRequests)} helper={`${teamLeaderCount} Team Leader trên trang`} tone="cyan" />
+        <MetricCard label="Chờ xử lý" value={String(pendingRequests)} helper={`${teamLeaderCount} Trưởng nhóm trên trang`} tone="cyan" />
       </section>
 
       <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -490,7 +490,7 @@ export default function ManagerDepartmentPage() {
                 <span
                   className={`inline-flex shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${roleBadgeClass(member.role)}`}
                 >
-                  {member.role === "TEAM_LEADER" ? "Team Leader" : "Nhân viên"}
+                  {member.role === "TEAM_LEADER" ? "Trưởng nhóm" : "Nhân viên"}
                 </span>
               </div>
 

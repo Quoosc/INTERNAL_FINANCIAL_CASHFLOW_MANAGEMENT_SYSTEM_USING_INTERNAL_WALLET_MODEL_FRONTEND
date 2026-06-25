@@ -106,7 +106,7 @@ const ROLE_CREATE_ACTIONS: Partial<
 > = {
   [RoleName.TEAM_LEADER]: {
     title: "Xin cấp vốn dự án",
-    description: "Team Leader tạo yêu cầu cấp vốn tại màn hình chi tiết dự án mình phụ trách.",
+    description: "Trưởng nhóm tạo yêu cầu cấp vốn tại màn hình chi tiết dự án mình phụ trách.",
     href: "/team-leader/projects",
     action: "Chọn dự án để xin cấp vốn",
   },

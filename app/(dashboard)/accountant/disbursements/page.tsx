@@ -256,7 +256,7 @@ export default function AccountantDisbursementsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Giải ngân</h1>
           <p className="text-slate-500 mt-1">
-            Danh sách yêu cầu đã được Team Leader duyệt và chờ Kế toán xử lý.
+            Danh sách yêu cầu đã được Trưởng nhóm duyệt và chờ Kế toán xử lý.
           </p>
         </div>
         <span className="inline-flex w-fit px-3 py-1.5 rounded-full border border-amber-300 bg-amber-100 text-amber-700 text-sm font-medium">
@@ -392,7 +392,7 @@ export default function AccountantDisbursementsPage() {
                       </span>
                     </p>
                     <p className="text-xs text-slate-500">
-                      Duyệt bởi: {item.approver?.fullName ?? "Team Leader"}
+                      Duyệt bởi: {item.approver?.fullName ?? "Trưởng nhóm"}
                       {item.approver?.approvedAt
                         ? ` • ${formatDateTime(item.approver.approvedAt)}`
                         : ""}

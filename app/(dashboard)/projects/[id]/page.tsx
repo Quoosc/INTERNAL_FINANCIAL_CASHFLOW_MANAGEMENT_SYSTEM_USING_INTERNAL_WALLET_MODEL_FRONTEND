@@ -8,6 +8,7 @@ import {
   ProjectPhasesResponse,
   ProjectPhaseResponse,
 } from "@/types";
+import { MetricLabel } from "@/components/ui/metric-label";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 
@@ -78,15 +79,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
   );
 
   const budgetStats = useMemo(() => {
-    const totalBudget = phases.reduce(
-      (sum, phase) => sum + phase.budgetLimit,
-      0,
-    );
-    const spentAmount = phases.reduce(
-      (sum, phase) => sum + phase.currentSpent,
-      0,
-    );
-    const remainingBudget = Math.max(0, totalBudget - spentAmount);
+    const totalBudget = data?.totalBudget ?? 0;
+    const spentAmount = data?.totalSpent ?? 0;
+    const remainingBudget = data?.availableBudget ?? 0;
     const spentPercent =
       totalBudget > 0
         ? Math.min(100, Math.round((spentAmount / totalBudget) * 100))
@@ -98,9 +93,15 @@ export default function ProjectDetailPage({ params }: PageProps) {
       remainingBudget,
       spentPercent,
     };
-  }, [phases]);
+  }, [data?.availableBudget, data?.totalBudget, data?.totalSpent]);
 
   const projectStatusText = useMemo(() => {
+    if (data?.status) {
+      if (data.status === "ACTIVE") return "Đang triển khai";
+      if (data.status === "PLANNING") return "Lên kế hoạch";
+      if (data.status === "PAUSED") return "Tạm dừng";
+      return "Đã đóng";
+    }
     if (phases.some((phase) => phase.status === PhaseStatus.ACTIVE)) {
       return "Đang triển khai";
     }
@@ -111,7 +112,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
       return "Chưa bắt đầu";
     }
     return "Chưa có giai đoạn";
-  }, [phases]);
+  }, [data?.status, phases]);
 
   if (loading) {
     return (
@@ -223,17 +224,17 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <BudgetCard
-            title="Tổng ngân sách giai đoạn"
+            title={<MetricLabel label="Hạn mức giai đoạn" description="Mức ngân sách kế hoạch tối đa của các giai đoạn, không phải số tiền hiện có." />}
             value={budgetStats.totalBudget}
             tone="text-slate-900"
           />
           <BudgetCard
-            title="Đã chi"
+            title={<MetricLabel label="Đã chi" description="Tổng giá trị giao dịch đã hoàn tất trong các giai đoạn." />}
             value={budgetStats.spentAmount}
             tone="text-rose-700"
           />
           <BudgetCard
-            title="Còn lại"
+            title={<MetricLabel label="Quỹ khả dụng" description="Số tiền thực tế còn có thể sử dụng trong các giai đoạn." />}
             value={budgetStats.remainingBudget}
             tone="text-emerald-700"
           />
@@ -346,7 +347,7 @@ function BudgetCard({
   value,
   tone,
 }: {
-  title: string;
+  title: React.ReactNode;
   value: number;
   tone: string;
 }) {

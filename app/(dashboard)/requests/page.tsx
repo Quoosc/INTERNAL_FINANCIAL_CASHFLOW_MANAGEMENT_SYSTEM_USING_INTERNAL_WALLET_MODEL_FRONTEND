@@ -52,7 +52,7 @@ const CREATE_ACTION_BY_ROLE: Partial<
   [RoleName.TEAM_LEADER]: {
     href: "/team-leader/projects",
     label: "Xin cấp vốn dự án",
-    description: "Theo dõi các yêu cầu bạn đã tạo; Team Leader tạo yêu cầu cấp vốn từ màn hình chi tiết dự án.",
+    description: "Theo dõi các yêu cầu bạn đã tạo; Trưởng nhóm tạo yêu cầu cấp vốn từ màn hình chi tiết dự án.",
   },
   [RoleName.MANAGER]: {
     href: "/dashboard",

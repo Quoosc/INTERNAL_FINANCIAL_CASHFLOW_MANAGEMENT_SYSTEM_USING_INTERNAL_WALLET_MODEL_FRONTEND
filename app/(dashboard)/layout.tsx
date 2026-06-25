@@ -328,7 +328,7 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
           items: [...shared, notifications],
         },
         {
-          label: "Team Leader",
+          label: "Trưởng nhóm",
           items: [
             {
               label: "Duyệt yêu cầu",
@@ -503,7 +503,7 @@ function getNavGroups(role: RoleName | undefined): NavGroup[] {
 
 const ROLE_LABELS: Partial<Record<RoleName, string>> = {
   [RoleName.EMPLOYEE]: "Nhân viên",
-  [RoleName.TEAM_LEADER]: "Team Leader",
+  [RoleName.TEAM_LEADER]: "Trưởng nhóm",
   [RoleName.MANAGER]: "Manager",
   [RoleName.ACCOUNTANT]: "Kế toán",
   [RoleName.CFO]: "CFO",

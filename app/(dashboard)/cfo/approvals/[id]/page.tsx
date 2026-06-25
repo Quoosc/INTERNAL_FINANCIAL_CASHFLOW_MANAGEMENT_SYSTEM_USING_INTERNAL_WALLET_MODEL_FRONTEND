@@ -238,7 +238,8 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
     try {
       await api.post<AdminApproveResponse>(`/api/v1/cfo/approvals/${id}/approve`, body);
-      router.push(LIST_PATH);
+      router.replace(`${LIST_PATH}?tab=approved`);
+      router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {
         setActionError(err.apiMessage);

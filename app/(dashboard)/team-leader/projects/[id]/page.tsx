@@ -8,6 +8,7 @@ import { formatCurrency, formatDate, getBurnClass } from "@/lib/format";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SideDrawer } from "@/components/ui/side-drawer";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { MetricLabel } from "@/components/ui/metric-label";
 import {
   AddMemberBody,
   AvailableMemberResponse,
@@ -838,9 +839,9 @@ export default function TLProjectDetailPage({ params }: PageProps) {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Hạn mức dự án" value={formatCurrency(project.totalBudget)} helper="Ngân sách kế hoạch" tone="blue" />
-        <MetricCard label="Đã chi" value={formatCurrency(budgetSummary.totalSpent)} helper={`${overallBurn}% ngân sách đã sử dụng`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
-        <MetricCard label="Quỹ khả dụng" value={formatCurrency(budgetSummary.availableBudget)} helper={`${budgetSummary.remainingPercent}% khả dụng`} tone="emerald" />
+        <MetricCard label={<MetricLabel label="Hạn mức dự án" description="Mức ngân sách kế hoạch tối đa của dự án, không phải số tiền đã được cấp." />} value={formatCurrency(project.totalBudget)} helper="Ngân sách kế hoạch" tone="blue" />
+        <MetricCard label={<MetricLabel label="Đã chi" description="Tổng giá trị các giao dịch đã hoàn tất và được ghi nhận cho dự án." />} value={formatCurrency(budgetSummary.totalSpent)} helper={`${overallBurn}% ngân sách đã sử dụng`} tone={overallBurn >= 85 ? "rose" : "indigo"} />
+        <MetricCard label={<MetricLabel label="Quỹ khả dụng" description="Số tiền thực tế dự án đang có thể sử dụng cho các yêu cầu mới." />} value={formatCurrency(budgetSummary.availableBudget)} helper={`${budgetSummary.remainingPercent}% khả dụng`} tone="emerald" />
         <MetricCard label="Thành viên" value={String(project.members.length)} helper={`${project.phases.length} giai đoạn`} tone="cyan" />
       </section>
 
@@ -1403,7 +1404,7 @@ function MetricCard({
   helper,
   tone,
 }: {
-  label: string;
+  label: React.ReactNode;
   value: string;
   helper: string;
   tone: "blue" | "emerald" | "indigo" | "cyan" | "rose";

@@ -502,7 +502,8 @@ export default function TLApprovalDetailPage({ params }: PageProps) {
         body,
       );
       toast.success("Đã duyệt yêu cầu thành công.");
-      router.push("/team-leader/approvals");
+      router.replace("/team-leader/approvals?tab=approved");
+      router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {
         setActionError(err.apiMessage);

@@ -65,6 +65,12 @@ export interface ProjectPhaseResponse {
 export interface ProjectPhasesResponse {
   projectId: number;
   projectName: string;
+  status: ProjectStatus;
+  totalBudget: number;
+  totalSpent: number;
+  availableBudget: number;
+  currentPhaseId: number | null;
+  currentPhaseName: string | null;
   phases: ProjectPhaseResponse[];
 }
 

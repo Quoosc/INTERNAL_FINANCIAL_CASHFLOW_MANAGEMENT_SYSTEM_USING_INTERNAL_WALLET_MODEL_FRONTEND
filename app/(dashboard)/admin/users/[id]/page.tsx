@@ -23,7 +23,7 @@ interface PageProps {
 
 const ROLE_OPTIONS: { value: RoleName; label: string; roleId: number }[] = [
   { value: RoleName.EMPLOYEE, label: "Nhân viên", roleId: 1 },
-  { value: RoleName.TEAM_LEADER, label: "Team Leader", roleId: 2 },
+  { value: RoleName.TEAM_LEADER, label: "Trưởng nhóm", roleId: 2 },
   { value: RoleName.MANAGER, label: "Manager", roleId: 3 },
   { value: RoleName.ACCOUNTANT, label: "Kế toán", roleId: 4 },
   { value: RoleName.CFO, label: "CFO", roleId: 5 },

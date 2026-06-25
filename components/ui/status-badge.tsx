@@ -67,7 +67,7 @@ const ROLE_LABEL: Partial<Record<RoleName, string>> = {
   [RoleName.CFO]: "CFO",
   [RoleName.MANAGER]: "Manager",
   [RoleName.ACCOUNTANT]: "Kế toán",
-  [RoleName.TEAM_LEADER]: "Team Leader",
+  [RoleName.TEAM_LEADER]: "Trưởng nhóm",
   [RoleName.EMPLOYEE]: "Nhân viên",
 };
 

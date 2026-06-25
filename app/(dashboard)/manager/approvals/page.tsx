@@ -198,7 +198,7 @@ export default function ManagerApprovalsPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">Manager workspace</p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Duyệt cấp vốn dự án</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
-                Xử lý đề xuất cấp vốn từ Team Leader và chuyển tiền trực tiếp từ ví phòng ban sang quỹ dự án.
+                Xử lý đề xuất cấp vốn từ Trưởng nhóm và chuyển tiền trực tiếp từ ví phòng ban sang quỹ dự án.
               </p>
             </div>
 
@@ -213,7 +213,7 @@ export default function ManagerApprovalsPage() {
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label={isApprovedTab ? "Đã duyệt" : "Chưa duyệt"} value={total.toLocaleString("vi-VN")} helper={`${items.length} yêu cầu đang hiển thị`} tone="blue" />
         <MetricCard label={isApprovedTab ? "Tổng đã cấp" : "Tổng đề xuất"} value={formatCurrency(totalAmount)} helper="Giá trị trên trang hiện tại" tone="indigo" />
-        <MetricCard label="Người gửi" value={String(uniqueRequesters)} helper="Team Leader gửi đề xuất" tone="cyan" />
+        <MetricCard label="Người gửi" value={String(uniqueRequesters)} helper="Trưởng nhóm gửi đề xuất" tone="cyan" />
         <MetricCard label="Vượt ngân sách DA" value={String(overBudgetCount)} helper="Cần kiểm tra kỹ trước khi duyệt" tone="rose" />
       </section>
 
@@ -221,7 +221,7 @@ export default function ManagerApprovalsPage() {
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900">Bộ lọc cấp vốn</h2>
-            <p className="mt-1 text-sm text-slate-500">Tìm theo mã yêu cầu, dự án hoặc Team Leader gửi đề xuất.</p>
+            <p className="mt-1 text-sm text-slate-500">Tìm theo mã yêu cầu, dự án hoặc Trưởng nhóm gửi đề xuất.</p>
           </div>
           {filtered && (
             <button
@@ -265,7 +265,7 @@ export default function ManagerApprovalsPage() {
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Tìm theo mã yêu cầu, dự án, Team Leader..."
+            placeholder="Tìm theo mã yêu cầu, dự án, Trưởng nhóm..."
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
           />
         </div>

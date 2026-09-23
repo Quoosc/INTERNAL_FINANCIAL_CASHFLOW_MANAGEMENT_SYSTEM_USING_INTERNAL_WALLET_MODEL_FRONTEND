@@ -110,6 +110,7 @@ export interface ManagerDeptMemberListItem {
   employeeCode: string;
   avatar: string | null;
   jobTitle: string | null;
+  role?: "TEAM_LEADER" | "EMPLOYEE" | string | null;
   status: string;
   pendingRequestsCount: number;
   debtBalance: number;
@@ -140,6 +141,7 @@ export interface ManagerDeptMemberDetailResponse {
 
 /** GET /manager/approvals — query params */
 export interface ManagerApprovalFilterParams {
+  status?: RequestStatus;
   search?: string;
   page?: number;
   size?: number;

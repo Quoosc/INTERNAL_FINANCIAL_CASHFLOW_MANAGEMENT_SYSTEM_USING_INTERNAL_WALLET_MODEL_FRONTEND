@@ -15,6 +15,7 @@ export interface AdminApprovalListItem {
   type: "DEPARTMENT_TOPUP";
   status: RequestStatus;
   amount: number;
+  approvedAmount?: number | null;
   description: string | null;
   requester: ApprovalRequester;
   department: {
@@ -46,8 +47,12 @@ export interface AdminApprovalDetailResponse {
     totalProjectQuota: number;
     totalAvailableBalance: number;
   };
-  systemFund: {
-    totalBalance: number;
+  companyFund?: {
+    balance?: number;
+    availableBalance?: number;
+  };
+  systemFund?: {
+    totalBalance?: number;
   };
   timeline: RequestTimelineEntry[];
   createdAt: string;
@@ -227,6 +232,7 @@ export interface UpdateSettingsBody {
 
 /** GET /admin/approvals — query params */
 export interface AdminApprovalFilterParams {
+  status?: RequestStatus;
   search?: string;
   page?: number;
   limit?: number;

@@ -13,9 +13,8 @@ import {
   AdminRejectResponse,
   RequestAction,
   RequestStatus,
-  RequestType,
 } from "@/types";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, parseApiDate } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
@@ -154,8 +153,14 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     };
   }, [id, toast]);
 
-  const systemFundBalance = request?.systemFund.totalBalance ?? 0;
-  const deptCurrent = request?.department.totalAvailableBalance ?? 0;
+  const systemFundBalance =
+    request?.companyFund?.balance ??
+    request?.companyFund?.availableBalance ??
+    request?.systemFund?.totalBalance ??
+    0;
+  const deptCurrent = request?.department?.totalAvailableBalance ?? 0;
+  const isPending = request?.status === RequestStatus.PENDING;
+  const settledAmount = request?.approvedAmount ?? request?.amount ?? 0;
 
   const maxApprovable = useMemo(() => {
     if (!request) return 0;
@@ -164,6 +169,9 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
   const previewApprovedAmount = useMemo(() => {
     if (!request) return 0;
+    if (request.status !== RequestStatus.PENDING) {
+      return request.approvedAmount ?? request.amount;
+    }
 
     const fromInput = Number(approvedAmount);
     if (!Number.isFinite(fromInput) || fromInput <= 0) {
@@ -173,15 +181,17 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
     return Math.min(fromInput, request.amount);
   }, [approvedAmount, maxApprovable, request]);
 
-  const systemFundAfter = Math.max(0, systemFundBalance - previewApprovedAmount);
-  const deptAfter = deptCurrent + previewApprovedAmount;
-  const overSystemFund = request ? request.amount > systemFundBalance : false;
-  const canTakeAction = request?.status === RequestStatus.PENDING;
+  const systemFundBefore = isPending ? systemFundBalance : systemFundBalance + settledAmount;
+  const systemFundAfter = isPending ? Math.max(0, systemFundBalance - previewApprovedAmount) : systemFundBalance;
+  const deptBefore = Math.max(0, deptCurrent - settledAmount);
+  const deptAfter = isPending ? deptCurrent + previewApprovedAmount : deptCurrent;
+  const overSystemFund = isPending && request ? request.amount > systemFundBalance : false;
+  const canTakeAction = isPending;
 
   const sortedTimeline = useMemo(() => {
     if (!request) return [];
     return [...request.timeline].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      (a, b) => (parseApiDate(a.createdAt)?.getTime() ?? 0) - (parseApiDate(b.createdAt)?.getTime() ?? 0),
     );
   }, [request]);
 
@@ -228,7 +238,8 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
     try {
       await api.post<AdminApproveResponse>(`/api/v1/cfo/approvals/${id}/approve`, body);
-      router.push(LIST_PATH);
+      router.replace(`${LIST_PATH}?tab=approved`);
+      router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {
         setActionError(err.apiMessage);
@@ -276,8 +287,8 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Budget approval detail</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Review department top-up proposal, system fund impact and approval decision.</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết duyệt ngân sách</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Xem xét đề xuất cấp ngân sách phòng ban, tác động đến quỹ hệ thống và quyết định phê duyệt.</p>
           </div>
         </div>
       </section>
@@ -313,15 +324,15 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Budget approval detail</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Review department top-up proposal, system fund impact and approval decision.</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết duyệt ngân sách</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Xem xét đề xuất cấp ngân sách phòng ban, tác động đến quỹ hệ thống và quyết định phê duyệt.</p>
           </div>
         </div>
       </section>
 
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link href={LIST_PATH} className="hover:text-slate-900 transition-colors">
-          Duyệt cấp quota ngân sách
+          Duyệt ngân sách phòng ban
         </Link>
         <span>/</span>
         <span className="text-slate-600 font-mono">{request.requestCode}</span>
@@ -342,7 +353,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           <div className="flex flex-col items-start lg:items-end gap-2">
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex px-3 py-1.5 rounded-full border text-sm bg-blue-50 border-blue-200 text-blue-700">
-                Cấp quota
+                Cấp ngân sách phòng ban
               </span>
               <span className={`inline-flex px-3 py-1.5 rounded-full border text-sm ${statusClass(request.status)}`}>
                 {statusLabel(request.status)}
@@ -356,12 +367,25 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Tác động Flow 3</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {isPending ? "Tác động nếu phê duyệt" : "Số dư sau xử lý"}
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <InfoCard label="Quỹ hệ thống hiện tại" value={formatCurrency(systemFundBalance)} />
-          <InfoCard label="Sau phê duyệt" value={formatCurrency(systemFundAfter)} tone="text-amber-700" />
-          <InfoCard label="Quỹ phòng ban sau phê duyệt" value={formatCurrency(deptAfter)} tone="text-emerald-700" />
+          <InfoCard
+            label={isPending ? "Quỹ hệ thống hiện tại" : "Trước khi trừ"}
+            value={formatCurrency(systemFundBefore)}
+          />
+          <InfoCard
+            label={isPending ? "Quỹ hệ thống sau phê duyệt" : "Sau khi trừ"}
+            value={formatCurrency(systemFundAfter)}
+            tone="text-amber-700"
+          />
+          <InfoCard
+            label={isPending ? "Quỹ phòng ban sau phê duyệt" : "Quỹ phòng ban hiện tại"}
+            value={formatCurrency(deptAfter)}
+            tone="text-emerald-700"
+          />
         </div>
 
         {overSystemFund && (
@@ -388,8 +412,11 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InfoCard label="Phòng ban" value={request.department.name} />
               <InfoCard label="Mã phòng" value={request.department.code} />
-              <InfoCard label="Quota dự án hiện tại" value={formatCurrency(request.department.totalProjectQuota)} />
-              <InfoCard label="Ngân sách khả dụng" value={formatCurrency(request.department.totalAvailableBalance)} />
+              <InfoCard
+                label={isPending ? "Số dư ví phòng ban hiện tại" : "Trước khi cấp"}
+                value={formatCurrency(isPending ? request.department.totalAvailableBalance : deptBefore)}
+              />
+              <InfoCard label="Nguồn số liệu" value="Ví phòng ban" />
             </div>
           </div>
 
@@ -401,7 +428,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-3">
-            <h2 className="text-lg font-semibold text-slate-900">Tiến trình Flow 3</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Tiến trình xử lý</h2>
 
             {sortedTimeline.length > 0 ? (
               <div className="space-y-3">
@@ -466,7 +493,7 @@ export default function CfoApprovalDetailPage({ params }: PageProps) {
 
         <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
           <h2 className="text-lg font-semibold text-slate-900">Tóm tắt quyết định</h2>
-          <InfoCard label="Loại yêu cầu" value={RequestType.DEPARTMENT_TOPUP} />
+          <InfoCard label="Loại yêu cầu" value="Cấp ngân sách phòng ban" />
           <InfoCard label="Số tiền yêu cầu" value={formatCurrency(request.amount)} />
           <InfoCard label="Số tiền dự kiến duyệt" value={formatCurrency(previewApprovedAmount)} tone="text-blue-700" />
           <InfoCard label="Trạng thái hiện tại" value={statusLabel(request.status)} />

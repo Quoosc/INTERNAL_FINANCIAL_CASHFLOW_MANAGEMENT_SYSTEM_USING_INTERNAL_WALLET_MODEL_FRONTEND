@@ -20,9 +20,9 @@ const BREADCRUMB_MAP: Record<string, string[]> = {
   "/payroll": ["Phiếu lương"],
   "/projects": ["Dự án"],
   "/profile": ["Hồ sơ cá nhân"],
-  "/team-leader/approvals": ["Team Leader", "Duyệt yêu cầu"],
-  "/team-leader/projects": ["Team Leader", "Dự án"],
-  "/team-leader/team": ["Team Leader", "Nhóm của tôi"],
+  "/team-leader/approvals": ["Trưởng nhóm", "Duyệt yêu cầu"],
+  "/team-leader/projects": ["Trưởng nhóm", "Dự án"],
+  "/team-leader/team": ["Trưởng nhóm", "Nhóm của tôi"],
   "/manager/approvals": ["Manager", "Duyệt nạp quỹ"],
   "/manager/projects": ["Manager", "Dự án"],
   "/manager/department": ["Manager", "Phòng ban"],
@@ -46,7 +46,7 @@ const BREADCRUMB_MAP: Record<string, string[]> = {
 
 const ROLE_LABELS: Partial<Record<RoleName, string>> = {
   [RoleName.EMPLOYEE]: "Nhân viên",
-  [RoleName.TEAM_LEADER]: "Team Leader",
+  [RoleName.TEAM_LEADER]: "Trưởng nhóm",
   [RoleName.MANAGER]: "Manager",
   [RoleName.ACCOUNTANT]: "Kế toán",
   [RoleName.CFO]: "CFO",

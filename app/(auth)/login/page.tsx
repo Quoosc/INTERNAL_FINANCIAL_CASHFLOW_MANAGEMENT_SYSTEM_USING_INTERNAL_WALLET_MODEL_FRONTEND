@@ -47,7 +47,7 @@ const ROLE_CONFIGS: RoleConfig[] = [
   },
   {
     role: "TEAM_LEADER",
-    label: "Team Leader",
+    label: "Trưởng nhóm",
     hint: "Duyệt chi tiêu & quản lý DA",
     textColor: "text-blue-600",
     border: "border-blue-500",

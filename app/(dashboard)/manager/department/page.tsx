@@ -34,13 +34,18 @@ function parseRole(value: string | null): MemberRole | undefined {
 }
 
 function inferRole(member: ManagerDeptMemberListItem): MemberRole {
-  const withRole = member as ManagerDeptMemberListItem & { role?: string };
-  if (withRole.role === "TEAM_LEADER" || withRole.role === "EMPLOYEE") {
-    return withRole.role;
+  const role = member.role?.toUpperCase();
+  if (role === "TEAM_LEADER" || role === "TEAMLEADER") {
+    return "TEAM_LEADER";
+  }
+  if (role === "EMPLOYEE") {
+    return "EMPLOYEE";
   }
 
   const jobTitle = member.jobTitle?.toLowerCase() ?? "";
-  return jobTitle.includes("team leader") ? "TEAM_LEADER" : "EMPLOYEE";
+  return jobTitle.includes("team leader") || jobTitle.includes("technical lead")
+    ? "TEAM_LEADER"
+    : "EMPLOYEE";
 }
 
 function normalizeMember(member: ManagerDeptMemberListItem): ManagerMemberView {
@@ -299,7 +304,7 @@ export default function ManagerDepartmentPage() {
 
   const roleTabs: { label: string; value?: MemberRole }[] = [
     { label: "Tất cả" },
-    { label: "Team Leader", value: "TEAM_LEADER" },
+    { label: "Trưởng nhóm", value: "TEAM_LEADER" },
     { label: "Nhân viên", value: "EMPLOYEE" },
   ];
 
@@ -329,6 +334,10 @@ export default function ManagerDepartmentPage() {
   const debtMembers = members.filter((member) => member.debtBalance > 0).length;
   const pendingRequests = members.reduce((sum, member) => sum + member.pendingRequestsCount, 0);
   const teamLeaderCount = members.filter((member) => member.role === "TEAM_LEADER").length;
+  const currentDepartment = deptDashboard?.department;
+  const currentDepartmentLabel = currentDepartment
+    ? `${currentDepartment.name}${currentDepartment.code ? ` (${currentDepartment.code})` : ""}`
+    : "Phòng ban đang quản lý";
 
   return (
     <div className="space-y-6">
@@ -342,6 +351,10 @@ export default function ManagerDepartmentPage() {
               <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
                 Theo dõi ngân sách phòng ban, thành viên, dư nợ và yêu cầu đang chờ xử lý.
               </p>
+              <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur">
+                <span className="h-2 w-2 rounded-full bg-cyan-200" />
+                Đang xem: {currentDepartmentLabel}
+              </div>
             </div>
 
             <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur">
@@ -353,16 +366,16 @@ export default function ManagerDepartmentPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Quỹ khả dụng" value={formatCurrency(availableBudget)} helper={`${availablePercent}% trên tổng quota`} tone="blue" />
-        <MetricCard label="Tổng quota" value={formatCurrency(totalQuota)} helper="Ngân sách phòng ban" tone="indigo" />
+        <MetricCard label="Số dư ví PB" value={formatCurrency(availableBudget)} helper="Có thể dùng để cấp vốn dự án" tone="blue" />
+        <MetricCard label="Thành viên" value={total.toLocaleString("vi-VN")} helper="Nhân sự trong phòng" tone="indigo" />
         <MetricCard label="Có dư nợ" value={String(debtMembers)} helper="Thành viên cần theo dõi" tone="rose" />
-        <MetricCard label="Chờ xử lý" value={String(pendingRequests)} helper={`${teamLeaderCount} Team Leader trên trang`} tone="cyan" />
+        <MetricCard label="Chờ xử lý" value={String(pendingRequests)} helper={`${teamLeaderCount} Trưởng nhóm trên trang`} tone="cyan" />
       </section>
 
       <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-slate-700">Mức khả dụng quỹ phòng ban</span>
+            <span className="font-semibold text-slate-700">Tỷ lệ khả dụng ví phòng ban</span>
             <span className="font-medium text-blue-700">{availablePercent}%</span>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -477,7 +490,7 @@ export default function ManagerDepartmentPage() {
                 <span
                   className={`inline-flex shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${roleBadgeClass(member.role)}`}
                 >
-                  {member.role === "TEAM_LEADER" ? "Team Leader" : "Nhân viên"}
+                  {member.role === "TEAM_LEADER" ? "Trưởng nhóm" : "Nhân viên"}
                 </span>
               </div>
 

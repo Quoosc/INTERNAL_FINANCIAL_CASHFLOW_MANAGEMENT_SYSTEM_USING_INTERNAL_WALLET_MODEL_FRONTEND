@@ -2,18 +2,17 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { createDeposit } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useToast } from "@/contexts/toast-context";
 import { DepositLogResponse } from "@/types";
+import { BackButton } from "@/components/ui/back-button";
 
 const MIN_AMOUNT = 10_000;
 
 export default function DepositPage() {
-  const router = useRouter();
   const toast = useToast();
 
   const [amount, setAmount] = useState<number | null>(null);
@@ -72,23 +71,14 @@ export default function DepositPage() {
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">VNPay deposit</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Create a wallet top-up payment and keep the payment code ready for tracking.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Không gian IFMS</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Nạp tiền qua VNPay</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Tạo giao dịch nạp tiền vào ví và lưu mã thanh toán để thuận tiện tra cứu.</p>
           </div>
         </div>
       </section>
 
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-        </svg>
-        Quay lại
-      </button>
+      <BackButton fallbackHref="/wallet" />
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
@@ -119,10 +109,12 @@ export default function DepositPage() {
             onChange={setAmount}
             placeholder="Nhập số tiền"
           />
-          <div className="flex items-center justify-between gap-3 mt-2 text-xs">
+          <div className="mt-2 space-y-1 text-xs">
             <p className="text-slate-500">Tối thiểu: {formatCurrency(MIN_AMOUNT)}</p>
             {amountNumber > 0 && (
-              <p className="font-medium text-slate-700">{formatCurrency(amountNumber)}</p>
+              <p className="font-semibold text-blue-700" aria-live="polite">
+                Số tiền đã nhập: {formatCurrency(amountNumber)}
+              </p>
             )}
           </div>
         </div>

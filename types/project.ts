@@ -16,6 +16,7 @@ export enum ProjectStatus {
 
 /** khớp với project.entity.PhaseStatus */
 export enum PhaseStatus {
+  PLANNED = "PLANNED",
   ACTIVE = "ACTIVE",
   CLOSED = "CLOSED",
 }
@@ -40,6 +41,7 @@ export interface ProjectListItem {
   status: ProjectStatus;
   departmentId: number;
   totalBudget: number;
+  availableBudget: number;
   totalSpent: number;
   currentPhaseId: number | null;
   currentPhaseName: string | null;
@@ -63,6 +65,12 @@ export interface ProjectPhaseResponse {
 export interface ProjectPhasesResponse {
   projectId: number;
   projectName: string;
+  status: ProjectStatus;
+  totalBudget: number;
+  totalSpent: number;
+  availableBudget: number;
+  currentPhaseId: number | null;
+  currentPhaseName: string | null;
   phases: ProjectPhaseResponse[];
 }
 

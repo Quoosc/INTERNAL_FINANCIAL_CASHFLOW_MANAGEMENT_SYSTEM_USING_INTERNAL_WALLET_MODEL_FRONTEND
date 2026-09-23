@@ -17,6 +17,25 @@ export function formatInputAmount(raw: string): string {
   return Number(raw).toLocaleString("vi-VN");
 }
 
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const HAS_TIMEZONE_RE = /(?:Z|[+-]\d{2}:?\d{2})$/i;
+
+export function parseApiDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (DATE_ONLY_RE.test(trimmed)) {
+    const [year, month, day] = trimmed.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const normalized = HAS_TIMEZONE_RE.test(trimmed) ? trimmed : `${trimmed}Z`;
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Intl.DateTimeFormat("vi-VN", {
@@ -25,7 +44,7 @@ export function formatDateTime(iso: string | null | undefined): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(iso));
+  }).format(parseApiDate(iso) ?? new Date(iso));
 }
 
 export function formatDate(iso: string | null | undefined): string {
@@ -34,11 +53,11 @@ export function formatDate(iso: string | null | undefined): string {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  }).format(new Date(iso));
+  }).format(parseApiDate(iso) ?? new Date(iso));
 }
 
 export function formatRelativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffMs = Date.now() - (parseApiDate(iso) ?? new Date(iso)).getTime();
   const diffMin = Math.floor(diffMs / (1000 * 60));
 
   if (diffMin < 1) return "Vừa xong";

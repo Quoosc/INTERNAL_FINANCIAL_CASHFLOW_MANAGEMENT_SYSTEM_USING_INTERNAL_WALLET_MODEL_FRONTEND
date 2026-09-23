@@ -2,12 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useWallet } from "@/contexts/wallet-context";
 import { ApiError } from "@/lib/api-client";
 import { cancelWithdrawRequest, createWithdrawRequest, getMyWithdrawRequests } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { BackButton } from "@/components/ui/back-button";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { EmptyState } from "@/components/ui/loading-skeleton";
 import { useToast } from "@/contexts/toast-context";
@@ -55,7 +55,6 @@ function getWithdrawStatusLabel(status: WithdrawStatus): string {
 }
 
 export default function WithdrawPage() {
-  const router = useRouter();
   const toast = useToast();
   const { wallet, isLoading: walletLoading, fetchWallet } = useWallet();
 
@@ -196,16 +195,7 @@ export default function WithdrawPage() {
         </div>
       </section>
 
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white transition-colors"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-        </svg>
-        Quay lại
-      </button>
+      <BackButton fallbackHref="/wallet" />
 
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Rút tiền</h1>

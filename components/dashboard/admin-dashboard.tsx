@@ -53,6 +53,87 @@ function getTotal<T>(payload: PaginatedResponse<T> | T[]): number {
   return Array.isArray(payload) ? payload.length : payload.total;
 }
 
+const AUDIT_ENTITY_LABELS: Record<string, string> = {
+  User: "người dùng",
+  UserProfile: "hồ sơ cá nhân",
+  UserSecuritySettings: "thiết lập bảo mật",
+  Department: "phòng ban",
+  Project: "dự án",
+  ProjectPhase: "giai đoạn dự án",
+  ProjectMember: "thành viên dự án",
+  PhaseCategoryBudget: "ngân sách hạng mục",
+  ExpenseCategory: "hạng mục chi phí",
+  Request: "yêu cầu chi tiêu",
+  RequestHistory: "lịch sử yêu cầu",
+  WithdrawRequest: "yêu cầu rút tiền",
+  DepositLog: "giao dịch nạp tiền",
+  Wallet: "ví nội bộ",
+  Transaction: "giao dịch",
+  LedgerEntry: "bút toán sổ cái",
+  PayrollPeriod: "kỳ lương",
+  Payslip: "phiếu lương",
+  CompanyFund: "quỹ hệ thống",
+  SystemConfig: "cấu hình hệ thống",
+  Notification: "thông báo",
+  Role: "vai trò",
+  Permission: "quyền hệ thống",
+};
+
+const AUDIT_ACTION_VERBS: Record<string, string> = {
+  INSERT: "Tạo mới",
+  UPDATE: "Cập nhật",
+  DELETE: "Xóa",
+  USER_CREATED: "Tạo người dùng",
+  USER_UPDATED: "Cập nhật người dùng",
+  USER_LOCKED: "Khóa tài khoản",
+  USER_UNLOCKED: "Mở khóa tài khoản",
+  BANK_INFO_UPDATED: "Cập nhật thông tin ngân hàng",
+  ROLE_ASSIGNED: "Gán vai trò",
+  ROLE_REVOKED: "Thu hồi vai trò",
+  PERMISSION_GRANTED: "Cấp quyền",
+  PERMISSION_REVOKED: "Thu hồi quyền",
+  DEPARTMENT_CREATED: "Tạo phòng ban",
+  DEPARTMENT_UPDATED: "Cập nhật phòng ban",
+  DEPARTMENT_DELETED: "Xóa phòng ban",
+  DEPARTMENT_TOPUP: "Cấp vốn phòng ban",
+  PROJECT_TOPUP: "Cấp vốn dự án",
+  CATEGORY_BUDGET_UPDATED: "Cập nhật ngân sách hạng mục",
+  CONFIG_UPDATED: "Cập nhật cấu hình",
+  SYSTEM_FUND_ADJUSTED: "Điều chỉnh quỹ hệ thống",
+  PIN_RESET: "Đặt lại PIN",
+  PIN_LOCKED: "Khóa PIN",
+  USER_LOGIN_SUCCESS: "Đăng nhập thành công",
+  USER_LOGIN_FAILED: "Đăng nhập thất bại",
+  DATA_EXPORTED: "Xuất dữ liệu",
+  MANUAL_ADJUSTMENT: "Điều chỉnh thủ công",
+};
+
+function humanizeAuditToken(value: string): string {
+  return value
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function auditEntityLabel(entityName: string | null | undefined): string {
+  if (!entityName) return "dữ liệu hệ thống";
+  return AUDIT_ENTITY_LABELS[entityName] ?? humanizeAuditToken(entityName);
+}
+
+function auditActionLabel(action: string, entityName: string | null | undefined): string {
+  const semanticLabel = AUDIT_ACTION_VERBS[action];
+  if (semanticLabel) {
+    if (action === "INSERT" || action === "UPDATE" || action === "DELETE") {
+      return `${semanticLabel} ${auditEntityLabel(entityName)}`;
+    }
+    return semanticLabel;
+  }
+
+  return humanizeAuditToken(action).replace(/^\w/, (char) => char.toUpperCase());
+}
+
 const ACCENT_TO_GRADIENT: Record<string, string> = {
   "text-blue-700":    "bg-linear-to-br from-blue-500 to-blue-600",
   "text-emerald-700": "bg-linear-to-br from-emerald-500 to-emerald-600",
@@ -546,8 +627,8 @@ export function AdminDashboard() {
             <div className="space-y-3">
               {dashboard?.recentAuditEvents.slice(0, 5).map((item) => (
                 <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-3">
-                  <p className="text-sm font-medium text-slate-900">{item.action}</p>
-                  <p className="text-xs text-slate-500 mt-1">{item.actorName ?? "System"} • {item.entityName}</p>
+                  <p className="text-sm font-medium text-slate-900">{auditActionLabel(item.action, item.entityName)}</p>
+                  <p className="text-xs text-slate-500 mt-1">{item.actorName ?? "Hệ thống"} • {auditEntityLabel(item.entityName)}</p>
                   <p className="text-xs text-slate-500 mt-1">{formatRelativeTime(item.createdAt)} ({formatDateTime(item.createdAt)})</p>
                 </div>
               ))}

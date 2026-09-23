@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const apiBaseUrl = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8080"
+).trim().replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   // Pin the workspace root explicitly: a stray package-lock.json in the
   // parent D:\IFMS_FE directory makes Turbopack infer that as the root,
@@ -13,7 +19,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL || "https://ifms-production.up.railway.app/"}/api/:path*`,
+        destination: `${apiBaseUrl}/api/:path*`,
       },
     ];
   },

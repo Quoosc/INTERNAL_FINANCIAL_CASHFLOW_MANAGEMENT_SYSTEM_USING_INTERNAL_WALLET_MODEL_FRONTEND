@@ -201,8 +201,6 @@ export function ManagerDashboard() {
     projects.filter((p) => p.status === "ACTIVE").length;
   const pendingCount = dashboard?.pendingApprovalsCount ?? approvals.length;
   const deptBalance = dashboard?.departmentBudget.totalAvailableBalance ?? 0;
-  const deptQuota = dashboard?.departmentBudget.totalProjectQuota ?? 0;
-  const deptSpent = dashboard?.departmentBudget.totalSpent ?? Math.max(0, deptQuota - deptBalance);
   const teamDebt = dashboard?.teamDebtSummary.totalDebt ?? 0;
   const debtUsers = dashboard?.teamDebtSummary.employeesWithDebt ?? 0;
   const pendingAmount = approvals.reduce((sum, item) => sum + item.amount, 0);
@@ -278,9 +276,9 @@ export function ManagerDashboard() {
         ) : (
           <>
             <StatCard
-              title="Quỹ phòng ban"
+              title="Số dư ví PB"
               value={formatCurrency(deptBalance)}
-              sub="Số dư khả dụng"
+              sub="Có thể dùng để cấp vốn"
               href="/manager/department"
               accent="text-blue-700"
               icon={
@@ -303,7 +301,7 @@ export function ManagerDashboard() {
             <StatCard
               title="Chờ duyệt"
               value={String(pendingCount)}
-              sub="PROJECT_TOPUP"
+              sub="Cấp vốn dự án"
               href="/manager/approvals"
               accent="text-amber-700"
               icon={
@@ -324,7 +322,7 @@ export function ManagerDashboard() {
             />
 
             <StatCard
-              title="Dự án active"
+              title="Dự án đang hoạt động"
               value={String(activeProjects)}
               sub="Đang triển khai"
               href="/manager/projects"
@@ -377,8 +375,8 @@ export function ManagerDashboard() {
           <div className="rounded-3xl border border-blue-100 bg-blue-50/70 p-5">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm font-bold text-blue-900">Tổng quan quỹ phòng ban</p>
-                <p className="mt-1 text-sm text-blue-700">Đã dùng {formatCurrency(deptSpent)} / {formatCurrency(deptQuota)}</p>
+                <p className="text-sm font-bold text-blue-900">Số dư ví phòng ban</p>
+                <p className="mt-1 text-sm text-blue-700">Khả dụng để duyệt cấp vốn dự án</p>
               </div>
               <p className="text-2xl font-bold text-blue-900">{formatCurrency(deptBalance)}</p>
             </div>
@@ -387,8 +385,8 @@ export function ManagerDashboard() {
           <div className="rounded-3xl border border-indigo-100 bg-indigo-50/70 p-5">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm font-bold text-indigo-900">PROJECT_TOPUP đang chờ</p>
-                <p className="mt-1 text-sm text-indigo-700">Tổng giá trị các đề xuất mới nhất</p>
+                <p className="text-sm font-bold text-indigo-900">Đề xuất cấp vốn dự án đang chờ</p>
+                <p className="mt-1 text-sm text-indigo-700">Tổng giá trị đề xuất cấp vốn mới nhất</p>
               </div>
               <p className="text-2xl font-bold text-indigo-900">{formatCurrency(pendingAmount)}</p>
             </div>
@@ -400,8 +398,8 @@ export function ManagerDashboard() {
         <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">PROJECT_TOPUP chờ duyệt</h2>
-              <p className="mt-1 text-sm text-slate-500">Các đề xuất cấp vốn mới từ Team Leader.</p>
+              <h2 className="text-lg font-bold text-slate-900">Yêu cầu cấp vốn dự án chờ duyệt</h2>
+              <p className="mt-1 text-sm text-slate-500">Các đề xuất cấp vốn mới từ Trưởng nhóm.</p>
             </div>
             <Link
               href="/manager/approvals"
@@ -422,7 +420,7 @@ export function ManagerDashboard() {
             </div>
           ) : approvals.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 p-8 text-center text-sm text-slate-500">
-              Không có yêu cầu PROJECT_TOPUP đang chờ duyệt.
+              Không có yêu cầu cấp vốn dự án đang chờ duyệt.
             </div>
           ) : (
             <div className="space-y-3">
@@ -514,7 +512,7 @@ export function ManagerDashboard() {
 
                     <div className="mt-2 space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span>Budget burn</span>
+                        <span>Tỷ lệ sử dụng ngân sách</span>
                         <span>{burn}%</span>
                       </div>
                       <div className="h-2 rounded-full bg-white border border-slate-200 overflow-hidden">
@@ -617,7 +615,7 @@ export function ManagerDashboard() {
                 Xin cấp vốn phòng ban
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Flow 3: DEPARTMENT_TOPUP gửi Admin phê duyệt.
+                Yêu cầu này sẽ được gửi đến CFO để phê duyệt ngân sách phòng ban.
               </p>
             </div>
 

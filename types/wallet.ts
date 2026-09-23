@@ -167,6 +167,7 @@ export interface WithdrawRequestResponse {
   id: number;
   withdrawCode: string;
   userId: number;
+  requesterFullName?: string | null;
   amount: number;
 
   // Bank snapshot (lấy từ UserProfile lúc tạo)
@@ -306,6 +307,7 @@ export interface LedgerFilterParams {
  */
 export interface AccountantLedgerItemResponse {
   id: number;
+  transactionId?: number;
   transactionCode: string;
   type: TransactionType;
   status: TransactionStatus;
@@ -314,6 +316,7 @@ export interface AccountantLedgerItemResponse {
   balanceAfter: number;
   walletOwnerType: WalletOwnerType;
   ownerId: number;
+  ownerName?: string | null;
   timestamp: string;
 }
 
@@ -329,6 +332,7 @@ export interface AccountantLedgerEntryItem {
   balanceAfter: number;
   walletOwnerType: WalletOwnerType;
   walletOwnerId: number;
+  walletOwnerName?: string | null;
   createdAt: string;
 }
 
@@ -349,6 +353,7 @@ export interface AccountantTransactionDetailResponse {
   referenceId: number | null;
   walletOwnerType: WalletOwnerType;
   walletOwnerId: number;
+  walletOwnerName?: string | null;
   description: string;
   ledgerEntries: AccountantLedgerEntryItem[];
   createdAt: string;

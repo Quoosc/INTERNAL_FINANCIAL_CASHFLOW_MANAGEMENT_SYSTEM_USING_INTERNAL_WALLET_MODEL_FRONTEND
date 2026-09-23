@@ -3,7 +3,7 @@
 import React, { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDate, formatDateTime, parseApiDate } from "@/lib/format";
 import {
   RequestStatusBadge,
   RequestTypeBadge,
@@ -82,7 +82,7 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
   ];
 
   const sortedTimeline = [...request.timeline].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) => (parseApiDate(a.createdAt)?.getTime() ?? 0) - (parseApiDate(b.createdAt)?.getTime() ?? 0),
   );
 
   sortedTimeline.forEach((entry) => {
@@ -111,7 +111,7 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
   switch (request.status) {
     case RequestStatus.PENDING:
       rows.push({
-        title: "Đang chờ Team Leader duyệt",
+        title: "Đang chờ Trưởng nhóm duyệt",
         subtitle: "Chưa có quyết định phê duyệt",
         time: "Hiện tại",
         tone: "current",
@@ -119,7 +119,7 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
       break;
     case RequestStatus.APPROVED_BY_TEAM_LEADER:
       rows.push({
-        title: "Team Leader đã duyệt",
+        title: "Trưởng nhóm đã duyệt",
         subtitle: "Đang chờ Accountant xử lý giải ngân",
         time: "Hiện tại",
         tone: "current",
@@ -608,7 +608,7 @@ export default function RequestDetailPage({ params }: PageProps) {
 
         <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">
-            Timeline xử lý
+            Lịch sử xử lý
           </h2>
 
           <div className="space-y-3">

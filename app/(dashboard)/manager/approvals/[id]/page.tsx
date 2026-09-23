@@ -14,7 +14,7 @@ import {
   RequestAction,
   RequestStatus,
 } from "@/types";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, parseApiDate } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 
 interface PageProps {
@@ -208,7 +208,8 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
     try {
       await api.post<ManagerApproveResponse>(`/api/v1/manager/approvals/${id}/approve`, body);
       toast.success("Đã duyệt yêu cầu thành công.");
-      router.push("/manager/approvals");
+      router.replace("/manager/approvals?tab=approved");
+      router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {
         setActionError(err.apiMessage);
@@ -277,7 +278,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
   const overDeptBudget = request.amount > request.department.totalAvailableBalance;
 
   const sortedTimeline = [...request.timeline].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => (parseApiDate(a.createdAt)?.getTime() ?? 0) - (parseApiDate(b.createdAt)?.getTime() ?? 0)
   );
   const remainingDeptBudget = Math.max(0, request.department.totalAvailableBalance - previewApprovedAmount);
   const projectAfterApproval = request.project.availableBudget + previewApprovedAmount;
@@ -326,7 +327,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Số tiền yêu cầu" value={formatCurrency(request.amount)} helper={`Tạo lúc ${formatDateTime(request.createdAt)}`} tone="blue" />
         <MetricCard label="Có thể duyệt" value={formatCurrency(maxApprovable)} helper="Theo quỹ phòng ban khả dụng" tone="emerald" />
-        <MetricCard label="Quỹ PB còn lại" value={formatCurrency(remainingDeptBudget)} helper="Sau giá trị preview duyệt" tone={overDeptBudget ? "rose" : "indigo"} />
+        <MetricCard label="Quỹ PB sau duyệt" value={formatCurrency(remainingDeptBudget)} helper="Sau khi trừ số tiền duyệt" tone={overDeptBudget ? "rose" : "indigo"} />
         <MetricCard label="Dự án sau duyệt" value={formatCurrency(projectAfterApproval)} helper={request.project.projectCode} tone="cyan" />
       </section>
 
@@ -339,7 +340,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-4">
               <h2 className="text-lg font-bold text-slate-900">Người gửi yêu cầu</h2>
-              <p className="mt-1 text-sm text-slate-500">Thông tin Team Leader tạo đề xuất cấp vốn.</p>
+              <p className="mt-1 text-sm text-slate-500">Thông tin Trưởng nhóm tạo đề xuất cấp vốn.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <InfoCard label="Họ tên" value={request.requester.fullName} />
@@ -376,7 +377,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
             }`}
           >
             <p className={`text-sm ${overDeptBudget ? "text-rose-700" : "text-emerald-700"}`}>
-              Quỹ phòng ban khả dụng: {formatCurrency(request.department.totalAvailableBalance)}
+              Số dư ví phòng ban hiện tại: {formatCurrency(request.department.totalAvailableBalance)}
             </p>
             {overDeptBudget && (
               <p className="text-xs text-rose-700 mt-2">Yêu cầu hiện vượt mức quỹ phòng ban đang khả dụng.</p>
@@ -415,7 +416,7 @@ export default function ManagerApprovalDetailPage({ params }: PageProps) {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-lg font-bold text-slate-900">Timeline</h2>
+            <h2 className="text-lg font-bold text-slate-900">Lịch sử xử lý</h2>
             <p className="mt-1 text-sm text-slate-500">Lịch sử xử lý cấp vốn.</p>
           </div>
 

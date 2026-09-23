@@ -8,6 +8,7 @@ import {
   ProjectPhasesResponse,
   ProjectPhaseResponse,
 } from "@/types";
+import { MetricLabel } from "@/components/ui/metric-label";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 
@@ -16,13 +17,19 @@ interface PageProps {
 }
 
 function getPhaseStatusClass(status: PhaseStatus): string {
-  return status === PhaseStatus.ACTIVE
-    ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-300"
-    : "bg-slate-500/15 border-slate-500/30 text-slate-600";
+  if (status === PhaseStatus.PLANNED) {
+    return "bg-blue-50 border-blue-200 text-blue-700";
+  }
+  if (status === PhaseStatus.ACTIVE) {
+    return "bg-emerald-50 border-emerald-200 text-emerald-700";
+  }
+  return "bg-slate-100 border-slate-200 text-slate-600";
 }
 
 function getPhaseStatusLabel(status: PhaseStatus): string {
-  return status === PhaseStatus.ACTIVE ? "Đang hoạt động" : "Đã đóng";
+  if (status === PhaseStatus.PLANNED) return "Chưa bắt đầu";
+  if (status === PhaseStatus.ACTIVE) return "Đang thực hiện";
+  return "Đã kết thúc";
 }
 
 export default function ProjectDetailPage({ params }: PageProps) {
@@ -72,15 +79,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
   );
 
   const budgetStats = useMemo(() => {
-    const totalBudget = phases.reduce(
-      (sum, phase) => sum + phase.budgetLimit,
-      0,
-    );
-    const spentAmount = phases.reduce(
-      (sum, phase) => sum + phase.currentSpent,
-      0,
-    );
-    const remainingBudget = Math.max(0, totalBudget - spentAmount);
+    const totalBudget = data?.totalBudget ?? 0;
+    const spentAmount = data?.totalSpent ?? 0;
+    const remainingBudget = data?.availableBudget ?? 0;
     const spentPercent =
       totalBudget > 0
         ? Math.min(100, Math.round((spentAmount / totalBudget) * 100))
@@ -92,17 +93,26 @@ export default function ProjectDetailPage({ params }: PageProps) {
       remainingBudget,
       spentPercent,
     };
-  }, [phases]);
+  }, [data?.availableBudget, data?.totalBudget, data?.totalSpent]);
 
   const projectStatusText = useMemo(() => {
+    if (data?.status) {
+      if (data.status === "ACTIVE") return "Đang triển khai";
+      if (data.status === "PLANNING") return "Lên kế hoạch";
+      if (data.status === "PAUSED") return "Tạm dừng";
+      return "Đã đóng";
+    }
     if (phases.some((phase) => phase.status === PhaseStatus.ACTIVE)) {
       return "Đang triển khai";
     }
-    if (phases.length > 0) {
+    if (phases.length > 0 && phases.every((phase) => phase.status === PhaseStatus.CLOSED)) {
       return "Đã đóng";
     }
-    return "Chưa có phase";
-  }, [phases]);
+    if (phases.some((phase) => phase.status === PhaseStatus.PLANNED)) {
+      return "Chưa bắt đầu";
+    }
+    return "Chưa có giai đoạn";
+  }, [data?.status, phases]);
 
   if (loading) {
     return (
@@ -112,9 +122,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Project detail</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Review phase budgets, delivery status and spending progress for this project.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Không gian IFMS</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết dự án</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Theo dõi ngân sách, trạng thái thực hiện và tiến độ chi tiêu của từng giai đoạn.</p>
           </div>
         </div>
       </section>
@@ -164,9 +174,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">IFMS workspace</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Project detail</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Review phase budgets, delivery status and spending progress for this project.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Không gian IFMS</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết dự án</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Theo dõi ngân sách, trạng thái thực hiện và tiến độ chi tiêu của từng giai đoạn.</p>
           </div>
         </div>
       </section>
@@ -214,17 +224,17 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <BudgetCard
-            title="Tổng ngân sách phase"
+            title={<MetricLabel label="Hạn mức giai đoạn" description="Mức ngân sách kế hoạch tối đa của các giai đoạn, không phải số tiền hiện có." />}
             value={budgetStats.totalBudget}
             tone="text-slate-900"
           />
           <BudgetCard
-            title="Đã chi"
+            title={<MetricLabel label="Đã chi" description="Tổng giá trị giao dịch đã hoàn tất trong các giai đoạn." />}
             value={budgetStats.spentAmount}
             tone="text-rose-700"
           />
           <BudgetCard
-            title="Còn lại"
+            title={<MetricLabel label="Quỹ khả dụng" description="Số tiền thực tế còn có thể sử dụng trong các giai đoạn." />}
             value={budgetStats.remainingBudget}
             tone="text-emerald-700"
           />
@@ -247,13 +257,13 @@ export default function ProjectDetailPage({ params }: PageProps) {
       <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900">
-            Danh sách phase
+            Danh sách giai đoạn
           </h2>
         </div>
 
         {phases.length === 0 ? (
           <div className="px-5 py-10 text-center text-slate-500">
-            Dự án chưa có phase.
+            Dự án chưa có giai đoạn.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -261,7 +271,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
               <thead className="sticky top-0 z-10 bg-white">
                 <tr className="bg-blue-50 border-b border-slate-200">
                   <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Phase
+                    Giai đoạn
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
                     Thời gian
@@ -337,7 +347,7 @@ function BudgetCard({
   value,
   tone,
 }: {
-  title: string;
+  title: React.ReactNode;
   value: number;
   tone: string;
 }) {

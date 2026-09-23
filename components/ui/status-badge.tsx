@@ -67,7 +67,7 @@ const ROLE_LABEL: Partial<Record<RoleName, string>> = {
   [RoleName.CFO]: "CFO",
   [RoleName.MANAGER]: "Manager",
   [RoleName.ACCOUNTANT]: "Kế toán",
-  [RoleName.TEAM_LEADER]: "Team Leader",
+  [RoleName.TEAM_LEADER]: "Trưởng nhóm",
   [RoleName.EMPLOYEE]: "Nhân viên",
 };
 
@@ -99,8 +99,8 @@ const REQUEST_TYPE_LABEL: Partial<Record<RequestType, string>> = {
   [RequestType.ADVANCE]: "Tạm ứng",
   [RequestType.EXPENSE]: "Chi phí",
   [RequestType.REIMBURSE]: "Hoàn ứng",
-  [RequestType.PROJECT_TOPUP]: "Nạp quỹ DA",
-  [RequestType.DEPARTMENT_TOPUP]: "Nạp quota PB",
+  [RequestType.PROJECT_TOPUP]: "Cấp vốn dự án",
+  [RequestType.DEPARTMENT_TOPUP]: "Cấp ngân sách PB",
 };
 
 export function RequestTypeBadge({

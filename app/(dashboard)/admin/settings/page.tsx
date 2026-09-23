@@ -47,8 +47,8 @@ const VISIBLE_SETTING_META: Record<string, SettingDisplayMeta> = {
     description: "Giao dịch rút tiền của Nhân viên không vượt hạn mức này sẽ được xử lý tự động.",
   },
   WITHDRAW_LIMIT_TEAM_LEADER: {
-    label: "Hạn mức rút tự động của Team Leader",
-    description: "Giao dịch rút tiền của Team Leader không vượt hạn mức này sẽ được xử lý tự động.",
+    label: "Hạn mức rút tự động của Trưởng nhóm",
+    description: "Giao dịch rút tiền của Trưởng nhóm không vượt hạn mức này sẽ được xử lý tự động.",
   },
   WITHDRAW_LIMIT_MANAGER: {
     label: "Hạn mức rút tự động của Manager",

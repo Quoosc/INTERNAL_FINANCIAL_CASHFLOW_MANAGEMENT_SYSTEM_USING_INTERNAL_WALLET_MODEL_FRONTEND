@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { useToast } from "@/contexts/toast-context";
@@ -289,9 +290,19 @@ export default function AccountantLedgerPage() {
               Tra cứu giao dịch hệ thống, theo dõi tiền vào ra và đối chiếu từng ghi nhận kế toán.
             </p>
           </div>
-          <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">Giao dịch</p>
-            <p className="mt-2 text-3xl font-bold">{total}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/accountant/ledger/demo"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/30 bg-white px-4 py-3 text-sm font-semibold text-blue-700 shadow-lg shadow-blue-950/10 transition hover:-translate-y-0.5 hover:bg-blue-50"
+            >
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-blue-700" aria-hidden="true">✦</span>
+              Xem giao diện đề xuất
+              <span aria-hidden="true">→</span>
+            </Link>
+            <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">Giao dịch</p>
+              <p className="mt-2 text-3xl font-bold">{total}</p>
+            </div>
           </div>
         </div>
       </section>

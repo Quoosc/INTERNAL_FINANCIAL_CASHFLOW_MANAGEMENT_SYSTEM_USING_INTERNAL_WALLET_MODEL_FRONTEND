@@ -40,9 +40,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Local tooling (not for repo)
+# Local tooling (not for repo); only the ledger docs below are tracked from docs/
 .claude/
 .vscode/
 docs/
+!docs/
+docs/*
+!docs/API_CONTRACT.md
+!docs/PROJECT_STRUCTURE.md
+!docs/PROGRESS.md
+!docs/ledger-accounting.md
+!docs/ledger-redesign-plan.md
 logs/
 test-results/

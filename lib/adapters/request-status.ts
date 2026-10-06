@@ -22,9 +22,9 @@ export function normalizeRequestStatus(
 }
 
 export function isAccountantQueueStatus(status: RequestStatusLike): boolean {
-  return (
-    normalizeRequestStatus(status) === RequestStatus.APPROVED_BY_TEAM_LEADER
-  );
+  const normalized = normalizeRequestStatus(status);
+  return normalized === RequestStatus.APPROVED_BY_TEAM_LEADER
+    || normalized === RequestStatus.ACCOUNTANT_VERIFIED;
 }
 
 export function getPendingSummaryCount(

@@ -92,8 +92,10 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
           ? "Đã duyệt"
           : entry.action === RequestAction.REJECT
             ? "Đã từ chối"
-            : entry.action === RequestAction.PAYOUT
+          : entry.action === RequestAction.PAYOUT
               ? "Đã chi tiền"
+              : entry.action === RequestAction.VERIFY
+                ? "Kế toán đã xác nhận chứng từ"
               : entry.action === RequestAction.CANCEL
                 ? "Đã hủy yêu cầu"
                 : entry.action,
@@ -121,6 +123,14 @@ function buildTimelineRows(request: RequestDetailResponse): TimelineRow[] {
       rows.push({
         title: "Trưởng nhóm đã duyệt",
         subtitle: "Đang chờ Accountant xử lý giải ngân",
+        time: "Hiện tại",
+        tone: "current",
+      });
+      break;
+    case RequestStatus.ACCOUNTANT_VERIFIED:
+      rows.push({
+        title: "Kế toán đã xác nhận chứng từ hoàn chi",
+        subtitle: "Đang chờ chuyển khoản hoàn tiền cho nhân viên",
         time: "Hiện tại",
         tone: "current",
       });
@@ -482,7 +492,7 @@ export default function RequestDetailPage({ params }: PageProps) {
 
         <div className="flex flex-wrap gap-2">
           <RequestTypeBadge type={request.type} />
-          <RequestStatusBadge status={request.status} />
+          <RequestStatusBadge status={request.status} type={request.type} />
         </div>
       </div>
 

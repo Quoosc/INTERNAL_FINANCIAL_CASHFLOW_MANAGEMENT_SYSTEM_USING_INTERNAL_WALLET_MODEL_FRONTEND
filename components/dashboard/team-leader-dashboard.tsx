@@ -32,9 +32,9 @@ function getApprovalTypeLabel(type: RequestType): string {
     case RequestType.ADVANCE:
       return "Tạm ứng";
     case RequestType.EXPENSE:
-      return "Chi phí";
+      return "Hoàn chi nhân viên";
     case RequestType.REIMBURSE:
-      return "Hoàn ứng";
+      return "Quyết toán tạm ứng";
     default:
       return type;
   }

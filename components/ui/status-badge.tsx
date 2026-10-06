@@ -97,8 +97,8 @@ const REQUEST_TYPE_VARIANT: Record<string, BadgeVariant> = {
 
 const REQUEST_TYPE_LABEL: Partial<Record<RequestType, string>> = {
   [RequestType.ADVANCE]: "Tạm ứng",
-  [RequestType.EXPENSE]: "Chi phí",
-  [RequestType.REIMBURSE]: "Hoàn ứng",
+  [RequestType.EXPENSE]: "Hoàn chi nhân viên",
+  [RequestType.REIMBURSE]: "Quyết toán tạm ứng",
   [RequestType.PROJECT_TOPUP]: "Cấp vốn dự án",
   [RequestType.DEPARTMENT_TOPUP]: "Cấp ngân sách PB",
 };
@@ -120,6 +120,7 @@ export function RequestTypeBadge({
 const REQUEST_STATUS_VARIANT: Record<string, BadgeVariant> = {
   [RequestStatus.PENDING]: "amber",
   [RequestStatus.APPROVED_BY_TEAM_LEADER]: "indigo",
+  [RequestStatus.ACCOUNTANT_VERIFIED]: "teal",
   [RequestStatus.APPROVED_BY_MANAGER]: "teal",
   [RequestStatus.APPROVED_BY_CFO]: "cyan",
   [RequestStatus.PAID]: "emerald",
@@ -131,18 +132,21 @@ const REQUEST_STATUS_VARIANT: Record<string, BadgeVariant> = {
 const REQUEST_STATUS_LABEL: Partial<Record<RequestStatus, string>> = {
   [RequestStatus.PENDING]: "Đang chờ",
   [RequestStatus.APPROVED_BY_TEAM_LEADER]: "Chờ giải ngân",
+  [RequestStatus.ACCOUNTANT_VERIFIED]: "Chứng từ đã xác nhận",
   [RequestStatus.APPROVED_BY_MANAGER]: "Manager đã duyệt",
   [RequestStatus.APPROVED_BY_CFO]: "CFO đã duyệt",
-  [RequestStatus.PAID]: "Đã thanh toán",
+  [RequestStatus.PAID]: "Đã xử lý",
   [RequestStatus.REJECTED]: "Từ chối",
   [RequestStatus.CANCELLED]: "Đã hủy",
 };
 
 export function RequestStatusBadge({
   status,
+  type,
   size,
 }: {
   status: RequestStatus | string;
+  type?: RequestType;
   size?: "xs" | "sm";
 }) {
   const normalizedStatus =
@@ -151,6 +155,8 @@ export function RequestStatusBadge({
       : status;
   const variant = REQUEST_STATUS_VARIANT[status] ?? "slate";
   const label =
-    REQUEST_STATUS_LABEL[normalizedStatus as RequestStatus] ?? status;
+    normalizedStatus === RequestStatus.PAID && type === RequestType.REIMBURSE
+      ? "Đã quyết toán"
+      : REQUEST_STATUS_LABEL[normalizedStatus as RequestStatus] ?? status;
   return <StatusBadge variant={variant} label={label} size={size} />;
 }

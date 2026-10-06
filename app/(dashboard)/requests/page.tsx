@@ -26,17 +26,18 @@ const PAGE_LIMIT = 8;
 const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
   [RequestStatus.PENDING]: "Chờ duyệt",
   [RequestStatus.APPROVED_BY_TEAM_LEADER]: "TL đã duyệt — chờ giải ngân",
+  [RequestStatus.ACCOUNTANT_VERIFIED]: "Chứng từ đã xác nhận — chờ hoàn tiền",
   [RequestStatus.APPROVED_BY_MANAGER]: "Manager đã duyệt",
   [RequestStatus.APPROVED_BY_CFO]: "CFO đã duyệt",
-  [RequestStatus.PAID]: "Đã chi trả",
+  [RequestStatus.PAID]: "Đã xử lý",
   [RequestStatus.REJECTED]: "Từ chối",
   [RequestStatus.CANCELLED]: "Đã hủy",
 };
 
 const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
   [RequestType.ADVANCE]: "Tạm ứng",
-  [RequestType.EXPENSE]: "Chi phí",
-  [RequestType.REIMBURSE]: "Hoàn ứng",
+  [RequestType.EXPENSE]: "Hoàn chi nhân viên",
+  [RequestType.REIMBURSE]: "Quyết toán tạm ứng",
   [RequestType.PROJECT_TOPUP]: "Cấp vốn dự án",
   [RequestType.DEPARTMENT_TOPUP]: "Cấp vốn phòng ban",
 };
@@ -47,7 +48,7 @@ const CREATE_ACTION_BY_ROLE: Partial<
   [RoleName.EMPLOYEE]: {
     href: "/requests/new",
     label: "Tạo yêu cầu mới",
-    description: "Theo dõi toàn bộ tạm ứng, chi phí và hoàn ứng với trạng thái xử lý rõ ràng theo từng bước phê duyệt.",
+    description: "Theo dõi tạm ứng, hoàn chi nhân viên và quyết toán tạm ứng theo từng bước xử lý.",
   },
   [RoleName.TEAM_LEADER]: {
     href: "/team-leader/projects",
@@ -490,7 +491,7 @@ export default function RequestsPage() {
                       {formatCurrency(request.amount)}
                     </td>
                     <td className="px-4 py-3">
-                      <RequestStatusBadge status={request.status} />
+                      <RequestStatusBadge status={request.status} type={request.type} />
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">
                       {request.projectName ?? "—"}

@@ -71,8 +71,8 @@ const REQUEST_TYPE_CONFIG = [
   },
   {
     type: RequestType.EXPENSE,
-    label: "Chi phí",
-    sub: "Thanh toán chi phí đã phát sinh",
+    label: "Hoàn chi nhân viên",
+    sub: "Đề nghị hoàn tiền cho khoản đã tự chi, kèm chứng từ",
     cardSelected: "border-violet-500 bg-violet-50",
     cardHover: "hover:border-violet-300",
     iconSelected: "bg-violet-500 text-white",
@@ -86,8 +86,8 @@ const REQUEST_TYPE_CONFIG = [
   },
   {
     type: RequestType.REIMBURSE,
-    label: "Hoàn ứng",
-    sub: "Hoàn lại tiền đã chi cá nhân",
+    label: "Quyết toán tạm ứng",
+    sub: "Nộp chứng từ cho khoản đã chi bằng tiền tạm ứng",
     cardSelected: "border-teal-500 bg-teal-50",
     cardHover: "hover:border-teal-300",
     iconSelected: "bg-teal-500 text-white",
@@ -524,7 +524,7 @@ export default function NewRequestPage() {
     if (isReimburseType && !advanceBalanceId) {
       setFieldErrors((prev) => ({
         ...prev,
-        advanceBalanceId: "Vui lòng chọn khoản tạm ứng cần hoàn.",
+        advanceBalanceId: "Vui lòng chọn khoản tạm ứng cần quyết toán.",
       }));
       return false;
     }
@@ -532,7 +532,7 @@ export default function NewRequestPage() {
     const requiresAttachment =
       form.type === RequestType.EXPENSE || form.type === RequestType.REIMBURSE;
     if (requiresAttachment && files.length === 0) {
-      toast.error("Yêu cầu Chi phí và Hoàn ứng bắt buộc phải đính kèm ít nhất 1 chứng từ.");
+      toast.error("Yêu cầu Hoàn chi và Quyết toán tạm ứng bắt buộc phải đính kèm ít nhất 1 chứng từ.");
       return false;
     }
 
@@ -678,7 +678,7 @@ export default function NewRequestPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Tạo yêu cầu mới</h1>
           <p className="text-slate-500 mt-1">
-            Tạo yêu cầu chi tiêu cá nhân: Tạm ứng, Chi phí, Hoàn ứng.
+            Tạo yêu cầu chi tiêu cá nhân: Tạm ứng, Hoàn chi nhân viên, Quyết toán tạm ứng.
           </p>
         </div>
       </div>
@@ -822,7 +822,7 @@ export default function NewRequestPage() {
           {isReimburseType && (
             <div>
               <label className="block text-sm font-medium text-slate-600 mb-2">
-                Khoản tạm ứng cần hoàn <span className="text-rose-500">*</span>
+                Khoản tạm ứng cần quyết toán <span className="text-rose-500">*</span>
               </label>
               <select
                 value={advanceBalanceId?.toString() ?? ""}
@@ -835,12 +835,12 @@ export default function NewRequestPage() {
                 className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500/40 ${fieldErrors.advanceBalanceId ? "border-rose-300" : "border-slate-200"}`}
               >
                 <option value="">
-                  {loadingAdvances ? "Đang tải..." : advanceOptions.length === 0 ? "Không có khoản tạm ứng chưa hoàn" : "Chọn khoản tạm ứng"}
+                  {loadingAdvances ? "Đang tải..." : advanceOptions.length === 0 ? "Không có khoản tạm ứng còn dư" : "Chọn khoản tạm ứng"}
                 </option>
                 {advanceOptions.map((opt) => (
                   <option key={opt.id} value={opt.id}>
                     {opt.requestCode} — còn {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(opt.remainingAmount)}
-                    {opt.status === "PARTIALLY_SETTLED" ? " (hoàn một phần)" : ""}
+                    {opt.status === "PARTIALLY_SETTLED" ? " (đã quyết toán một phần)" : ""}
                   </option>
                 ))}
               </select>
@@ -848,7 +848,7 @@ export default function NewRequestPage() {
                 <p className="text-xs text-rose-600 mt-1">{fieldErrors.advanceBalanceId}</p>
               )}
               {advanceBalanceId && (
-                <p className="text-xs text-teal-600 mt-1">✓ Đã chọn khoản tạm ứng</p>
+                <p className="text-xs text-teal-600 mt-1">✓ Đã chọn khoản tạm ứng cần quyết toán</p>
               )}
             </div>
           )}

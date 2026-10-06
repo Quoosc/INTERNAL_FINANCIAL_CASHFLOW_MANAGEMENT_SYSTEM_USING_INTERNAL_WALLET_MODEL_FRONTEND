@@ -100,11 +100,11 @@ const REQUEST_TYPE_CONFIG: Record<
     badgeCls: "bg-purple-100 text-purple-700 border border-purple-200",
   },
   [RequestType.EXPENSE]: {
-    label: "Chi phí",
+    label: "Hoàn chi nhân viên",
     badgeCls: "bg-blue-50 text-blue-700 border border-blue-200",
   },
   [RequestType.REIMBURSE]: {
-    label: "Hoàn ứng",
+    label: "Quyết toán tạm ứng",
     badgeCls: "bg-teal-500/20 text-teal-700 border border-teal-200",
   },
   [RequestType.PROJECT_TOPUP]: {
@@ -129,6 +129,10 @@ const REQUEST_STATUS_CONFIG: Record<
     label: "Chờ giải ngân",
     cls: "text-blue-600",
   },
+  [RequestStatus.ACCOUNTANT_VERIFIED]: {
+    label: "Chứng từ đã xác nhận, chờ hoàn tiền",
+    cls: "text-teal-700",
+  },
   [RequestStatus.APPROVED_BY_MANAGER]: {
     label: "Manager đã duyệt",
     cls: "text-emerald-700",
@@ -137,7 +141,7 @@ const REQUEST_STATUS_CONFIG: Record<
     label: "CFO đã duyệt",
     cls: "text-emerald-700",
   },
-  [RequestStatus.PAID]: { label: "Đã chi", cls: "text-emerald-700" },
+  [RequestStatus.PAID]: { label: "Đã xử lý", cls: "text-emerald-700" },
   [RequestStatus.REJECTED]: { label: "Từ chối", cls: "text-rose-700" },
   [RequestStatus.CANCELLED]: { label: "Đã hủy", cls: "text-slate-500" },
 };
@@ -651,7 +655,7 @@ export function EmployeeDashboard() {
             <QuickAction
               href="/requests/new"
               label="Tạo yêu cầu mới"
-              sub="Tạm ứng / Chi phí / Hoàn ứng"
+              sub="Tạm ứng / Hoàn chi / Quyết toán tạm ứng"
               iconBg="bg-linear-to-br from-violet-500 to-purple-600"
               icon={
                 <svg

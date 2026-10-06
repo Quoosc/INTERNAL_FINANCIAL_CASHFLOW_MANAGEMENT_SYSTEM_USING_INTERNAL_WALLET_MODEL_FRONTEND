@@ -8,7 +8,7 @@
 /**
  * khớp với request.entity.RequestType — 5 giá trị
  *
- * Flow 1: ADVANCE, EXPENSE, REIMBURSE → Employee → TL approve → Accountant payout
+ * Flow 1: ADVANCE, EXPENSE, REIMBURSE → Employee → TL approval → Accountant processes by request type
  * Flow 2: PROJECT_TOPUP → TL → Manager approve → auto PAID
  * Flow 3: DEPARTMENT_TOPUP → Manager → CFO approve → auto PAID
  */
@@ -24,7 +24,7 @@ export enum RequestType {
  * khớp với request.entity.RequestStatus — 8 giá trị
  *
  * Flow 1 (ADVANCE/EXPENSE/REIMBURSE):
- *   PENDING → APPROVED_BY_TEAM_LEADER → PAID (Accountant disburse)
+ *   PENDING → APPROVED_BY_TEAM_LEADER → PAID; EXPENSE also passes through ACCOUNTANT_VERIFIED before payment.
  *
  * Flow 2 (PROJECT_TOPUP):
  *   PENDING → APPROVED_BY_MANAGER → PAID (auto)
@@ -35,6 +35,7 @@ export enum RequestType {
 export enum RequestStatus {
   PENDING = "PENDING",
   APPROVED_BY_TEAM_LEADER = "APPROVED_BY_TEAM_LEADER",
+  ACCOUNTANT_VERIFIED = "ACCOUNTANT_VERIFIED",
   APPROVED_BY_MANAGER = "APPROVED_BY_MANAGER",
   APPROVED_BY_CFO = "APPROVED_BY_CFO",
   PAID = "PAID",
@@ -43,12 +44,13 @@ export enum RequestStatus {
 }
 
 /**
- * khớp với request.entity.RequestAction — 4 giá trị
+ * khớp với request.entity.RequestAction — 5 giá trị
  * KHÔNG có ESCALATE
  */
 export enum RequestAction {
   APPROVE = "APPROVE",
   REJECT = "REJECT",
+  VERIFY = "VERIFY",
   PAYOUT = "PAYOUT",
   CANCEL = "CANCEL",
 }

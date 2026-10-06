@@ -36,9 +36,9 @@ function getRequestTypeLabel(type: RequestType): string {
     case RequestType.ADVANCE:
       return "Tạm ứng";
     case RequestType.EXPENSE:
-      return "Chi phí";
+      return "Hoàn chi nhân viên";
     case RequestType.REIMBURSE:
-      return "Hoàn ứng";
+      return "Quyết toán tạm ứng";
     default:
       return type;
   }
@@ -152,7 +152,7 @@ export function AccountantDashboard() {
       const disbursementsReq = api.get<
         PaginatedResponse<DisbursementListItem> | DisbursementListItem[]
       >(
-        "/api/v1/accountant/disbursements?page=0&size=3&status=APPROVED_BY_TEAM_LEADER",
+        "/api/v1/accountant/disbursements?page=0&size=3",
       );
       const payrollReq = api.get<
         PaginatedResponse<PayrollPeriodListItem> | PayrollPeriodListItem[]
@@ -325,13 +325,13 @@ export function AccountantDashboard() {
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs text-slate-500">Chờ giải ngân</p>
+              <p className="text-xs text-slate-500">Yêu cầu chờ Kế toán xử lý</p>
               <p className="text-3xl font-bold text-amber-700 mt-1">
                 {dashboard?.pendingDisbursementsCount ??
                   pendingDisbursements.length}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                APPROVED_BY_TEAM_LEADER
+                Tạm ứng, quyết toán và hoàn chi chờ xử lý
               </p>
             </div>
             <span className="w-9 h-9 rounded-xl bg-linear-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">

@@ -11,6 +11,7 @@ import {
   DisbursementDetailResponse,
   DisbursementRejectBody,
   RequestAction,
+  RequestStatus,
   RequestType,
   VerifyPinResponse,
 } from "@/types";
@@ -35,9 +36,9 @@ function getTypeLabel(type: RequestType): string {
     case RequestType.ADVANCE:
       return "Tạm ứng";
     case RequestType.EXPENSE:
-      return "Chi phí";
+      return "Hoàn chi nhân viên";
     case RequestType.REIMBURSE:
-      return "Hoàn ứng";
+      return "Quyết toán tạm ứng";
     default:
       return type;
   }
@@ -194,14 +195,20 @@ export default function AccountantDisbursementDetailPage({
     };
   }, [id, toast]);
 
-  const allChecked = useMemo(
-    () => Object.values(checklist).every(Boolean),
-    [checklist],
-  );
-
   const canProcessDisbursement = useMemo(
     () => (detail ? isAccountantQueueStatus(detail.status) : false),
     [detail],
+  );
+  const isVerifiedExpenseWaitingForPayment = Boolean(
+    detail?.type === RequestType.EXPENSE && detail.status === RequestStatus.ACCOUNTANT_VERIFIED,
+  );
+  const isVerifyingExpense = Boolean(
+    detail?.type === RequestType.EXPENSE && detail.status === RequestStatus.APPROVED_BY_TEAM_LEADER,
+  );
+  const allChecked = useMemo(
+    () => Object.entries(checklist).every(([key, checked]) =>
+      (isVerifiedExpenseWaitingForPayment && key === "budgetAvailable") || checked),
+    [checklist, isVerifiedExpenseWaitingForPayment],
   );
 
   const tlApprovalEntry = useMemo(() => {
@@ -214,14 +221,42 @@ export default function AccountantDisbursementDetailPage({
     );
   }, [detail]);
 
+  const accountantActionEntry = useMemo(() => {
+    if (!detail) return null;
+    return [...detail.timeline].reverse().find((entry) =>
+      entry.action === RequestAction.VERIFY ||
+      entry.action === RequestAction.PAYOUT ||
+      entry.action === RequestAction.REJECT,
+    ) ?? null;
+  }, [detail]);
+
+  const accountantStepTitle = isVerifyingExpense
+    ? "Bước 3: Kế toán xác nhận chứng từ"
+    : isVerifiedExpenseWaitingForPayment
+      ? "Bước 4: Kế toán thanh toán hoàn chi"
+      : detail?.type === RequestType.EXPENSE
+        ? "Bước 4: Kế toán thanh toán hoàn chi"
+        : detail?.type === RequestType.REIMBURSE
+          ? "Bước 3: Kế toán quyết toán tạm ứng"
+          : "Bước 3: Kế toán giải ngân tạm ứng";
+
+  const processingStatusLabel = isVerifiedExpenseWaitingForPayment
+    ? "Chứng từ đã xác nhận · chờ thanh toán"
+    : canProcessDisbursement
+      ? "Chờ Kế toán xử lý"
+      : detail?.status === RequestStatus.PAID
+        ? detail?.type === RequestType.REIMBURSE ? "Đã quyết toán chứng từ" : "Đã hoàn tất"
+        : detail?.status === RequestStatus.REJECTED ? "Đã từ chối" : "Đã xử lý";
+
   const budgetStillAvailable = useMemo(() => {
+    if (isVerifiedExpenseWaitingForPayment) return true;
     if (!detail) return false;
 
     const budgetLimit = detail.phase.budgetLimit ?? 0;
     const currentSpent = detail.phase.currentSpent ?? 0;
     const remaining = budgetLimit - currentSpent;
     return remaining >= detail.approvedAmount;
-  }, [detail]);
+  }, [detail, isVerifiedExpenseWaitingForPayment]);
 
   const handleChecklistChange = (key: keyof typeof checklist) => {
     setChecklist((prev) => ({
@@ -276,8 +311,9 @@ export default function AccountantDisbursementDetailPage({
         pin,
         note: disburseNote.trim() || undefined,
       };
+      const actionPath = isVerifiedExpenseWaitingForPayment ? "pay" : "disburse";
       const res = await api.post<DisburseResponse>(
-        `/api/v1/accountant/disbursements/${id}/disburse`,
+        `/api/v1/accountant/disbursements/${id}/${actionPath}`,
         body,
       );
       setSuccessData(res.data);
@@ -333,9 +369,9 @@ export default function AccountantDisbursementDetailPage({
           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-10 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
           <div className="relative max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Trung tâm giải ngân</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết giải ngân</h1>
-            <p className="mt-3 text-sm leading-6 text-blue-100">Kiểm tra người nhận, chứng từ, luồng phê duyệt và xác nhận chuyển tiền.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100">Kế toán · xử lý yêu cầu</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Chi tiết yêu cầu</h1>
+            <p className="mt-3 text-sm leading-6 text-blue-100">Kiểm tra phê duyệt, chứng từ và thực hiện đúng bước xác nhận hoặc thanh toán.</p>
           </div>
         </div>
       </section>
@@ -406,8 +442,8 @@ export default function AccountantDisbursementDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         <InfoCard label="Mã yêu cầu" value={detail.requestCode} mono />
         <InfoCard label="Người nhận" value={detail.requester.fullName} />
-        <InfoCard label="Số tiền giải ngân" value={formatCurrency(detail.approvedAmount)} tone="text-amber-700" />
-        <InfoCard label="Trạng thái xử lý" value={canProcessDisbursement ? "Đang chờ giải ngân" : "Đã xử lý"} />
+        <InfoCard label={isVerifyingExpense || isVerifiedExpenseWaitingForPayment ? "Số tiền hoàn chi" : "Số tiền tạm ứng"} value={formatCurrency(detail.approvedAmount)} tone="text-amber-700" />
+        <InfoCard label="Trạng thái xử lý" value={processingStatusLabel} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-6">
@@ -462,10 +498,11 @@ export default function AccountantDisbursementDetailPage({
               />
 
               <TimelineStep
-                title="Bước 3: Accountant xử lý giải ngân"
-                subtitle="Đang chờ xác minh"
-                time="Hiện tại"
-                current
+                title={accountantStepTitle}
+                subtitle={isVerifiedExpenseWaitingForPayment ? "Chứng từ đã hợp lệ; khoản hoàn chi đang chờ thanh toán" : canProcessDisbursement ? "Đang chờ xử lý" : detail.status === RequestStatus.REJECTED ? "Yêu cầu đã bị từ chối" : processingStatusLabel}
+                time={accountantActionEntry ? formatDateTime(accountantActionEntry.createdAt) : "Hiện tại"}
+                completed={detail.status === RequestStatus.PAID}
+                current={canProcessDisbursement}
               />
             </div>
           </div>
@@ -566,7 +603,7 @@ export default function AccountantDisbursementDetailPage({
             <ChecklistItem
               checked={checklist.budgetAvailable}
               onToggle={() => handleChecklistChange("budgetAvailable")}
-              label="Ngân sách phase còn đủ để giải ngân"
+              label={isVerifyingExpense ? "Ngân sách dự án còn đủ cho khoản chi" : "Ngân sách dự án còn đủ cho khoản này"}
               hint={
                 budgetStillAvailable
                   ? "Ngân sách khả dụng"
@@ -642,10 +679,10 @@ export default function AccountantDisbursementDetailPage({
 
           <div className="order-1 rounded-3xl border border-slate-200 bg-white p-5 space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">
-              Xác nhận giải ngân
+              {!canProcessDisbursement ? processingStatusLabel : isVerifyingExpense ? "Xác nhận chứng từ hoàn chi" : isVerifiedExpenseWaitingForPayment ? "Thanh toán hoàn chi" : "Xác nhận giải ngân tạm ứng"}
             </h2>
             <p className="text-sm text-slate-500">
-              Nhập mã PIN của bạn để xác nhận giải ngân.
+              {!canProcessDisbursement ? "Yêu cầu này đã kết thúc; không cần thao tác thêm." : isVerifyingExpense ? "Nhập mã PIN để xác nhận chứng từ hợp lệ và ghi nhận chi phí." : isVerifiedExpenseWaitingForPayment ? "Nhập mã PIN để chuyển khoản hoàn chi đã được xác nhận." : "Nhập mã PIN để xác nhận giải ngân tạm ứng."}
             </p>
 
             <div
@@ -660,7 +697,7 @@ export default function AccountantDisbursementDetailPage({
                 maxLength={5}
                 value={pin}
                 onChange={(event) => handlePinChange(event.target.value)}
-                disabled={!allChecked || submitting}
+                disabled={!canProcessDisbursement || !allChecked || submitting}
                 placeholder="•••••"
                 className="w-full px-4 py-3 rounded-2xl bg-blue-50 border border-slate-200 text-slate-900 tracking-[0.35em] text-center text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
               />
@@ -668,8 +705,8 @@ export default function AccountantDisbursementDetailPage({
                 rows={2}
                 value={disburseNote}
                 onChange={(event) => setDisburseNote(event.target.value)}
-                disabled={submitting}
-                placeholder="Ghi chú giải ngân (không bắt buộc)"
+                disabled={!canProcessDisbursement || submitting}
+                placeholder={isVerifyingExpense ? "Ghi chú xác nhận chứng từ (không bắt buộc)" : "Ghi chú thanh toán (không bắt buộc)"}
                 className="mt-3 w-full px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
               />
               {!allChecked && (
@@ -685,18 +722,20 @@ export default function AccountantDisbursementDetailPage({
             <button
               type="button"
               onClick={handleDisburse}
-              disabled={pin.length < 5 || submitting || !allChecked}
+              disabled={!canProcessDisbursement || pin.length < 5 || submitting || !allChecked}
               className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
-              {submitting && <svg className="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
-              {disburseStage === "verifying"
+              {submitting && canProcessDisbursement && <svg className="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+              {!canProcessDisbursement ? processingStatusLabel : disburseStage === "verifying"
                 ? "Đang xác thực PIN..."
                 : disburseStage === "disbursing"
-                  ? "Đang giải ngân..."
-                  : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
+                  ? isVerifyingExpense ? "Đang xác nhận chứng từ..." : "Đang thanh toán..."
+                  : isVerifyingExpense ? `Xác nhận chứng từ ${formatCurrency(detail.approvedAmount)}`
+                    : isVerifiedExpenseWaitingForPayment ? `Thanh toán ${formatCurrency(detail.approvedAmount)}`
+                      : `Giải ngân ${formatCurrency(detail.approvedAmount)}`}
             </button>
 
-            {canProcessDisbursement && (
+            {canProcessDisbursement && !isVerifiedExpenseWaitingForPayment && (
               <button
                 type="button"
                 onClick={() => {
@@ -812,17 +851,17 @@ export default function AccountantDisbursementDetailPage({
                 </svg>
               </span>
               <h3 className="text-xl font-bold text-slate-900">
-                Giải ngân thành công
+                Giao dịch đã được xử lý thành công
               </h3>
             </div>
 
             <div className="space-y-2 rounded-2xl border border-slate-200 bg-blue-50 p-4">
-              <p className="text-sm text-slate-600">
+              {successData.transactionCode && <p className="text-sm text-slate-600">
                 Mã giao dịch:{" "}
                 <span className="font-mono text-slate-900">
                   {successData.transactionCode}
                 </span>
-              </p>
+              </p>}
               <p className="text-sm text-slate-600">
                 Số tiền:{" "}
                 <span className="font-semibold text-emerald-700">

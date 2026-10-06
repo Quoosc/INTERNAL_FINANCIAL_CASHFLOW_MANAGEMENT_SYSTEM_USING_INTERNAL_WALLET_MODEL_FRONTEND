@@ -277,3 +277,87 @@ export interface LedgerSummaryResponse {
   totalOutflow: number;
   transactionCount: number;
 }
+
+export type AccountingJournalEvent =
+  | "ADVANCE_DISBURSED"
+  | "EXPENSE_VERIFIED"
+  | "EXPENSE_PAID"
+  | "REIMBURSE_SETTLED"
+  | "ADVANCE_RETURNED"
+  | "PAYROLL_SETTLEMENT";
+
+export interface AccountingJournalItem {
+  id: number;
+  journalCode: string;
+  eventType: AccountingJournalEvent;
+  postingDate: string;
+  postingPeriod: string;
+  description: string;
+  sourceType: string;
+  sourceId: string;
+  requestId: number | null;
+  advanceBalanceId: number | null;
+  employeeId: number | null;
+  employeeName: string | null;
+  projectId: number | null;
+  projectName: string | null;
+  walletTransactionId: number | null;
+  totalAmount: number;
+  balanced: boolean;
+}
+
+export interface AccountingJournalLine {
+  id: number;
+  accountCode: string;
+  accountName: string;
+  debitAmount: number;
+  creditAmount: number;
+  effectDescription: string;
+  advanceBalanceId: number | null;
+  requestId: number | null;
+  employeeId: number | null;
+  projectId: number | null;
+}
+
+export interface AccountingJournalDetail extends AccountingJournalItem {
+  totalDebit: number;
+  totalCredit: number;
+  lines: AccountingJournalLine[];
+}
+
+export interface AdvanceActivity {
+  journalId: number;
+  journalCode: string;
+  eventType: AccountingJournalEvent;
+  postingDate: string;
+  description: string;
+  amount: number;
+}
+
+export interface AdvanceBalanceDetail {
+  id: number;
+  requestCode: string;
+  disbursedDate: string | null;
+  projectId: number | null;
+  projectName: string | null;
+  phaseName: string | null;
+  categoryName: string | null;
+  originalAmount: number;
+  reimbursedAmount: number;
+  cashReturnedAmount: number;
+  payrollOffsetAmount: number;
+  legacyUnclassifiedAmount: number;
+  remainingAmount: number;
+  status: "OUTSTANDING" | "PARTIALLY_SETTLED" | "SETTLED";
+  activities: AdvanceActivity[];
+}
+
+export interface AdvanceEmployeeSummary {
+  employeeId: number;
+  employeeName: string;
+  departmentName: string | null;
+  openAdvanceCount: number;
+  totalDisbursed: number;
+  totalRemaining: number;
+  advances: AdvanceBalanceDetail[];
+}

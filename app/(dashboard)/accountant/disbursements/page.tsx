@@ -52,9 +52,9 @@ function getRequestTypeLabel(type: RequestType): string {
     case RequestType.ADVANCE:
       return "Tạm ứng";
     case RequestType.EXPENSE:
-      return "Chi phí";
+      return "Hoàn chi nhân viên";
     case RequestType.REIMBURSE:
-      return "Hoàn ứng";
+      return "Quyết toán tạm ứng";
     default:
       return type;
   }
@@ -165,7 +165,6 @@ export default function AccountantDisbursementsPage() {
         };
 
         const query = new URLSearchParams();
-        query.set("status", "APPROVED_BY_TEAM_LEADER");
         if (filters.type) query.set("type", filters.type);
         if (filters.search) query.set("search", filters.search);
         query.set("page", String(toApiPage(filters.page ?? 1)));
@@ -221,8 +220,8 @@ export default function AccountantDisbursementsPage() {
   const tabs: Array<{ label: string; value?: RequestType }> = [
     { label: "Tất cả" },
     { label: "Tạm ứng", value: RequestType.ADVANCE },
-    { label: "Chi phí", value: RequestType.EXPENSE },
-    { label: "Hoàn ứng", value: RequestType.REIMBURSE },
+    { label: "Hoàn chi nhân viên", value: RequestType.EXPENSE },
+    { label: "Quyết toán tạm ứng", value: RequestType.REIMBURSE },
   ];
 
   return (

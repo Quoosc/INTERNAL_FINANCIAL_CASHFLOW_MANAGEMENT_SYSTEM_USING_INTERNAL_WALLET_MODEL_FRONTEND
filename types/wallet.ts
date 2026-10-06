@@ -329,7 +329,7 @@ export interface AccountantLedgerEntryItem {
   transactionCode: string;
   direction: TransactionDirection;
   amount: number;
-  balanceAfter: number;
+  balanceAfter: number | null;
   walletOwnerType: WalletOwnerType;
   walletOwnerId: number;
   walletOwnerName?: string | null;
@@ -348,7 +348,7 @@ export interface AccountantTransactionDetailResponse {
   type: TransactionType;
   status: TransactionStatus;
   amount: number;
-  balanceAfter: number;
+  balanceAfter: number | null;
   referenceType: ReferenceType | null;
   referenceId: number | null;
   walletOwnerType: WalletOwnerType;
@@ -356,6 +356,7 @@ export interface AccountantTransactionDetailResponse {
   walletOwnerName?: string | null;
   description: string;
   ledgerEntries: AccountantLedgerEntryItem[];
+  accountingJournalIds: number[];
   createdAt: string;
 }
 
@@ -368,6 +369,20 @@ export interface AccountantLedgerFilterParams {
   to?: string;      // "YYYY-MM-DD"
   page?: number;
   limit?: number;
+}
+
+/** One real transaction row, with both wallet-side balance movements nested in it. */
+export interface AccountantWalletTransactionResponse {
+  id: number;
+  transactionCode: string;
+  type: TransactionType;
+  status: TransactionStatus;
+  amount: number;
+  referenceType: ReferenceType | null;
+  referenceId: number | null;
+  description: string | null;
+  timestamp: string;
+  walletMovements: AccountantLedgerEntryItem[];
 }
 
 // --- SSE Event Payloads ---

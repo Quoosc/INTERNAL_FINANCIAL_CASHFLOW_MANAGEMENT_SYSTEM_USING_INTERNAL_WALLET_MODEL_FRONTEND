@@ -344,7 +344,7 @@ export default function AccountantLedgerDetailPage({ params }: PageProps) {
 
       <section className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-3">
         <div><h2 className="text-lg font-semibold text-slate-900">Bút toán kế toán liên quan</h2><p className="mt-1 text-xs text-slate-500">Một giao dịch tiền có thể gắn với một hoặc nhiều bước ghi nhận kế toán.</p></div>
-        {txn.accountingJournalIds?.length ? <div className="flex flex-wrap gap-2">{txn.accountingJournalIds.map((journalId) => <Link key={journalId} href={`/accountant/ledger/journals/${journalId}`} className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100">Mở bút toán #{journalId}</Link>)}</div> : <p className="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">Chưa có bút toán kế toán liên kết. Một số giao dịch ví, như phân bổ nội bộ, chỉ di chuyển tiền trong hệ thống và không ghi nhận chi phí.</p>}
+        {txn.accountingJournalIds?.length ? <div className="flex flex-wrap gap-2">{txn.accountingJournalIds.map((journalId) => <Link key={journalId} href={`/accountant/ledger/journals/${journalId}`} className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100">Mở bút toán #{journalId}</Link>)}</div> : <p className="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">Giao dịch này chưa có bút toán kế toán liên kết. Có thể đây là giao dịch chỉ theo dõi ở sổ ví (như nạp/rút ví cá nhân) hoặc là giao dịch lịch sử chưa đủ chứng từ để lập bút toán; cần kiểm tra loại nghiệp vụ và hồ sơ trước khi kết luận đã được hạch toán.</p>}
       </section>
 
       <Link

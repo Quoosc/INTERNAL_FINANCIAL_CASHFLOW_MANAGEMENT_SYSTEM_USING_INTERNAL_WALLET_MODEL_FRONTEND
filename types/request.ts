@@ -141,6 +141,8 @@ export interface RequestSummaryResponse {
 export interface AdvanceBalanceItem {
   id: number;
   requestCode: string;
+  projectName: string | null;
+  disbursedDate: string | null;
   originalAmount: number;
   remainingAmount: number;
   status: "OUTSTANDING" | "PARTIALLY_SETTLED";
@@ -151,6 +153,13 @@ export interface AdvanceBalanceItem {
   phaseName?: string | null;
   categoryId?: number | null;
   categoryName?: string | null;
+}
+
+export interface AdvanceReturnResponse {
+  advanceBalanceId: number;
+  transactionCode: string;
+  returnedAmount: number;
+  remainingAmount: number;
 }
 
 // --- Employee Request Body DTOs ---

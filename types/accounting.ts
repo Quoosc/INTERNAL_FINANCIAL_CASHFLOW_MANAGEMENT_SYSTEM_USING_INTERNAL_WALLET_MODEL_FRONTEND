@@ -284,7 +284,10 @@ export type AccountingJournalEvent =
   | "EXPENSE_PAID"
   | "REIMBURSE_SETTLED"
   | "ADVANCE_RETURNED"
-  | "PAYROLL_SETTLEMENT";
+  | "PAYROLL_SETTLEMENT"
+  | "SYSTEM_TOPUP"
+  | "DEPARTMENT_ALLOCATION"
+  | "PROJECT_ALLOCATION";
 
 export interface AccountingJournalItem {
   id: number;
@@ -304,6 +307,9 @@ export interface AccountingJournalItem {
   walletTransactionId: number | null;
   totalAmount: number;
   balanced: boolean;
+  createdByUserId: number | null;
+  createdByName: string | null;
+  createdAt: string | null;
 }
 
 export interface AccountingJournalLine {
@@ -360,4 +366,35 @@ export interface AdvanceEmployeeSummary {
   totalDisbursed: number;
   totalRemaining: number;
   advances: AdvanceBalanceDetail[];
+}
+
+export interface LedgerCategoryBudget {
+  categoryId: number;
+  categoryName: string;
+  budgetLimit: number;
+  recognizedExpense: number;
+  lockedForRequests: number;
+  openAdvance: number;
+}
+
+export interface LedgerPhaseBudget {
+  phaseId: number;
+  phaseName: string;
+  budgetLimit: number;
+  recognizedExpense: number;
+  lockedForRequests: number;
+  openAdvance: number;
+  categories: LedgerCategoryBudget[];
+}
+
+export interface LedgerProjectBudget {
+  projectId: number;
+  projectCode: string;
+  projectName: string;
+  totalBudget: number;
+  projectFundBalance: number;
+  recognizedExpense: number;
+  lockedForRequests: number;
+  openAdvance: number;
+  phases: LedgerPhaseBudget[];
 }

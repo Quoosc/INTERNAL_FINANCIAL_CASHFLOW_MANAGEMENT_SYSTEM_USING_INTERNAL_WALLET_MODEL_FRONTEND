@@ -1,140 +1,111 @@
-# IFMS — trạng thái và kế hoạch hoàn tất chức năng sổ cái
+# IFMS — trạng thái triển khai và phần việc còn lại của sổ cái
 
-**Cập nhật:** 06/10/2026  
-**Phạm vi:** Trang Kế toán ở `financial-wallet-frontend` và backend trong repo `IFMS` tại `D:/UIT/HK6 UIT/LẬP TRÌNH JAVA/IFMS`.  
-**Trạng thái:** Đã triển khai nền tảng frontend/backend; chưa nghiệm thu tích hợp với database và chưa xác nhận toàn bộ luồng chạy thực tế.
+**Cập nhật:** 10/10/2026
+**Phạm vi:** Frontend financial-wallet-frontend và backend IFMS.
+**Trạng thái:** Đã bổ sung chức năng và tài liệu theo quyết định đã chốt. Chưa nghiệm thu chạy với database.
 
-## 1. Mục đích tài liệu
+## Quyết định nghiệp vụ đã chốt
 
-Tài liệu này ghi lại phần sổ cái đã được triển khai, phần còn thiếu và thứ tự công việc đề xuất để hoàn tất. Đây là kế hoạch cho các task tiếp theo, không phải xác nhận hệ thống đã sẵn sàng vận hành.
+| Nội dung | Quyết định |
+|---|---|
+| Nạp quỹ và phân bổ nội bộ | Lập journal cho tiền vào quỹ công ty từ nguồn bên ngoài, cấp ngân sách phòng ban và cấp vốn dự án. Đây là biến động tài sản/quỹ, không tự ghi thành chi phí. |
+| Ví cá nhân | Nạp/rút ví cá nhân (DEPOSIT/WITHDRAW) chỉ theo dõi trong sổ giao dịch ví; không xem là tiền công ty giữ hộ và không lập journal của công ty. |
+| Dữ liệu lịch sử | Chỉ lập journal bù khi có đủ chứng từ và thông tin đối chiếu. Không đủ căn cứ thì giữ nhãn giao dịch lịch sử chưa có journal. |
+| Khấu trừ tạm ứng qua lương | Giữ cách FIFO hiện tại; khấu trừ làm giảm dư tạm ứng, không tạo giao dịch hoàn tiền giả. |
+| Nhân viên hoàn tạm ứng | Chỉ ghi giảm dư tạm ứng khi có tiền thật chuyển từ ví nhân viên về đúng ví dự án. |
+| Nhân viên tự chi | Chi phí được ghi khi Kế toán xác nhận chứng từ hợp lệ; chuyển tiền vào ví nhân viên là thanh toán hoàn chi riêng. |
 
-Trong tài liệu:
+## 1. Đã thực hiện
 
-- **Giao dịch ví** là lần chuyển tiền thực tế giữa các ví và các dòng làm thay đổi số dư ví.
-- **Bút toán kế toán (journal)** là ghi nhận tác động của một nghiệp vụ lên các tài khoản kế toán; hai phía phải cân bằng.
-- **Tạm ứng (advance)** là tiền đã giao cho nhân viên và còn phải quyết toán.
-- **Nhân viên tự chi (expense)** là nhân viên dùng tiền của mình, nộp chứng từ để được hoàn chi.
-- **Quyết toán tạm ứng (reimburse)** là nộp chứng từ cho khoản tạm ứng đã nhận; không đồng nghĩa với một lần chuyển tiền mới.
+### Frontend
 
-## 2. Đã thực hiện
+Trang thật /accountant/ledger hiện có bốn khu vực:
 
-### 2.1 Frontend
+1. **Giao dịch ví:** một dòng cho mỗi giao dịch, bộ lọc và phân trang; chi tiết hiển thị các ví bị tác động và journal liên quan nếu có.
+2. **Sổ cái kế toán:** danh sách và chi tiết journal, gồm nghiệp vụ nguồn, tài khoản, ngày/kỳ ghi sổ, cân bằng, người tạo và thời điểm tạo.
+3. **Tạm ứng còn mở:** nhóm theo nhân viên; từng khoản cho biết đã quyết toán bằng chứng từ, tiền hoàn thật, khấu trừ lương, phần lịch sử chưa phân loại và số còn lại.
+4. **Ngân sách & tạm ứng:** tổng hợp theo dự án, giai đoạn và danh mục; trình bày riêng chi phí đã xác nhận, tiền đang khóa cho yêu cầu, tạm ứng còn mở và ngân sách khả dụng.
 
-Trang thật `/accountant/ledger` đã được chuyển sang gọi API backend, với ba khu vực riêng:
+Ở trang /wallet, nhân viên xem các khoản tạm ứng của chính mình và có thể nhập số tiền, ghi chú rồi hoàn tiền thật về ví dự án. Sau khi hoàn, trang tải lại số dư ví, lịch sử giao dịch và dư tạm ứng. Backend vẫn kiểm tra quyền sở hữu, số dư tạm ứng còn lại và số tiền khả dụng.
 
-1. **Giao dịch ví:** một dòng cho mỗi giao dịch, có bộ lọc và phân trang; chi tiết cho biết các ví bị tác động và liên kết tới bút toán liên quan nếu có.
-2. **Sổ cái kế toán:** danh sách bút toán và trang chi tiết riêng, gồm ngày/kỳ ghi sổ, nghiệp vụ nguồn, nhân viên/dự án liên quan, các tài khoản bị tác động, giải thích tác động và trạng thái cân bằng.
-3. **Tạm ứng còn phải quyết toán:** nhóm theo nhân viên; mở rộng để xem từng khoản tạm ứng, chứng từ đã quyết toán, tiền mặt đã hoàn, phần khấu trừ lương và số còn lại.
+Trang /accountant/ledger/demo vẫn là dữ liệu giả dùng để thuyết trình; dữ liệu thật nằm ở /accountant/ledger.
 
-Các màn hình xử lý yêu cầu cũng phản ánh hai bước của nhân viên tự chi: Kế toán xác nhận chứng từ, sau đó mới thanh toán hoàn chi. Trạng thái mới đã được nối vào nhãn trạng thái và các dashboard liên quan.
+### Backend IFMS
 
-**Lưu ý:** route `/accountant/ledger/demo` vẫn là trang minh họa dùng dữ liệu giả. Route cần dùng để xem dữ liệu thật là `/accountant/ledger`.
+- Journal được tạo cùng transaction nghiệp vụ, kiểm tra tổng hai phía và có khóa duy nhất theo loại sự kiện/nguồn để hạn chế ghi trùng.
+- Journal bao phủ ADVANCE, xác nhận và thanh toán EXPENSE, REIMBURSE, ADVANCE_RETURN, payroll, SYSTEM_TOPUP, cấp ngân sách phòng ban và cấp vốn dự án.
+- Journal mới lưu người/tác vụ tạo và thời điểm tạo. Migration V20 thêm các trường audit và chặn UPDATE/DELETE trực tiếp trên journal cùng các dòng journal. Bút toán lịch sử có thể không có người tạo/thời điểm gốc; các trường đó để trống thay vì đoán.
+- API danh sách journal lọc theo sự kiện, ngày, nhân viên, dự án và ID yêu cầu; API chi tiết trả dấu vết audit.
+- API GET /api/v1/accountant/ledger/budget-exposure tổng hợp theo dự án/giai đoạn/danh mục.
+- API nhân viên hoàn tạm ứng đã tồn tại; giao diện /wallet nay đã nối vào API đó.
+- Các migration hiện có tới V20. V19 tạo bảng journal và tách tiền hoàn thật, khấu trừ lương, dữ liệu lịch sử chưa phân loại. V20 bổ sung audit và tính bất biến ở database.
 
-### 2.2 Backend IFMS
+### Mapping journal hiện được dùng
 
-- Thêm lưu trữ bút toán gồm phần đầu và các dòng tài khoản; dịch vụ kiểm tra tổng hai phía trước khi ghi và dùng mã sự kiện/nguồn để ngăn ghi trùng.
-- Bổ sung API đọc giao dịch ví đã gộp, danh sách/chi tiết bút toán và tạm ứng còn mở theo nhân viên.
-- Giữ các API sổ cái cũ để tương thích; chi tiết giao dịch cũ có thể trả về các mã bút toán liên quan.
-- Bổ sung trạng thái trung gian `ACCOUNTANT_VERIFIED` cho yêu cầu nhân viên tự chi.
-- Bổ sung số tiền giữ theo từng yêu cầu để giới hạn giải ngân theo chính yêu cầu đó; từ chối yêu cầu thì nhả khoản đã giữ.
-- Tách tiền hoàn tạm ứng thật khỏi khoản khấu trừ lương. Tiền hoàn thật tạo giao dịch từ ví nhân viên về đúng ví dự án; khấu trừ lương chỉ bù trừ số dư tạm ứng.
-- Journal đã bao phủ các nghiệp vụ tạm ứng, xác nhận và thanh toán hoàn chi, quyết toán tạm ứng, hoàn tiền tạm ứng và bảng lương.
-- Migration mới là **V19** vì V17 và V18 đã tồn tại trong repo IFMS. Dữ liệu hoàn tạm ứng lịch sử chưa phân loại được chuyển sang trường lịch sử riêng để không tự đoán loại nghiệp vụ.
+Các mã dưới đây là mapping quản trị nội bộ cho IFMS, chưa được GVHD xác nhận là danh mục tài khoản chính thức.
 
-### 2.3 Quy tắc nghiệp vụ đã được nối vào luồng
+| Nghiệp vụ | Tác động được ghi |
+|---|---|
+| SYSTEM_TOPUP | Tăng quỹ công ty; giảm tài khoản nguồn ngân hàng/nguồn bên ngoài. Có mã giao dịch và payment reference để đối chiếu. |
+| DEPARTMENT_ALLOCATION | Tăng quỹ phòng ban; giảm quỹ công ty. |
+| PROJECT_ALLOCATION | Tăng quỹ dự án; giảm quỹ phòng ban. |
+| DEPOSIT/WITHDRAW cá nhân | Không lập journal công ty; vẫn có transaction và biến động ví cá nhân. |
 
-| Nghiệp vụ | Khi nào ghi chi phí | Chuyển tiền | Tác động số dư tạm ứng |
-|---|---|---|---|
-| Tạm ứng (`ADVANCE`) | Không ghi chi phí lúc giải ngân | Ví dự án → ví nhân viên | Tạo khoản còn phải quyết toán |
-| Nhân viên tự chi (`EXPENSE`) | Khi Kế toán xác nhận chứng từ hợp lệ | Chuyển hoàn chi ở bước thanh toán riêng | Không tác động |
-| Thanh toán hoàn chi (`EXPENSE` đã xác nhận) | Không ghi chi phí lần hai | Ví dự án → ví nhân viên | Không tác động |
-| Quyết toán tạm ứng (`REIMBURSE`) | Khi chứng từ được chấp nhận | Không phát sinh giao dịch ví mới | Giảm khoản tạm ứng còn mở |
-| Nhân viên hoàn tiền (`ADVANCE_RETURN`) | Không ghi chi phí | Ví nhân viên → ví dự án gốc | Giảm khoản còn phải quyết toán |
-| Khấu trừ tạm ứng qua lương | Ghi theo dữ liệu phiếu lương hiện có | Không giả lập chuyển tiền hoàn | Giảm khoản tạm ứng; hiện đang phân bổ FIFO |
+Các luồng ADVANCE, EXPENSE, REIMBURSE, ADVANCE_RETURN và payroll tiếp tục dùng quy tắc ghi nhận tại docs/project_2/ledger-accounting-implementation.md trong repo backend.
 
-## 3. Chưa thực hiện hoặc chưa xác nhận
+### Các chỉ tiêu ngân sách được tách riêng
 
-### 3.1 Chưa nghiệm thu khi chạy với database thật
+API và giao diện không cộng các chỉ tiêu sau thành một số “đã chi” chung:
 
-- Migration V19 chưa được áp dụng lên database trong môi trường chạy.
-- Chưa kiểm tra migration trên bản sao dữ liệu hiện có, gồm việc chuyển dữ liệu lịch sử, tạo số tiền giữ cho các yêu cầu cũ và giữ nguyên số dư tạm ứng.
-- Chưa khởi chạy backend và frontend cùng nhau để kiểm tra đăng nhập, quyền, phản hồi API, trạng thái rỗng/lỗi và dữ liệu thật trên giao diện.
-- Backend đã compile thành công; frontend build và kiểm chứng tích hợp chưa chạy. Compile không xác nhận migration hoặc các luồng nghiệp vụ chạy đúng trên database.
+- **Chi phí đã xác nhận:** số đang lưu ở project/phase/category totalSpent hoặc currentSpent; EXPENSE ghi khi xác nhận chứng từ và REIMBURSE ghi khi quyết toán.
+- **Đang khóa cho yêu cầu:** tổng reservedAmount của yêu cầu đã được duyệt hoặc đã xác nhận chứng từ.
+- **Tạm ứng còn mở:** tổng dư AdvanceBalance.remainingAmount.
+- **Số dư quỹ dự án:** giá trị đang lưu trên Project; khoản đang khóa và tạm ứng còn mở vẫn được hiển thị riêng.
 
-### 3.2 Chưa có giao diện cho một số thao tác
+ADVANCE không được tính thành chi phí ngay khi giải ngân. Các chỉ tiêu là những góc nhìn khác nhau và không được cộng chồng lên nhau.
 
-- Chưa có giao diện nhân viên chọn khoản tạm ứng và thực hiện hoàn tiền thật. Backend đã có API hoàn tiền; trang sổ cái chỉ phục vụ tra cứu khoản còn mở.
-- Chưa có trang hoặc thao tác đóng kỳ kế toán.
-- Chưa có quy trình đảo bút toán/điều chỉnh sau khi ghi sổ; không được sửa trực tiếp giao dịch gốc để thay cho quy trình này.
+## 2. Chưa nghiệm thu hoặc còn phụ thuộc
 
-### 3.3 Phạm vi ghi sổ chưa bao phủ mọi loại giao dịch ví
+### Chạy với database và dữ liệu thật
 
-- Chưa tạo journal cho nạp tiền hệ thống, nạp/rút ví và phân bổ nội bộ. Cần chốt nghiệp vụ nào phải có journal, nghiệp vụ nào chỉ là di chuyển tiền giữa các ví nội bộ, rồi mới bổ sung mapping.
-- Giao dịch lịch sử trước khi triển khai journal có thể không có bút toán liên kết. Hiện chưa có quyết định backfill journal lịch sử hay chỉ đánh dấu rõ các giao dịch cũ chưa có journal.
-- Mapping tài khoản hiện là mapping nội bộ IFMS, chưa được xác nhận là hệ thống tài khoản pháp định.
+- Chưa áp dụng V19/V20 trên database thử nghiệm hoặc bản sao dữ liệu, chưa kiểm tra chuyển đổi dữ liệu cũ.
+- Lúc kiểm tra, DATABASE_URL không được cấu hình và Docker Engine không chạy; vì vậy chưa khởi động tích hợp backend/frontend với database.
+- Chưa kiểm tra quyền và các luồng nghiệp vụ thật với tài khoản Kế toán/nhân viên; chưa xác minh số dư trước/sau trên database.
+- Đã chạy compile backend và production build frontend thành công. Chưa chạy bộ test hoặc kiểm thử API/end-to-end.
 
-### 3.4 Một số chỉ tiêu và quy tắc cần chốt
+### Backfill và mapping
 
-- `currentSpent` chưa trình bày riêng tiền đã giữ, tạm ứng đang mở và chi phí đã quyết toán. `reservedAmount` chỉ giữ tiền ở ví theo yêu cầu, không thay thế báo cáo cam kết/ngân sách.
-- Khấu trừ lương hiện phân bổ FIFO vào các khoản tạm ứng. Cần xác nhận thứ tự này phù hợp với quy tắc IFMS.
-- Ngày/kỳ ghi sổ đã có dữ liệu, nhưng chưa có quy định xử lý giao dịch sai phát hiện sau khi kỳ đã đóng.
-- Journal hiện không có API sửa/xóa; tính append-only được tuân theo ở dịch vụ hiện tại nhưng chưa được database cưỡng chế bằng chính sách bất biến.
+- Chưa backfill journal cho dữ liệu lịch sử. Chỉ thực hiện sau khi có dữ liệu/chứng từ đủ căn cứ và database mục tiêu để đối chiếu.
+- Cần GVHD/người phụ trách nghiệp vụ duyệt tên tài khoản và mapping. Mã tài khoản hiện tại là mapping nội bộ IFMS, không tuyên bố là hệ thống tài khoản pháp định.
+- Với giao dịch không có journal, chi tiết hiện phân biệt khả năng là loại chỉ theo dõi ở sổ ví (như DEPOSIT/WITHDRAW cá nhân) hoặc giao dịch cũ chưa có đủ hồ sơ; cần kiểm tra nguồn trước khi kết luận đã hạch toán.
 
-## 4. Kế hoạch thực hiện tiếp theo
+### Kỳ kế toán và sửa sai
 
-### Giai đoạn A — Làm cho bản hiện tại chạy được end-to-end
+- Chưa có thao tác đóng kỳ kế toán, lựa chọn ngày nghiệp vụ/ngày ghi sổ, hoặc quy trình đảo journal có liên kết và chống đảo trùng.
+- Journal đã bị chặn sửa/xóa ở database. Trước khi mở chức năng sửa sai cần chốt cách xử lý ngày/kỳ khi phát hiện sai sau khi đóng kỳ, quyền thực hiện và cách gắn lý do/chứng từ. Không sửa trực tiếp dữ liệu gốc.
 
-| ID | Công việc | Điều kiện hoàn thành |
+## 3. Plan còn lại
+
+| Mục | Trạng thái | Việc tiếp theo |
 |---|---|---|
-| A1 | Chạy V19 trước trên database thử nghiệm/bản sao; kiểm tra schema, ràng buộc duy nhất, dữ liệu chuyển đổi và số dư tạm ứng trước/sau. | Migration chạy thành công; không mất số dư hoặc lịch sử; có biên bản kết quả trước/sau. |
-| A2 | Khởi chạy backend và frontend cùng cấu hình database đã migrate; đăng nhập bằng tài khoản Kế toán và nhân viên. | Trang sổ cái tải được dữ liệu API thật; phân quyền đúng; không có lỗi API/console làm hỏng luồng. |
-| A3 | Đi qua các luồng ADVANCE, EXPENSE xác nhận → thanh toán, REIMBURSE, ADVANCE_RETURN và payroll trên dữ liệu thử nghiệm. | Số dư ví, số dư tạm ứng, chi phí và journal khớp quy tắc ở mục 2.3; mỗi journal cân bằng. |
-| A4 | Kiểm tra bộ lọc, phân trang, liên kết từ giao dịch sang journal, trạng thái rỗng/lỗi và dữ liệu lịch sử chưa có journal. | Bộ lọc áp dụng cùng phạm vi cho danh sách/tổng hợp; giao dịch cũ không bị trình bày nhầm thành journal. |
+| A1 — kiểm tra V19/V20 trên database thử nghiệm/bản sao | Chưa làm | Chạy migration và đối chiếu schema, số dư tạm ứng, reservations, journal và dữ liệu lịch sử trước/sau. |
+| A2 — chạy tích hợp và kiểm tra phân quyền | Chưa làm | Cần cấu hình database thử nghiệm; kiểm tra tài khoản Kế toán và nhân viên. |
+| A3 — đi qua các luồng ADVANCE, EXPENSE, REIMBURSE, hoàn tiền và payroll | Chưa làm | Xác nhận ví, số dư tạm ứng, chi phí và journal khớp sau từng bước. |
+| A4 — kiểm tra lọc, phân trang và liên kết dữ liệu | Chưa làm | Kiểm tra trên API/database thật; xác nhận giao dịch cũ không bị hiểu nhầm là đã có journal. |
+| B1 — giao diện nhân viên hoàn tạm ứng | Hoàn tất phần code | Màn hình /wallet nối API; còn cần kiểm tra runtime với database. |
+| B2/B3 — mapping và journal nạp quỹ/phân bổ | Đã triển khai code | Đã có ba event journal và liên kết transaction/request; cần GVHD duyệt mapping và chạy tích hợp. |
+| B4 — backfill có chứng từ | Chưa làm, phụ thuộc dữ liệu | Chỉ lập journal cho từng giao dịch có hồ sơ và số liệu đối chiếu; không suy đoán cho dữ liệu thiếu. |
+| B5 — báo cáo ngân sách tách biệt | Đã triển khai code | Có API và tab theo dự án/giai đoạn/danh mục; cần đối chiếu số liệu thật. |
+| C1 — duyệt mapping tài khoản | Còn chờ nghiệp vụ | GVHD/người phụ trách duyệt tên và ý nghĩa các tài khoản nội bộ. |
+| C2 — đóng kỳ và đảo/điều chỉnh | Chưa triển khai | Cần chốt ngày/kỳ ghi đảo khi kỳ cũ đã đóng, quyền đóng/mở kỳ và trường hợp điều chỉnh. |
+| C3 — audit và bất biến | Đã triển khai code | V20 thêm người tạo/thời điểm và ngăn sửa/xóa journal ở database; legacy có thể thiếu audit gốc. |
+| C4 — FIFO payroll | Đã có trong code, chưa kiểm chứng runtime | Code kiểm tra tổng phân bổ bằng advanceDeduct, lấy các khoản tạm ứng theo createdAt, id và gắn từng dòng journal với khoản tương ứng. |
 
-**Phụ thuộc:** hoàn thành A1 trước A2/A3. Không chạy V19 trực tiếp trên dữ liệu quan trọng nếu chưa sao lưu và kiểm tra trên bản sao.
+## 4. Kiểm chứng trong lượt triển khai này
 
-### Giai đoạn B — Hoàn tất các chức năng nghiệp vụ còn thiếu
+- Backend IFMS: mvnw.cmd -q -DskipTests compile — thành công.
+- Frontend: npm run build — thành công; route sổ cái, chi tiết journal, trang ví và demo đều được build.
+- Không chạy test suite.
+- Không chạy migration vì môi trường hiện không có DATABASE_URL và Docker Engine chưa sẵn sàng.
 
-| ID | Công việc | Điều kiện hoàn thành |
-|---|---|---|
-| B1 | Tạo giao diện nhân viên hoàn tiền tạm ứng: xem khoản còn mở, chọn khoản, nhập số tiền/ghi chú, xác nhận và xem kết quả. | Nhân viên chỉ thao tác với khoản của mình; không hoàn quá số dư còn lại; sau hoàn, ví và số phải quyết toán cập nhật nhất quán. |
-| B2 | Chốt danh mục sự kiện phải ghi journal: nạp hệ thống, nạp/rút, phân bổ nội bộ và các giao dịch còn lại. | Có bảng mapping được duyệt, mô tả khi nào ghi và tài khoản nội bộ bị tác động cho từng sự kiện. |
-| B3 | Triển khai journal cho các sự kiện đã được chốt ở B2. | Mỗi nghiệp vụ tạo journal một lần, cân bằng, truy về giao dịch nguồn; không tạo chi phí cho chuyển nội bộ nếu nghiệp vụ không phải chi phí. |
-| B4 | Chốt cách hiển thị và xử lý giao dịch trước V19. | Hoặc có kế hoạch backfill có đối chiếu; hoặc giao diện ghi rõ “giao dịch lịch sử, chưa có bút toán”, không tự tạo số liệu suy đoán. |
-| B5 | Thiết kế báo cáo riêng cho tiền đã giữ, tạm ứng đang mở, chứng từ đã quyết toán và chi phí đã xác nhận. | Tổng không cộng trùng; ADVANCE không thành chi phí trước khi quyết toán; một khoản REIMBURSE chỉ ghi chi phí một lần. |
-
-### Giai đoạn C — Bổ sung kiểm soát kế toán và sửa sai
-
-| ID | Công việc | Điều kiện hoàn thành |
-|---|---|---|
-| C1 | GVHD/người phụ trách nghiệp vụ duyệt tên và mapping tài khoản nội bộ, cách hiển thị “Ghi nhận/Đối ứng”, ngày và kỳ ghi sổ. | Có mapping được duyệt cho từng sự kiện đang hỗ trợ; tài liệu và giao diện dùng cùng thuật ngữ. |
-| C2 | Thiết kế quy trình đảo/điều chỉnh journal, chống đảo trùng và quy định ngày ghi nhận khi kỳ đã khóa. | Không sửa/xóa dữ liệu gốc; journal điều chỉnh liên kết journal gốc; có quy tắc kỳ kế toán và quyền thao tác. |
-| C3 | Chốt chính sách bất biến và phân quyền sửa sai. | Có kiểm soát ở tầng lưu trữ/API; mọi thao tác điều chỉnh có người thực hiện, thời điểm, lý do và tham chiếu. |
-| C4 | Xác nhận FIFO cho khấu trừ lương hoặc thay bằng quy tắc được IFMS duyệt. | Mỗi khoản khấu trừ truy được tới phiếu lương và từng khoản tạm ứng; không tạo biến động ví giả. |
-
-**Phụ thuộc:** C1 cần hoàn tất trước khi coi mapping là chuẩn; C2/C3 cần thiết kế nghiệp vụ trước khi triển khai chức năng sửa sai.
-
-## 5. Thứ tự ưu tiên đề xuất
-
-1. **Ưu tiên 0:** A1–A4 — chứng minh phần đã triển khai hoạt động với database và dữ liệu thật.
-2. **Ưu tiên 1:** B1 — hoàn tất giao diện hoàn tiền tạm ứng; B2–B4 — chốt phạm vi và lịch sử journal.
-3. **Ưu tiên 2:** B5 và C1–C4 — hoàn chỉnh báo cáo ngân sách, mapping và kiểm soát kế toán.
-
-Không nên tuyên bố hoàn tất sổ cái trước khi giai đoạn A đạt điều kiện nghiệm thu. Các công việc B2, B4, C1 và C2 có quyết định nghiệp vụ cần chốt trước khi code.
-
-## 6. Tiêu chí nghiệm thu toàn bộ
-
-- Trang `/accountant/ledger` đọc dữ liệu thật; trang demo được nhận diện riêng là dữ liệu minh họa.
-- Một giao dịch ví chỉ hiển thị một lần ở danh sách giao dịch; biến động từng ví không bị gọi là bút toán kế toán.
-- Mỗi nghiệp vụ thuộc phạm vi journal có đúng một bút toán nguồn, hai phía cân bằng và liên kết ngược được tới yêu cầu/giao dịch/nhân viên/dự án phù hợp.
-- Tạm ứng còn phải quyết toán được tính theo từng nhân viên và từng khoản, trừ riêng chứng từ hợp lệ, tiền mặt hoàn và khấu trừ lương.
-- Thanh toán hoàn chi không ghi chi phí lần thứ hai; quyết toán tạm ứng không tạo giao dịch ví mới; khấu trừ lương không giả lập hoàn tiền mặt.
-- Migration V19 chạy thành công trên database mục tiêu sau khi đã được kiểm tra dữ liệu; các luồng chính được kiểm chứng trên cấu hình chạy thực tế.
-- Các giới hạn chưa triển khai (nếu còn) được hiển thị rõ và không làm người dùng hiểu giao dịch ví là journal hoặc hiểu giao dịch lịch sử chưa có journal là đã được hạch toán.
-
-## 7. Trạng thái kiểm chứng tại thời điểm cập nhật
-
-- Backend IFMS: `mvnw.cmd -q -DskipTests compile` đã thành công.
-- `git diff --check`: đã chạy và không phát hiện lỗi khoảng trắng; các cảnh báo còn lại chỉ liên quan chuyển đổi LF/CRLF của Windows.
-- Chưa chạy frontend build, bộ kiểm thử, kiểm thử API end-to-end hoặc migration V19 trên database.
-- Cập nhật tài liệu này chỉ lập kế hoạch cho phần còn lại; chưa thực hiện thêm thay đổi code.
+**Chưa thể xác nhận hệ thống đã được nghiệm thu hoặc sẵn sàng dùng trên dữ liệu thật cho đến khi hoàn thành A1–A4.**

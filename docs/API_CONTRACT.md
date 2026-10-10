@@ -536,9 +536,10 @@ Notes:
 | Method | Endpoint                                                                    |
 | ------ | --------------------------------------------------------------------------- |
 | GET    | `/accountant/ledger/wallet-transactions?type=&status=&referenceType=&from=&to=&page=1&limit=20` |
-| GET    | `/accountant/ledger/journals?event=&from=&to=&page=1&limit=20` |
+| GET    | `/accountant/ledger/journals?event=&from=&to=&employeeId=&projectId=&requestId=&page=1&limit=20` |
 | GET    | `/accountant/ledger/journals/:journalId` |
 | GET    | `/accountant/ledger/advances/outstanding` |
+| GET    | `/accountant/ledger/budget-exposure` |
 | GET    | `/accountant/ledger?type=&status=&referenceType=&from=&to=&page=1&limit=20` (endpoint tương thích cũ) |
 | GET    | `/accountant/ledger/summary?type=&status=&referenceType=&from=&to=` |
 | GET    | `/accountant/ledger/:transactionId` |
@@ -546,7 +547,9 @@ Notes:
 
 Các endpoint `/accountant/ledger` hiện trả về giao dịch ví và các dòng `LedgerEntry` gắn với ví. Đây là nhật ký biến động tiền trong IFMS; các dòng chi tiết đang hiển thị không phải journal theo tài khoản kế toán. `LedgerSummaryResponse.currentBalance` là số dư `COMPANY_FUND`; tổng tiền vào/ra phụ thuộc phạm vi thời gian được yêu cầu.
 
-**Cập nhật 06/10/2026:** API journal và số dư tạm ứng nhóm theo nhân viên đã được triển khai ở backend IFMS và nối ở trang thật. Danh sách giao dịch trả một dòng mỗi transaction, gom các biến động ví bên trong. Summary lọc cùng loại/trạng thái/nguồn/ngày với danh sách; số dư COMPANY_FUND vẫn là snapshot hiện tại. Journal có trang chi tiết riêng; xem nghiệp vụ, response fields và giới hạn trong [`ledger-accounting.md`](ledger-accounting.md).
+**Cập nhật 10/10/2026:** API journal có bộ lọc theo event/ngày/nhân viên/dự án/yêu cầu, đồng thời trả người tạo và thời điểm tạo. Bổ sung tổng hợp ngân sách dự án/giai đoạn/danh mục. Journal được tạo cho SYSTEM_TOPUP và các lần phân bổ nội bộ; DEPOSIT/WITHDRAW của ví cá nhân vẫn chỉ nằm trong sổ giao dịch ví. Migration V20 bổ sung audit và chặn sửa/xóa journal ở database. Xem quy tắc, response và giới hạn trong [`ledger-accounting.md`](ledger-accounting.md).
+
+`AccountingJournalItemResponse` và `AccountingJournalDetailResponse` có thêm `createdByUserId`, `createdByName`, `createdAt`; các trường này có thể null với journal cũ vì không thể khôi phục actor/thời điểm gốc. Endpoint `budget-exposure` trả các chỉ số riêng cho từng project, phase và category: budget, recognized expense, locked request amount và open advance. Các giá trị này mô tả trạng thái khác nhau và không được cộng thành một tổng “đã chi”.
 
 **LedgerSummaryResponse:**
 

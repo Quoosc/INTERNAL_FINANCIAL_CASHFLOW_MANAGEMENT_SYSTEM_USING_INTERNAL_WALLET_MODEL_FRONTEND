@@ -61,7 +61,7 @@
 | `accountant/payroll/page.tsx` | `GET /api/v1/accountant/payroll` + `POST` | List + tạo kỳ lương + tải template — Sprint 10 |
 | `accountant/payroll/[id]/page.tsx` | `GET/PUT/POST import/auto-netting/run` | 4-step workflow, FormData import, 409 overwrite — Sprint 10 |
 | `accountant/payslips/[id]/page.tsx` | `GET /api/v1/accountant/payslips/{id}` | Chi tiết phiếu lương kế toán — breadcrumb, salary breakdown table — Sprint 15 |
-| `accountant/ledger/page.tsx` | `GET /accountant/ledger/wallet-transactions`, `/journals`, `/advances/outstanding`, `/summary` | Giao dịch ví, journal kế toán và tạm ứng theo nhân viên |
+| `accountant/ledger/page.tsx` | `GET /accountant/ledger/wallet-transactions`, `/journals`, `/advances/outstanding`, `/budget-exposure`, `/summary` | Giao dịch ví, journal kế toán, tạm ứng và ngân sách theo đối tượng |
 | `accountant/ledger/[id]/page.tsx` | `GET /accountant/ledger/{id}` | Chi tiết giao dịch và biến động từng ví; tách khỏi journal |
 | `accountant/ledger/journals/[journalId]/page.tsx` | `GET /accountant/ledger/journals/{journalId}` | Chi tiết dòng tài khoản, cân bằng và tham chiếu nguồn |
 | `accountant/ledger/demo/page.tsx` | Mock data cục bộ | Demo tĩnh độc lập, không phải dữ liệu thật |
@@ -81,7 +81,7 @@
 | `cfo/settings/page.tsx` | — | Re-export từ `admin/settings/page` |
 | `dashboard/page.tsx` | Composite + dedicated endpoints — Sprint 12/16 | Employee/TL: compose từ API có sẵn. Manager: `/api/v1/dashboard/manager`. Accountant: `/api/v1/dashboard/accountant`. CFO: `/api/v1/dashboard/cfo`. Admin: `/api/v1/dashboard/admin` |
 
-**Trạng thái sổ cái kế toán (05/10/2026):** giao diện thật đã gọi API journal và danh sách tạm ứng theo nhân viên; backend có migration V17, các journal cho luồng ADVANCE/EXPENSE/REIMBURSE/hoàn tạm ứng/payroll. Chưa chạy build/test sau thay đổi; xem giới hạn tại [`ledger-accounting.md`](ledger-accounting.md) và [`ledger-redesign-plan.md`](ledger-redesign-plan.md).
+**Trạng thái sổ cái kế toán (10/10/2026):** đã nối journal cho ADVANCE/EXPENSE/REIMBURSE/hoàn tạm ứng/payroll, SYSTEM_TOPUP và phân bổ nội bộ; bổ sung audit V20, bộ lọc đối tượng, báo cáo ngân sách tách chi phí/tiền khóa/tạm ứng và giao diện nhân viên hoàn tạm ứng tại /wallet. Backend compile và frontend build thành công. Chưa áp dụng V19/V20 hoặc chạy end-to-end vì DATABASE_URL chưa cấu hình và Docker Engine chưa chạy; xem [`ledger-accounting.md`](ledger-accounting.md) và [`ledger-redesign-plan.md`](ledger-redesign-plan.md).
 
 ---
 

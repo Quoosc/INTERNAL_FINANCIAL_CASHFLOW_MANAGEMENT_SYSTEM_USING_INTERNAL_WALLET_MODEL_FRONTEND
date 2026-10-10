@@ -1,6 +1,6 @@
 # PROJECT_STRUCTURE.md — Cấu trúc dự án Frontend
 
-> **Cập nhật v3.6 (2026-10-05):** Sổ cái Kế toán nối API giao dịch ví, journal và tạm ứng theo nhân viên; có trang chi tiết journal riêng. Xem `docs/ledger-accounting.md` để biết phạm vi và giới hạn.
+> **Cập nhật v3.7 (2026-10-10):** Sổ cái có bộ lọc journal theo nguồn/đối tượng, audit người tạo, tổng hợp ngân sách theo dự án/giai đoạn/danh mục và thao tác hoàn tạm ứng ở trang ví nhân viên. Vẫn cần chạy migration và nghiệm thu với database. Xem `docs/ledger-accounting.md` và `docs/ledger-redesign-plan.md`.
 
 ## Tổng quan
 
@@ -230,7 +230,7 @@ financial-wallet-frontend/
 | Route | Trạng thái | Ghi chú |
 |---|---|---|
 | `app/(dashboard)/accountant/payroll/*` | ✅ LIVE | `AccountantPayrollController` — Sprint 10 |
-| `app/(dashboard)/accountant/ledger/page.tsx`, `[id]/page.tsx` | ✅ LIVE — giao dịch ví, journal, tạm ứng theo nhân viên | API thật; `LedgerEntry` vẫn chỉ là biến động ví |
+| `app/(dashboard)/accountant/ledger/page.tsx`, `[id]/page.tsx` | ✅ LIVE — giao dịch ví, journal, tạm ứng, ngân sách | API thật; `LedgerEntry` vẫn chỉ là biến động ví |
 | `app/(dashboard)/accountant/ledger/journals/[journalId]/page.tsx` | ✅ LIVE — chi tiết journal | Hiển thị các dòng tài khoản, cân bằng và tham chiếu nghiệp vụ |
 | `app/(dashboard)/accountant/ledger/demo/page.tsx` | ⚠️ DEMO ONLY | Dữ liệu giả độc lập; không dùng làm nguồn dữ liệu trang thật |
 | `app/(dashboard)/dashboard/page.tsx` | ✅ LIVE | `/api/v1/dashboard/*` — Sprint 16 |

@@ -18,3 +18,4 @@ export * from "./manager";
 export * from "./accountant";
 export * from "./admin";
 export * from "./dashboard";
+export * from "./ai";

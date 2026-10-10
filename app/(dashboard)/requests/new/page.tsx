@@ -1,17 +1,23 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { z } from "zod";
 import { ApiError, api } from "@/lib/api-client";
+import { extractReceipt, getAiStatus, suggestReceiptCategory } from "@/lib/api/ai";
 import { formatCurrency } from "@/lib/format";
 import { useToast } from "@/contexts/toast-context";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { AiFilledBadge } from "@/components/request/ai-filled-badge";
+import { ReceiptScanStatus, type ReceiptScanState } from "@/components/request/receipt-scan-status";
+import { ReceiptPreviewModal } from "@/components/request/receipt-preview-modal";
 import { useAuth } from "@/contexts/auth-context";
 import {
   AdvanceBalanceItem,
+  AiCategory,
+  AiStatusResponse,
   CreateRequestBody,
   ExpenseCategoryResponse,
   FileStorageRequest,
@@ -27,7 +33,14 @@ interface UploadFileItem {
   id: string;
   file: File;
   previewUrl: string | null;
+  /** Trạng thái AI đọc chứng từ; undefined = chưa đọc (AI tắt hoặc loại yêu cầu không dùng AI) */
+  scan?: ReceiptScanState;
 }
+
+/** Các ô AI có thể tự điền. Ô nằm trong tập này nghĩa là giá trị hiện tại do AI điền. */
+type AiField = "amount" | "expenseDate" | "title" | "description" | "categoryId";
+
+const AI_DESCRIPTION_MAX = 1000;
 
 interface CategoryOption {
   id: number;
@@ -173,6 +186,9 @@ async function uploadAttachments(files: UploadFileItem[]): Promise<FileStorageRe
       url: uploaded.secure_url,
       fileType: item.file.type || `${uploaded.resource_type}/${uploaded.format ?? "octet-stream"}`,
       size: item.file.size || uploaded.bytes,
+      // Liên kết bản AI đã đọc → backend đối chiếu số tiền + phát hiện hoá đơn dùng lại
+      extractionId:
+        item.scan?.state === "done" && !item.scan.ignored ? item.scan.result.extractionId : undefined,
     });
   }
 
@@ -288,8 +304,10 @@ export default function NewRequestPage() {
       setLoadingPhases(true);
 
       try {
+        // Quyết toán dùng phase của khoản tạm ứng gốc, phase đó có thể đã đóng → không lọc ACTIVE
+        const statusQuery = isReimburseType ? "" : "?status=ACTIVE";
         const phasesRes = await api.get<ProjectPhasesResponse>(
-          `/api/v1/projects/${projectId}/phases?status=ACTIVE`
+          `/api/v1/projects/${projectId}/phases${statusQuery}`
         );
 
         if (cancelled) return;
@@ -314,7 +332,7 @@ export default function NewRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, [form.projectId, projects, isProjectBasedType, toast]);
+  }, [form.projectId, projects, isProjectBasedType, isReimburseType, toast]);
 
   useEffect(() => {
     const phaseId = form.phaseId;
@@ -405,16 +423,295 @@ export default function NewRequestPage() {
     };
   }, [isReimburseType, toast]);
 
+  // Thu hồi object URL khi rời trang. Không chạy theo mỗi lần `files` đổi: trạng thái AI
+  // cập nhật `files` liên tục, làm vậy sẽ thu hồi URL của ảnh vẫn đang hiển thị.
+  // Xoá từng file thì removeFile tự thu hồi URL của file đó.
+  const filesRef = useRef<UploadFileItem[]>([]);
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
   useEffect(() => {
     return () => {
-      files.forEach((item) => {
+      filesRef.current.forEach((item) => {
         if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
       });
     };
-  }, [files]);
+  }, []);
+
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
+  const previewItem = files.find((f) => f.id === previewFileId) ?? null;
+  const closePreview = useCallback(() => setPreviewFileId(null), []);
+
+  // ── AI đọc chứng từ ─────────────────────────────────────────
+  // Nguyên tắc: AI chỉ điền ô đang trống hoặc ô mà chính AI đã điền trước đó;
+  // user sửa ô nào thì ô đó thuộc về user, AI không đụng vào nữa.
+
+  const [aiStatus, setAiStatus] = useState<AiStatusResponse | null>(null);
+  const [aiFilled, setAiFilled] = useState<Set<AiField>>(() => new Set());
+  const aiFilledRef = useRef<Set<AiField>>(new Set());
+  /** Hạng mục AI chọn cho một phase cụ thể (chỉ dùng cho Hoàn chi nhân viên) */
+  const [aiCategory, setAiCategory] = useState<(AiCategory & { phaseId: number }) | null>(null);
+  const suggestedKeysRef = useRef<Set<string>>(new Set());
+  const scanStartedRef = useRef<Set<string>>(new Set());
+
+  // Quyết toán tạm ứng: dự án / phase / hạng mục lấy theo khoản tạm ứng gốc
+  const [linkedToAdvance, setLinkedToAdvance] = useState(false);
+  const advancePrefillRef = useRef<{ phaseId?: number | null; categoryId?: number | null } | null>(null);
+
+  // Giá trị mới nhất của form, đọc trong effect mà không phải đưa vào dependency
+  const latestRef = useRef({ form, title, expenseDate });
+  useEffect(() => {
+    latestRef.current = { form, title, expenseDate };
+  });
+
+  const aiEnabled = !!aiStatus?.enabled;
+  const scanEligible =
+    aiEnabled && (form.type === RequestType.EXPENSE || form.type === RequestType.REIMBURSE);
+  const linkedLocked = isReimburseType && linkedToAdvance;
+  const selectedAdvance = advanceOptions.find((a) => a.id === advanceBalanceId);
+
+  const markAiFilled = useCallback((fields: AiField[], filled: boolean) => {
+    if (fields.length === 0) return;
+    const next = new Set(aiFilledRef.current);
+    fields.forEach((f) => (filled ? next.add(f) : next.delete(f)));
+    aiFilledRef.current = next;
+    setAiFilled(next);
+  }, []);
+
+  useEffect(() => {
+    if (!canCreatePersonalRequest) return;
+    let cancelled = false;
+    getAiStatus()
+      .then((res) => {
+        if (!cancelled) setAiStatus(res.data);
+      })
+      .catch(() => {
+        if (!cancelled) setAiStatus(null); // AI không khả dụng → form nhập tay như cũ
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [canCreatePersonalRequest]);
+
+  const scanFile = useCallback(async (id: string, file: File) => {
+    const current = latestRef.current.form;
+    // Chỉ Hoàn chi nhân viên mới cần AI chọn hạng mục; Quyết toán lấy hạng mục theo tạm ứng
+    const phaseId = current.type === RequestType.EXPENSE ? current.phaseId : undefined;
+    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, scan: { state: "scanning" } } : f)));
+
+    try {
+      const res = await extractReceipt(file, phaseId);
+      const result = res.data;
+      setFiles((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, scan: { state: "done", result, ignored: false } } : f))
+      );
+      if (phaseId) {
+        suggestedKeysRef.current.add(`${result.extractionId}:${phaseId}`);
+        if (result.suggestion.category) setAiCategory({ ...result.suggestion.category, phaseId });
+      }
+      if (!result.cached) {
+        setAiStatus((s) => (s ? { ...s, remainingToday: Math.max(0, s.remainingToday - 1) } : s));
+      }
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.apiMessage : "Không đọc được chứng từ, vui lòng nhập tay.";
+      setFiles((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, scan: { state: "error", message } } : f))
+      );
+    }
+  }, []);
+
+  // Tự đọc mọi file chưa đọc khi AI dùng được cho loại yêu cầu hiện tại
+  useEffect(() => {
+    if (!scanEligible) return;
+    files.forEach((item) => {
+      if (item.scan || scanStartedRef.current.has(item.id)) return;
+      scanStartedRef.current.add(item.id);
+      void scanFile(item.id, item.file);
+    });
+  }, [files, scanEligible, scanFile]);
+
+  const scanResults = useMemo(
+    () =>
+      files.flatMap((f) =>
+        f.scan?.state === "done" && !f.scan.ignored ? [f.scan.result] : []
+      ),
+    [files]
+  );
+  const scanKey = scanResults.map((r) => r.extractionId).join(",");
+
+  // Gộp kết quả các chứng từ rồi điền vào form
+  useEffect(() => {
+    if (!scanEligible) return;
+    const { form: f, title: t, expenseDate: d } = latestRef.current;
+    const owned = aiFilledRef.current;
+    const canFill = (field: AiField, isEmpty: boolean) => isEmpty || owned.has(field);
+
+    // Không còn chứng từ nào được dùng → gỡ các giá trị do AI điền
+    if (scanResults.length === 0) {
+      if (owned.has("amount")) setForm((p) => ({ ...p, amount: undefined }));
+      if (owned.has("description")) setForm((p) => ({ ...p, description: "" }));
+      if (owned.has("title")) setTitle("");
+      if (owned.has("expenseDate")) setExpenseDate("");
+      markAiFilled(["amount", "description", "title", "expenseDate"], false);
+      return;
+    }
+
+    const filled: AiField[] = [];
+
+    const totals = scanResults
+      .map((r) => r.fields.totalAmount)
+      .filter((v): v is number => v != null);
+    if (totals.length > 0 && canFill("amount", f.amount == null)) {
+      const sum = totals.reduce((a, b) => a + b, 0);
+      setForm((p) => ({ ...p, amount: sum }));
+      filled.push("amount");
+    }
+
+    const dates = scanResults
+      .map((r) => r.fields.invoiceDate)
+      .filter((v): v is string => !!v)
+      .sort();
+    const latestDate = dates[dates.length - 1];
+    if (latestDate && canFill("expenseDate", !d)) {
+      setExpenseDate(latestDate);
+      filled.push("expenseDate");
+    }
+
+    const suggestedTitle = scanResults.find((r) => r.suggestion.title)?.suggestion.title;
+    if (suggestedTitle && canFill("title", !t.trim())) {
+      setTitle(suggestedTitle);
+      filled.push("title");
+    }
+
+    const drafts = scanResults
+      .map((r) => r.suggestion.descriptionDraft)
+      .filter((v): v is string => !!v);
+    if (drafts.length > 0 && canFill("description", !(f.description ?? "").trim())) {
+      setForm((p) => ({ ...p, description: drafts.join("\n\n").slice(0, AI_DESCRIPTION_MAX) }));
+      filled.push("description");
+    }
+
+    markAiFilled(filled, true);
+    if (filled.length > 0) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        filled.forEach((field) => delete next[field]);
+        return next;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi tập chứng từ thay đổi
+  }, [scanKey, scanEligible]);
+
+  // User chọn phase SAU khi tải chứng từ → hỏi AI chọn hạng mục (chỉ gửi văn bản, không gửi lại ảnh)
+  useEffect(() => {
+    if (form.type !== RequestType.EXPENSE || !form.phaseId || !aiEnabled) return;
+    const first = scanResults[0];
+    if (!first) return;
+    const key = `${first.extractionId}:${form.phaseId}`;
+    if (suggestedKeysRef.current.has(key)) return;
+    suggestedKeysRef.current.add(key);
+
+    const phaseId = form.phaseId;
+    let cancelled = false;
+    suggestReceiptCategory(first.extractionId, phaseId)
+      .then((res) => {
+        if (!cancelled && res.data.category) setAiCategory({ ...res.data.category, phaseId });
+      })
+      .catch(() => {
+        // Không gợi ý được thì để user tự chọn
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scanResults đại diện bởi scanKey
+  }, [form.phaseId, form.type, scanKey, aiEnabled]);
+
+  // Áp hạng mục AI đã chọn khi danh sách hạng mục của phase đã tải xong
+  useEffect(() => {
+    if (!aiCategory || form.type !== RequestType.EXPENSE || aiCategory.phaseId !== form.phaseId) return;
+    if (!categoryOptions.some((c) => c.id === aiCategory.id)) return;
+    if (form.categoryId != null && !aiFilledRef.current.has("categoryId")) return;
+    if (form.categoryId === aiCategory.id) return;
+    setForm((p) => ({ ...p, categoryId: aiCategory.id }));
+    markAiFilled(["categoryId"], true);
+    setFieldErrors((p) => ({ ...p, categoryId: undefined }));
+  }, [aiCategory, categoryOptions, form.phaseId, form.categoryId, form.type, markAiFilled]);
+
+  // Quyết toán: sau khi danh sách phase / hạng mục tải xong thì chọn đúng mục của khoản tạm ứng
+  useEffect(() => {
+    const prefill = advancePrefillRef.current;
+    if (!prefill?.phaseId || !phases?.phases.some((p) => p.id === prefill.phaseId)) return;
+    if (latestRef.current.form.phaseId !== prefill.phaseId) {
+      setForm((p) => ({ ...p, phaseId: prefill.phaseId ?? undefined }));
+    }
+  }, [phases]);
+
+  useEffect(() => {
+    const prefill = advancePrefillRef.current;
+    if (!prefill?.categoryId || !categoryOptions.some((c) => c.id === prefill.categoryId)) return;
+    setForm((p) => ({ ...p, categoryId: prefill.categoryId ?? undefined }));
+    advancePrefillRef.current = null;
+  }, [categoryOptions]);
+
+  const handleAdvanceChange = (id: number | undefined) => {
+    setAdvanceBalanceId(id);
+    setFieldErrors((p) => ({ ...p, advanceBalanceId: undefined, projectId: undefined, phaseId: undefined, categoryId: undefined }));
+
+    const advance = advanceOptions.find((a) => a.id === id);
+    if (!advance?.projectId) {
+      setLinkedToAdvance(false);
+      advancePrefillRef.current = null;
+      return;
+    }
+
+    setLinkedToAdvance(true);
+    advancePrefillRef.current = { phaseId: advance.phaseId, categoryId: advance.categoryId };
+
+    if (form.projectId !== advance.projectId) {
+      // Đổi dự án → effect tải phase → effect trên chọn phase → tải hạng mục → chọn hạng mục
+      setForm((p) => ({ ...p, projectId: advance.projectId ?? undefined }));
+    } else if (advance.phaseId && form.phaseId !== advance.phaseId) {
+      if (phases?.phases.some((p) => p.id === advance.phaseId)) {
+        setForm((p) => ({ ...p, phaseId: advance.phaseId ?? undefined }));
+      }
+    } else if (advance.categoryId && categoryOptions.some((c) => c.id === advance.categoryId)) {
+      setForm((p) => ({ ...p, categoryId: advance.categoryId ?? undefined }));
+      advancePrefillRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!isReimburseType) {
+      setLinkedToAdvance(false);
+      advancePrefillRef.current = null;
+    }
+  }, [isReimburseType]);
+
+  const setScanIgnored = (id: string) => {
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === id && f.scan?.state === "done"
+          ? { ...f, scan: { ...f.scan, ignored: !f.scan.ignored } }
+          : f
+      )
+    );
+  };
+
+  const retryScan = (id: string) => {
+    const item = files.find((f) => f.id === id);
+    if (item) void scanFile(item.id, item.file);
+  };
+
+  const exceedsAdvance =
+    isReimburseType &&
+    selectedAdvance != null &&
+    form.amount != null &&
+    form.amount > selectedAdvance.remainingAmount;
 
   const handleAmountChange = (amount: number | null) => {
     setForm((prev) => ({ ...prev, amount: amount ?? undefined }));
+    markAiFilled(["amount"], false);
     if (fieldErrors.amount) setFieldErrors((prev) => ({ ...prev, amount: undefined }));
   };
 
@@ -458,7 +755,8 @@ export default function NewRequestPage() {
     const mapped = accepted.map((file) => ({
       id: `${file.name}-${file.lastModified}-${Math.random().toString(16).slice(2)}`,
       file,
-      previewUrl: isImage(file) ? URL.createObjectURL(file) : null,
+      // Tạo cho cả PDF để xem trong modal; thu hồi khi xoá file hoặc rời trang
+      previewUrl: URL.createObjectURL(file),
     }));
 
     setFiles((prev) => [...prev, ...mapped]);
@@ -684,6 +982,7 @@ export default function NewRequestPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* ── 1. Loại yêu cầu + nơi chi tiêu ── */}
         <div className="rounded-3xl border border-slate-200 bg-white p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-slate-600 mb-3">Loại yêu cầu</label>
@@ -710,127 +1009,14 @@ export default function NewRequestPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Số tiền (VND)</label>
-            <CurrencyInput
-              value={form.amount ?? null}
-              onChange={handleAmountChange}
-              onBlur={handleAmountBlur}
-              placeholder="Nhập số tiền"
-              error={fieldErrors.amount}
-            />
-            {!fieldErrors.amount && (
-              <p className="text-xs text-slate-500 mt-1">{form.amount ? `Giá trị: ${formatCurrency(form.amount)}` : ""}</p>
-            )}
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-600 mb-2">Tiêu đề</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => { setTitle(e.target.value); if (fieldErrors.title) setFieldErrors((p) => ({ ...p, title: undefined })); }}
-              onBlur={handleTitleBlur}
-              placeholder="Ví dụ: Tạm ứng công tác tháng 4"
-              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.title ? "border-rose-300" : "border-slate-200"}`}
-            />
-            {fieldErrors.title && <p className="text-xs text-rose-600 mt-1">{fieldErrors.title}</p>}
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-600 mb-2">Mô tả chi tiết</label>
-            <textarea
-              rows={4}
-              value={form.description ?? ""}
-              onChange={(e) => {
-                setForm((prev) => ({ ...prev, description: e.target.value }));
-                if (fieldErrors.description) setFieldErrors((p) => ({ ...p, description: undefined }));
-              }}
-              onBlur={handleDescriptionBlur}
-              placeholder="Mô tả nội dung chi tiêu..."
-              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.description ? "border-rose-300" : "border-slate-200"}`}
-            />
-            {fieldErrors.description && <p className="text-xs text-rose-600 mt-1">{fieldErrors.description}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Dự án</label>
-            <select
-              value={form.projectId?.toString() ?? ""}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                setForm((prev) => ({ ...prev, projectId: Number.isFinite(value) && value > 0 ? value : undefined }));
-                if (fieldErrors.projectId) setFieldErrors((p) => ({ ...p, projectId: undefined }));
-              }}
-              disabled={!isProjectBasedType || loading}
-              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.projectId ? "border-rose-300" : "border-slate-200"}`}
-            >
-              <option value="">Chọn dự án</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  [{project.projectCode}] {project.name}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.projectId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.projectId}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Phase</label>
-            <select
-              value={form.phaseId?.toString() ?? ""}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                setForm((prev) => ({ ...prev, phaseId: Number.isFinite(value) && value > 0 ? value : undefined, categoryId: undefined }));
-                if (fieldErrors.phaseId) setFieldErrors((p) => ({ ...p, phaseId: undefined }));
-              }}
-              disabled={!isProjectBasedType || !form.projectId || loadingPhases}
-              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.phaseId ? "border-rose-300" : "border-slate-200"}`}
-            >
-              <option value="">{loadingPhases ? "Đang tải giai đoạn..." : form.projectId ? "Chọn giai đoạn" : "Chọn dự án trước"}</option>
-              {(phases?.phases ?? []).map((phase) => (
-                <option key={phase.id} value={phase.id}>
-                  [{phase.phaseCode}] {phase.name}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.phaseId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.phaseId}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Hạng mục chi phí</label>
-            <select
-              value={form.categoryId?.toString() ?? ""}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                setForm((prev) => ({ ...prev, categoryId: Number.isFinite(value) && value > 0 ? value : undefined }));
-                if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: undefined }));
-              }}
-              disabled={!isProjectBasedType || !form.phaseId || loadingCategories}
-              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.categoryId ? "border-rose-300" : "border-slate-200"}`}
-            >
-              <option value="">{loadingCategories ? "Đang tải hạng mục..." : form.phaseId ? "Chọn hạng mục" : "Chọn giai đoạn trước"}</option>
-              {categoryOptions.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.categoryId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.categoryId}</p>}
-          </div>
-
           {isReimburseType && (
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-600 mb-2">
                 Khoản tạm ứng cần quyết toán <span className="text-rose-500">*</span>
               </label>
               <select
                 value={advanceBalanceId?.toString() ?? ""}
-                onChange={(e) => {
-                  const id = Number(e.target.value) || undefined;
-                  setAdvanceBalanceId(id);
-                  setFieldErrors((p) => ({ ...p, advanceBalanceId: undefined }));
-                }}
+                onChange={(e) => handleAdvanceChange(Number(e.target.value) || undefined)}
                 disabled={loadingAdvances}
                 className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500/40 ${fieldErrors.advanceBalanceId ? "border-rose-300" : "border-slate-200"}`}
               >
@@ -847,27 +1033,106 @@ export default function NewRequestPage() {
               {fieldErrors.advanceBalanceId && (
                 <p className="text-xs text-rose-600 mt-1">{fieldErrors.advanceBalanceId}</p>
               )}
-              {advanceBalanceId && (
-                <p className="text-xs text-teal-600 mt-1">✓ Đã chọn khoản tạm ứng cần quyết toán</p>
+              {selectedAdvance && (
+                <p className="text-xs text-teal-600 mt-1">
+                  ✓ Đã chọn khoản tạm ứng
+                  {linkedToAdvance && " — dự án, giai đoạn và hạng mục được lấy theo khoản tạm ứng gốc"}
+                </p>
               )}
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">Ngày chi tiêu</label>
-            <input
-              type="date"
-              value={expenseDate}
-              onChange={(e) => { setExpenseDate(e.target.value); if (fieldErrors.expenseDate) setFieldErrors((p) => ({ ...p, expenseDate: undefined })); }}
-              onBlur={handleExpenseDateBlur}
-              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.expenseDate ? "border-rose-300" : "border-slate-200"}`}
-            />
-            {fieldErrors.expenseDate && <p className="text-xs text-rose-600 mt-1">{fieldErrors.expenseDate}</p>}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-2">
+                Dự án{linkedLocked && <AiFilledBadge kind="advance" />}
+              </label>
+              <select
+                value={form.projectId?.toString() ?? ""}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setForm((prev) => ({ ...prev, projectId: Number.isFinite(value) && value > 0 ? value : undefined }));
+                  if (fieldErrors.projectId) setFieldErrors((p) => ({ ...p, projectId: undefined }));
+                }}
+                disabled={!isProjectBasedType || loading || linkedLocked}
+                className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.projectId ? "border-rose-300" : "border-slate-200"}`}
+              >
+                <option value="">Chọn dự án</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    [{project.projectCode}] {project.name}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.projectId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.projectId}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-2">
+                Phase{linkedLocked && <AiFilledBadge kind="advance" />}
+              </label>
+              <select
+                value={form.phaseId?.toString() ?? ""}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setForm((prev) => ({ ...prev, phaseId: Number.isFinite(value) && value > 0 ? value : undefined, categoryId: undefined }));
+                  if (fieldErrors.phaseId) setFieldErrors((p) => ({ ...p, phaseId: undefined }));
+                }}
+                disabled={!isProjectBasedType || !form.projectId || loadingPhases || linkedLocked}
+                className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.phaseId ? "border-rose-300" : "border-slate-200"}`}
+              >
+                <option value="">{loadingPhases ? "Đang tải giai đoạn..." : form.projectId ? "Chọn giai đoạn" : "Chọn dự án trước"}</option>
+                {(phases?.phases ?? []).map((phase) => (
+                  <option key={phase.id} value={phase.id}>
+                    [{phase.phaseCode}] {phase.name}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.phaseId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.phaseId}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-2">
+                Hạng mục chi phí
+                {linkedLocked ? <AiFilledBadge kind="advance" /> : aiFilled.has("categoryId") && <AiFilledBadge kind="ai" />}
+              </label>
+              <select
+                value={form.categoryId?.toString() ?? ""}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setForm((prev) => ({ ...prev, categoryId: Number.isFinite(value) && value > 0 ? value : undefined }));
+                  markAiFilled(["categoryId"], false);
+                  if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: undefined }));
+                }}
+                disabled={!isProjectBasedType || !form.phaseId || loadingCategories || linkedLocked}
+                className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.categoryId ? "border-rose-300" : "border-slate-200"}`}
+              >
+                <option value="">{loadingCategories ? "Đang tải hạng mục..." : form.phaseId ? "Chọn hạng mục" : "Chọn giai đoạn trước"}</option>
+                {categoryOptions.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.categoryId && <p className="text-xs text-rose-600 mt-1">{fieldErrors.categoryId}</p>}
+            </div>
           </div>
         </div>
 
+        {/* ── 2. Chứng từ — AI đọc ngay khi tải lên ── */}
         <div className="rounded-3xl border border-slate-200 bg-white p-5">
           <label className="block text-sm font-medium text-slate-600 mb-2">Đính kèm chứng từ (image/pdf)</label>
+
+          {scanEligible && (
+            <div className="mb-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
+              ✨ AI sẽ đọc chứng từ và tự điền <b>số tiền, ngày chi tiêu, tiêu đề, mô tả</b>
+              {form.type === RequestType.EXPENSE && <> và <b>hạng mục chi phí</b></>}. Bạn chỉ cần kiểm tra lại
+              và bổ sung mục đích chi.
+              <span className="block text-xs text-violet-600 mt-1">
+                Còn {aiStatus?.remainingToday ?? 0}/{aiStatus?.maxCallsPerDay ?? 0} lượt đọc hôm nay. Tải lại cùng một file không tốn lượt.
+              </span>
+            </div>
+          )}
 
           <div className="border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center bg-blue-50">
             <input
@@ -890,28 +1155,54 @@ export default function NewRequestPage() {
                   className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    {item.previewUrl ? (
-                      <Image
-                        src={item.previewUrl}
-                        alt={item.file.name}
-                        width={48}
-                        height={48}
-                        unoptimized
-                        className="w-12 h-12 rounded-lg object-cover border border-slate-200"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    <button
+                      type="button"
+                      onClick={() => setPreviewFileId(item.id)}
+                      title="Xem chứng từ"
+                      aria-label={`Xem chứng từ ${item.file.name}`}
+                      className="group relative shrink-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    >
+                      {item.previewUrl && isImage(item.file) ? (
+                        <Image
+                          src={item.previewUrl}
+                          alt={item.file.name}
+                          width={48}
+                          height={48}
+                          unoptimized
+                          className="w-12 h-12 rounded-lg object-cover border border-slate-200 cursor-zoom-in"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 cursor-zoom-in">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                        </div>
+                      )}
+                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-slate-900/50 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 8v6m-3-3h6m4 0a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                      </div>
-                    )}
+                      </span>
+                    </button>
 
                     <div className="min-w-0">
-                      <p className="text-sm text-slate-900 truncate">{item.file.name}</p>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewFileId(item.id)}
+                        className="block max-w-full truncate text-left text-sm text-slate-900 hover:text-blue-700 hover:underline"
+                      >
+                        {item.file.name}
+                      </button>
                       <p className="text-xs text-slate-500">
                         {(item.file.size / 1024).toFixed(1)} KB
                       </p>
+                      {scanEligible && item.scan && (
+                        <ReceiptScanStatus
+                          scan={item.scan}
+                          onToggleIgnore={() => setScanIgnored(item.id)}
+                          onRetry={() => retryScan(item.id)}
+                        />
+                      )}
                     </div>
                   </div>
 
@@ -926,6 +1217,98 @@ export default function NewRequestPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {previewItem && (
+          <ReceiptPreviewModal
+            file={previewItem.file}
+            previewUrl={previewItem.previewUrl}
+            scan={previewItem.scan}
+            onClose={closePreview}
+          />
+        )}
+
+        {/* ── 3. Nội dung chi — các ô AI có thể điền ── */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-2">
+              Số tiền (VND){aiFilled.has("amount") && <AiFilledBadge kind="ai" />}
+            </label>
+            <CurrencyInput
+              value={form.amount ?? null}
+              onChange={handleAmountChange}
+              onBlur={handleAmountBlur}
+              placeholder="Nhập số tiền"
+              error={fieldErrors.amount}
+            />
+            {!fieldErrors.amount && (
+              <p className="text-xs text-slate-500 mt-1">{form.amount ? `Giá trị: ${formatCurrency(form.amount)}` : ""}</p>
+            )}
+            {exceedsAdvance && selectedAdvance && (
+              <p className="text-xs text-amber-700 mt-1">
+                ⚠ Vượt số còn lại của khoản tạm ứng ({formatCurrency(selectedAdvance.remainingAmount)}). Quyết toán không được lớn hơn số còn lại.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-2">
+              Ngày chi tiêu{aiFilled.has("expenseDate") && <AiFilledBadge kind="ai" />}
+            </label>
+            <input
+              type="date"
+              value={expenseDate}
+              onChange={(e) => {
+                setExpenseDate(e.target.value);
+                markAiFilled(["expenseDate"], false);
+                if (fieldErrors.expenseDate) setFieldErrors((p) => ({ ...p, expenseDate: undefined }));
+              }}
+              onBlur={handleExpenseDateBlur}
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.expenseDate ? "border-rose-300" : "border-slate-200"}`}
+            />
+            {fieldErrors.expenseDate && <p className="text-xs text-rose-600 mt-1">{fieldErrors.expenseDate}</p>}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-slate-600 mb-2">
+              Tiêu đề{aiFilled.has("title") && <AiFilledBadge kind="ai" />}
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                markAiFilled(["title"], false);
+                if (fieldErrors.title) setFieldErrors((p) => ({ ...p, title: undefined }));
+              }}
+              onBlur={handleTitleBlur}
+              placeholder="Ví dụ: Tạm ứng công tác tháng 4"
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.title ? "border-rose-300" : "border-slate-200"}`}
+            />
+            {fieldErrors.title && <p className="text-xs text-rose-600 mt-1">{fieldErrors.title}</p>}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-slate-600 mb-2">
+              Mô tả chi tiết{aiFilled.has("description") && <AiFilledBadge kind="ai" />}
+            </label>
+            <textarea
+              rows={aiFilled.has("description") ? 7 : 4}
+              value={form.description ?? ""}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, description: e.target.value }));
+                markAiFilled(["description"], false);
+                if (fieldErrors.description) setFieldErrors((p) => ({ ...p, description: undefined }));
+              }}
+              onBlur={handleDescriptionBlur}
+              placeholder="Mô tả nội dung chi tiêu..."
+              className={`w-full px-4 py-3 rounded-2xl border bg-white text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${fieldErrors.description ? "border-rose-300" : "border-slate-200"}`}
+            />
+            {aiFilled.has("description") && !fieldErrors.description && (
+              <p className="text-xs text-violet-700 mt-1">Hãy bổ sung mục đích chi (chi cho việc gì) — AI không biết phần này.</p>
+            )}
+            {fieldErrors.description && <p className="text-xs text-rose-600 mt-1">{fieldErrors.description}</p>}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

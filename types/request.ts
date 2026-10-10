@@ -74,6 +74,8 @@ export interface FileStorageRequest {
   url: string;
   fileType: string;
   size: number;
+  /** id trả về từ POST /ai/receipts/extract cho file này (nếu đã đọc bằng AI) */
+  extractionId?: number;
 }
 
 /** Một dòng trong timeline (lịch sử duyệt) */
@@ -142,6 +144,13 @@ export interface AdvanceBalanceItem {
   originalAmount: number;
   remainingAmount: number;
   status: "OUTSTANDING" | "PARTIALLY_SETTLED";
+  // Dự án / phase / hạng mục của request tạm ứng gốc — dùng để tự điền form quyết toán
+  projectId?: number | null;
+  projectName?: string | null;
+  phaseId?: number | null;
+  phaseName?: string | null;
+  categoryId?: number | null;
+  categoryName?: string | null;
 }
 
 // --- Employee Request Body DTOs ---
